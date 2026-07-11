@@ -1,7 +1,18 @@
 import { useCallback, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
+  Platform,
+} from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { colors, spacing, radius } from "../theme/theme";
@@ -9,15 +20,17 @@ import { colors, spacing, radius } from "../theme/theme";
 export default function HomeScreen({ navigation }) {
   const { user } = useAuth();
   const [loadingTest, setLoadingTest] = useState(false);
+  const [todayTest, setTodayTest] = useState(null);
   const [upcomingLive, setUpcomingLive] = useState(null);
   const [stats, setStats] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
-      const [liveRes, attemptsRes] = await Promise.allSettled([
+      const [liveRes, attemptsRes, todayRes] = await Promise.allSettled([
         api.get("/exams/live/upcoming"),
         api.get("/tests/my-attempts"),
+        api.get("/tests/today"),
       ]);
 
       if (liveRes.status === "fulfilled") {
@@ -33,6 +46,10 @@ export default function HomeScreen({ navigation }) {
             : 0;
         setStats({ totalTests, avgAccuracy });
       }
+
+      if (todayRes.status === "fulfilled") {
+        setTodayTest(todayRes.value.data.test || null);
+      }
     } catch (err) {
       // Non-critical - dashboard still usable
     }
@@ -47,16 +64,20 @@ export default function HomeScreen({ navigation }) {
   async function startTodayTest() {
     setLoadingTest(true);
     try {
-      const res = await api.get("/tests/today");
-      navigation.navigate("TestTaking", { testId: res.data.test._id });
+      let test = todayTest;
+      if (!test?._id) {
+        const res = await api.get("/tests/today");
+        test = res.data.test;
+      }
+      navigation.navigate("TestTaking", { testId: test._id });
     } catch (err) {
       if (err.response?.data?.code === "SUBSCRIPTION_REQUIRED") {
-        Alert.alert("Free Trial Khatam", err.response.data.message, [
-          { text: "Baad mein", style: "cancel" },
-          { text: "Upgrade Karo", onPress: () => navigation.navigate("Subscription") },
+        Alert.alert("Free Trial Ended", err.response.data.message, [
+          { text: "Maybe Later", style: "cancel" },
+          { text: "Upgrade Now", onPress: () => navigation.navigate("Subscription") },
         ]);
       } else {
-        Alert.alert("Error", err.response?.data?.message || "Test load nahi ho paya");
+        Alert.alert("Error", err.response?.data?.message || "Unable to load the test right now");
       }
     } finally {
       setLoadingTest(false);
@@ -77,11 +98,14 @@ export default function HomeScreen({ navigation }) {
     <ScrollView
       style={styles.container}
       contentContainerStyle={{ paddingBottom: spacing.xl }}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
+      }
     >
-      {/* ---- Header: avatar left, notification-free clean bar ---- */}
+      {/* ---- Header: avatar left, clean bar ---- */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerLeft} onPress={() => navigation.navigate("Profile")}>
+        <TouchableOpacity style={styles.headerLeft} onPress={() => navigation.navigate("Profile")} activeOpacity={0.7}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{user?.name?.charAt(0)?.toUpperCase() || "?"}</Text>
           </View>
@@ -93,45 +117,114 @@ export default function HomeScreen({ navigation }) {
 
         <View style={styles.streakPill}>
           <Ionicons name="flame" size={14} color="#EA580C" />
-          <Text style={styles.streakText}>{user?.streakCount || 0} din</Text>
+          <Text style={styles.streakText}>{user?.streakCount || 0} days</Text>
         </View>
       </View>
 
-      {/* ---- Hero: the ONE action we want them to take ---- */}
-      <TouchableOpacity style={styles.heroCard} onPress={startTodayTest} disabled={loadingTest} activeOpacity={0.9}>
-        {loadingTest ? (
-          <ActivityIndicator color="#fff" size="large" />
-        ) : (
-          <>
-            <View style={styles.heroBadge}>
-              <Text style={styles.heroBadgeText}>AAJ KA TEST</Text>
+      {/* ---- Hero: Today's Test — the ONE action we want them to take ---- */}
+      <TouchableOpacity onPress={startTodayTest} disabled={loadingTest} activeOpacity={0.92}>
+        <View style={styles.heroCard}>
+          {/* Decorative layered blobs for depth */}
+          <View style={styles.heroBlobLarge} />
+          <View style={styles.heroBlobSmall} />
+
+          {/* Glossy sheen overlay */}
+          <LinearGradient
+            colors={["rgba(255,255,255,0.22)", "rgba(255,255,255,0)"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0.9, y: 0.9 }}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+
+          {/* Watermark icon */}
+          <Ionicons
+            name="book"
+            size={130}
+            color="rgba(255,255,255,0.10)"
+            style={styles.heroWatermark}
+          />
+
+          {loadingTest ? (
+            <View style={styles.heroLoading}>
+              <ActivityIndicator color="#fff" size="large" />
+              <Text style={styles.heroLoadingText}>Preparing your test…</Text>
             </View>
-            <Text style={styles.heroTitle}>Roz ka practice,{"\n"}roz ka sudhaar</Text>
-            <Text style={styles.heroSub}>Aapke weak topics ke hisaab se banaya gaya</Text>
-            <View style={styles.heroButton}>
-              <Text style={styles.heroButtonText}>Shuru Karo</Text>
-              <Ionicons name="arrow-forward" size={16} color={colors.brand} />
-            </View>
-          </>
-        )}
+          ) : (
+            <>
+              <View style={styles.heroTopRow}>
+                <View style={styles.heroBadge}>
+                  <Ionicons name="flash" size={12} color="#fff" />
+                  <Text style={styles.heroBadgeText}>TODAY'S TEST</Text>
+                </View>
+                {user?.streakCount > 0 && (
+                  <View style={styles.heroStreakChip}>
+                    <Ionicons name="flame" size={12} color="#fff" />
+                    <Text style={styles.heroStreakText}>{user.streakCount}</Text>
+                  </View>
+                )}
+              </View>
+
+              <Text style={styles.heroTitle} numberOfLines={2}>
+                {todayTest?.title || "Daily practice,\ndaily progress"}
+              </Text>
+              <Text style={styles.heroSub} numberOfLines={1}>
+                {todayTest
+                  ? "Personalized for your weak topics"
+                  : "Your custom test will be ready in a moment"}
+              </Text>
+
+              {/* Meta chips — only show what's actually available */}
+              {(todayTest?.questionCount || todayTest?.duration) && (
+                <View style={styles.heroMetaRow}>
+                  {!!todayTest?.questionCount && (
+                    <View style={styles.heroMetaChip}>
+                      <Ionicons name="help-circle-outline" size={13} color="#fff" />
+                      <Text style={styles.heroMetaText}>{todayTest.questionCount} Qs</Text>
+                    </View>
+                  )}
+                  {!!todayTest?.duration && (
+                    <View style={styles.heroMetaChip}>
+                      <Ionicons name="time-outline" size={13} color="#fff" />
+                      <Text style={styles.heroMetaText}>{todayTest.duration} min</Text>
+                    </View>
+                  )}
+                </View>
+              )}
+
+              <View style={styles.heroButton}>
+                <Text style={styles.heroButtonText}>Start Now</Text>
+                <View style={styles.heroButtonIcon}>
+                  <Ionicons name="arrow-forward" size={14} color="#fff" />
+                </View>
+              </View>
+            </>
+          )}
+        </View>
       </TouchableOpacity>
 
       {/* ---- Stats row ---- */}
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
-          <Ionicons name="checkmark-done" size={18} color={colors.brand} />
+          <View style={[styles.statIconWrap, { backgroundColor: colors.brandLight }]}>
+            <Ionicons name="checkmark-done" size={16} color={colors.brand} />
+          </View>
           <Text style={styles.statValue}>{stats?.totalTests ?? "—"}</Text>
-          <Text style={styles.statLabel}>Tests Diye</Text>
+          <Text style={styles.statLabel}>Tests Taken</Text>
         </View>
         <View style={styles.statCard}>
-          <Ionicons name="trending-up" size={18} color={colors.success} />
+          <View style={[styles.statIconWrap, { backgroundColor: "#DCFCE7" }]}>
+            <Ionicons name="trending-up" size={16} color={colors.success} />
+          </View>
           <Text style={styles.statValue}>{stats ? `${stats.avgAccuracy}%` : "—"}</Text>
           <Text style={styles.statLabel}>Average Score</Text>
         </View>
         <View style={styles.statCard}>
-          <Ionicons name="flame" size={18} color="#EA580C" />
+          <View style={[styles.statIconWrap, { backgroundColor: "#FFEDD5" }]}>
+            <Ionicons name="flame" size={16} color="#EA580C" />
+          </View>
           <Text style={styles.statValue}>{user?.streakCount || 0}</Text>
-          <Text style={styles.statLabel}>Din Streak</Text>
+          <Text style={styles.statLabel}>Day Streak</Text>
         </View>
       </View>
 
@@ -143,8 +236,12 @@ export default function HomeScreen({ navigation }) {
           activeOpacity={0.9}
         >
           <View style={styles.liveTop}>
-            <View style={styles.liveDot} />
+            <View style={styles.liveDotOuter}>
+              <View style={styles.liveDot} />
+            </View>
             <Text style={styles.liveLabel}>LIVE EXAM</Text>
+            <View style={{ flex: 1 }} />
+            <Ionicons name="chevron-forward" size={16} color={colors.slate} />
           </View>
           <Text style={styles.liveTitle} numberOfLines={1}>
             {upcomingLive.title}
@@ -165,13 +262,13 @@ export default function HomeScreen({ navigation }) {
 
       {/* ---- Upgrade banner (only for free users) ---- */}
       {!isPremium && (
-        <TouchableOpacity style={styles.upgradeCard} onPress={() => navigation.navigate("Subscription")}>
+        <TouchableOpacity style={styles.upgradeCard} onPress={() => navigation.navigate("Subscription")} activeOpacity={0.9}>
           <View style={styles.upgradeIcon}>
             <Ionicons name="star" size={18} color="#B45309" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.upgradeTitle}>Premium se sab unlock karo</Text>
-            <Text style={styles.upgradeSub}>Unlimited mocks & practice · ₹149 se</Text>
+            <Text style={styles.upgradeTitle}>Unlock everything with Premium</Text>
+            <Text style={styles.upgradeSub}>Unlimited mocks & practice · starting ₹149</Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color="#B45309" />
         </TouchableOpacity>
@@ -180,12 +277,14 @@ export default function HomeScreen({ navigation }) {
       {/* ---- Quick access ---- */}
       <Text style={styles.sectionTitle}>Quick Access</Text>
       <View style={styles.grid}>
-        <QuickCard icon="stats-chart" label="My Analysis" onPress={() => navigation.navigate("Analysis")} />
-        <QuickCard icon="time" label="History" onPress={() => navigation.navigate("HistoryTab")} />
-        <QuickCard icon="gift" label="Refer & Earn" onPress={() => navigation.navigate("Referral")} />
+        <QuickCard icon="stats-chart" label="My Analysis" tint="#EEF2FF" iconColor="#4338CA" onPress={() => navigation.navigate("Analysis")} />
+        <QuickCard icon="time" label="History" tint="#F0FDFA" iconColor="#0F766E" onPress={() => navigation.navigate("HistoryTab")} />
+        <QuickCard icon="gift" label="Refer & Earn" tint="#FDF2F8" iconColor="#BE185D" onPress={() => navigation.navigate("Referral")} />
         <QuickCard
           icon={isPremium ? "shield-checkmark" : "star"}
           label={isPremium ? "Premium" : "Upgrade"}
+          tint="#FFFBEB"
+          iconColor="#B45309"
           onPress={() => navigation.navigate("Subscription")}
         />
       </View>
@@ -193,16 +292,36 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
-function QuickCard({ icon, label, onPress }) {
+function QuickCard({ icon, label, onPress, tint, iconColor }) {
   return (
     <TouchableOpacity style={styles.quickCard} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.quickIconWrap}>
-        <Ionicons name={icon} size={20} color={colors.brand} />
+      <View style={[styles.quickIconWrap, tint ? { backgroundColor: tint } : null]}>
+        <Ionicons name={icon} size={20} color={iconColor || colors.brand} />
       </View>
       <Text style={styles.quickLabel}>{label}</Text>
     </TouchableOpacity>
   );
 }
+
+const cardShadow = Platform.select({
+  ios: {
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+  },
+  android: { elevation: 2 },
+});
+
+const heroShadow = Platform.select({
+  ios: {
+    shadowColor: colors.brand,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 24,
+  },
+  android: { elevation: 7 },
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.slateLight, paddingHorizontal: spacing.lg },
@@ -217,12 +336,13 @@ const styles = StyleSheet.create({
   },
   headerLeft: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: colors.brand,
     alignItems: "center",
     justifyContent: "center",
+    ...cardShadow,
   },
   avatarText: { color: "#fff", fontSize: 18, fontWeight: "800" },
   greetingSmall: { fontSize: 12, color: colors.slate },
@@ -232,43 +352,114 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
     backgroundColor: "#FFF7ED",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: "#FED7AA",
   },
   streakText: { fontSize: 12, fontWeight: "700", color: "#EA580C" },
 
-  // Hero
+  // Hero — "Today's Test"
   heroCard: {
     backgroundColor: colors.brand,
-    borderRadius: radius.xl,
+    borderRadius: 28,
     padding: spacing.lg,
     marginBottom: spacing.md,
-    minHeight: 170,
+    minHeight: 200,
     justifyContent: "center",
+    overflow: "hidden",
+    position: "relative",
+    ...heroShadow,
   },
-  heroBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: radius.full,
+  heroBlobLarge: {
+    position: "absolute",
+    top: -70,
+    right: -50,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+  heroBlobSmall: {
+    position: "absolute",
+    bottom: -55,
+    left: -35,
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: "rgba(255,255,255,0.07)",
+  },
+  heroWatermark: {
+    position: "absolute",
+    right: -10,
+    bottom: -18,
+    transform: [{ rotate: "-12deg" }],
+  },
+  heroLoading: { alignItems: "center", justifyContent: "center", paddingVertical: spacing.md },
+  heroLoadingText: { color: "rgba(255,255,255,0.9)", fontSize: 13, marginTop: spacing.sm, fontWeight: "600" },
+  heroTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: spacing.sm,
   },
+  heroBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(255,255,255,0.22)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.full,
+  },
   heroBadgeText: { color: "#fff", fontSize: 10, fontWeight: "800", letterSpacing: 0.6 },
+  heroStreakChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: radius.full,
+  },
+  heroStreakText: { color: "#fff", fontSize: 11, fontWeight: "800" },
   heroTitle: { color: "#fff", fontSize: 22, fontWeight: "800", lineHeight: 29 },
-  heroSub: { color: "rgba(255,255,255,0.85)", fontSize: 13, marginTop: 6, marginBottom: spacing.md },
+  heroSub: { color: "rgba(255,255,255,0.85)", fontSize: 13, marginTop: 6 },
+  heroMetaRow: { flexDirection: "row", gap: 8, marginTop: spacing.sm },
+  heroMetaChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: radius.full,
+  },
+  heroMetaText: { color: "#fff", fontSize: 11, fontWeight: "700" },
   heroButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    justifyContent: "space-between",
     alignSelf: "flex-start",
     backgroundColor: "#fff",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
+    paddingLeft: 18,
+    paddingRight: 6,
+    paddingVertical: 6,
     borderRadius: radius.full,
+    marginTop: spacing.md,
+    gap: 10,
   },
-  heroButtonText: { color: colors.brand, fontSize: 14, fontWeight: "700" },
+  heroButtonText: { color: colors.brand, fontSize: 14, fontWeight: "800" },
+  heroButtonIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.brand,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
   // Stats
   statsRow: { flexDirection: "row", gap: spacing.sm, marginBottom: spacing.md },
@@ -280,8 +471,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: colors.border,
+    ...cardShadow,
   },
-  statValue: { fontSize: 18, fontWeight: "800", color: colors.ink, marginTop: 6 },
+  statIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 6,
+  },
+  statValue: { fontSize: 18, fontWeight: "800", color: colors.ink },
   statLabel: { fontSize: 10, color: colors.slate, marginTop: 2 },
 
   // Live
@@ -294,8 +494,17 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderLeftWidth: 3,
     borderLeftColor: colors.danger,
+    ...cardShadow,
   },
   liveTop: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 },
+  liveDotOuter: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: "rgba(220,38,38,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.danger },
   liveLabel: { fontSize: 10, fontWeight: "800", color: colors.danger, letterSpacing: 0.5 },
   liveTitle: { fontSize: 15, fontWeight: "700", color: colors.ink },
@@ -313,10 +522,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: "#FDE68A",
+    ...cardShadow,
   },
   upgradeIcon: {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     borderRadius: radius.md,
     backgroundColor: "#FEF3C7",
     alignItems: "center",
@@ -335,6 +545,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    ...cardShadow,
   },
   quickIconWrap: {
     width: 40,
