@@ -1,9 +1,7 @@
 import axios from "axios";
 
-// Set VITE_API_URL in a .env file at the admin-panel root, e.g.:
-// VITE_API_URL=http://localhost:5000/api   (local dev)
-// VITE_API_URL=https://your-app.onrender.com/api   (production)
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+const API_URL = import.meta.env.VITE_API_URL || "https://mocktest-6gci.onrender.com/api";
 
 const api = axios.create({ baseURL: API_URL });
 
