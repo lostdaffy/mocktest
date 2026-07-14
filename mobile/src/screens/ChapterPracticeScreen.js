@@ -1,23 +1,28 @@
 import { useCallback, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, SectionList, ActivityIndicator, Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
-import { colors, spacing, radius } from "../theme/theme";
+import { colors, spacing, radius, type, card } from "../theme/theme";
 
-// Each level gets a distinct colour so the ladder is obvious at a glance.
-const LEVEL_META = {
-  easy: { label: "Easy", tint: colors.success, bg: colors.successLight },
-  medium: { label: "Medium", tint: "#0284C7", bg: "#E0F2FE" },
-  hard: { label: "Hard", tint: "#EA580C", bg: "#FFF7ED" },
-  advanced: { label: "Advanced", tint: "#7C3AED", bg: "#F3E8FF" },
-};
+// Order matters - this is the ladder, and it drives the lock logic below.
+const LEVELS = [
+  { key: "easy", label: "Easy", tint: colors.easy, bg: colors.easyBg },
+  { key: "medium", label: "Medium", tint: colors.medium, bg: colors.mediumBg },
+  { key: "hard", label: "Hard", tint: colors.hard, bg: colors.hardBg },
+  { key: "advanced", label: "Advanced", tint: colors.advanced, bg: colors.advancedBg },
+];
 
 export default function ChapterPracticeScreen({ route, navigation }) {
-  const { subject, chapter } = route.params;
+  const { subject, chapter, currentLevel, isCompleted } = route.params;
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(null);
+
+  const currentLevelIdx = Math.max(
+    0,
+    LEVELS.findIndex((l) => l.key === currentLevel)
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,28 +45,19 @@ export default function ChapterPracticeScreen({ route, navigation }) {
   );
 
   async function startTest(test) {
-    if (!test.isFree) {
-      setStarting(test._id);
-      try {
-        const res = await api.get(`/tests/${test._id}`);
-        navigation.navigate("TestTaking", { testId: res.data.test._id });
-      } catch (err) {
-        Alert.alert("Premium Test", "Ye practice test premium hai. Har chapter ke pehle 2 test free hain.", [
-          { text: "Baad mein", style: "cancel" },
-          { text: "Upgrade Karo", onPress: () => navigation.navigate("Subscription") },
-        ]);
-      } finally {
-        setStarting(null);
-      }
-      return;
-    }
-
     setStarting(test._id);
     try {
       const res = await api.get(`/tests/${test._id}`);
       navigation.navigate("TestTaking", { testId: res.data.test._id });
     } catch (err) {
-      Alert.alert("Error", "Test load nahi hua");
+      if (err.response?.data?.code === "SUBSCRIPTION_REQUIRED" || !test.isFree) {
+        Alert.alert("Premium test", "Upgrade to unlock every practice test in this chapter.", [
+          { text: "Later", style: "cancel" },
+          { text: "Upgrade", onPress: () => navigation.navigate("Subscription") },
+        ]);
+      } else {
+        Alert.alert("Something went wrong", "Couldn't load the test");
+      }
     } finally {
       setStarting(null);
     }
@@ -75,74 +71,113 @@ export default function ChapterPracticeScreen({ route, navigation }) {
     );
   }
 
+  // Group the flat, difficulty-sorted list from the backend into one
+  // section per level - this is what stops Easy/Medium/Hard/Advanced from
+  // reading as one mixed list.
+  const sections = LEVELS.map((lvl, idx) => ({
+    level: lvl,
+    idx,
+    locked: !isCompleted && idx > currentLevelIdx,
+    data: tests.filter((t) => t.difficultyLevel === lvl.key),
+  })).filter((s) => s.data.length > 0 || s.idx <= currentLevelIdx || isCompleted);
+
   return (
-    <FlatList
+    <SectionList
       style={styles.container}
-      data={tests}
+      sections={sections}
       keyExtractor={(item) => item._id}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xl }}
+      stickySectionHeadersEnabled={false}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}
       ListHeaderComponent={
         <View style={styles.header}>
           <Text style={styles.chapterName}>{chapter}</Text>
           <Text style={styles.subjectName}>{subject}</Text>
-          <View style={styles.ladderHint}>
-            <Ionicons name="trending-up" size={14} color={colors.brand} />
-            <Text style={styles.ladderText}>Easy se shuru karo, phir upar badho</Text>
-          </View>
         </View>
       }
       ListEmptyComponent={
         <View style={styles.empty}>
-          <Ionicons name="book-outline" size={40} color={colors.slate} />
-          <Text style={styles.emptyTitle}>Abhi koi practice test nahi</Text>
-          <Text style={styles.emptyText}>Is chapter ke tests jald aayenge</Text>
+          <View style={styles.emptyIcon}>
+            <Ionicons name="book-outline" size={26} color={colors.slateSoft} />
+          </View>
+          <Text style={styles.emptyTitle}>No practice tests yet</Text>
+          <Text style={styles.emptyText}>Tests for this chapter are coming soon</Text>
         </View>
       }
-      renderItem={({ item }) => {
-        const meta = LEVEL_META[item.difficultyLevel] || LEVEL_META.easy;
-        const locked = !item.isFree;
+      renderSectionHeader={({ section }) => (
+        <View style={styles.sectionHeader}>
+          <View style={[styles.sectionDot, { backgroundColor: section.level.tint }]} />
+          <Text style={styles.sectionTitle}>{section.level.label}</Text>
+          {section.locked ? (
+            <View style={styles.lockedTag}>
+              <Ionicons name="lock-closed" size={10} color={colors.slateSoft} />
+              <Text style={styles.lockedTagText}>Complete {LEVELS[section.idx - 1]?.label} first</Text>
+            </View>
+          ) : section.data.length === 0 ? (
+            <Text style={styles.comingSoonText}>Coming soon</Text>
+          ) : null}
+        </View>
+      )}
+      renderItem={({ item, section }) => {
+        const premiumLocked = !item.isFree;
+        const levelLocked = section.locked;
         const isStarting = starting === item._id;
 
         return (
           <TouchableOpacity
-            style={styles.testCard}
-            activeOpacity={0.7}
-            onPress={() => startTest(item)}
+            style={[styles.testCard, levelLocked && styles.testCardLocked]}
+            activeOpacity={0.75}
+            onPress={() => {
+              if (levelLocked) {
+                Alert.alert(
+                  "Level locked",
+                  `Clear a test in ${LEVELS[section.idx - 1]?.label} to unlock ${section.level.label}.`
+                );
+                return;
+              }
+              startTest(item);
+            }}
             disabled={isStarting}
           >
-            <View style={[styles.levelBar, { backgroundColor: meta.tint }]} />
+            <View style={[styles.levelBar, { backgroundColor: levelLocked ? colors.border : section.level.tint }]} />
 
-            <View style={{ flex: 1, paddingLeft: spacing.md }}>
+            <View style={styles.testBody}>
               <View style={styles.topRow}>
-                <View style={[styles.levelTag, { backgroundColor: meta.bg }]}>
-                  <Text style={[styles.levelTagText, { color: meta.tint }]}>{meta.label}</Text>
-                </View>
-                <View style={[styles.tag, locked ? styles.tagPremium : styles.tagFree]}>
-                  <Ionicons
-                    name={locked ? "lock-closed" : "checkmark-circle"}
-                    size={10}
-                    color={locked ? "#B45309" : colors.success}
-                  />
-                  <Text style={[styles.tagText, { color: locked ? "#B45309" : colors.success }]}>
-                    {locked ? "Premium" : "Free"}
-                  </Text>
-                </View>
+                {premiumLocked && !levelLocked ? (
+                  <View style={styles.tag}>
+                    <Ionicons name="lock-closed" size={9} color={colors.warn} />
+                    <Text style={[styles.tagText, { color: colors.warn }]}>Premium</Text>
+                  </View>
+                ) : !levelLocked ? (
+                  <View style={styles.tag}>
+                    <Ionicons name="checkmark-circle" size={9} color={colors.success} />
+                    <Text style={[styles.tagText, { color: colors.success }]}>Free</Text>
+                  </View>
+                ) : null}
               </View>
 
-              <Text style={styles.testTitle} numberOfLines={1}>
+              <Text style={[styles.testTitle, levelLocked && styles.testTitleLocked]} numberOfLines={1}>
                 {item.title}
               </Text>
 
               <View style={styles.metaRow}>
-                <Ionicons name="time-outline" size={12} color={colors.slate} />
+                <Ionicons name="time-outline" size={12} color={colors.slateSoft} />
                 <Text style={styles.metaText}>{item.durationMinutes} min</Text>
+                {item.questions?.length ? (
+                  <>
+                    <View style={styles.dot} />
+                    <Text style={styles.metaText}>{item.questions.length} questions</Text>
+                  </>
+                ) : null}
               </View>
             </View>
 
             {isStarting ? (
-              <ActivityIndicator size="small" color={colors.brand} />
+              <ActivityIndicator size="small" color={colors.brand} style={{ marginRight: spacing.md }} />
             ) : (
-              <Ionicons name="play-circle" size={28} color={colors.brand} />
+              <View style={[styles.playWrap, levelLocked && styles.playWrapLocked]}>
+                <Ionicons name={levelLocked ? "lock-closed" : "play"} size={13} color={levelLocked ? colors.slateSoft : colors.brand} />
+              </View>
             )}
           </TouchableOpacity>
         );
@@ -152,53 +187,55 @@ export default function ChapterPracticeScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.slateLight },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.slateLight },
+  container: { flex: 1, backgroundColor: colors.bg },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
 
-  header: { marginTop: 8, marginBottom: spacing.lg },
-  chapterName: { fontSize: 21, fontWeight: "800", color: colors.ink },
-  subjectName: { fontSize: 13, color: colors.slate, marginTop: 2 },
-  ladderHint: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: colors.brandLight,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radius.md,
-    marginTop: spacing.md,
-    alignSelf: "flex-start",
-  },
-  ladderText: { fontSize: 12, color: colors.brand, fontWeight: "600" },
+  header: { marginTop: 6, marginBottom: spacing.md },
+  chapterName: { ...type.h1, color: colors.ink },
+  subjectName: { ...type.small, color: colors.slate, marginTop: 3 },
 
-  testCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    paddingLeft: 0,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: "hidden",
-  },
+  sectionHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: spacing.md, marginBottom: 10 },
+  sectionDot: { width: 8, height: 8, borderRadius: 4 },
+  sectionTitle: { ...type.h3, color: colors.ink },
+  lockedTag: { flexDirection: "row", alignItems: "center", gap: 4, marginLeft: "auto" },
+  lockedTagText: { ...type.tiny, color: colors.slateSoft, fontWeight: "500" },
+  comingSoonText: { ...type.tiny, color: colors.slateSoft, fontWeight: "500", marginLeft: "auto", fontStyle: "italic" },
+
+  testCard: { ...card, flexDirection: "row", alignItems: "center", marginBottom: 10, overflow: "hidden" },
+  testCardLocked: { opacity: 0.6 },
   levelBar: { width: 4, alignSelf: "stretch" },
+  testBody: { flex: 1, padding: spacing.md },
 
-  topRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 5 },
-  levelTag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full },
-  levelTagText: { fontSize: 10, fontWeight: "800" },
-
-  tag: { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 7, paddingVertical: 3, borderRadius: radius.full },
-  tagFree: { backgroundColor: colors.successLight },
-  tagPremium: { backgroundColor: "#FFFBEB" },
+  topRow: { flexDirection: "row", alignItems: "center", marginBottom: 6, minHeight: 16 },
+  tag: { flexDirection: "row", alignItems: "center", gap: 3 },
   tagText: { fontSize: 10, fontWeight: "700" },
 
-  testTitle: { fontSize: 14, fontWeight: "700", color: colors.ink },
-  metaRow: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 4 },
-  metaText: { fontSize: 11, color: colors.slate },
+  testTitle: { ...type.bodyStrong, color: colors.ink },
+  testTitleLocked: { color: colors.slateSoft },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 5 },
+  metaText: { ...type.tiny, color: colors.slateSoft, fontWeight: "500" },
+  dot: { width: 3, height: 3, borderRadius: 2, backgroundColor: colors.border, marginHorizontal: 3 },
 
-  empty: { alignItems: "center", paddingVertical: 60, gap: spacing.sm },
-  emptyTitle: { fontSize: 15, fontWeight: "700", color: colors.ink },
-  emptyText: { fontSize: 13, color: colors.slate },
+  playWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.brandLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: spacing.md,
+  },
+  playWrapLocked: { backgroundColor: colors.slateLight },
+
+  empty: { alignItems: "center", paddingVertical: 70, gap: 10 },
+  emptyIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.slateLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyTitle: { ...type.h3, color: colors.ink },
+  emptyText: { ...type.small, color: colors.slate },
 });

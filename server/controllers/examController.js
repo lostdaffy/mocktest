@@ -1,7 +1,7 @@
 const ExamPattern = require("../models/ExamPattern");
 const Test = require("../models/Test");
 const Attempt = require("../models/Attempt");
-const { generateFullMock } = require("../services/testGenerator");
+
 
 // GET /api/exams -> list all configured exams
 async function listExamPatterns(req, res) {
@@ -23,19 +23,54 @@ async function upsertExamPattern(req, res) {
   res.json({ message: "Exam pattern saved", pattern });
 }
 
-// POST /api/exams/live/schedule (admin only) { examType, scheduledAt }
-// The paper itself is auto-assembled at creation time from the pattern -
-// admin only picks date/time, doesn't build the test.
+// POST /api/exams/live/schedule (admin only) { mockTestId, scheduledAt }
+//
+// A live exam is a COPY of an already-published, already-reviewed mock -
+// not a fresh Gemini/random-pool assembly. This matters for two reasons:
+// 1. Reliability - published mocks are guaranteed to meet the 100-question
+//    minimum and have passed the admin review workflow. A fresh random pull
+//    from the standalone question pool has no such guarantee and can come
+//    back thin or empty, which is why scheduling used to fail silently.
+// 2. Fairness - every student in a live exam must get the IDENTICAL paper
+//    for the leaderboard/ranking to mean anything.
 async function scheduleLiveExam(req, res) {
   try {
-    const { examType, scheduledAt } = req.body;
-    const test = await generateFullMock(examType);
+    const { mockTestId, scheduledAt } = req.body;
+    if (!mockTestId || !scheduledAt) {
+      return res.status(400).json({ message: "Pick a mock and a date/time" });
+    }
 
-    test.type = "live";
-    test.scheduledAt = new Date(scheduledAt);
-    test.liveStatus = "upcoming";
-    test.title = `Live Mock - ${test.title}`;
-    await test.save();
+    const source = await Test.findById(mockTestId);
+    if (!source) return res.status(404).json({ message: "Mock test not found" });
+    if (source.type !== "full_mock") {
+      return res.status(400).json({ message: "Only a full mock can be scheduled as a live exam" });
+    }
+    if (source.publishStatus !== "published") {
+      return res.status(400).json({ message: "This mock isn't published yet - publish it first" });
+    }
+    if (!source.liveExclusive) {
+      return res.status(400).json({
+        message:
+          "This mock is part of the regular Mock Tests series and students may already have taken it. Build a Live Exam Exclusive mock instead.",
+      });
+    }
+
+    // Clone, don't mutate - the original stays in its exam series untouched.
+    const test = await Test.create({
+      title: `Live Exam - ${source.title}`,
+      type: "live",
+      examType: source.examType,
+      examStage: source.examStage,
+      questions: source.questions,
+      durationMinutes: source.durationMinutes,
+      marksPerQuestion: source.marksPerQuestion,
+      negativeMarking: source.negativeMarking,
+      scheduledAt: new Date(scheduledAt),
+      liveStatus: "upcoming",
+      publishStatus: "published",
+      isFree: source.isFree,
+      createdBy: "admin",
+    });
 
     res.status(201).json({ message: "Live exam scheduled", test });
   } catch (err) {
@@ -45,7 +80,11 @@ async function scheduleLiveExam(req, res) {
 
 // GET /api/exams/live/upcoming
 async function listUpcomingLiveExams(req, res) {
-  const exams = await Test.find({ type: "live", scheduledAt: { $gte: new Date() } })
+  const exams = await Test.find({
+    type: "live",
+    publishStatus: "published",
+    scheduledAt: { $gte: new Date() },
+  })
     .sort({ scheduledAt: 1 })
     .select("-questions");
   res.json({ exams });

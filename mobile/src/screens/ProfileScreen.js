@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
-import { colors, spacing, radius } from "../theme/theme";
+import { colors, gradients, spacing, radius, type, shadow, card } from "../theme/theme";
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout, refreshUser } = useAuth();
@@ -17,9 +18,9 @@ export default function ProfileScreen({ navigation }) {
     try {
       await api.patch("/auth/profile", { email });
       await refreshUser();
-      Alert.alert("Saved", "Email save ho gaya");
+      Alert.alert("Saved", "Your email has been updated");
     } catch (err) {
-      Alert.alert("Error", err.response?.data?.message || "Email save nahi hua");
+      Alert.alert("Couldn't save", err.response?.data?.message || "Please try again");
     } finally {
       setSavingEmail(false);
     }
@@ -32,16 +33,16 @@ export default function ProfileScreen({ navigation }) {
       await api.patch("/auth/profile", { preferredLanguage: lang });
       await refreshUser();
     } catch (err) {
-      Alert.alert("Error", "Language update nahi ho paya");
+      Alert.alert("Couldn't update", "Please try again");
     } finally {
       setSavingLang(false);
     }
   }
 
   function confirmLogout() {
-    Alert.alert("Logout karein?", "", [
+    Alert.alert("Log out?", "You'll need to sign in again.", [
       { text: "Cancel", style: "cancel" },
-      { text: "Logout", style: "destructive", onPress: logout },
+      { text: "Log out", style: "destructive", onPress: logout },
     ]);
   }
 
@@ -49,74 +50,71 @@ export default function ProfileScreen({ navigation }) {
   const lang = user?.preferredLanguage || "en";
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xl }}>
-      {/* Profile header */}
-      <View style={styles.profileCard}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Header */}
+      <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.profileCard}>
+        <View style={styles.ring} />
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{user?.name?.charAt(0)?.toUpperCase() || "?"}</Text>
         </View>
         <Text style={styles.name}>{user?.name}</Text>
         <Text style={styles.phone}>{user?.phone}</Text>
 
-        <View style={[styles.planBadge, isActive ? styles.planBadgePremium : styles.planBadgeFree]}>
-          <Ionicons name={isActive ? "star" : "person"} size={12} color={isActive ? "#B45309" : colors.slate} />
-          <Text style={[styles.planBadgeText, { color: isActive ? "#B45309" : colors.slate }]}>
-            {isActive ? "Premium Member" : "Free Plan"}
-          </Text>
+        <View style={styles.planBadge}>
+          <Ionicons name={isActive ? "star" : "person"} size={11} color="#fff" />
+          <Text style={styles.planBadgeText}>{isActive ? "Premium Member" : "Free Plan"}</Text>
         </View>
-      </View>
+      </LinearGradient>
 
-      {/* Subscription */}
-      <TouchableOpacity style={styles.row} onPress={() => navigation.navigate("Subscription")} activeOpacity={0.7}>
-        <View style={[styles.rowIcon, { backgroundColor: "#FFFBEB" }]}>
-          <Ionicons name="star" size={17} color="#B45309" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.rowTitle}>Subscription</Text>
-          <Text style={styles.rowSub}>
-            {isActive
-              ? `Valid till ${
-                  user.subscriptionExpiresAt
-                    ? new Date(user.subscriptionExpiresAt).toLocaleDateString("en-IN")
-                    : ""
-                }`
-              : "Upgrade karke sab unlock karo"}
-          </Text>
-        </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.slate} />
-      </TouchableOpacity>
-
-      {/* Refer */}
-      <TouchableOpacity style={styles.row} onPress={() => navigation.navigate("Referral")} activeOpacity={0.7}>
-        <View style={[styles.rowIcon, { backgroundColor: colors.brandLight }]}>
-          <Ionicons name="gift" size={17} color={colors.brand} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.rowTitle}>Refer & Earn</Text>
-          <Text style={styles.rowSub}>Dost ko refer karke credit kamao</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.slate} />
-      </TouchableOpacity>
-
-      {/* History */}
-      <TouchableOpacity style={styles.row} onPress={() => navigation.navigate("HistoryTab")} activeOpacity={0.7}>
-        <View style={[styles.rowIcon, { backgroundColor: colors.slateLight }]}>
-          <Ionicons name="time" size={17} color={colors.slate} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.rowTitle}>Test History</Text>
-          <Text style={styles.rowSub}>Apne purane tests dekho</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.slate} />
-      </TouchableOpacity>
+      {/* Rows */}
+      <Row
+        icon="star"
+        tint={colors.warn}
+        bg={colors.warnLight}
+        title="Subscription"
+        sub={
+          isActive
+            ? `Valid till ${user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt).toLocaleDateString("en-IN") : "—"}`
+            : "Upgrade to unlock everything"
+        }
+        onPress={() => navigation.navigate("Subscription")}
+      />
+      <Row
+        icon="gift"
+        tint={colors.success}
+        bg={colors.successLight}
+        title="Refer & Earn"
+        sub="Earn credit for every friend who joins"
+        onPress={() => navigation.navigate("Referral")}
+      />
+      <Row
+        icon="time"
+        tint={colors.brand}
+        bg={colors.brandLight}
+        title="Test History"
+        sub="Review your past attempts"
+        onPress={() => navigation.navigate("HistoryTab")}
+      />
+      <Row
+        icon="stats-chart"
+        tint={colors.advanced}
+        bg={colors.advancedBg}
+        title="My Analysis"
+        sub="Topic-wise strengths and gaps"
+        onPress={() => navigation.navigate("Analysis")}
+      />
 
       {/* Language */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
+      <View style={styles.settingCard}>
+        <View style={styles.settingHeader}>
           <Ionicons name="language" size={16} color={colors.ink} />
-          <Text style={styles.cardTitle}>Language</Text>
+          <Text style={styles.settingTitle}>Question language</Text>
         </View>
-        <Text style={styles.cardHint}>Tests mein questions kis bhasha mein dikhein</Text>
+        <Text style={styles.settingHint}>Which language questions appear in during tests</Text>
         <View style={styles.langRow}>
           {[
             { code: "en", label: "English" },
@@ -129,7 +127,7 @@ export default function ProfileScreen({ navigation }) {
                 style={[styles.langChip, active && styles.langChipActive]}
                 onPress={() => changeLanguage(l.code)}
                 disabled={savingLang}
-                activeOpacity={0.7}
+                activeOpacity={0.75}
               >
                 <Text style={[styles.langChipText, active && styles.langChipTextActive]}>{l.label}</Text>
               </TouchableOpacity>
@@ -140,141 +138,149 @@ export default function ProfileScreen({ navigation }) {
       </View>
 
       {/* Email */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
+      <View style={styles.settingCard}>
+        <View style={styles.settingHeader}>
           <Ionicons name="mail" size={16} color={colors.ink} />
-          <Text style={styles.cardTitle}>Email</Text>
+          <Text style={styles.settingTitle}>Email</Text>
         </View>
-        <Text style={styles.cardHint}>Password bhoolne pe reset OTP isi pe aayega</Text>
+        <Text style={styles.settingHint}>Password-reset codes are sent here</Text>
         <View style={styles.emailRow}>
           <TextInput
             style={styles.emailInput}
             value={email}
             onChangeText={setEmail}
-            placeholder="aapka@email.com"
-            placeholderTextColor={colors.slate}
+            placeholder="you@example.com"
+            placeholderTextColor={colors.slateSoft}
             keyboardType="email-address"
             autoCapitalize="none"
           />
           <TouchableOpacity
-            style={styles.saveButton}
+            style={[styles.saveButton, (!email || email === user?.email) && styles.saveButtonDisabled]}
             onPress={saveEmail}
             disabled={savingEmail || !email || email === user?.email}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
             {savingEmail ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.saveButtonText}>Save</Text>}
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Logout */}
-      <TouchableOpacity style={styles.logoutButton} onPress={confirmLogout} activeOpacity={0.7}>
+      <TouchableOpacity style={styles.logoutButton} onPress={confirmLogout} activeOpacity={0.75}>
         <Ionicons name="log-out-outline" size={17} color={colors.danger} />
-        <Text style={styles.logoutText}>Logout</Text>
+        <Text style={styles.logoutText}>Log out</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
+function Row({ icon, tint, bg, title, sub, onPress }) {
+  return (
+    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.75}>
+      <View style={[styles.rowIcon, { backgroundColor: bg }]}>
+        <Ionicons name={icon} size={17} color={tint} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.rowTitle}>{title}</Text>
+        <Text style={styles.rowSub}>{sub}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={17} color={colors.slateSoft} />
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.slateLight },
+  container: { flex: 1, backgroundColor: colors.bg },
 
   profileCard: {
-    backgroundColor: "#fff",
-    borderRadius: radius.xl,
+    borderRadius: radius.xxl,
     padding: spacing.lg,
     alignItems: "center",
     marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    overflow: "hidden",
+    ...shadow.brand,
+  },
+  ring: {
+    position: "absolute",
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 26,
+    borderColor: "rgba(255,255,255,0.06)",
+    top: -80,
+    right: -60,
   },
   avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.brand,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderWidth: 3,
+    borderColor: "rgba(255,255,255,0.3)",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: spacing.sm,
+    marginBottom: 12,
   },
-  avatarText: { color: "#fff", fontSize: 28, fontWeight: "800" },
-  name: { fontSize: 19, fontWeight: "800", color: colors.ink },
-  phone: { fontSize: 13, color: colors.slate, marginTop: 2 },
+  avatarText: { color: "#fff", fontSize: 30, fontWeight: "800" },
+  name: { fontSize: 20, fontWeight: "800", color: "#fff", letterSpacing: -0.3 },
+  phone: { fontSize: 13, color: "rgba(255,255,255,0.8)", marginTop: 2 },
   planBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
+    backgroundColor: "rgba(255,255,255,0.2)",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: radius.full,
-    marginTop: spacing.sm,
+    marginTop: 12,
   },
-  planBadgePremium: { backgroundColor: "#FFFBEB" },
-  planBadgeFree: { backgroundColor: colors.slateLight },
-  planBadgeText: { fontSize: 12, fontWeight: "700" },
+  planBadgeText: { fontSize: 11, fontWeight: "700", color: "#fff" },
 
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    backgroundColor: "#fff",
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
+  row: { ...card, flexDirection: "row", alignItems: "center", gap: 11, padding: spacing.md, marginBottom: 10 },
   rowIcon: { width: 38, height: 38, borderRadius: radius.md, alignItems: "center", justifyContent: "center" },
-  rowTitle: { fontSize: 14, fontWeight: "700", color: colors.ink },
-  rowSub: { fontSize: 12, color: colors.slate, marginTop: 1 },
+  rowTitle: { ...type.bodyStrong, color: colors.ink },
+  rowSub: { ...type.tiny, color: colors.slateSoft, fontWeight: "500", marginTop: 1 },
 
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cardHeader: { flexDirection: "row", alignItems: "center", gap: 6 },
-  cardTitle: { fontSize: 14, fontWeight: "700", color: colors.ink },
-  cardHint: { fontSize: 12, color: colors.slate, marginTop: 3, marginBottom: spacing.sm },
+  settingCard: { ...card, padding: spacing.md, marginTop: 6, marginBottom: 10 },
+  settingHeader: { flexDirection: "row", alignItems: "center", gap: 7 },
+  settingTitle: { ...type.bodyStrong, color: colors.ink },
+  settingHint: { ...type.tiny, color: colors.slateSoft, fontWeight: "500", marginTop: 3, marginBottom: 11 },
 
-  langRow: { flexDirection: "row", gap: spacing.sm, alignItems: "center" },
+  langRow: { flexDirection: "row", gap: 8, alignItems: "center" },
   langChip: {
-    paddingHorizontal: 18,
-    paddingVertical: 9,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: radius.full,
-    backgroundColor: colors.slateLight,
-    borderWidth: 1,
+    backgroundColor: colors.bg,
+    borderWidth: 1.5,
     borderColor: colors.border,
   },
   langChipActive: { backgroundColor: colors.brand, borderColor: colors.brand },
-  langChipText: { fontSize: 13, fontWeight: "600", color: colors.slate },
+  langChipText: { ...type.small, fontWeight: "700", color: colors.slate },
   langChipTextActive: { color: "#fff" },
 
-  emailRow: { flexDirection: "row", gap: spacing.sm, alignItems: "center" },
+  emailRow: { flexDirection: "row", gap: 8, alignItems: "center" },
   emailInput: {
     flex: 1,
-    backgroundColor: colors.slateLight,
+    backgroundColor: colors.bg,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
-    height: 44,
+    height: 46,
     fontSize: 14,
     color: colors.ink,
-    borderWidth: 1,
+    fontWeight: "500",
+    borderWidth: 1.5,
     borderColor: colors.border,
   },
   saveButton: {
     backgroundColor: colors.brand,
-    paddingHorizontal: 20,
-    height: 44,
+    paddingHorizontal: 22,
+    height: 46,
     borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
   },
-  saveButtonText: { color: "#fff", fontSize: 13, fontWeight: "700" },
+  saveButtonDisabled: { backgroundColor: colors.slateSoft },
+  saveButtonText: { color: "#fff", ...type.small, fontWeight: "700" },
 
   logoutButton: {
     flexDirection: "row",
@@ -282,9 +288,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 7,
     backgroundColor: colors.dangerLight,
-    height: 50,
+    height: 52,
     borderRadius: radius.md,
     marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.dangerBorder,
   },
   logoutText: { color: colors.danger, fontSize: 15, fontWeight: "700" },
 });

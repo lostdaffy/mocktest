@@ -82,6 +82,8 @@ async function generateFullMock(examType) {
     examType,
     questions: allQuestions.map((q) => q._id),
     durationMinutes: pattern.durationMinutes,
+    marksPerQuestion: pattern.marksPerQuestion,
+    negativeMarking: pattern.negativeMarking,
     createdBy: "system_auto",
   });
 
@@ -119,16 +121,44 @@ async function generateTopicTest({ examType, subject, topic, count = 15 }) {
  * Mix: weak topics (from user.topicStats where accuracy < 60) + one
  * high-weightage topic, so practice is always relevant, not random.
  */
+// Returns the start of "today" in IST, since that's the audience's timezone -
+// a test generated at 11:58 PM and one at 12:02 AM should count as different days.
+function startOfTodayIST() {
+  const now = new Date();
+  const istOffsetMs = 5.5 * 60 * 60 * 1000;
+  const istNow = new Date(now.getTime() + istOffsetMs);
+  istNow.setUTCHours(0, 0, 0, 0);
+  return new Date(istNow.getTime() - istOffsetMs);
+}
+
+// This never calls Gemini - it only samples from the pre-existing published
+// question bank built by the admin's "Generate & Add" workflow. That pool is
+// what needs to stay healthy; this function just needs to be safe to call
+// from thousands of concurrent requests, which means:
+//   1. Idempotent per (user, day) - repeat calls return the SAME test instead
+//      of creating a new Test document every time (was silently bloating the
+//      DB by one document per open of the Home tab).
+//   2. A graceful fallback when a user's specific weak-topic pool is thin,
+//      instead of a hard error that fires for every affected user at once.
 async function generatePersonalizedDailyTest(userId) {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
 
+  const todayStart = startOfTodayIST();
+  const existing = await Test.findOne({
+    generatedForUser: userId,
+    type: "revision",
+    title: "Aaj Ka Test",
+    createdAt: { $gte: todayStart },
+  });
+  if (existing) return existing;
+
+  const examType = user.examGoals?.[0] || "SSC_CGL";
   const weakTopics = (user.topicStats || [])
     .filter((t) => t.accuracy < 60 && t.attempted >= 3)
     .sort((a, b) => a.accuracy - b.accuracy)
     .slice(0, 2);
 
-  const examType = user.examGoals?.[0] || "SSC_CGL";
   let questions = [];
 
   if (weakTopics.length > 0) {
@@ -139,17 +169,23 @@ async function generatePersonalizedDailyTest(userId) {
       ]);
       questions = questions.concat(qs);
     }
-  } else {
-    // New user / no weak-topic data yet -> give a balanced general practice set
-    questions = await Question.aggregate([
-      { $match: { examType, status: "published" } },
-      { $sample: { size: 20 } },
+  }
+
+  // Weak-topic pool came back thin (or the user has no weak-topic data yet) -
+  // top up with a general set instead of erroring. This is what keeps a
+  // sudden traffic spike from turning into a wall of failed requests.
+  if (questions.length < 15) {
+    const alreadyIds = questions.map((q) => q._id);
+    const filler = await Question.aggregate([
+      { $match: { examType, status: "published", _id: { $nin: alreadyIds } } },
+      { $sample: { size: 20 - questions.length } },
     ]);
+    questions = questions.concat(filler);
   }
 
   if (questions.length === 0) {
     throw new Error(
-      `Abhi ${examType} ke liye koi published question available nahi hai. Pehle backend mein "npm run generate:questions" chalao.`
+      `No published questions available for ${examType} yet. Ask the admin to publish some first.`
     );
   }
 

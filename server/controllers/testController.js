@@ -46,6 +46,7 @@ async function getExamSeries(req, res) {
     examStage,
     type: "full_mock",
     publishStatus: "published",
+    liveExclusive: { $ne: true }, // exclusive content only surfaces via a scheduled live exam
   })
     .sort({ seriesNumber: 1 })
     .select("-questions");
@@ -64,13 +65,9 @@ async function getPracticeSeries(req, res) {
     .sort({ difficultyLevel: 1, seriesNumber: 1 })
     .select("-questions");
 
-  // Free tier: first 2 practice tests per chapter are free, rest locked
-  const withAccess = tests.map((t, idx) => ({
-    ...t.toObject(),
-    isFreeTest: idx < 2, // first 2 free
-  }));
-
-  res.json({ tests: withAccess });
+  // isFree is the admin's own choice made at publish time (see
+  // publishPracticeTest) - it must not be recomputed here.
+  res.json({ tests });
 }
 
 // GET /api/tests/:id  -> full test with questions (without revealing correct answers)

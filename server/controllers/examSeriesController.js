@@ -32,9 +32,10 @@ async function listExams(req, res) {
 // GET /api/exam-series/:examStage/mocks?status= -> all mocks for one exam (draft/published/archived)
 async function listExamMocks(req, res) {
   const { examStage } = req.params;
-  const { status } = req.query;
+  const { status, liveExclusive } = req.query;
   const filter = { examStage, type: "full_mock" };
   if (status) filter.publishStatus = status;
+  if (liveExclusive !== undefined) filter.liveExclusive = liveExclusive === "true";
 
   const mocks = await Test.find(filter).sort({ seriesNumber: -1, createdAt: -1 }).lean();
   // Replace the heavy questions array with just its length for the list view
@@ -415,6 +416,7 @@ async function addQuestionsToMock(req, res) {
 async function createEmptyMock(req, res) {
   try {
     const { examStage } = req.params;
+    const { liveExclusive } = req.body;
     const pattern = await ExamPattern.findOne({ examType: examStage, isActive: true });
     if (!pattern) return res.status(404).json({ message: `${examStage} ka pattern nahi mila` });
 
@@ -422,7 +424,7 @@ async function createEmptyMock(req, res) {
     const nextNumber = (lastMock?.seriesNumber || 0) + 1;
 
     const test = await Test.create({
-      title: `${pattern.displayName} - Mock #${nextNumber}`,
+      title: `${pattern.displayName} - ${liveExclusive ? "Live Exam" : "Mock"} #${nextNumber}`,
       type: "full_mock",
       examType: examStage,
       examStage,
@@ -432,6 +434,7 @@ async function createEmptyMock(req, res) {
       marksPerQuestion: pattern.marksPerQuestion,
       negativeMarking: pattern.negativeMarking,
       publishStatus: "draft",
+      liveExclusive: !!liveExclusive,
       createdBy: "admin",
     });
 

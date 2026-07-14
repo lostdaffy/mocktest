@@ -15,6 +15,7 @@ export default function ExamMocks() {
   const [sections, setSections] = useState([]); // real sections of THIS exam
   const [addBusy, setAddBusy] = useState(false); // true while a batch is generating
   const [sectionStatus, setSectionStatus] = useState(null); // per-section progress for the open mock
+  const [createAsLive, setCreateAsLive] = useState(false); // new mock is Live-Exam Exclusive
 
   async function loadSectionStatus(testId) {
     try {
@@ -64,8 +65,9 @@ export default function ExamMocks() {
     setGenerating(true);
     setGenMessage("");
     try {
-      const res = await api.post(`/exam-series/${examStage}/create-empty-mock`);
+      const res = await api.post(`/exam-series/${examStage}/create-empty-mock`, { liveExclusive: createAsLive });
       setGenMessage(res.data.message);
+      setCreateAsLive(false);
       load();
     } catch (err) {
       setGenMessage("Error: " + (err.response?.data?.message || "fail"));
@@ -158,17 +160,34 @@ export default function ExamMocks() {
       </Link>
       <div className="flex items-center justify-between mt-2 mb-1">
         <h1 className="font-display text-2xl font-bold text-ink">{examStage} Mock Series</h1>
-        <button
-          onClick={createEmpty}
-          disabled={generating}
-          className="px-5 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium transition-colors disabled:opacity-60"
-        >
-          {generating ? "Ban raha hai..." : "+ Naya Mock Banao"}
-        </button>
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={createAsLive}
+              onChange={(e) => setCreateAsLive(e.target.checked)}
+              className="w-4 h-4 rounded border-slate-300 text-brand focus:ring-brand"
+            />
+            Live Exam Exclusive
+          </label>
+          <button
+            onClick={createEmpty}
+            disabled={generating}
+            className="px-5 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium transition-colors disabled:opacity-60"
+          >
+            {generating ? "Ban raha hai..." : "+ Naya Mock Banao"}
+          </button>
+        </div>
       </div>
       <p className="text-slate-500 mb-6">
         Naya mock banao, phir usme <b>"Add Questions"</b> se thoda-thoda karke questions add karo (12-12). 100 questions
         hone par publish kar sakte ho. Sirf is exam ka content — quality guaranteed.
+        {createAsLive && (
+          <span className="block mt-1 text-brand font-medium">
+            "Live Exam Exclusive" checked hai — ye mock Mock Tests tab mein students ko kabhi nahi dikhega, sirf Live
+            Exam schedule karne ke liye available hoga.
+          </span>
+        )}
       </p>
 
       {addBusy && (
@@ -192,7 +211,14 @@ export default function ExamMocks() {
               <div key={m._id} className="mb-3">
                 <div className="bg-white border border-slate-100 rounded-xl p-4 flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-ink">{m.title}</p>
+                    <p className="font-semibold text-ink flex items-center gap-2">
+                      {m.title}
+                      {m.liveExclusive && (
+                        <span className="text-[10px] font-bold bg-red-50 text-red-600 px-2 py-0.5 rounded-full">
+                          LIVE EXCLUSIVE
+                        </span>
+                      )}
+                    </p>
                     <p className={`text-xs mt-0.5 ${(m.questions?.length || 0) >= 100 ? "text-emerald-600" : "text-amber-600"}`}>
                       {m.questions?.length || 0} / 100 questions
                       {(m.questions?.length || 0) < 100 && " — publish ke liye aur chahiye"}
@@ -307,17 +333,30 @@ export default function ExamMocks() {
             {drafts.length === 0 && <Empty text="Koi draft nahi. Naya generate karo." />}
           </Section>
 
-          <Section title={`✅ Published / Live (${published.length})`} hint="Students ko ye dikh rahe hain">
-            {published.map((m) => (
-              <MockRow
-                key={m._id}
-                mock={m}
-                onReview={() => openReview(m._id)}
-                onArchive={() => archive(m._id)}
-                published
-              />
-            ))}
-            {published.length === 0 && <Empty text="Abhi koi mock live nahi." />}
+          <Section
+            title={`✅ Published — Mock Tests tab (${published.filter((m) => !m.liveExclusive).length})`}
+            hint="Students ko ye normal Mock Tests mein dikh rahe hain"
+          >
+            {published
+              .filter((m) => !m.liveExclusive)
+              .map((m) => (
+                <MockRow key={m._id} mock={m} onReview={() => openReview(m._id)} onArchive={() => archive(m._id)} published />
+              ))}
+            {published.filter((m) => !m.liveExclusive).length === 0 && <Empty text="Abhi koi mock live nahi." />}
+          </Section>
+
+          <Section
+            title={`🔴 Live Exam Exclusive pool (${published.filter((m) => m.liveExclusive).length})`}
+            hint="Students ko kahin nahi dikhte — sirf Live Exams page se schedule karne ke liye"
+          >
+            {published
+              .filter((m) => m.liveExclusive)
+              .map((m) => (
+                <MockRow key={m._id} mock={m} onReview={() => openReview(m._id)} onArchive={() => archive(m._id)} published />
+              ))}
+            {published.filter((m) => m.liveExclusive).length === 0 && (
+              <Empty text="Koi Live Exam Exclusive mock nahi bana abhi. Upar checkbox tick karke banao." />
+            )}
           </Section>
 
           {archived.length > 0 && (
@@ -365,7 +404,12 @@ function MockRow({ mock, onReview, onPublish, onArchive, onDelete, published }) 
   return (
     <div className="bg-white border border-slate-100 rounded-xl shadow-sm p-4 flex items-center justify-between">
       <div>
-        <p className="font-semibold text-ink">{mock.title}</p>
+        <p className="font-semibold text-ink flex items-center gap-2">
+          {mock.title}
+          {mock.liveExclusive && (
+            <span className="text-[10px] font-bold bg-red-50 text-red-600 px-2 py-0.5 rounded-full">LIVE EXCLUSIVE</span>
+          )}
+        </p>
         <p className="text-xs text-slate-400">
           {mock.durationMinutes} min · {mock.isFree ? "Free" : "Premium"}
         </p>

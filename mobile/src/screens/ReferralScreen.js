@@ -2,8 +2,9 @@ import { useCallback, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Share, Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
-import { colors, spacing, radius } from "../theme/theme";
+import { colors, gradients, spacing, radius, type, shadow, card } from "../theme/theme";
 
 export default function ReferralScreen({ navigation }) {
   const [info, setInfo] = useState(null);
@@ -31,7 +32,7 @@ export default function ReferralScreen({ navigation }) {
     try {
       await Share.share({ message: info.shareMessage });
     } catch (err) {
-      Alert.alert("Error", "Share nahi ho paya");
+      Alert.alert("Couldn't share", "Please try again");
     }
   }
 
@@ -44,81 +45,72 @@ export default function ReferralScreen({ navigation }) {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xl }}>
-      {/* Hero */}
-      <View style={styles.hero}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}
+      showsVerticalScrollIndicator={false}
+    >
+      <LinearGradient colors={gradients.success} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
+        <View style={styles.ring} />
         <View style={styles.heroIcon}>
-          <Ionicons name="gift" size={26} color="#fff" />
+          <Ionicons name="gift" size={24} color="#fff" />
         </View>
-        <Text style={styles.heroTitle}>Refer karo, discount kamao</Text>
+        <Text style={styles.heroTitle}>Refer friends, pay less</Text>
         <Text style={styles.heroSub}>
-          Dost aapke code se join karke plan le, aapko ₹30-₹50 credit milega — agli purchase pe discount
+          When a friend signs up with your code and buys a plan, you earn ₹30–₹50 credit
         </Text>
-      </View>
+      </LinearGradient>
 
-      {/* Stats */}
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
-          <Ionicons name="wallet" size={18} color={colors.success} />
+          <View style={[styles.statIcon, { backgroundColor: colors.successLight }]}>
+            <Ionicons name="wallet" size={15} color={colors.success} />
+          </View>
           <Text style={[styles.statValue, { color: colors.success }]}>₹{info.credits || 0}</Text>
-          <Text style={styles.statLabel}>Credit Balance</Text>
+          <Text style={styles.statLabel}>Credit balance</Text>
         </View>
         <View style={styles.statCard}>
-          <Ionicons name="people" size={18} color={colors.brand} />
+          <View style={[styles.statIcon, { backgroundColor: colors.brandLight }]}>
+            <Ionicons name="people" size={15} color={colors.brand} />
+          </View>
           <Text style={styles.statValue}>{info.referralCount || 0}</Text>
-          <Text style={styles.statLabel}>Successful Referrals</Text>
+          <Text style={styles.statLabel}>Referrals</Text>
         </View>
       </View>
 
-      {/* Code */}
       <View style={styles.codeCard}>
-        <Text style={styles.codeLabel}>AAPKA REFERRAL CODE</Text>
+        <Text style={styles.codeLabel}>YOUR REFERRAL CODE</Text>
         <Text style={styles.codeText}>{info.referralCode}</Text>
-        <TouchableOpacity style={styles.shareButton} onPress={shareCode} activeOpacity={0.85}>
-          <Ionicons name="share-social" size={17} color="#fff" />
-          <Text style={styles.shareButtonText}>Code Share Karo</Text>
+        <TouchableOpacity onPress={shareCode} activeOpacity={0.85} style={{ width: "100%" }}>
+          <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.shareButton}>
+            <Ionicons name="share-social" size={17} color="#fff" />
+            <Text style={styles.shareButtonText}>Share Code</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
 
-      {/* How it works */}
-      <Text style={styles.sectionTitle}>Kaise Kaam Karta Hai</Text>
+      <Text style={styles.sectionTitle}>How it works</Text>
       <View style={styles.stepsCard}>
-        <Step
-          num="1"
-          icon="share-social-outline"
-          title="Code share karo"
-          desc="Dost ko apna referral code bhejo (WhatsApp, Telegram — kahin bhi)"
-        />
+        <Step num="1" icon="share-social-outline" title="Share your code" desc="Send it to friends on WhatsApp, Telegram — anywhere" />
         <View style={styles.stepLine} />
-        <Step
-          num="2"
-          icon="person-add-outline"
-          title="Dost signup kare"
-          desc="Wo signup karte waqt aapka code daale"
-        />
+        <Step num="2" icon="person-add-outline" title="They sign up" desc="Your code goes in during their registration" />
         <View style={styles.stepLine} />
-        <Step
-          num="3"
-          icon="wallet-outline"
-          title="Aapko credit mile"
-          desc="Jab wo pehla plan kharide — ₹30 (quarterly) ya ₹50 (yearly) aapko"
-        />
+        <Step num="3" icon="wallet-outline" title="You earn credit" desc="₹30 (quarterly) or ₹50 (yearly) on their first purchase" />
       </View>
 
       {info.credits > 0 && (
-        <TouchableOpacity style={styles.useCreditCard} onPress={() => navigation.navigate("Subscription")} activeOpacity={0.7}>
-          <Ionicons name="pricetag" size={18} color={colors.success} />
+        <TouchableOpacity style={styles.useCreditCard} onPress={() => navigation.navigate("Subscription")} activeOpacity={0.75}>
+          <Ionicons name="pricetag" size={17} color={colors.success} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.useCreditTitle}>₹{info.credits} credit use karo</Text>
-            <Text style={styles.useCreditSub}>Checkout pe discount ban ke lagega</Text>
+            <Text style={styles.useCreditTitle}>Use your ₹{info.credits} credit</Text>
+            <Text style={styles.useCreditSub}>Applied automatically at checkout</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.success} />
+          <Ionicons name="chevron-forward" size={17} color={colors.success} />
         </TouchableOpacity>
       )}
 
       <Text style={styles.note}>
-        Credit max 50% tak discount de sakta hai. Referral tabhi count hoga jab aapka dost pehli baar paid plan
-        kharide.
+        Credit can cover up to 50% of a plan. It's earned when your friend makes their first paid purchase.
       </Text>
     </ScrollView>
   );
@@ -142,50 +134,41 @@ function Step({ num, icon, title, desc }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.slateLight },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.slateLight },
+  container: { flex: 1, backgroundColor: colors.bg },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
 
-  hero: {
-    backgroundColor: colors.brand,
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    alignItems: "center",
-    marginBottom: spacing.md,
+  hero: { borderRadius: radius.xxl, padding: spacing.lg, alignItems: "center", marginBottom: spacing.md, overflow: "hidden", ...shadow.md },
+  ring: {
+    position: "absolute",
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    borderWidth: 24,
+    borderColor: "rgba(255,255,255,0.08)",
+    top: -70,
+    right: -50,
   },
   heroIcon: {
-    width: 54,
-    height: 54,
+    width: 52,
+    height: 52,
     borderRadius: radius.lg,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: "rgba(255,255,255,0.22)",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: spacing.sm,
+    marginBottom: 12,
   },
-  heroTitle: { fontSize: 19, fontWeight: "800", color: "#fff", textAlign: "center" },
-  heroSub: {
-    fontSize: 13,
-    color: "rgba(255,255,255,0.85)",
-    textAlign: "center",
-    marginTop: 6,
-    lineHeight: 19,
-  },
+  heroTitle: { fontSize: 20, fontWeight: "800", color: "#fff", textAlign: "center", letterSpacing: -0.3 },
+  heroSub: { fontSize: 13, color: "rgba(255,255,255,0.88)", textAlign: "center", marginTop: 5, lineHeight: 19 },
 
-  statsRow: { flexDirection: "row", gap: spacing.sm, marginBottom: spacing.md },
-  statCard: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: radius.lg,
-    paddingVertical: spacing.md,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  statValue: { fontSize: 22, fontWeight: "800", color: colors.ink, marginTop: 5 },
-  statLabel: { fontSize: 11, color: colors.slate, marginTop: 2 },
+  statsRow: { flexDirection: "row", gap: 10, marginBottom: spacing.md },
+  statCard: { ...card, flex: 1, paddingVertical: spacing.md, alignItems: "center" },
+  statIcon: { width: 32, height: 32, borderRadius: radius.sm, alignItems: "center", justifyContent: "center" },
+  statValue: { fontSize: 22, fontWeight: "800", color: colors.ink, marginTop: 6 },
+  statLabel: { ...type.tiny, color: colors.slateSoft, fontWeight: "600", marginTop: 1 },
 
   codeCard: {
-    backgroundColor: "#fff",
-    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xxl,
     padding: spacing.lg,
     alignItems: "center",
     marginBottom: spacing.lg,
@@ -193,37 +176,22 @@ const styles = StyleSheet.create({
     borderColor: colors.brand,
     borderStyle: "dashed",
   },
-  codeLabel: { fontSize: 10, fontWeight: "800", color: colors.slate, letterSpacing: 1 },
-  codeText: {
-    fontSize: 30,
-    fontWeight: "800",
-    color: colors.brand,
-    letterSpacing: 3,
-    marginVertical: spacing.sm,
-  },
+  codeLabel: { ...type.micro, color: colors.slateSoft, letterSpacing: 1 },
+  codeText: { fontSize: 32, fontWeight: "800", color: colors.brand, letterSpacing: 4, marginVertical: 12 },
   shareButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 7,
-    backgroundColor: colors.brand,
-    height: 48,
+    gap: 8,
+    height: 50,
     borderRadius: radius.md,
-    width: "100%",
-    marginTop: spacing.sm,
+    ...shadow.brand,
   },
-  shareButtonText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  shareButtonText: { color: "#fff", fontSize: 15, fontWeight: "800" },
 
-  sectionTitle: { fontSize: 16, fontWeight: "800", color: colors.ink, marginBottom: spacing.sm },
-  stepsCard: {
-    backgroundColor: "#fff",
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.md,
-  },
-  step: { flexDirection: "row", gap: spacing.sm },
+  sectionTitle: { ...type.h3, color: colors.ink, marginBottom: 12 },
+  stepsCard: { ...card, padding: spacing.md, marginBottom: spacing.md },
+  step: { flexDirection: "row", gap: 10 },
   stepNum: {
     width: 26,
     height: 26,
@@ -234,23 +202,23 @@ const styles = StyleSheet.create({
   },
   stepNumText: { fontSize: 12, fontWeight: "800", color: colors.brand },
   stepTitleRow: { flexDirection: "row", alignItems: "center", gap: 5 },
-  stepTitle: { fontSize: 14, fontWeight: "700", color: colors.ink },
-  stepDesc: { fontSize: 12, color: colors.slate, marginTop: 2, lineHeight: 17 },
-  stepLine: { width: 1, height: 14, backgroundColor: colors.border, marginLeft: 13, marginVertical: 6 },
+  stepTitle: { ...type.bodyStrong, color: colors.ink },
+  stepDesc: { ...type.small, color: colors.slate, marginTop: 2, lineHeight: 18 },
+  stepLine: { width: 1.5, height: 16, backgroundColor: colors.border, marginLeft: 13, marginVertical: 7 },
 
   useCreditCard: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
+    gap: 10,
     backgroundColor: colors.successLight,
     borderRadius: radius.lg,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: "#A7F3D0",
+    borderColor: colors.successBorder,
     marginBottom: spacing.md,
   },
-  useCreditTitle: { fontSize: 14, fontWeight: "700", color: "#065F46" },
-  useCreditSub: { fontSize: 12, color: "#047857", marginTop: 1 },
+  useCreditTitle: { ...type.bodyStrong, color: "#065F46" },
+  useCreditSub: { ...type.tiny, color: "#047857", fontWeight: "500", marginTop: 1 },
 
-  note: { fontSize: 11, color: colors.slate, textAlign: "center", lineHeight: 16, paddingHorizontal: spacing.md },
+  note: { ...type.tiny, color: colors.slateSoft, textAlign: "center", lineHeight: 17, paddingHorizontal: spacing.md, fontWeight: "500" },
 });

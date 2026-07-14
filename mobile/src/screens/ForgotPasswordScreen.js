@@ -5,39 +5,41 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  ActivityIndicator,
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
-import { colors, spacing, radius } from "../theme/theme";
+import { colors, gradients, spacing, radius, type, shadow } from "../theme/theme";
 
 export default function ForgotPasswordScreen({ navigation }) {
-  const [step, setStep] = useState(1); // 1 = request OTP, 2 = enter OTP + new password
+  const [step, setStep] = useState(1); // 1 = request code, 2 = reset
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [focused, setFocused] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [info, setInfo] = useState("");
+  const [sentTo, setSentTo] = useState("");
 
   async function requestOtp() {
-    if (!phone || phone.length !== 10) {
-      setError("10 digit ka phone number daalo");
+    if (!phone) {
+      setError("Enter your phone number");
       return;
     }
     setError("");
     setLoading(true);
     try {
       const res = await api.post("/auth/forgot-password", { phone });
-      setInfo(res.data.message || "OTP aapke email pe bhej diya hai");
+      setSentTo(res.data.maskedEmail || "your registered email");
       setStep(2);
     } catch (err) {
-      setError(err.response?.data?.message || "OTP bhejne mein problem hui");
+      setError(err.response?.data?.message || "Couldn't send the code. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -45,139 +47,174 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   async function resetPassword() {
     if (!otp || !newPassword) {
-      setError("OTP aur naya password dono daalo");
+      setError("Enter the code and your new password");
       return;
     }
     if (newPassword.length < 6) {
-      setError("Password kam se kam 6 characters ka ho");
+      setError("Password must be at least 6 characters");
       return;
     }
     setError("");
     setLoading(true);
     try {
       await api.post("/auth/reset-password", { phone, otp, newPassword });
-      Alert.alert("Ho gaya!", "Password reset ho gaya. Ab naye password se login karo.", [
-        { text: "Login Karo", onPress: () => navigation.navigate("Login") },
+      Alert.alert("Password reset", "You can now sign in with your new password", [
+        { text: "Sign in", onPress: () => navigation.navigate("Login") },
       ]);
     } catch (err) {
-      setError(err.response?.data?.message || "Reset fail hua. OTP check karo.");
+      setError(err.response?.data?.message || "Reset failed. Check the code and try again.");
     } finally {
       setLoading(false);
     }
   }
 
+  const field = (key) => [styles.inputWrap, focused === key && styles.inputWrapFocused];
+  const iconColor = (key) => (focused === key ? colors.brand : colors.slateSoft);
+
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <View style={styles.iconWrap}>
-          <Ionicons name={step === 1 ? "lock-open" : "key"} size={26} color={colors.brand} />
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <View style={styles.brandWrap}>
+          <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.logoBox}>
+            <Ionicons name="lock-open" size={25} color="#fff" />
+          </LinearGradient>
+          <Text style={styles.title}>Reset password</Text>
+          <Text style={styles.subtitle}>
+            {step === 1 ? "We'll email you a verification code" : `Code sent to ${sentTo}`}
+          </Text>
         </View>
 
-        <Text style={styles.title}>{step === 1 ? "Password Bhool Gaye?" : "Naya Password Set Karo"}</Text>
-        <Text style={styles.subtitle}>
-          {step === 1
-            ? "Apna phone number daalo — OTP aapke registered email pe aayega"
-            : "Email pe aaya OTP daalo aur naya password set karo"}
-        </Text>
-
         {/* Step indicator */}
-        <View style={styles.stepRow}>
-          <View style={[styles.stepDot, styles.stepDotActive]} />
+        <View style={styles.steps}>
+          <View style={styles.stepItem}>
+            <View style={[styles.stepDot, styles.stepDotActive]}>
+              {step > 1 ? <Ionicons name="checkmark" size={12} color="#fff" /> : <Text style={styles.stepDotText}>1</Text>}
+            </View>
+            <Text style={[styles.stepLabel, styles.stepLabelActive]}>Verify</Text>
+          </View>
+
           <View style={[styles.stepBar, step === 2 && styles.stepBarActive]} />
-          <View style={[styles.stepDot, step === 2 && styles.stepDotActive]} />
+
+          <View style={styles.stepItem}>
+            <View style={[styles.stepDot, step === 2 && styles.stepDotActive]}>
+              <Text style={[styles.stepDotText, step !== 2 && styles.stepDotTextInactive]}>2</Text>
+            </View>
+            <Text style={[styles.stepLabel, step === 2 && styles.stepLabelActive]}>New password</Text>
+          </View>
         </View>
 
         <View style={styles.card}>
           {step === 1 ? (
             <>
-              <Text style={styles.label}>Phone Number</Text>
-              <View style={styles.inputWrap}>
-                <Ionicons name="call-outline" size={18} color={colors.slate} />
+              <Text style={styles.label}>Phone number</Text>
+              <View style={field("phone")}>
+                <Ionicons name="call-outline" size={18} color={iconColor("phone")} />
                 <TextInput
                   style={styles.input}
-                  placeholder="10 digit mobile number"
-                  placeholderTextColor={colors.slate}
+                  placeholder="10-digit mobile number"
+                  placeholderTextColor={colors.slateSoft}
                   keyboardType="phone-pad"
                   maxLength={10}
                   value={phone}
                   onChangeText={setPhone}
+                  onFocus={() => setFocused("phone")}
+                  onBlur={() => setFocused(null)}
                 />
               </View>
-            </>
-          ) : (
-            <>
-              {info ? (
-                <View style={styles.infoBox}>
-                  <Ionicons name="mail" size={15} color={colors.brand} />
-                  <Text style={styles.infoText}>{info}</Text>
+
+              <View style={styles.hintBox}>
+                <Ionicons name="information-circle-outline" size={15} color={colors.brand} />
+                <Text style={styles.hintText}>
+                  The code goes to the email saved on your account. No email saved? Contact support.
+                </Text>
+              </View>
+
+              {error ? (
+                <View style={styles.errorBox}>
+                  <Ionicons name="alert-circle" size={15} color={colors.danger} />
+                  <Text style={styles.errorText}>{error}</Text>
                 </View>
               ) : null}
 
-              <Text style={styles.label}>OTP</Text>
-              <View style={styles.inputWrap}>
-                <Ionicons name="keypad-outline" size={18} color={colors.slate} />
+              <TouchableOpacity onPress={requestOtp} disabled={loading} activeOpacity={0.85}>
+                <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.button}>
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <>
+                      <Text style={styles.buttonText}>Send Code</Text>
+                      <Ionicons name="arrow-forward" size={17} color="#fff" />
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <Text style={styles.label}>Verification code</Text>
+              <View style={field("otp")}>
+                <Ionicons name="keypad-outline" size={18} color={iconColor("otp")} />
                 <TextInput
                   style={[styles.input, styles.otpInput]}
-                  placeholder="6 digit OTP"
-                  placeholderTextColor={colors.slate}
+                  placeholder="6-digit code"
+                  placeholderTextColor={colors.slateSoft}
                   keyboardType="number-pad"
                   maxLength={6}
                   value={otp}
                   onChangeText={setOtp}
+                  onFocus={() => setFocused("otp")}
+                  onBlur={() => setFocused(null)}
                 />
               </View>
 
-              <Text style={styles.label}>Naya Password</Text>
-              <View style={styles.inputWrap}>
-                <Ionicons name="lock-closed-outline" size={18} color={colors.slate} />
+              <Text style={styles.label}>New password</Text>
+              <View style={field("pass")}>
+                <Ionicons name="lock-closed-outline" size={18} color={iconColor("pass")} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Kam se kam 6 characters"
-                  placeholderTextColor={colors.slate}
+                  placeholder="At least 6 characters"
+                  placeholderTextColor={colors.slateSoft}
                   secureTextEntry={!showPass}
                   value={newPassword}
                   onChangeText={setNewPassword}
+                  onFocus={() => setFocused("pass")}
+                  onBlur={() => setFocused(null)}
                 />
-                <TouchableOpacity onPress={() => setShowPass((s) => !s)}>
-                  <Ionicons name={showPass ? "eye-off-outline" : "eye-outline"} size={18} color={colors.slate} />
+                <TouchableOpacity onPress={() => setShowPass((s) => !s)} hitSlop={8}>
+                  <Ionicons name={showPass ? "eye-off-outline" : "eye-outline"} size={18} color={colors.slateSoft} />
                 </TouchableOpacity>
               </View>
+
+              {error ? (
+                <View style={styles.errorBox}>
+                  <Ionicons name="alert-circle" size={15} color={colors.danger} />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              ) : null}
+
+              <TouchableOpacity onPress={resetPassword} disabled={loading} activeOpacity={0.85}>
+                <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.button}>
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <>
+                      <Text style={styles.buttonText}>Reset Password</Text>
+                      <Ionicons name="checkmark" size={17} color="#fff" />
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.resendWrap} onPress={() => setStep(1)}>
+                <Text style={styles.resend}>Didn't get the code? Try again</Text>
+              </TouchableOpacity>
             </>
-          )}
-
-          {error ? (
-            <View style={styles.errorBox}>
-              <Ionicons name="alert-circle" size={15} color={colors.danger} />
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : null}
-
-          <TouchableOpacity
-            style={styles.button}
-            onPress={step === 1 ? requestOtp : resetPassword}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Text style={styles.buttonText}>{step === 1 ? "OTP Bhejo" : "Password Reset Karo"}</Text>
-                <Ionicons name="arrow-forward" size={16} color="#fff" />
-              </>
-            )}
-          </TouchableOpacity>
-
-          {step === 2 && (
-            <TouchableOpacity style={styles.backLink} onPress={() => setStep(1)}>
-              <Text style={styles.backLinkText}>Phone number badalna hai?</Text>
-            </TouchableOpacity>
           )}
         </View>
 
-        <TouchableOpacity style={styles.footer} onPress={() => navigation.navigate("Login")}>
-          <Ionicons name="arrow-back" size={15} color={colors.brand} />
-          <Text style={styles.footerText}>Login pe wapas jao</Text>
+        <TouchableOpacity style={styles.backWrap} onPress={() => navigation.navigate("Login")}>
+          <Ionicons name="arrow-back" size={15} color={colors.slate} />
+          <Text style={styles.backText}>Back to sign in</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -185,93 +222,104 @@ export default function ForgotPasswordScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: colors.slateLight, padding: spacing.lg, justifyContent: "center" },
+  container: { flexGrow: 1, backgroundColor: colors.bg, padding: spacing.lg, justifyContent: "center" },
 
-  iconWrap: {
+  brandWrap: { alignItems: "center", marginBottom: spacing.lg },
+  logoBox: {
     width: 56,
     height: 56,
     borderRadius: radius.lg,
-    backgroundColor: colors.brandLight,
     alignItems: "center",
     justifyContent: "center",
-    alignSelf: "center",
-    marginBottom: spacing.md,
+    marginBottom: 12,
+    ...shadow.brand,
   },
-  title: { fontSize: 21, fontWeight: "800", color: colors.ink, textAlign: "center" },
-  subtitle: {
-    fontSize: 13,
-    color: colors.slate,
-    textAlign: "center",
-    marginTop: 6,
-    lineHeight: 19,
-    paddingHorizontal: spacing.md,
-  },
+  title: { ...type.h1, color: colors.ink },
+  subtitle: { ...type.small, color: colors.slate, marginTop: 4, textAlign: "center" },
 
-  stepRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginVertical: spacing.lg },
-  stepDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.border },
+  steps: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: spacing.lg },
+  stepItem: { alignItems: "center", gap: 5 },
+  stepDot: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: colors.slateLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   stepDotActive: { backgroundColor: colors.brand },
-  stepBar: { width: 40, height: 2, backgroundColor: colors.border },
+  stepDotText: { fontSize: 12, fontWeight: "800", color: "#fff" },
+  stepDotTextInactive: { color: colors.slateSoft },
+  stepLabel: { ...type.tiny, color: colors.slateSoft, fontWeight: "600" },
+  stepLabelActive: { color: colors.brand },
+  stepBar: { width: 50, height: 2, backgroundColor: colors.border, marginHorizontal: 10, marginBottom: 18 },
   stepBarActive: { backgroundColor: colors.brand },
 
   card: {
-    backgroundColor: "#fff",
-    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xxl,
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadow.md,
   },
-  label: { fontSize: 12, fontWeight: "700", color: colors.ink, marginBottom: 6 },
+  label: { ...type.tiny, fontWeight: "700", color: colors.inkSoft, marginBottom: 7 },
   inputWrap: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
-    backgroundColor: colors.slateLight,
+    gap: 10,
+    backgroundColor: colors.bg,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
-    height: 50,
+    height: 52,
     marginBottom: spacing.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
   },
-  input: { flex: 1, fontSize: 15, color: colors.ink },
-  otpInput: { letterSpacing: 6, fontWeight: "700" },
+  inputWrapFocused: { borderColor: colors.brand, backgroundColor: colors.brandTint },
+  input: { flex: 1, fontSize: 15, color: colors.ink, fontWeight: "500" },
+  otpInput: { letterSpacing: 6, fontWeight: "700", fontSize: 17 },
 
-  infoBox: {
+  hintBox: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 7,
-    backgroundColor: colors.brandLight,
-    padding: spacing.sm,
+    gap: 8,
+    backgroundColor: colors.brandTint,
+    padding: 12,
     borderRadius: radius.md,
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.brandLight,
   },
-  infoText: { flex: 1, fontSize: 12, color: colors.brand, lineHeight: 17 },
+  hintText: { flex: 1, ...type.small, color: colors.brand, lineHeight: 18, fontWeight: "600" },
 
   errorBox: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 7,
     backgroundColor: colors.dangerLight,
-    padding: spacing.sm,
+    padding: 11,
     borderRadius: radius.md,
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.dangerBorder,
   },
-  errorText: { flex: 1, fontSize: 12, color: colors.danger },
+  errorText: { flex: 1, ...type.small, color: colors.danger },
 
   button: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: colors.brand,
-    height: 52,
+    height: 54,
     borderRadius: radius.md,
+    ...shadow.brand,
   },
-  buttonText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  buttonText: { color: "#fff", fontSize: 16, fontWeight: "800" },
 
-  backLink: { alignItems: "center", paddingTop: spacing.md },
-  backLinkText: { fontSize: 13, color: colors.slate, fontWeight: "600" },
+  resendWrap: { alignItems: "center", marginTop: spacing.md },
+  resend: { ...type.small, color: colors.brand, fontWeight: "700" },
 
-  footer: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: spacing.lg },
-  footerText: { fontSize: 14, color: colors.brand, fontWeight: "700" },
+  backWrap: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: spacing.lg },
+  backText: { ...type.bodyStrong, color: colors.slate },
 });

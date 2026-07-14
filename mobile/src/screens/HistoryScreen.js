@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator }
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
-import { colors, spacing, radius } from "../theme/theme";
+import { colors, spacing, radius, type, card } from "../theme/theme";
 
 export default function HistoryScreen({ navigation }) {
   const [history, setHistory] = useState([]);
@@ -40,32 +40,35 @@ export default function HistoryScreen({ navigation }) {
       style={styles.container}
       data={history}
       keyExtractor={(item) => item.attemptId}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xl }}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}
       ListHeaderComponent={
         history.length > 0 ? (
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Test History</Text>
             <Text style={styles.headerSub}>
-              {history.length} test{history.length > 1 ? "s" : ""} diye — progress dekho
+              {history.length} attempt{history.length > 1 ? "s" : ""} · tap any to review
             </Text>
           </View>
         ) : null
       }
       ListEmptyComponent={
         <View style={styles.empty}>
-          <Ionicons name="time-outline" size={40} color={colors.slate} />
-          <Text style={styles.emptyTitle}>Abhi koi test nahi diya</Text>
-          <Text style={styles.emptyText}>Pehla test do — yahan history aur progress dikhegi</Text>
+          <View style={styles.emptyIcon}>
+            <Ionicons name="time-outline" size={26} color={colors.slateSoft} />
+          </View>
+          <Text style={styles.emptyTitle}>No attempts yet</Text>
+          <Text style={styles.emptyText}>Take your first test — your history and progress will show up here</Text>
         </View>
       }
       renderItem={({ item }) => {
         const pct = item.totalMarks > 0 ? Math.round((item.score / item.totalMarks) * 100) : 0;
-        const tint = pct >= 60 ? colors.success : pct >= 40 ? "#EA580C" : colors.danger;
+        const tint = pct >= 60 ? colors.success : pct >= 40 ? colors.hard : colors.danger;
 
         return (
           <TouchableOpacity
             style={styles.card}
-            activeOpacity={0.7}
+            activeOpacity={0.75}
             onPress={() => navigation.navigate("Result", { attemptId: item.attemptId })}
           >
             <View style={{ flex: 1 }}>
@@ -74,7 +77,7 @@ export default function HistoryScreen({ navigation }) {
               </Text>
 
               <View style={styles.metaRow}>
-                <Ionicons name="calendar-outline" size={11} color={colors.slate} />
+                <Ionicons name="calendar-outline" size={11} color={colors.slateSoft} />
                 <Text style={styles.meta}>
                   {new Date(item.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                 </Text>
@@ -86,7 +89,7 @@ export default function HistoryScreen({ navigation }) {
               </View>
 
               <View style={styles.barBg}>
-                <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: tint }]} />
+                <View style={[styles.barFill, { width: `${Math.max(pct, 2)}%`, backgroundColor: tint }]} />
               </View>
             </View>
 
@@ -102,37 +105,35 @@ export default function HistoryScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.slateLight },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.slateLight },
+  container: { flex: 1, backgroundColor: colors.bg },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
 
-  header: { marginTop: 8, marginBottom: spacing.md },
-  headerTitle: { fontSize: 21, fontWeight: "800", color: colors.ink },
-  headerSub: { fontSize: 13, color: colors.slate, marginTop: 3 },
+  header: { marginTop: 6, marginBottom: spacing.md },
+  headerTitle: { ...type.h1, color: colors.ink },
+  headerSub: { ...type.small, color: colors.slate, marginTop: 4 },
 
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    backgroundColor: "#fff",
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  title: { fontSize: 14, fontWeight: "700", color: colors.ink },
-  metaRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 5, marginBottom: 7 },
-  meta: { fontSize: 11, color: colors.slate },
-  dot: { width: 3, height: 3, borderRadius: 2, backgroundColor: colors.border, marginHorizontal: 2 },
+  card: { ...card, flexDirection: "row", alignItems: "center", gap: 14, padding: spacing.md, marginBottom: 10 },
+  title: { ...type.bodyStrong, color: colors.ink },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6, marginBottom: 8 },
+  meta: { ...type.tiny, color: colors.slateSoft, fontWeight: "500" },
+  dot: { width: 3, height: 3, borderRadius: 2, backgroundColor: colors.border, marginHorizontal: 3 },
 
   barBg: { height: 5, backgroundColor: colors.slateLight, borderRadius: 3, overflow: "hidden" },
   barFill: { height: 5, borderRadius: 3 },
 
-  scoreBox: { alignItems: "center", minWidth: 52 },
+  scoreBox: { alignItems: "center", minWidth: 54 },
   scoreValue: { fontSize: 22, fontWeight: "800" },
-  scoreOutOf: { fontSize: 11, color: colors.slate },
+  scoreOutOf: { ...type.tiny, color: colors.slateSoft, fontWeight: "500" },
 
-  empty: { alignItems: "center", paddingVertical: 70, gap: spacing.sm },
-  emptyTitle: { fontSize: 15, fontWeight: "700", color: colors.ink },
-  emptyText: { fontSize: 13, color: colors.slate, textAlign: "center", paddingHorizontal: spacing.lg },
+  empty: { alignItems: "center", paddingVertical: 70, gap: 10 },
+  emptyIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.slateLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyTitle: { ...type.h3, color: colors.ink },
+  emptyText: { ...type.small, color: colors.slate, textAlign: "center", paddingHorizontal: spacing.xl },
 });

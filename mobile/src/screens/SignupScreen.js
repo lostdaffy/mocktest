@@ -11,8 +11,9 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
-import { colors, spacing, radius } from "../theme/theme";
+import { colors, gradients, spacing, radius, type, shadow } from "../theme/theme";
 
 const EXAMS = [
   { code: "SSC_CGL", label: "SSC", icon: "school" },
@@ -31,12 +32,13 @@ export default function SignupScreen({ navigation }) {
   const [showPass, setShowPass] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   const [selectedExam, setSelectedExam] = useState("SSC_CGL");
+  const [focused, setFocused] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSignup() {
     if (!name || !phone || !password) {
-      setError("Naam, phone aur password zaroori hain");
+      setError("Name, phone and password are required");
       return;
     }
     setError("");
@@ -44,83 +46,94 @@ export default function SignupScreen({ navigation }) {
     try {
       await signup(name, phone, password, [selectedExam], email, referralCode);
     } catch (err) {
-      setError(err.response?.data?.message || "Signup fail hua. Dobara try karo.");
+      setError(err.response?.data?.message || "Sign-up failed. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
+  const field = (key) => [styles.inputWrap, focused === key && styles.inputWrapFocused];
+  const iconColor = (key) => (focused === key ? colors.brand : colors.slateSoft);
+
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.brandWrap}>
-          <View style={styles.logoBox}>
-            <Ionicons name="school" size={26} color="#fff" />
-          </View>
-          <Text style={styles.title}>Account Banao</Text>
-          <Text style={styles.subtitle}>Free mein shuru karo — koi card nahi chahiye</Text>
+          <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.logoBox}>
+            <Ionicons name="school" size={25} color="#fff" />
+          </LinearGradient>
+          <Text style={styles.title}>Create your account</Text>
+          <Text style={styles.subtitle}>Free to start — no card needed</Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.label}>Aapka Naam</Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="person-outline" size={18} color={colors.slate} />
+          <Text style={styles.label}>Full name</Text>
+          <View style={field("name")}>
+            <Ionicons name="person-outline" size={18} color={iconColor("name")} />
             <TextInput
               style={styles.input}
-              placeholder="Pura naam"
-              placeholderTextColor={colors.slate}
+              placeholder="Your name"
+              placeholderTextColor={colors.slateSoft}
               value={name}
               onChangeText={setName}
+              onFocus={() => setFocused("name")}
+              onBlur={() => setFocused(null)}
             />
           </View>
 
-          <Text style={styles.label}>Phone Number</Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="call-outline" size={18} color={colors.slate} />
+          <Text style={styles.label}>Phone number</Text>
+          <View style={field("phone")}>
+            <Ionicons name="call-outline" size={18} color={iconColor("phone")} />
             <TextInput
               style={styles.input}
-              placeholder="10 digit mobile number"
-              placeholderTextColor={colors.slate}
+              placeholder="10-digit mobile number"
+              placeholderTextColor={colors.slateSoft}
               keyboardType="phone-pad"
               maxLength={10}
               value={phone}
               onChangeText={setPhone}
+              onFocus={() => setFocused("phone")}
+              onBlur={() => setFocused(null)}
             />
           </View>
 
           <Text style={styles.label}>
-            Email <Text style={styles.optional}>(password reset ke liye)</Text>
+            Email <Text style={styles.optional}>· for password reset</Text>
           </Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="mail-outline" size={18} color={colors.slate} />
+          <View style={field("email")}>
+            <Ionicons name="mail-outline" size={18} color={iconColor("email")} />
             <TextInput
               style={styles.input}
-              placeholder="aapka@email.com"
-              placeholderTextColor={colors.slate}
+              placeholder="you@example.com"
+              placeholderTextColor={colors.slateSoft}
               keyboardType="email-address"
               autoCapitalize="none"
               value={email}
               onChangeText={setEmail}
+              onFocus={() => setFocused("email")}
+              onBlur={() => setFocused(null)}
             />
           </View>
 
           <Text style={styles.label}>Password</Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="lock-closed-outline" size={18} color={colors.slate} />
+          <View style={field("pass")}>
+            <Ionicons name="lock-closed-outline" size={18} color={iconColor("pass")} />
             <TextInput
               style={styles.input}
-              placeholder="Kam se kam 6 characters"
-              placeholderTextColor={colors.slate}
+              placeholder="At least 6 characters"
+              placeholderTextColor={colors.slateSoft}
               secureTextEntry={!showPass}
               value={password}
               onChangeText={setPassword}
+              onFocus={() => setFocused("pass")}
+              onBlur={() => setFocused(null)}
             />
-            <TouchableOpacity onPress={() => setShowPass((s) => !s)}>
-              <Ionicons name={showPass ? "eye-off-outline" : "eye-outline"} size={18} color={colors.slate} />
+            <TouchableOpacity onPress={() => setShowPass((s) => !s)} hitSlop={8}>
+              <Ionicons name={showPass ? "eye-off-outline" : "eye-outline"} size={18} color={colors.slateSoft} />
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.label}>Aapka Exam</Text>
+          <Text style={styles.label}>Which exam are you preparing for?</Text>
           <View style={styles.examGrid}>
             {EXAMS.map((exam) => {
               const active = selectedExam === exam.code;
@@ -129,9 +142,9 @@ export default function SignupScreen({ navigation }) {
                   key={exam.code}
                   style={[styles.examChip, active && styles.examChipActive]}
                   onPress={() => setSelectedExam(exam.code)}
-                  activeOpacity={0.7}
+                  activeOpacity={0.75}
                 >
-                  <Ionicons name={exam.icon} size={15} color={active ? "#fff" : colors.slate} />
+                  <Ionicons name={exam.icon} size={14} color={active ? "#fff" : colors.slate} />
                   <Text style={[styles.examChipText, active && styles.examChipTextActive]}>{exam.label}</Text>
                 </TouchableOpacity>
               );
@@ -139,17 +152,19 @@ export default function SignupScreen({ navigation }) {
           </View>
 
           <Text style={styles.label}>
-            Referral Code <Text style={styles.optional}>(optional)</Text>
+            Referral code <Text style={styles.optional}>· optional</Text>
           </Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="gift-outline" size={18} color={colors.slate} />
+          <View style={field("ref")}>
+            <Ionicons name="gift-outline" size={18} color={iconColor("ref")} />
             <TextInput
               style={styles.input}
-              placeholder="Dost ka code"
-              placeholderTextColor={colors.slate}
+              placeholder="Friend's code"
+              placeholderTextColor={colors.slateSoft}
               autoCapitalize="characters"
               value={referralCode}
               onChangeText={setReferralCode}
+              onFocus={() => setFocused("ref")}
+              onBlur={() => setFocused(null)}
             />
           </View>
 
@@ -160,22 +175,24 @@ export default function SignupScreen({ navigation }) {
             </View>
           ) : null}
 
-          <TouchableOpacity style={styles.button} onPress={handleSignup} disabled={loading} activeOpacity={0.85}>
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Text style={styles.buttonText}>Shuru Karo</Text>
-                <Ionicons name="arrow-forward" size={17} color="#fff" />
-              </>
-            )}
+          <TouchableOpacity onPress={handleSignup} disabled={loading} activeOpacity={0.85}>
+            <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.button}>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Text style={styles.buttonText}>Get Started</Text>
+                  <Ionicons name="arrow-forward" size={17} color="#fff" />
+                </>
+              )}
+            </LinearGradient>
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Pehle se account hai? </Text>
+          <Text style={styles.footerText}>Already have an account? </Text>
           <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-            <Text style={styles.footerLink}>Login karo</Text>
+            <Text style={styles.footerLink}>Sign in</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -184,83 +201,88 @@ export default function SignupScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: colors.slateLight, padding: spacing.lg, paddingTop: 50 },
+  container: { flexGrow: 1, backgroundColor: colors.bg, padding: spacing.lg, paddingTop: 46 },
 
   brandWrap: { alignItems: "center", marginBottom: spacing.lg },
   logoBox: {
-    width: 54,
-    height: 54,
+    width: 56,
+    height: 56,
     borderRadius: radius.lg,
-    backgroundColor: colors.brand,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: spacing.sm,
+    marginBottom: 12,
+    ...shadow.brand,
   },
-  title: { fontSize: 21, fontWeight: "800", color: colors.ink },
-  subtitle: { fontSize: 13, color: colors.slate, marginTop: 3 },
+  title: { ...type.h1, color: colors.ink },
+  subtitle: { ...type.small, color: colors.slate, marginTop: 3 },
 
   card: {
-    backgroundColor: "#fff",
-    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xxl,
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadow.md,
   },
-  label: { fontSize: 12, fontWeight: "700", color: colors.ink, marginBottom: 6 },
-  optional: { fontWeight: "500", color: colors.slate },
+  label: { ...type.tiny, fontWeight: "700", color: colors.inkSoft, marginBottom: 7 },
+  optional: { fontWeight: "500", color: colors.slateSoft },
+
   inputWrap: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
-    backgroundColor: colors.slateLight,
+    gap: 10,
+    backgroundColor: colors.bg,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
-    height: 50,
+    height: 52,
     marginBottom: spacing.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
   },
-  input: { flex: 1, fontSize: 15, color: colors.ink },
+  inputWrapFocused: { borderColor: colors.brand, backgroundColor: colors.brandTint },
+  input: { flex: 1, fontSize: 15, color: colors.ink, fontWeight: "500" },
 
-  examGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginBottom: spacing.md },
+  examGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: spacing.md },
   examChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
     borderRadius: radius.full,
-    backgroundColor: colors.slateLight,
-    borderWidth: 1,
+    backgroundColor: colors.bg,
+    borderWidth: 1.5,
     borderColor: colors.border,
   },
-  examChipActive: { backgroundColor: colors.brand, borderColor: colors.brand },
-  examChipText: { fontSize: 13, fontWeight: "600", color: colors.slate },
+  examChipActive: { backgroundColor: colors.brand, borderColor: colors.brand, ...shadow.sm },
+  examChipText: { ...type.small, fontWeight: "700", color: colors.slate },
   examChipTextActive: { color: "#fff" },
 
   errorBox: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 7,
     backgroundColor: colors.dangerLight,
-    padding: spacing.sm,
+    padding: 11,
     borderRadius: radius.md,
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.dangerBorder,
   },
-  errorText: { flex: 1, fontSize: 12, color: colors.danger },
+  errorText: { flex: 1, ...type.small, color: colors.danger },
 
   button: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: colors.brand,
-    height: 52,
+    height: 54,
     borderRadius: radius.md,
+    ...shadow.brand,
   },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  buttonText: { color: "#fff", fontSize: 16, fontWeight: "800" },
 
   footer: { flexDirection: "row", justifyContent: "center", marginTop: spacing.lg, marginBottom: spacing.lg },
-  footerText: { fontSize: 14, color: colors.slate },
-  footerLink: { fontSize: 14, color: colors.brand, fontWeight: "700" },
+  footerText: { ...type.body, color: colors.slate },
+  footerLink: { ...type.bodyStrong, color: colors.brand },
 });

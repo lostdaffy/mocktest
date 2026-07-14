@@ -2,18 +2,19 @@ import { useCallback, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
-import { colors, spacing, radius } from "../theme/theme";
+import { colors, spacing, radius, type, shadow, card } from "../theme/theme";
 
-// Each exam gets its own icon + accent so the list is scannable at a glance.
+// Per-exam identity so the list is scannable at a glance.
 const EXAM_META = {
-  SSC_CGL: { icon: "school", tint: "#1053F3", bg: "#E8EFFE" },
-  SSC_MTS: { icon: "briefcase", tint: "#059669", bg: "#ECFDF5" },
-  SSC_CHSL: { icon: "document-text", tint: "#7C3AED", bg: "#F3E8FF" },
-  UP_POLICE: { icon: "shield-checkmark", tint: "#DC2626", bg: "#FEF2F2" },
-  RAILWAY: { icon: "train", tint: "#EA580C", bg: "#FFF7ED" },
-  BANKING: { icon: "card", tint: "#0891B2", bg: "#ECFEFF" },
-  CTET: { icon: "person", tint: "#DB2777", bg: "#FDF2F8" },
+  SSC_CGL: { icon: "school", grad: ["#3B7BFF", "#1053F3"] },
+  SSC_MTS: { icon: "briefcase", grad: ["#10B981", "#059669"] },
+  SSC_CHSL: { icon: "document-text", grad: ["#A78BFA", "#7C3AED"] },
+  UP_POLICE: { icon: "shield-checkmark", grad: ["#F87171", "#DC2626"] },
+  RAILWAY: { icon: "train", grad: ["#FB923C", "#EA580C"] },
+  BANKING: { icon: "card", grad: ["#22D3EE", "#0891B2"] },
+  CTET: { icon: "person", grad: ["#F472B6", "#DB2777"] },
 };
 
 export default function ExamPickerScreen({ navigation }) {
@@ -51,25 +52,31 @@ export default function ExamPickerScreen({ navigation }) {
       style={styles.container}
       data={exams}
       keyExtractor={(item) => item.examType}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xl }}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}
       ListHeaderComponent={
         <View style={styles.header}>
-          <Text style={styles.title}>Mock Test Series</Text>
-          <Text style={styles.subtitle}>Apna exam choose karo — poori mock series ready hai</Text>
+          <Text style={styles.title}>Mock Tests</Text>
+          <Text style={styles.subtitle}>Full-length papers that mirror the real exam pattern</Text>
         </View>
       }
       ListEmptyComponent={
         <View style={styles.empty}>
-          <Ionicons name="document-outline" size={40} color={colors.slate} />
-          <Text style={styles.emptyText}>Abhi koi exam available nahi hai</Text>
+          <View style={styles.emptyIcon}>
+            <Ionicons name="document-outline" size={26} color={colors.slateSoft} />
+          </View>
+          <Text style={styles.emptyTitle}>No exams available yet</Text>
+          <Text style={styles.emptyText}>Check back shortly — new mock series are on the way</Text>
         </View>
       }
       renderItem={({ item }) => {
-        const meta = EXAM_META[item.examType] || { icon: "book", tint: colors.brand, bg: colors.brandLight };
+        const meta = EXAM_META[item.examType] || { icon: "book", grad: ["#3B7BFF", "#1053F3"] };
+        const totalQs = item.sections?.reduce((sum, s) => sum + (s.questionCount || 0), 0);
+
         return (
           <TouchableOpacity
             style={styles.examCard}
-            activeOpacity={0.7}
+            activeOpacity={0.75}
             onPress={() =>
               navigation.navigate("ExamSeries", {
                 examStage: item.examType,
@@ -77,29 +84,31 @@ export default function ExamPickerScreen({ navigation }) {
               })
             }
           >
-            <View style={[styles.iconWrap, { backgroundColor: meta.bg }]}>
-              <Ionicons name={meta.icon} size={22} color={meta.tint} />
-            </View>
+            <LinearGradient colors={meta.grad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.iconWrap}>
+              <Ionicons name={meta.icon} size={22} color="#fff" />
+            </LinearGradient>
 
             <View style={{ flex: 1 }}>
               <Text style={styles.examName}>{item.displayName || item.examType}</Text>
               <View style={styles.metaRow}>
-                {item.durationMinutes ? (
+                {totalQs ? (
                   <View style={styles.metaItem}>
-                    <Ionicons name="time-outline" size={12} color={colors.slate} />
-                    <Text style={styles.metaText}>{item.durationMinutes} min</Text>
+                    <Ionicons name="help-circle-outline" size={12} color={colors.slateSoft} />
+                    <Text style={styles.metaText}>{totalQs} questions</Text>
                   </View>
                 ) : null}
-                {item.sections?.length ? (
+                {item.durationMinutes ? (
                   <View style={styles.metaItem}>
-                    <Ionicons name="layers-outline" size={12} color={colors.slate} />
-                    <Text style={styles.metaText}>{item.sections.length} sections</Text>
+                    <Ionicons name="time-outline" size={12} color={colors.slateSoft} />
+                    <Text style={styles.metaText}>{item.durationMinutes} min</Text>
                   </View>
                 ) : null}
               </View>
             </View>
 
-            <Ionicons name="chevron-forward" size={18} color={colors.slate} />
+            <View style={styles.chevWrap}>
+              <Ionicons name="chevron-forward" size={16} color={colors.slate} />
+            </View>
           </TouchableOpacity>
         );
       }}
@@ -108,35 +117,37 @@ export default function ExamPickerScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.slateLight },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.slateLight },
-  header: { marginTop: 8, marginBottom: spacing.lg },
-  title: { fontSize: 22, fontWeight: "800", color: colors.ink },
-  subtitle: { fontSize: 13, color: colors.slate, marginTop: 4 },
+  container: { flex: 1, backgroundColor: colors.bg },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
 
-  examCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    backgroundColor: "#fff",
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  iconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: radius.md,
+  header: { marginTop: 6, marginBottom: spacing.lg },
+  title: { ...type.h1, color: colors.ink },
+  subtitle: { ...type.small, color: colors.slate, marginTop: 5, lineHeight: 18 },
+
+  examCard: { ...card, flexDirection: "row", alignItems: "center", gap: 14, padding: spacing.md, marginBottom: 10 },
+  iconWrap: { width: 48, height: 48, borderRadius: radius.md, alignItems: "center", justifyContent: "center", ...shadow.sm },
+  examName: { ...type.h3, color: colors.ink },
+  metaRow: { flexDirection: "row", gap: 12, marginTop: 5 },
+  metaItem: { flexDirection: "row", alignItems: "center", gap: 3 },
+  metaText: { ...type.tiny, color: colors.slateSoft, fontWeight: "500" },
+  chevWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.slateLight,
     alignItems: "center",
     justifyContent: "center",
   },
-  examName: { fontSize: 15, fontWeight: "700", color: colors.ink },
-  metaRow: { flexDirection: "row", gap: spacing.md, marginTop: 4 },
-  metaItem: { flexDirection: "row", alignItems: "center", gap: 3 },
-  metaText: { fontSize: 11, color: colors.slate },
 
-  empty: { alignItems: "center", paddingVertical: 60, gap: spacing.sm },
-  emptyText: { color: colors.slate, fontSize: 14 },
+  empty: { alignItems: "center", paddingVertical: 70, gap: 10 },
+  emptyIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.slateLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyTitle: { ...type.h3, color: colors.ink },
+  emptyText: { ...type.small, color: colors.slate, textAlign: "center", paddingHorizontal: spacing.xl },
 });

@@ -65,7 +65,7 @@ export default function PaymentScreen({ route, navigation }) {
       setOrderData(res.data);
       setShowCheckout(true);
     } catch (err) {
-      Alert.alert("Error", err.response?.data?.message || "Order create nahi ho paya");
+      Alert.alert("Error", err.response?.data?.message || "Couldn't create the order");
       navigation.goBack();
     } finally {
       setLoading(false);
@@ -95,11 +95,11 @@ export default function PaymentScreen({ route, navigation }) {
         // Refetch full user profile so subscription status is accurately reflected everywhere
         await refreshUser();
 
-        Alert.alert("Success! 🎉", "Aapka subscription activate ho gaya hai", [
+        Alert.alert("Payment successful", "Your subscription is now active", [
           { text: "OK", onPress: () => navigation.navigate("Home") },
         ]);
       } catch (err) {
-        Alert.alert("Verification Failed", "Payment hua lekin verify nahi ho paya. Support se contact karo.");
+        Alert.alert("Verification failed", "The payment went through but we couldn't verify it. Please contact support.");
         navigation.goBack();
       } finally {
         setProcessing(false);
@@ -109,7 +109,7 @@ export default function PaymentScreen({ route, navigation }) {
       navigation.goBack();
     } else if (data.status === "failed") {
       handledRef.current = true;
-      Alert.alert("Payment Failed", data.error?.description || "Payment fail ho gaya, dobara try karo");
+      Alert.alert("Payment failed", data.error?.description || "The payment didn't go through. Please try again.");
       navigation.goBack();
     }
   }
@@ -118,7 +118,7 @@ export default function PaymentScreen({ route, navigation }) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={colors.brand} />
-        <Text style={styles.loadingText}>Order taiyar kar rahe hain...</Text>
+        <Text style={styles.loadingText}>Preparing your order…</Text>
       </View>
     );
   }
@@ -153,7 +153,7 @@ export default function PaymentScreen({ route, navigation }) {
                 {useCredits && <Text style={styles.checkmark}>✓</Text>}
               </View>
               <Text style={styles.creditToggleText}>
-                ₹{maxDiscount} referral credit use karo (max 50% off)
+                Use ₹{maxDiscount} referral credit (up to 50% off)
               </Text>
             </TouchableOpacity>
           )}

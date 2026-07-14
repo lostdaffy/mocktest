@@ -31,6 +31,11 @@ const testSchema = new mongoose.Schema(
     // Access control
     isFree: { type: Boolean, default: false },
 
+    // A mock built specifically to become a live exam later. It's excluded
+    // from the regular student-facing Mock Tests series so nobody can
+    // practice on it before the live event runs.
+    liveExclusive: { type: Boolean, default: false },
+
     // Admin publish workflow: draft -> published (live to students) or archived.
     // Only "published" tests are visible to students.
     publishStatus: {

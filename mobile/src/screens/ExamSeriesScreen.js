@@ -2,8 +2,9 @@ import { useCallback, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
-import { colors, spacing, radius } from "../theme/theme";
+import { colors, gradients, spacing, radius, type, shadow, card } from "../theme/theme";
 
 export default function ExamSeriesScreen({ route, navigation }) {
   const { examStage, examName } = route.params;
@@ -36,12 +37,12 @@ export default function ExamSeriesScreen({ route, navigation }) {
       navigation.navigate("TestTaking", { testId: res.data.test._id });
     } catch (err) {
       if (err.response?.data?.code === "SUBSCRIPTION_REQUIRED") {
-        Alert.alert("Premium Test", err.response.data.message, [
-          { text: "Baad mein", style: "cancel" },
-          { text: "Upgrade Karo", onPress: () => navigation.navigate("Subscription") },
+        Alert.alert("Premium test", err.response.data.message, [
+          { text: "Later", style: "cancel" },
+          { text: "Upgrade", onPress: () => navigation.navigate("Subscription") },
         ]);
       } else {
-        Alert.alert("Error", "Test load nahi hua");
+        Alert.alert("Something went wrong", "Couldn't load the test");
       }
     } finally {
       setStarting(null);
@@ -56,27 +57,32 @@ export default function ExamSeriesScreen({ route, navigation }) {
     );
   }
 
+  const freeCount = tests.filter((t) => t.isFree).length;
+
   return (
     <FlatList
       style={styles.container}
       data={tests}
       keyExtractor={(item) => item._id}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xl }}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}
       ListHeaderComponent={
         <View style={styles.header}>
           <Text style={styles.title}>{examName}</Text>
           <Text style={styles.subtitle}>
             {tests.length > 0
-              ? `${tests.length} mock test${tests.length > 1 ? "s" : ""} — asli exam jaisa pattern`
-              : "Mock series"}
+              ? `${tests.length} mock test${tests.length > 1 ? "s" : ""} · ${freeCount} free`
+              : "Mock test series"}
           </Text>
         </View>
       }
       ListEmptyComponent={
         <View style={styles.empty}>
-          <Ionicons name="document-outline" size={40} color={colors.slate} />
-          <Text style={styles.emptyTitle}>Abhi koi mock test nahi</Text>
-          <Text style={styles.emptyText}>Naye mocks jald aayenge — thodi der baad check karo</Text>
+          <View style={styles.emptyIcon}>
+            <Ionicons name="document-outline" size={26} color={colors.slateSoft} />
+          </View>
+          <Text style={styles.emptyTitle}>No mock tests yet</Text>
+          <Text style={styles.emptyText}>New papers are added regularly — check back soon</Text>
         </View>
       }
       renderItem={({ item, index }) => {
@@ -86,13 +92,19 @@ export default function ExamSeriesScreen({ route, navigation }) {
         return (
           <TouchableOpacity
             style={styles.testCard}
-            activeOpacity={0.7}
+            activeOpacity={0.75}
             onPress={() => startTest(item)}
             disabled={isStarting}
           >
-            <View style={[styles.numBox, locked && styles.numBoxLocked]}>
-              <Text style={[styles.numText, locked && styles.numTextLocked]}>{item.seriesNumber || index + 1}</Text>
-            </View>
+            {locked ? (
+              <View style={styles.numBoxLocked}>
+                <Text style={styles.numTextLocked}>{item.seriesNumber || index + 1}</Text>
+              </View>
+            ) : (
+              <LinearGradient colors={gradients.brand} style={styles.numBox}>
+                <Text style={styles.numText}>{item.seriesNumber || index + 1}</Text>
+              </LinearGradient>
+            )}
 
             <View style={{ flex: 1 }}>
               <Text style={styles.testTitle} numberOfLines={1}>
@@ -100,22 +112,18 @@ export default function ExamSeriesScreen({ route, navigation }) {
               </Text>
               <View style={styles.metaRow}>
                 <View style={styles.metaItem}>
-                  <Ionicons name="time-outline" size={12} color={colors.slate} />
+                  <Ionicons name="time-outline" size={12} color={colors.slateSoft} />
                   <Text style={styles.metaText}>{item.durationMinutes} min</Text>
                 </View>
                 {item.questions?.length ? (
                   <View style={styles.metaItem}>
-                    <Ionicons name="help-circle-outline" size={12} color={colors.slate} />
+                    <Ionicons name="help-circle-outline" size={12} color={colors.slateSoft} />
                     <Text style={styles.metaText}>{item.questions.length} Q</Text>
                   </View>
                 ) : null}
                 <View style={[styles.tag, locked ? styles.tagPremium : styles.tagFree]}>
-                  <Ionicons
-                    name={locked ? "lock-closed" : "checkmark-circle"}
-                    size={10}
-                    color={locked ? "#B45309" : colors.success}
-                  />
-                  <Text style={[styles.tagText, { color: locked ? "#B45309" : colors.success }]}>
+                  <Ionicons name={locked ? "lock-closed" : "checkmark-circle"} size={9} color={locked ? colors.warn : colors.success} />
+                  <Text style={[styles.tagText, { color: locked ? colors.warn : colors.success }]}>
                     {locked ? "Premium" : "Free"}
                   </Text>
                 </View>
@@ -125,7 +133,9 @@ export default function ExamSeriesScreen({ route, navigation }) {
             {isStarting ? (
               <ActivityIndicator size="small" color={colors.brand} />
             ) : (
-              <Ionicons name="play-circle" size={28} color={colors.brand} />
+              <View style={styles.playWrap}>
+                <Ionicons name="play" size={13} color={colors.brand} />
+              </View>
             )}
           </TouchableOpacity>
         );
@@ -135,47 +145,54 @@ export default function ExamSeriesScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.slateLight },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.slateLight },
+  container: { flex: 1, backgroundColor: colors.bg },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
 
-  header: { marginTop: 8, marginBottom: spacing.lg },
-  title: { fontSize: 21, fontWeight: "800", color: colors.ink },
-  subtitle: { fontSize: 13, color: colors.slate, marginTop: 4 },
+  header: { marginTop: 6, marginBottom: spacing.lg },
+  title: { ...type.h1, color: colors.ink },
+  subtitle: { ...type.small, color: colors.slate, marginTop: 5 },
 
-  testCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    backgroundColor: "#fff",
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  numBox: {
-    width: 42,
-    height: 42,
+  testCard: { ...card, flexDirection: "row", alignItems: "center", gap: 14, padding: spacing.md, marginBottom: 10 },
+  numBox: { width: 44, height: 44, borderRadius: radius.md, alignItems: "center", justifyContent: "center", ...shadow.sm },
+  numBoxLocked: {
+    width: 44,
+    height: 44,
     borderRadius: radius.md,
+    backgroundColor: colors.slateLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  numText: { fontSize: 16, fontWeight: "800", color: "#fff" },
+  numTextLocked: { fontSize: 16, fontWeight: "800", color: colors.slateSoft },
+
+  testTitle: { ...type.bodyStrong, color: colors.ink },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 6, flexWrap: "wrap" },
+  metaItem: { flexDirection: "row", alignItems: "center", gap: 3 },
+  metaText: { ...type.tiny, color: colors.slateSoft, fontWeight: "500" },
+
+  tag: { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 7, paddingVertical: 3, borderRadius: radius.full },
+  tagFree: { backgroundColor: colors.successLight },
+  tagPremium: { backgroundColor: colors.warnLight },
+  tagText: { fontSize: 10, fontWeight: "700" },
+
+  playWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: colors.brandLight,
     alignItems: "center",
     justifyContent: "center",
   },
-  numBoxLocked: { backgroundColor: colors.slateLight },
-  numText: { fontSize: 16, fontWeight: "800", color: colors.brand },
-  numTextLocked: { color: colors.slate },
 
-  testTitle: { fontSize: 14, fontWeight: "700", color: colors.ink },
-  metaRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: 5, flexWrap: "wrap" },
-  metaItem: { flexDirection: "row", alignItems: "center", gap: 3 },
-  metaText: { fontSize: 11, color: colors.slate },
-
-  tag: { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 7, paddingVertical: 2, borderRadius: radius.full },
-  tagFree: { backgroundColor: colors.successLight },
-  tagPremium: { backgroundColor: "#FFFBEB" },
-  tagText: { fontSize: 10, fontWeight: "700" },
-
-  empty: { alignItems: "center", paddingVertical: 60, gap: spacing.sm },
-  emptyTitle: { fontSize: 15, fontWeight: "700", color: colors.ink },
-  emptyText: { fontSize: 13, color: colors.slate, textAlign: "center", paddingHorizontal: spacing.lg },
+  empty: { alignItems: "center", paddingVertical: 70, gap: 10 },
+  emptyIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.slateLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyTitle: { ...type.h3, color: colors.ink },
+  emptyText: { ...type.small, color: colors.slate, textAlign: "center", paddingHorizontal: spacing.xl },
 });

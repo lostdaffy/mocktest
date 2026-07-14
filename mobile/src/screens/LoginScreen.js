@@ -11,20 +11,22 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
-import { colors, spacing, radius } from "../theme/theme";
+import { colors, gradients, spacing, radius, type, shadow } from "../theme/theme";
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [focused, setFocused] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   async function handleLogin() {
     if (!phone || !password) {
-      setError("Phone aur password dono daalo");
+      setError("Enter your phone number and password");
       return;
     }
     setError("");
@@ -32,7 +34,7 @@ export default function LoginScreen({ navigation }) {
     try {
       await login(phone, password);
     } catch (err) {
-      setError(err.response?.data?.message || "Login fail hua. Dobara try karo.");
+      setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -40,53 +42,55 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        {/* Brand */}
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.brandWrap}>
-          <View style={styles.logoBox}>
+          <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.logoBox}>
             <Ionicons name="school" size={28} color="#fff" />
-          </View>
+          </LinearGradient>
           <Text style={styles.brandName}>Smart Test Engine</Text>
-          <Text style={styles.brandTag}>Practice karo. Aage badho.</Text>
+          <Text style={styles.brandTag}>Practice smarter. Score higher.</Text>
         </View>
 
-        {/* Card */}
         <View style={styles.card}>
-          <Text style={styles.title}>Wapas aa gaye! 👋</Text>
-          <Text style={styles.subtitle}>Login karke practice continue karo</Text>
+          <Text style={styles.title}>Welcome back</Text>
+          <Text style={styles.subtitle}>Sign in to continue your preparation</Text>
 
-          <Text style={styles.label}>Phone Number</Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="call-outline" size={18} color={colors.slate} />
+          <Text style={styles.label}>Phone number</Text>
+          <View style={[styles.inputWrap, focused === "phone" && styles.inputWrapFocused]}>
+            <Ionicons name="call-outline" size={18} color={focused === "phone" ? colors.brand : colors.slateSoft} />
             <TextInput
               style={styles.input}
-              placeholder="10 digit mobile number"
-              placeholderTextColor={colors.slate}
+              placeholder="10-digit mobile number"
+              placeholderTextColor={colors.slateSoft}
               keyboardType="phone-pad"
               maxLength={10}
               value={phone}
               onChangeText={setPhone}
+              onFocus={() => setFocused("phone")}
+              onBlur={() => setFocused(null)}
             />
           </View>
 
           <Text style={styles.label}>Password</Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="lock-closed-outline" size={18} color={colors.slate} />
+          <View style={[styles.inputWrap, focused === "pass" && styles.inputWrapFocused]}>
+            <Ionicons name="lock-closed-outline" size={18} color={focused === "pass" ? colors.brand : colors.slateSoft} />
             <TextInput
               style={styles.input}
-              placeholder="Apna password"
-              placeholderTextColor={colors.slate}
+              placeholder="Your password"
+              placeholderTextColor={colors.slateSoft}
               secureTextEntry={!showPass}
               value={password}
               onChangeText={setPassword}
+              onFocus={() => setFocused("pass")}
+              onBlur={() => setFocused(null)}
             />
-            <TouchableOpacity onPress={() => setShowPass((s) => !s)}>
-              <Ionicons name={showPass ? "eye-off-outline" : "eye-outline"} size={18} color={colors.slate} />
+            <TouchableOpacity onPress={() => setShowPass((s) => !s)} hitSlop={8}>
+              <Ionicons name={showPass ? "eye-off-outline" : "eye-outline"} size={18} color={colors.slateSoft} />
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity style={styles.forgotWrap} onPress={() => navigation.navigate("ForgotPassword")}>
-            <Text style={styles.forgot}>Password bhool gaye?</Text>
+            <Text style={styles.forgot}>Forgot password?</Text>
           </TouchableOpacity>
 
           {error ? (
@@ -96,22 +100,24 @@ export default function LoginScreen({ navigation }) {
             </View>
           ) : null}
 
-          <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading} activeOpacity={0.85}>
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Text style={styles.buttonText}>Login Karo</Text>
-                <Ionicons name="arrow-forward" size={17} color="#fff" />
-              </>
-            )}
+          <TouchableOpacity onPress={handleLogin} disabled={loading} activeOpacity={0.85}>
+            <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.button}>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Text style={styles.buttonText}>Sign In</Text>
+                  <Ionicons name="arrow-forward" size={17} color="#fff" />
+                </>
+              )}
+            </LinearGradient>
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Naye ho? </Text>
+          <Text style={styles.footerText}>New here? </Text>
           <TouchableOpacity onPress={() => navigation.navigate("Signup")}>
-            <Text style={styles.footerLink}>Account banao</Text>
+            <Text style={styles.footerLink}>Create an account</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -120,72 +126,76 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: colors.slateLight, padding: spacing.lg, justifyContent: "center" },
+  container: { flexGrow: 1, backgroundColor: colors.bg, padding: spacing.lg, justifyContent: "center" },
 
   brandWrap: { alignItems: "center", marginBottom: spacing.xl },
   logoBox: {
-    width: 60,
-    height: 60,
+    width: 62,
+    height: 62,
     borderRadius: radius.lg,
-    backgroundColor: colors.brand,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: spacing.sm,
+    marginBottom: 12,
+    ...shadow.brand,
   },
-  brandName: { fontSize: 20, fontWeight: "800", color: colors.ink },
-  brandTag: { fontSize: 13, color: colors.slate, marginTop: 2 },
+  brandName: { fontSize: 21, fontWeight: "800", color: colors.ink, letterSpacing: -0.3 },
+  brandTag: { ...type.small, color: colors.slate, marginTop: 3 },
 
   card: {
-    backgroundColor: "#fff",
-    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xxl,
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadow.md,
   },
-  title: { fontSize: 20, fontWeight: "800", color: colors.ink },
-  subtitle: { fontSize: 13, color: colors.slate, marginTop: 3, marginBottom: spacing.lg },
+  title: { ...type.h1, color: colors.ink },
+  subtitle: { ...type.small, color: colors.slate, marginTop: 4, marginBottom: spacing.lg },
 
-  label: { fontSize: 12, fontWeight: "700", color: colors.ink, marginBottom: 6 },
+  label: { ...type.tiny, fontWeight: "700", color: colors.inkSoft, marginBottom: 7 },
   inputWrap: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
-    backgroundColor: colors.slateLight,
+    gap: 10,
+    backgroundColor: colors.bg,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
-    height: 50,
+    height: 52,
     marginBottom: spacing.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
   },
-  input: { flex: 1, fontSize: 15, color: colors.ink },
+  inputWrapFocused: { borderColor: colors.brand, backgroundColor: colors.brandTint },
+  input: { flex: 1, fontSize: 15, color: colors.ink, fontWeight: "500" },
 
   forgotWrap: { alignSelf: "flex-end", marginBottom: spacing.md },
-  forgot: { fontSize: 13, color: colors.brand, fontWeight: "600" },
+  forgot: { ...type.small, color: colors.brand, fontWeight: "700" },
 
   errorBox: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 7,
     backgroundColor: colors.dangerLight,
-    padding: spacing.sm,
+    padding: 11,
     borderRadius: radius.md,
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.dangerBorder,
   },
-  errorText: { flex: 1, fontSize: 12, color: colors.danger },
+  errorText: { flex: 1, ...type.small, color: colors.danger },
 
   button: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: colors.brand,
-    height: 52,
+    height: 54,
     borderRadius: radius.md,
+    ...shadow.brand,
   },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  buttonText: { color: "#fff", fontSize: 16, fontWeight: "800" },
 
   footer: { flexDirection: "row", justifyContent: "center", marginTop: spacing.lg },
-  footerText: { fontSize: 14, color: colors.slate },
-  footerLink: { fontSize: 14, color: colors.brand, fontWeight: "700" },
+  footerText: { ...type.body, color: colors.slate },
+  footerLink: { ...type.bodyStrong, color: colors.brand },
 });

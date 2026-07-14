@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
-import { colors, spacing, radius } from "../theme/theme";
+import { colors, gradients, spacing, radius, type, shadow, card } from "../theme/theme";
 
 export default function SelectSubjectsScreen({ navigation }) {
-  const [allSubjects, setAllSubjects] = useState([]);
+  const [all, setAll] = useState([]);
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -16,9 +17,9 @@ export default function SelectSubjectsScreen({ navigation }) {
 
   async function load() {
     try {
-      const [catalogRes, myRes] = await Promise.all([api.get("/subjects"), api.get("/subjects/my")]);
-      setAllSubjects(catalogRes.data.subjects);
-      setSelected(myRes.data.subjects.map((s) => s.name));
+      const [allRes, myRes] = await Promise.all([api.get("/subjects"), api.get("/subjects/my")]);
+      setAll(allRes.data.subjects || []);
+      setSelected((myRes.data.subjects || []).map((s) => s._id));
     } catch (err) {
       // fail quietly
     } finally {
@@ -26,21 +27,21 @@ export default function SelectSubjectsScreen({ navigation }) {
     }
   }
 
-  function toggle(name) {
-    setSelected((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
+  function toggle(id) {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
   async function save() {
     if (selected.length === 0) {
-      Alert.alert("Ek subject to choose karo", "Kam se kam ek subject select karna zaroori hai");
+      Alert.alert("Pick at least one", "Select the subjects you want to practise");
       return;
     }
     setSaving(true);
     try {
-      await api.patch("/subjects/my", { subjects: selected });
+      await api.post("/subjects/select", { subjectIds: selected });
       navigation.goBack();
     } catch (err) {
-      Alert.alert("Error", "Save nahi ho paya");
+      Alert.alert("Couldn't save", "Please try again");
     } finally {
       setSaving(false);
     }
@@ -56,52 +57,71 @@ export default function SelectSubjectsScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 100 }}>
-        <Text style={styles.title}>Apne Subjects Choose Karo</Text>
-        <Text style={styles.subtitle}>
-          Jo subjects aap padh rahe ho, wahi select karo. Inke chapters ka practice mil jayega.
-        </Text>
-
-        {allSubjects.map((subj) => {
-          const isSelected = selected.includes(subj.name);
+      <FlatList
+        data={all}
+        keyExtractor={(item) => item._id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: spacing.lg, paddingBottom: 120 }}
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <Text style={styles.title}>Choose your subjects</Text>
+            <Text style={styles.subtitle}>
+              Pick what you're studying. You can change this anytime.
+            </Text>
+          </View>
+        }
+        renderItem={({ item }) => {
+          const active = selected.includes(item._id);
           return (
             <TouchableOpacity
-              key={subj._id}
-              style={[styles.card, isSelected && styles.cardSelected]}
-              onPress={() => toggle(subj.name)}
-              activeOpacity={0.7}
+              style={[styles.subjectCard, active && styles.subjectCardActive]}
+              onPress={() => toggle(item._id)}
+              activeOpacity={0.75}
             >
-              <View style={[styles.iconWrap, isSelected && styles.iconWrapSelected]}>
-                <Text style={styles.icon}>{subj.icon}</Text>
+              <View style={[styles.iconWrap, active && styles.iconWrapActive]}>
+                <Text style={styles.icon}>{item.icon}</Text>
               </View>
 
               <View style={{ flex: 1 }}>
-                <Text style={[styles.name, isSelected && styles.nameSelected]}>{subj.name}</Text>
-                <Text style={styles.meta}>{subj.chapters?.length || 0} chapters</Text>
+                <Text style={[styles.name, active && styles.nameActive]}>{item.name}</Text>
+                <Text style={styles.meta}>{item.chapters?.length || 0} chapters</Text>
               </View>
 
-              <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-                {isSelected && <Ionicons name="checkmark" size={15} color="#fff" />}
+              <View style={[styles.checkbox, active && styles.checkboxActive]}>
+                {active && <Ionicons name="checkmark" size={14} color="#fff" />}
               </View>
             </TouchableOpacity>
           );
-        })}
-      </ScrollView>
+        }}
+      />
 
-      {/* Sticky footer so the count + action are always visible */}
+      {/* Sticky footer */}
       <View style={styles.footer}>
-        <Text style={styles.count}>
-          {selected.length} subject{selected.length !== 1 ? "s" : ""} selected
-        </Text>
-        <TouchableOpacity style={styles.saveButton} onPress={save} disabled={saving} activeOpacity={0.85}>
-          {saving ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Text style={styles.saveButtonText}>Save Karo</Text>
-              <Ionicons name="arrow-forward" size={16} color="#fff" />
-            </>
-          )}
+        <View style={styles.countWrap}>
+          <Text style={styles.countValue}>{selected.length}</Text>
+          <Text style={styles.countLabel}>selected</Text>
+        </View>
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          onPress={save}
+          disabled={saving || selected.length === 0}
+          activeOpacity={0.85}
+        >
+          <LinearGradient
+            colors={selected.length === 0 ? [colors.slateSoft, colors.slate] : gradients.brand}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.saveButton}
+          >
+            {saving ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Text style={styles.saveButtonText}>Save</Text>
+                <Ionicons name="checkmark" size={17} color="#fff" />
+              </>
+            )}
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </View>
@@ -109,24 +129,15 @@ export default function SelectSubjectsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.slateLight },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.slateLight },
+  container: { flex: 1, backgroundColor: colors.bg },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
 
-  title: { fontSize: 21, fontWeight: "800", color: colors.ink, marginTop: 8 },
-  subtitle: { fontSize: 13, color: colors.slate, marginTop: 4, marginBottom: spacing.lg, lineHeight: 19 },
+  header: { marginTop: 6, marginBottom: spacing.lg },
+  title: { ...type.h1, color: colors.ink },
+  subtitle: { ...type.small, color: colors.slate, marginTop: 5, lineHeight: 18 },
 
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    backgroundColor: "#fff",
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cardSelected: { borderColor: colors.brand, borderWidth: 2, backgroundColor: colors.brandLight },
+  subjectCard: { ...card, flexDirection: "row", alignItems: "center", gap: 12, padding: spacing.md, marginBottom: 10 },
+  subjectCardActive: { borderColor: colors.brand, borderWidth: 2, backgroundColor: colors.brandTint },
 
   iconWrap: {
     width: 46,
@@ -136,23 +147,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  iconWrapSelected: { backgroundColor: "#fff" },
-  icon: { fontSize: 24 },
+  iconWrapActive: { backgroundColor: colors.brandLight },
+  icon: { fontSize: 22 },
 
-  name: { fontSize: 15, fontWeight: "700", color: colors.ink },
-  nameSelected: { color: colors.brand },
-  meta: { fontSize: 12, color: colors.slate, marginTop: 2 },
+  name: { ...type.h3, color: colors.ink },
+  nameActive: { color: colors.brand },
+  meta: { ...type.tiny, color: colors.slateSoft, fontWeight: "500", marginTop: 2 },
 
   checkbox: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: radius.xs,
     borderWidth: 2,
     borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
   },
-  checkboxSelected: { backgroundColor: colors.brand, borderColor: colors.brand },
+  checkboxActive: { backgroundColor: colors.brand, borderColor: colors.brand },
 
   footer: {
     position: "absolute",
@@ -161,24 +172,25 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-    backgroundColor: "#fff",
+    gap: 12,
+    backgroundColor: colors.surface,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+    ...shadow.lg,
   },
-  count: { fontSize: 13, color: colors.slate, fontWeight: "600" },
+  countWrap: { alignItems: "center", minWidth: 60 },
+  countValue: { fontSize: 22, fontWeight: "800", color: colors.brand },
+  countLabel: { ...type.tiny, color: colors.slateSoft, fontWeight: "500" },
   saveButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 7,
-    backgroundColor: colors.brand,
-    paddingHorizontal: 24,
-    height: 46,
+    height: 52,
     borderRadius: radius.md,
   },
-  saveButtonText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  saveButtonText: { color: "#fff", fontSize: 16, fontWeight: "800" },
 });
