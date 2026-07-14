@@ -22,6 +22,8 @@ const testSchema = new mongoose.Schema(
     // PYQ specific
     pyqYear: { type: Number },
     pyqShift: { type: String },
+    examDate: { type: Date }, // exact date the real paper was conducted, if known
+    pyqLanguage: { type: String, enum: ["english", "hindi", "bilingual"], default: "bilingual" },
 
     // Live exam specific
     scheduledAt: { type: Date },

@@ -4,12 +4,12 @@ const ExamPattern = require("../models/ExamPattern");
 const { extractQuestionsFromPDF } = require("../services/geminiService");
 
 // POST /api/pyq/upload (admin only)
-// body: { examStage, subject, year, shift, pdfBase64 }
+// body: { examStage, subject, year, shift, examDate, language, pdfBase64 }
 // Uploads a REAL previous-year paper PDF, extracts its actual questions
 // (not AI-authored ones), and saves them as a draft PYQ paper for review.
 async function uploadPyqPdf(req, res) {
   try {
-    const { examStage, subject, year, shift, pdfBase64 } = req.body;
+    const { examStage, subject, year, shift, examDate, language, pdfBase64 } = req.body;
     if (!examStage || !year || !pdfBase64) {
       return res.status(400).json({ message: "examStage, year, and pdfBase64 are required" });
     }
@@ -24,6 +24,7 @@ async function uploadPyqPdf(req, res) {
       examType: examStage,
       examDisplayName: pattern.displayName,
       subject,
+      language: language || "bilingual", // tells the extractor whether to expect one language or paired EN+HI
     });
 
     if (extracted.length === 0) {
@@ -35,27 +36,35 @@ async function uploadPyqPdf(req, res) {
     const validQuestions = extracted.filter((q) => q.text && q.options.every((o) => o));
     const questionDocs = await Question.insertMany(validQuestions);
     const missingAnswer = questionDocs.filter((q) => q.correctIndex === null || q.correctIndex === undefined).length;
+    const mismatchCount = questionDocs.filter((q) => q.aiConfidenceScore === 0.3).length;
+
+    const dateLabel = examDate ? new Date(examDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : year;
 
     const test = await Test.create({
-      title: `${pattern.displayName} PYQ - ${year}${shift ? ` (${shift})` : ""}`,
+      title: `${pattern.displayName} PYQ - ${dateLabel}${shift ? ` (${shift})` : ""}`,
       type: "pyq",
       examType: examStage,
       examStage,
       subject: subject || undefined,
       pyqYear: Number(year),
       pyqShift: shift || undefined,
+      examDate: examDate || undefined,
+      pyqLanguage: language || "bilingual",
       questions: questionDocs.map((q) => q._id),
       durationMinutes: Math.max(30, Math.round(questionDocs.length * 0.9)),
       publishStatus: "draft",
       createdBy: "admin",
     });
 
+    const parts = [`${questionDocs.length} questions extract hue.`];
+    if (missingAnswer > 0) parts.push(`${missingAnswer} mein answer key nahi mili.`);
+    if (mismatchCount > 0) parts.push(`${mismatchCount} mein PDF ka answer aur AI ka independent solve match nahi hua.`);
+    if (missingAnswer === 0 && mismatchCount === 0) parts.push("Sab verified hain - bas ek nazar daal ke publish kar sakte ho.");
+
     res.status(201).json({
-      message: `${questionDocs.length} questions extract hue. ${
-        missingAnswer > 0 ? `${missingAnswer} mein answer key nahi mili — review mein bharni hogi.` : "Sab mein answer key mil gayi."
-      }`,
+      message: parts.join(" "),
       test,
-      stats: { total: questionDocs.length, missingAnswer, skipped: extracted.length - validQuestions.length },
+      stats: { total: questionDocs.length, missingAnswer, mismatchCount, skipped: extracted.length - validQuestions.length },
     });
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -87,12 +96,20 @@ async function updatePyqQuestion(req, res) {
   if (textHi !== undefined) update.textHi = textHi;
   if (options !== undefined) update.options = options;
   if (optionsHi !== undefined) update.optionsHi = optionsHi;
-  if (correctIndex !== undefined) update.correctIndex = correctIndex;
+  if (subject !== undefined) update.subject = subject;
   if (solution !== undefined) update.solution = solution;
   if (solutionHi !== undefined) update.solutionHi = solutionHi;
-  if (subject !== undefined) update.subject = subject;
 
-  const question = await Question.findByIdAndUpdate(req.params.questionId, update, { new: true });
+  // Admin confirming/changing the answer settles it - clear the AI's
+  // uncertainty flag so it stops showing up as "needs attention".
+  if (correctIndex !== undefined) {
+    update.correctIndex = correctIndex;
+    update.aiConfidenceScore = 1;
+    update.flagReason = undefined;
+    update.suggestedIndex = undefined;
+  }
+
+  const question = await Question.findByIdAndUpdate(req.params.questionId, update, { new: true, runValidators: true });
   if (!question) return res.status(404).json({ message: "Question not found" });
   res.json({ message: "Question updated", question });
 }

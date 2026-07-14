@@ -19,6 +19,8 @@ export default function PyqBank() {
   const [subject, setSubject] = useState("");
   const [year, setYear] = useState(new Date().getFullYear());
   const [shift, setShift] = useState("");
+  const [examDate, setExamDate] = useState("");
+  const [language, setLanguage] = useState("bilingual");
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState(null); // { type: 'success'|'error', text }
@@ -61,6 +63,11 @@ export default function PyqBank() {
     });
   }
 
+  function onDateChange(value) {
+    setExamDate(value);
+    if (value) setYear(new Date(value).getFullYear());
+  }
+
   async function handleUpload(e) {
     e.preventDefault();
     if (!file) {
@@ -71,10 +78,12 @@ export default function PyqBank() {
     setUploadMsg(null);
     try {
       const pdfBase64 = await fileToBase64(file);
-      const res = await api.post("/pyq/upload", { examStage, subject, year, shift, pdfBase64 });
+      const res = await api.post("/pyq/upload", { examStage, subject, year, shift, examDate, language, pdfBase64 });
       setUploadMsg({ type: "success", text: res.data.message });
       setFile(null);
       setSubject("");
+      setExamDate("");
+      setShift("");
       loadPapers();
     } catch (err) {
       setUploadMsg({ type: "error", text: err.response?.data?.message || "Upload fail hua" });
@@ -137,13 +146,24 @@ export default function PyqBank() {
             />
           </div>
           <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              Exam Date <span className="text-slate-400">(optional, sirf year se zyada exact)</span>
+            </label>
+            <input
+              type="date"
+              value={examDate}
+              onChange={(e) => onDateChange(e.target.value)}
+              className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none w-40"
+            />
+          </div>
+          <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Year</label>
             <input
               type="number"
               required
               value={year}
               onChange={(e) => setYear(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none w-28"
+              className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none w-24"
             />
           </div>
           <div>
@@ -157,6 +177,18 @@ export default function PyqBank() {
               placeholder="e.g. Shift 1"
               className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none w-32"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">PDF Language</label>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none w-36"
+            >
+              <option value="bilingual">Bilingual (EN + HI)</option>
+              <option value="english">English only</option>
+              <option value="hindi">Hindi only</option>
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">PDF</label>
@@ -259,9 +291,14 @@ function PaperRow({ paper, onReview, onArchive, onDelete }) {
         </div>
         <div>
           <p className="font-semibold text-ink">{paper.title}</p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
             {paper.questions?.length || 0} questions
             {paper.subject ? ` · ${paper.subject}` : ""}
+            {paper.pyqLanguage && (
+              <span className="text-[10px] font-semibold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">
+                {paper.pyqLanguage === "bilingual" ? "EN + HI" : paper.pyqLanguage === "hindi" ? "HI" : "EN"}
+              </span>
+            )}
           </p>
         </div>
       </div>

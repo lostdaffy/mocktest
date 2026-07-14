@@ -291,29 +291,44 @@ Return ONLY valid JSON in this shape, no extra text:
  * @param {string} params.examDisplayName
  * @param {string} params.subject - e.g. "Reasoning" (helps Gemini tag correctly if the PDF mixes subjects)
  */
-async function extractQuestionsFromPDF({ pdfBase64, examType, examDisplayName, subject }) {
+async function extractQuestionsFromPDF({ pdfBase64, examType, examDisplayName, subject, language = "bilingual" }) {
   const ctx = EXAM_CONTEXT[examType] || { fullName: examDisplayName || examType };
+
+  const languageInstruction =
+    language === "english"
+      ? `This PDF is in ENGLISH ONLY. Extract "text"/"options" from what's printed, then translate them yourself into Hindi for "textHi"/"optionsHi" - a natural, exam-appropriate translation, not literal word-for-word.`
+      : language === "hindi"
+      ? `This PDF is in HINDI ONLY. Extract "textHi"/"optionsHi" from what's printed, then translate them yourself into English for "text"/"options" - a natural, exam-appropriate translation, not literal word-for-word.`
+      : `This PDF is BILINGUAL - many Indian exam papers print each question in English AND Hindi side by side (or one below the other) as the SAME question. Treat these as ONE question, not two - put the English in "text" and the Hindi in "textHi". Never output the same question twice just because it appeared in two languages.`;
 
   const prompt = `This PDF is a real ${ctx.fullName} previous-year question paper${
     subject ? ` (subject: ${subject})` : ""
   }. Extract EVERY multiple-choice question exactly as written - do not paraphrase, do not invent, do not skip any.
 
-For each question:
-- "text": the question exactly as printed (English). If the paper is in Hindi, still fill this with an accurate English translation.
-- "textHi": the question in Hindi (translate if the original was English; keep as-is if already Hindi).
-- "options": the exact 4 options as printed, in English.
-- "optionsHi": the same 4 options in Hindi.
-- "correctIndex": the 0-based index of the correct option IF an answer key is present anywhere in this PDF (start, end, or a separate page). If there is genuinely no answer key in the PDF, set this to null - do NOT guess.
-- "solution": a short explanation IF the PDF itself provides one. If the PDF gives no explanation, set this to null - do NOT invent one.
-- "solutionHi": Hindi version of the above, or null.
-- "subject": your best guess of which subject this question belongs to (e.g. "Reasoning", "Maths", "English", "GK"), based on the content.
+IMPORTANT - language: ${languageInstruction}
+
+For each question, do TWO things:
+1. Extract it exactly as printed: the question, its 4 options, and - if this PDF includes an answer key anywhere (start, end, or a separate page) - which option it marks correct.
+2. Independently solve the question yourself, as if you had no answer key, using your own reasoning.
+
+Then reconcile the two:
+- If the PDF's answer key exists AND matches your own independent solve: "correctIndex" = that option, "confidence" = "verified".
+- If the PDF's answer key exists but DISAGREES with your own independent solve: "correctIndex" = the PDF's stated answer (the real paper is the source of truth, not your opinion), "confidence" = "mismatch" - this tells the admin exactly which ones are worth a second look, instead of every question needing manual re-checking.
+- If the PDF has NO answer key at all for this question: "correctIndex" = null, "suggestedIndex" = your own independently-solved answer (a hint only, not authoritative), "confidence" = "no_key".
+
+Also for each question:
+- "text"/"textHi": the question in English / Hindi (translate whichever direction is missing).
+- "options"/"optionsHi": the exact 4 options in English / Hindi.
+- "solution"/"solutionHi": a short explanation ONLY if the PDF itself provides one - if not, set both to "" (do not invent one).
+- "subject": your best guess of the subject (e.g. "Reasoning", "Maths", "English", "GK").
 
 Return ONLY a valid JSON array, no markdown fences, no extra text, in this exact shape:
 [
   {
     "text": "...", "textHi": "...",
     "options": ["...","...","...","..."], "optionsHi": ["...","...","...","..."],
-    "correctIndex": 0, "solution": "...", "solutionHi": "...",
+    "correctIndex": 0, "suggestedIndex": null, "confidence": "verified",
+    "solution": "...", "solutionHi": "...",
     "subject": "..."
   }
 ]
@@ -333,23 +348,36 @@ If a question has more or fewer than 4 options in the original, still return exa
     throw new Error("Gemini PDF se questions extract nahi kar paaya. Try a clearer/smaller PDF.");
   }
 
-  return questions.map((q) => ({
-    text: q.text || "",
-    textHi: q.textHi || "",
-    options: Array.isArray(q.options) && q.options.length === 4 ? q.options : ["", "", "", ""],
-    optionsHi: Array.isArray(q.optionsHi) && q.optionsHi.length === 4 ? q.optionsHi : ["", "", "", ""],
-    correctIndex: Number.isInteger(q.correctIndex) ? q.correctIndex : null,
-    solution: q.solution || "",
-    solutionHi: q.solutionHi || "",
-    subject: q.subject || subject || "General",
-    examType: [examType],
-    examStage: examType,
-    topic: q.subject || subject || "General",
-    difficulty: "exam",
-    source: "pyq",
-    status: "under_review", // always human-checked before it reaches a student
-    createdBy: "admin",
-  }));
+  return questions.map((q) => {
+    const confidence = q.confidence || (Number.isInteger(q.correctIndex) ? "verified" : "no_key");
+    const flagReason =
+      confidence === "mismatch"
+        ? "PDF answer key aur AI ke independent solve mein farak hai - verify karo"
+        : confidence === "no_key"
+        ? "PDF mein answer key nahi mili - AI ka suggestion hai, confirm karo"
+        : undefined;
+
+    return {
+      text: q.text || "",
+      textHi: q.textHi || "",
+      options: Array.isArray(q.options) && q.options.length === 4 ? q.options : ["", "", "", ""],
+      optionsHi: Array.isArray(q.optionsHi) && q.optionsHi.length === 4 ? q.optionsHi : ["", "", "", ""],
+      correctIndex: Number.isInteger(q.correctIndex) ? q.correctIndex : undefined,
+      suggestedIndex: Number.isInteger(q.suggestedIndex) ? q.suggestedIndex : undefined,
+      aiConfidenceScore: confidence === "verified" ? 1 : confidence === "mismatch" ? 0.3 : 0.5,
+      flagReason,
+      solution: q.solution || "",
+      solutionHi: q.solutionHi || "",
+      subject: q.subject || subject || "General",
+      examType: [examType],
+      examStage: examType,
+      topic: q.subject || subject || "General",
+      difficulty: "exam",
+      source: "pyq",
+      status: "under_review", // always human-checked before it reaches a student
+      createdBy: "admin",
+    };
+  });
 }
 
 module.exports = { generateQuestions, verifyQuestion, callGemini, extractQuestionsFromPDF };

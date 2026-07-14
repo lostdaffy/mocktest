@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from "react-native";
 import { WebView } from "react-native-webview";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
@@ -65,7 +65,13 @@ export default function PaymentScreen({ route, navigation }) {
       setOrderData(res.data);
       setShowCheckout(true);
     } catch (err) {
-      Alert.alert("Error", err.response?.data?.message || "Couldn't create the order");
+      console.log("CREATE ORDER ERROR →", {
+        message: err.message,
+        code: err.code,
+        status: err.response?.status,
+        data: err.response?.data,
+      });
+      Alert.alert("Error", err.response?.data?.message || err.message || "Couldn't create the order");
       navigation.goBack();
     } finally {
       setLoading(false);
