@@ -58,12 +58,12 @@ function tryParseJson(text) {
   }
 }
 
-async function callGemini(prompt, { jsonMode = true, maxRetries = 4 } = {}) {
+async function callGeminiRaw(parts, { jsonMode = true, maxRetries = 4 } = {}) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not set in .env");
 
   const body = {
-    contents: [{ parts: [{ text: prompt }] }],
+    contents: [{ parts }],
     generationConfig: jsonMode ? { responseMimeType: "application/json" } : {},
   };
 
@@ -116,6 +116,10 @@ async function callGemini(prompt, { jsonMode = true, maxRetries = 4 } = {}) {
 
     throw new Error(`Gemini API error (${res.status}): ${errText}`);
   }
+}
+
+async function callGemini(prompt, opts = {}) {
+  return callGeminiRaw([{ text: prompt }], opts);
 }
 
 /**
@@ -274,4 +278,78 @@ Return ONLY valid JSON in this shape, no extra text:
   }
 }
 
-module.exports = { generateQuestions, verifyQuestion, callGemini };
+/**
+ * Extracts real MCQ questions from an uploaded previous-year paper PDF.
+ * This does NOT invent questions - it reads the actual PDF (Gemini's
+ * multimodal input) and pulls out exactly what's on the page. If the PDF
+ * includes an answer key, correctIndex is filled in; if not, it comes back
+ * null and the admin fills it in during review before publishing.
+ *
+ * @param {Object} params
+ * @param {string} params.pdfBase64 - the PDF file, base64-encoded
+ * @param {string} params.examType - e.g. "SSC_CGL"
+ * @param {string} params.examDisplayName
+ * @param {string} params.subject - e.g. "Reasoning" (helps Gemini tag correctly if the PDF mixes subjects)
+ */
+async function extractQuestionsFromPDF({ pdfBase64, examType, examDisplayName, subject }) {
+  const ctx = EXAM_CONTEXT[examType] || { fullName: examDisplayName || examType };
+
+  const prompt = `This PDF is a real ${ctx.fullName} previous-year question paper${
+    subject ? ` (subject: ${subject})` : ""
+  }. Extract EVERY multiple-choice question exactly as written - do not paraphrase, do not invent, do not skip any.
+
+For each question:
+- "text": the question exactly as printed (English). If the paper is in Hindi, still fill this with an accurate English translation.
+- "textHi": the question in Hindi (translate if the original was English; keep as-is if already Hindi).
+- "options": the exact 4 options as printed, in English.
+- "optionsHi": the same 4 options in Hindi.
+- "correctIndex": the 0-based index of the correct option IF an answer key is present anywhere in this PDF (start, end, or a separate page). If there is genuinely no answer key in the PDF, set this to null - do NOT guess.
+- "solution": a short explanation IF the PDF itself provides one. If the PDF gives no explanation, set this to null - do NOT invent one.
+- "solutionHi": Hindi version of the above, or null.
+- "subject": your best guess of which subject this question belongs to (e.g. "Reasoning", "Maths", "English", "GK"), based on the content.
+
+Return ONLY a valid JSON array, no markdown fences, no extra text, in this exact shape:
+[
+  {
+    "text": "...", "textHi": "...",
+    "options": ["...","...","...","..."], "optionsHi": ["...","...","...","..."],
+    "correctIndex": 0, "solution": "...", "solutionHi": "...",
+    "subject": "..."
+  }
+]
+
+If a question has more or fewer than 4 options in the original, still return exactly 4 in "options" using your best judgment of the closest 4, but prioritize accuracy - never fabricate options that aren't in the source.`;
+
+  const parts = [
+    { inline_data: { mime_type: "application/pdf", data: pdfBase64 } },
+    { text: prompt },
+  ];
+
+  // PDFs can run long (many pages) so this gets more time to retry than a
+  // normal generation call, and a longer pause between attempts.
+  const questions = await callGeminiRaw(parts, { jsonMode: true, maxRetries: 3 });
+
+  if (!Array.isArray(questions)) {
+    throw new Error("Gemini PDF se questions extract nahi kar paaya. Try a clearer/smaller PDF.");
+  }
+
+  return questions.map((q) => ({
+    text: q.text || "",
+    textHi: q.textHi || "",
+    options: Array.isArray(q.options) && q.options.length === 4 ? q.options : ["", "", "", ""],
+    optionsHi: Array.isArray(q.optionsHi) && q.optionsHi.length === 4 ? q.optionsHi : ["", "", "", ""],
+    correctIndex: Number.isInteger(q.correctIndex) ? q.correctIndex : null,
+    solution: q.solution || "",
+    solutionHi: q.solutionHi || "",
+    subject: q.subject || subject || "General",
+    examType: [examType],
+    examStage: examType,
+    topic: q.subject || subject || "General",
+    difficulty: "exam",
+    source: "pyq",
+    status: "under_review", // always human-checked before it reaches a student
+    createdBy: "admin",
+  }));
+}
+
+module.exports = { generateQuestions, verifyQuestion, callGemini, extractQuestionsFromPDF };

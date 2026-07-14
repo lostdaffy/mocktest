@@ -39,6 +39,19 @@ async function listTests(req, res) {
   res.json({ tests });
 }
 
+// GET /api/tests/pyq -> published, real previous-year papers for the student's exam
+async function getPyqList(req, res) {
+  const examStage = req.user.examGoals?.[0] || "SSC_CGL";
+  const tests = await Test.find({
+    examStage,
+    type: "pyq",
+    publishStatus: "published",
+  })
+    .sort({ pyqYear: -1, pyqShift: 1 })
+    .select("-questions");
+  res.json({ tests });
+}
+
 // GET /api/tests/exam-series/:examStage -> published mock series for one exam (student-facing)
 async function getExamSeries(req, res) {
   const { examStage } = req.params;
@@ -405,6 +418,7 @@ module.exports = {
   createWeeklyRevision,
   submitTest,
   getAttemptResult,
+  getPyqList,
   listMyAttempts,
   getFreeLimits,
   getExamSeries,

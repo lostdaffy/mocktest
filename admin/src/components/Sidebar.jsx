@@ -11,12 +11,14 @@ import {
   RiBroadcastLine,
   RiGroupLine,
   RiLogoutBoxRLine,
+  RiFilePaperLine,
 } from "@remixicon/react";
 
 const navItems = [
   { to: "/", label: "Dashboard", Icon: RiDashboardLine },
   { to: "/exam-series", label: "Exam Mock Series", Icon: RiFileList3Line },
   { to: "/practice-series", label: "Subject Practice", Icon: RiBookOpenLine },
+  { to: "/pyq-bank", label: "PYQ Bank", Icon: RiFilePaperLine },
   { to: "/questions", label: "Manage Questions", Icon: RiQuestionnaireLine },
   { to: "/reports", label: "Student Reports", Icon: RiFlag2Line },
   { to: "/exam-patterns", label: "Exam Patterns", Icon: RiLayoutGridLine },

@@ -12,6 +12,7 @@ import Reports from "./pages/Reports";
 import ExamSeries from "./pages/ExamSeries";
 import ExamMocks from "./pages/ExamMocks";
 import PracticeSeries from "./pages/PracticeSeries";
+import PyqBank from "./pages/PyqBank";
 
 export default function App() {
   return (
@@ -96,6 +97,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <PracticeSeries />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pyq-bank"
+            element={
+              <ProtectedRoute>
+                <PyqBank />
               </ProtectedRoute>
             }
           />

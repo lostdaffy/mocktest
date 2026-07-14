@@ -13,6 +13,7 @@ const {
   getFreeLimits,
   getExamSeries,
   getPracticeSeries,
+  getPyqList,
 } = require("../controllers/testController");
 const { getLeaderboard } = require("../controllers/examController");
 const { protect, requireActiveSubscription } = require("../middleware/auth");
@@ -22,6 +23,7 @@ router.get("/my-attempts", protect, listMyAttempts);
 router.get("/free-limits", protect, getFreeLimits);
 router.get("/exam-series/:examStage", protect, getExamSeries);
 router.get("/practice-series/:subject/:chapter", protect, getPracticeSeries);
+router.get("/pyq", protect, getPyqList);
 router.get("/", protect, listTests);
 router.get("/:id", protect, getTest);
 router.get("/:id/leaderboard", protect, getLeaderboard);

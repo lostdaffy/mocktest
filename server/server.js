@@ -12,6 +12,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const adminUserRoutes = require("./routes/adminUserRoutes");
 const subjectRoutes = require("./routes/subjectRoutes");
 const examSeriesRoutes = require("./routes/examSeriesRoutes");
+const pyqRoutes = require("./routes/pyqRoutes");
 
 // Security check: refuse to start with placeholder secrets. This catches
 // the common mistake of copying .env.example without changing these values -
@@ -43,7 +44,10 @@ validateEnv();
 const app = express();
 
 app.use(cors());
-app.use(express.json({ limit: "2mb" }));
+// Raised from 2mb to fit base64-encoded PYQ PDF uploads (a ~15mb source PDF
+// becomes ~20mb once base64-encoded). Keep individual PDF uploads under
+// ~15mb for reliability - split a very long paper by section if needed.
+app.use(express.json({ limit: "25mb" }));
 
 // Basic rate limiting to protect free-tier hosting from abuse
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300 });
@@ -59,6 +63,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/admin/users", adminUserRoutes);
 app.use("/api/subjects", subjectRoutes);
 app.use("/api/exam-series", examSeriesRoutes);
+app.use("/api/pyq", pyqRoutes);
 
 // Fallback error handler
 app.use((err, req, res, next) => {

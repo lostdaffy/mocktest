@@ -342,8 +342,22 @@ async function listPracticeTests(req, res) {
 
 // POST /api/exam-series/mock/:testId/add-questions (admin)
 // body: { subject, difficulty, count }
-// Adds more questions to an existing draft mock. Lets admin build a mock up to
-// 100 questions across multiple sessions instead of all at once (avoids rate limits).
+// Pulls a few REAL (source: "pyq") questions for this exam+subject to use as
+// few-shot style examples. This runs before EVERY batch of a mock (not just
+// once), so the whole 100-question paper stays grounded in genuine exam
+// style - not just a token handful of questions out of the full set.
+// Returns [] gracefully if the PYQ bank has nothing for this subject yet -
+// generation just proceeds without grounding, same as before.
+async function getPyqStyleExamples(examStage, subject, limit = 4) {
+  if (!subject) return [];
+  const docs = await Question.aggregate([
+    { $match: { examStage, subject, source: "pyq", status: "published" } },
+    { $sample: { size: limit } },
+  ]);
+  return docs.map((q) => q.text);
+}
+
+
 async function addQuestionsToMock(req, res) {
   try {
     const { subject } = req.body;
@@ -376,6 +390,7 @@ async function addQuestionsToMock(req, res) {
     }
 
     const batch = Math.min(count, 12); // cap for quality + valid JSON
+    const pyqExamples = await getPyqStyleExamples(test.examStage, subject);
     const rawQuestions = await generateQuestions({
       examType: test.examStage,
       examDisplayName: displayName,
@@ -383,6 +398,7 @@ async function addQuestionsToMock(req, res) {
       topic: subject || "General",
       count: batch,
       examMode: true, // real-exam-style questions (mixed difficulty like actual paper)
+      pyqExamples, // fresh real-question reference for THIS batch - every batch gets grounded, not just one
     });
 
     const newIds = [];
@@ -399,11 +415,16 @@ async function addQuestionsToMock(req, res) {
     const sectionNote = sectionDef
       ? ` (${subject}: ${test.questions.filter((q) => (q.subject || q) === subject).length || newIds.length}/${sectionDef.questionCount})`
       : "";
+    const groundingNote =
+      pyqExamples.length > 0
+        ? ` Style-matched against ${pyqExamples.length} real PYQ question(s).`
+        : ` No real PYQs found yet for ${subject} - upload some in PYQ Bank for closer style-matching.`;
 
     res.json({
-      message: `${newIds.length} questions add ho gaye${sectionNote}. Total ${test.questions.length} questions.`,
+      message: `${newIds.length} questions add ho gaye${sectionNote}. Total ${test.questions.length} questions.${groundingNote}`,
       added: newIds.length,
       totalCount: test.questions.length,
+      groundedInRealPyqs: pyqExamples.length > 0,
     });
   } catch (err) {
     console.error(err);
