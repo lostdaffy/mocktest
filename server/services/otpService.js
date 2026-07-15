@@ -55,7 +55,7 @@ async function sendOtp(phone, otp) {
 
   const data = await response.json().catch(() => null);
   if (!data || data.return !== true) {
-    const reason = data?.message?.[0] || data?.message || "unknown error";
+    const reason = Array.isArray(data?.message) ? data.message.join(", ") : data?.message || "unknown error";
     throw new Error(`SMS gateway rejected the request: ${reason}`);
   }
 
