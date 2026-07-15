@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../models/User");
 const PhoneOtp = require("../models/PhoneOtp");
-const { generateOtpCode, sendOtp, SMS_ENABLED } = require("../services/otpService");
+const { generateOtpCode, sendOtp } = require("../services/otpService");
 
 function generateToken(userId) {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -55,16 +55,11 @@ async function sendSignupOtp(req, res) {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    const { sent } = await sendOtp(phone, otp);
+    await sendOtp(phone, otp);
 
-    res.json({
-      message: sent ? "OTP aapke mobile number pe bhej diya gaya hai" : "OTP generate ho gaya",
-      // Dev mode only (no SMS gateway configured yet) - lets the app show the
-      // OTP on screen for testing. Never sent once SMS_ENABLED=true in .env.
-      devOtp: SMS_ENABLED ? undefined : otp,
-    });
+    res.json({ message: "OTP aapke mobile number pe bhej diya gaya hai" });
   } catch (err) {
-    res.status(500).json({ message: "OTP bhejne mein problem hui, thodi der baad try karo" });
+    res.status(500).json({ message: err.message || "OTP bhejne mein problem hui, thodi der baad try karo" });
   }
 }
 
@@ -233,17 +228,12 @@ async function requestOtp(req, res) {
     user.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
     await user.save();
 
-    const { sent } = await sendOtp(phone, otp);
+    await sendOtp(phone, otp);
 
-    res.json({
-      message: sent ? "OTP aapke mobile number pe bhej diya gaya hai" : "OTP generate ho gaya",
-      // In dev mode (SMS not configured), return the OTP so it can be shown
-      // on screen. In production with SMS_ENABLED=true, this is never sent.
-      devOtp: SMS_ENABLED ? undefined : otp,
-    });
+    res.json({ message: "OTP aapke mobile number pe bhej diya gaya hai" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "OTP bhejne mein problem hui, thodi der baad try karo" });
+    res.status(500).json({ message: err.message || "OTP bhejne mein problem hui, thodi der baad try karo" });
   }
 }
 

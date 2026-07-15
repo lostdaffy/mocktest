@@ -57,15 +57,8 @@ export default function SignupScreen({ navigation }) {
     setError("");
     setLoading(true);
     try {
-      const res = await sendSignupOtp(phone);
+      await sendSignupOtp(phone);
       setStep(2);
-      if (res.devOtp) {
-        // Dev mode only - no SMS gateway configured yet, so the OTP is shown
-        // directly instead of arriving by text.
-        AppAlert.alert("Dev mode - your OTP", `SMS isn't connected yet, so here's the code directly: ${res.devOtp}`, [
-          { text: "Got it" },
-        ]);
-      }
     } catch (err) {
       setError(err.response?.data?.message || "Couldn't send OTP. Please try again.");
     } finally {
@@ -76,12 +69,8 @@ export default function SignupScreen({ navigation }) {
   async function handleResendOtp() {
     setResending(true);
     try {
-      const res = await sendSignupOtp(phone);
-      if (res.devOtp) {
-        AppAlert.alert("Dev mode - your OTP", `New code: ${res.devOtp}`, [{ text: "Got it" }]);
-      } else {
-        AppAlert.alert("OTP resent", "A new code has been sent to your number.");
-      }
+      await sendSignupOtp(phone);
+      AppAlert.alert("OTP resent", "A new code has been sent to your number.");
     } catch (err) {
       AppAlert.alert("Couldn't resend", err.response?.data?.message || "Please wait a moment and try again.");
     } finally {
