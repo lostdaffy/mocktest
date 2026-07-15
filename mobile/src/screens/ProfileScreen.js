@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from "react-native";
+import AppAlert from "../components/AppAlert";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
@@ -18,9 +19,9 @@ export default function ProfileScreen({ navigation }) {
     try {
       await api.patch("/auth/profile", { email });
       await refreshUser();
-      Alert.alert("Saved", "Your email has been updated");
+      AppAlert.alert("Saved", "Your email has been updated");
     } catch (err) {
-      Alert.alert("Couldn't save", err.response?.data?.message || "Please try again");
+      AppAlert.alert("Couldn't save", err.response?.data?.message || "Please try again");
     } finally {
       setSavingEmail(false);
     }
@@ -33,14 +34,14 @@ export default function ProfileScreen({ navigation }) {
       await api.patch("/auth/profile", { preferredLanguage: lang });
       await refreshUser();
     } catch (err) {
-      Alert.alert("Couldn't update", "Please try again");
+      AppAlert.alert("Couldn't update", "Please try again");
     } finally {
       setSavingLang(false);
     }
   }
 
   function confirmLogout() {
-    Alert.alert("Log out?", "You'll need to sign in again.", [
+    AppAlert.alert("Log out?", "You'll need to sign in again.", [
       { text: "Cancel", style: "cancel" },
       { text: "Log out", style: "destructive", onPress: logout },
     ]);

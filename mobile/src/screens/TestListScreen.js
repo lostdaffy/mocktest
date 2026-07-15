@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from "react-native";
+import AppAlert from "../components/AppAlert";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -61,12 +62,12 @@ export default function TestListScreen({ route, navigation }) {
       navigation.navigate("TestTaking", { testId: res.data.test._id });
     } catch (err) {
       if (err.response?.data?.code === "SUBSCRIPTION_REQUIRED") {
-        Alert.alert("Premium test", err.response.data.message, [
+        AppAlert.alert("Premium test", err.response.data.message, [
           { text: "Later", style: "cancel" },
           { text: "Upgrade", onPress: () => navigation.navigate("Subscription") },
         ]);
       } else {
-        Alert.alert("Something went wrong", "Couldn't load the test");
+        AppAlert.alert("Something went wrong", "Couldn't load the test");
       }
     } finally {
       setStarting(null);

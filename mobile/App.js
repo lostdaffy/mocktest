@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { colors } from "./src/theme/theme";
+import { AppAlertHost } from "./src/components/AppAlert";
 
 import LoginScreen from "./src/screens/LoginScreen";
 import SignupScreen from "./src/screens/SignupScreen";
@@ -164,6 +165,7 @@ export default function App() {
     <AuthProvider>
       <StatusBar style="dark" />
       <RootNavigator />
+      <AppAlertHost />
     </AuthProvider>
   );
 }

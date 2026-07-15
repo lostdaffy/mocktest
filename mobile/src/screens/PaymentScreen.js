@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import AppAlert from "../components/AppAlert";
 import { WebView } from "react-native-webview";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
@@ -65,13 +66,7 @@ export default function PaymentScreen({ route, navigation }) {
       setOrderData(res.data);
       setShowCheckout(true);
     } catch (err) {
-      console.log("CREATE ORDER ERROR →", {
-        message: err.message,
-        code: err.code,
-        status: err.response?.status,
-        data: err.response?.data,
-      });
-      Alert.alert("Error", err.response?.data?.message || err.message || "Couldn't create the order");
+      AppAlert.alert("Error", err.response?.data?.message || "Couldn't create the order");
       navigation.goBack();
     } finally {
       setLoading(false);
@@ -101,11 +96,11 @@ export default function PaymentScreen({ route, navigation }) {
         // Refetch full user profile so subscription status is accurately reflected everywhere
         await refreshUser();
 
-        Alert.alert("Payment successful", "Your subscription is now active", [
+        AppAlert.alert("Payment successful", "Your subscription is now active", [
           { text: "OK", onPress: () => navigation.navigate("Home") },
         ]);
       } catch (err) {
-        Alert.alert("Verification failed", "The payment went through but we couldn't verify it. Please contact support.");
+        AppAlert.alert("Verification failed", "The payment went through but we couldn't verify it. Please contact support.");
         navigation.goBack();
       } finally {
         setProcessing(false);
@@ -115,7 +110,7 @@ export default function PaymentScreen({ route, navigation }) {
       navigation.goBack();
     } else if (data.status === "failed") {
       handledRef.current = true;
-      Alert.alert("Payment failed", data.error?.description || "The payment didn't go through. Please try again.");
+      AppAlert.alert("Payment failed", data.error?.description || "The payment didn't go through. Please try again.");
       navigation.goBack();
     }
   }

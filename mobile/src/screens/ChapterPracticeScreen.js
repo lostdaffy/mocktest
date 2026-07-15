@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView, ActivityIndicator } from "react-native";
+import AppAlert from "../components/AppAlert";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
@@ -55,12 +56,12 @@ export default function ChapterPracticeScreen({ route, navigation }) {
       navigation.navigate("TestTaking", { testId: res.data.test._id });
     } catch (err) {
       if (err.response?.data?.code === "SUBSCRIPTION_REQUIRED" || !test.isFree) {
-        Alert.alert("Premium test", "Upgrade to unlock every practice test in this chapter.", [
+        AppAlert.alert("Premium test", "Upgrade to unlock every practice test in this chapter.", [
           { text: "Later", style: "cancel" },
           { text: "Upgrade", onPress: () => navigation.navigate("Subscription") },
         ]);
       } else {
-        Alert.alert("Something went wrong", "Couldn't load the test");
+        AppAlert.alert("Something went wrong", "Couldn't load the test");
       }
     } finally {
       setStarting(null);
@@ -166,7 +167,7 @@ export default function ChapterPracticeScreen({ route, navigation }) {
               activeOpacity={0.75}
               onPress={() => {
                 if (activeLocked) {
-                  Alert.alert(
+                  AppAlert.alert(
                     "Level locked",
                     `Clear a test in ${LEVELS[activeIdx - 1]?.label} to unlock ${activeLevel.label}.`
                   );
@@ -191,6 +192,17 @@ export default function ChapterPracticeScreen({ route, navigation }) {
                       <Text style={[styles.tagText, { color: colors.success }]}>Free</Text>
                     </View>
                   ) : null}
+                  {!activeLocked && item.attemptStatus === "completed" ? (
+                    <View style={[styles.tag, styles.tagDone]}>
+                      <Ionicons name="checkmark-done" size={9} color={colors.brand} />
+                      <Text style={[styles.tagText, { color: colors.brand }]}>{item.bestAccuracy}%</Text>
+                    </View>
+                  ) : !activeLocked && item.attemptStatus === "in_progress" ? (
+                    <View style={[styles.tag, styles.tagResume]}>
+                      <Ionicons name="time" size={9} color={colors.warn} />
+                      <Text style={[styles.tagText, { color: colors.warn }]}>Resume</Text>
+                    </View>
+                  ) : null}
                 </View>
 
                 <Text style={[styles.testTitle, activeLocked && styles.testTitleLocked]} numberOfLines={1}>
@@ -213,7 +225,19 @@ export default function ChapterPracticeScreen({ route, navigation }) {
                 <ActivityIndicator size="small" color={colors.brand} style={{ marginRight: spacing.md }} />
               ) : (
                 <View style={[styles.playWrap, activeLocked && styles.playWrapLocked]}>
-                  <Ionicons name={activeLocked ? "lock-closed" : "play"} size={13} color={activeLocked ? colors.slateSoft : colors.brand} />
+                  <Ionicons
+                    name={
+                      activeLocked
+                        ? "lock-closed"
+                        : item.attemptStatus === "completed"
+                        ? "refresh"
+                        : item.attemptStatus === "in_progress"
+                        ? "play-skip-forward"
+                        : "play"
+                    }
+                    size={13}
+                    color={activeLocked ? colors.slateSoft : colors.brand}
+                  />
                 </View>
               )}
             </TouchableOpacity>
@@ -272,6 +296,8 @@ const styles = StyleSheet.create({
 
   topRow: { flexDirection: "row", alignItems: "center", marginBottom: 6, minHeight: 16 },
   tag: { flexDirection: "row", alignItems: "center", gap: 3 },
+  tagDone: { backgroundColor: colors.brandLight, paddingHorizontal: 7, paddingVertical: 3, borderRadius: radius.full },
+  tagResume: { backgroundColor: colors.warnLight, paddingHorizontal: 7, paddingVertical: 3, borderRadius: radius.full },
   tagText: { fontSize: 10, fontWeight: "700" },
 
   testTitle: { ...type.bodyStrong, color: colors.ink },

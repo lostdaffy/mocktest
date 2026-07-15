@@ -18,12 +18,12 @@ const BENEFITS = [
 
 const PLANS = [
   {
-    id: "quarterly",
-    label: "3 Months",
+    id: "half_yearly",
+    label: "6 Months",
     price: 149,
-    mrp: 499,
-    perDay: "₹1.65/day",
-    off: "70% OFF",
+    mrp: 299,
+    perDay: "₹0.82/day",
+    off: "50% OFF",
   },
   {
     id: "yearly",

@@ -4,18 +4,18 @@ const Subscription = require("../models/Subscription");
 const User = require("../models/User");
 
 const PLAN_PRICES = {
-  quarterly: 149,
+  half_yearly: 149,
   yearly: 249,
 };
 
 const PLAN_DURATION_MONTHS = {
-  quarterly: 3,
+  half_yearly: 6,
   yearly: 12,
 };
 
 // Credit a referrer earns when someone they referred completes a purchase.
 const REFERRAL_REWARD = {
-  quarterly: 30,
+  half_yearly: 30,
   yearly: 50,
 };
 
@@ -30,7 +30,7 @@ function getRazorpayInstance() {
   });
 }
 
-// POST /api/payments/create-order  { plan: "quarterly" | "yearly", useCredits: boolean }
+// POST /api/payments/create-order  { plan: "half_yearly" | "yearly", useCredits: boolean }
 async function createOrder(req, res) {
   try {
     const { plan, useCredits } = req.body;

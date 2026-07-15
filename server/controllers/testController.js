@@ -52,6 +52,36 @@ async function getPyqList(req, res) {
   res.json({ tests });
 }
 
+// Attaches the CURRENT student's attempt status to a list of tests, so the
+// UI can show "Completed 82%" / "Resume" instead of every card looking
+// identical regardless of history. One batch query, not N+1.
+async function withAttemptStatus(tests, userId) {
+  const testIds = tests.map((t) => t._id);
+  const attempts = await Attempt.find({ user: userId, test: { $in: testIds } })
+    .sort({ createdAt: -1 })
+    .select("test status accuracy score totalMarks");
+
+  const byTest = {};
+  for (const a of attempts) {
+    const key = String(a.test);
+    if (!byTest[key]) byTest[key] = []; // most recent first, since we sorted above
+    byTest[key].push(a);
+  }
+
+  return tests.map((t) => {
+    const obj = t.toObject ? t.toObject() : t;
+    const list = byTest[String(t._id)] || [];
+    const completed = list.find((a) => a.status === "submitted" || a.status === "auto_submitted");
+    const inProgress = list.find((a) => a.status === "in_progress");
+
+    return {
+      ...obj,
+      attemptStatus: completed ? "completed" : inProgress ? "in_progress" : "not_started",
+      bestAccuracy: completed ? Math.round(completed.accuracy) : null,
+    };
+  });
+}
+
 // GET /api/tests/exam-series/:examStage -> published mock series for one exam (student-facing)
 async function getExamSeries(req, res) {
   const { examStage } = req.params;
@@ -63,7 +93,7 @@ async function getExamSeries(req, res) {
   })
     .sort({ seriesNumber: 1 })
     .select("-questions");
-  res.json({ tests });
+  res.json({ tests: await withAttemptStatus(tests, req.user._id) });
 }
 
 // GET /api/tests/practice-series/:subject/:chapter -> published practice series for a chapter
@@ -80,7 +110,7 @@ async function getPracticeSeries(req, res) {
 
   // isFree is the admin's own choice made at publish time (see
   // publishPracticeTest) - it must not be recomputed here.
-  res.json({ tests });
+  res.json({ tests: await withAttemptStatus(tests, req.user._id) });
 }
 
 // GET /api/tests/:id  -> full test with questions (without revealing correct answers)
@@ -114,6 +144,18 @@ async function getTest(req, res) {
 
       await User.findByIdAndUpdate(req.user._id, { $inc: { [`freeUsage.${usageField}`]: 1 } });
     }
+  }
+
+  // Full mocks and practice tests use a per-test isFree flag the admin sets
+  // at publish time - this was never actually enforced here, meaning any
+  // "Premium" mock or practice test was fully playable without a
+  // subscription as long as the test ID was known. The mobile lock icon was
+  // cosmetic only.
+  if ((test.type === "full_mock" || test.type === "practice") && !test.isFree && !hasActiveSubscription(req.user)) {
+    return res.status(402).json({
+      message: "This is a Premium test. Subscribe to unlock it.",
+      code: "SUBSCRIPTION_REQUIRED",
+    });
   }
 
   res.json({ test });

@@ -1,16 +1,6 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from "react-native";
+import AppAlert from "../components/AppAlert";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
@@ -58,7 +48,7 @@ export default function ForgotPasswordScreen({ navigation }) {
     setLoading(true);
     try {
       await api.post("/auth/reset-password", { phone, otp, newPassword });
-      Alert.alert("Password reset", "You can now sign in with your new password", [
+      AppAlert.alert("Password reset", "You can now sign in with your new password", [
         { text: "Sign in", onPress: () => navigation.navigate("Login") },
       ]);
     } catch (err) {

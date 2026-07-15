@@ -1,16 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-  BackHandler,
-  Modal,
-  FlatList,
-} from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, BackHandler, Modal, FlatList } from "react-native";
+import AppAlert from "../components/AppAlert";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { colors, spacing, radius } from "../theme/theme";
@@ -35,7 +25,7 @@ export default function TestTakingScreen({ route, navigation }) {
   useEffect(() => {
     load();
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      Alert.alert("Leave the test?", "Your progress won't be saved.", [
+      AppAlert.alert("Leave the test?", "Your progress won't be saved.", [
         { text: "Stay", style: "cancel" },
         { text: "Leave", style: "destructive", onPress: () => navigation.goBack() },
       ]);
@@ -84,12 +74,12 @@ export default function TestTakingScreen({ route, navigation }) {
       setSecondsLeft(res.data.test.durationMinutes * 60);
     } catch (err) {
       if (err.response?.data?.code === "SUBSCRIPTION_REQUIRED") {
-        Alert.alert("Premium Feature", err.response.data.message, [
+        AppAlert.alert("Premium Feature", err.response.data.message, [
           { text: "Later", style: "cancel", onPress: () => navigation.goBack() },
           { text: "Upgrade", onPress: () => navigation.replace("Subscription") },
         ]);
       } else {
-        Alert.alert("Something went wrong", "Couldn't load the test");
+        AppAlert.alert("Something went wrong", "Couldn't load the test");
         navigation.goBack();
       }
     } finally {
@@ -176,7 +166,7 @@ export default function TestTakingScreen({ route, navigation }) {
   }
 
   function reportQuestion(questionId) {
-    Alert.alert("What's wrong with this question?", "", [
+    AppAlert.alert("What's wrong with this question?", "", [
       { text: "Wrong answer", onPress: () => submitReport(questionId, "wrong_answer") },
       { text: "Unclear question", onPress: () => submitReport(questionId, "unclear_question") },
       { text: "Duplicate options", onPress: () => submitReport(questionId, "duplicate_options") },
@@ -187,14 +177,14 @@ export default function TestTakingScreen({ route, navigation }) {
   async function submitReport(questionId, reason) {
     try {
       await api.post(`/questions/${questionId}/report`, { reason });
-      Alert.alert("Thanks", "Report submitted — we'll review it.");
+      AppAlert.alert("Thanks", "Report submitted — we'll review it.");
     } catch (err) {
-      Alert.alert("Something went wrong", "Couldn't submit the report");
+      AppAlert.alert("Something went wrong", "Couldn't submit the report");
     }
   }
 
   function confirmSubmit() {
-    Alert.alert("Submit test?", "You won't be able to change your answers after this.", [
+    AppAlert.alert("Submit test?", "You won't be able to change your answers after this.", [
       { text: "Cancel", style: "cancel" },
       { text: "Submit", onPress: () => handleSubmit(false) },
     ]);
@@ -219,7 +209,7 @@ export default function TestTakingScreen({ route, navigation }) {
         const res = await api.post(`/tests/${testId}/submit`, payload);
         navigation.replace("Result", { attemptId: res.data.attemptId });
       } catch (err) {
-        Alert.alert("Submit failed", "Please try again");
+        AppAlert.alert("Submit failed", "Please try again");
         setSubmitting(false);
       }
     },

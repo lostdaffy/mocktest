@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Share, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Share } from "react-native";
+import AppAlert from "../components/AppAlert";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -32,7 +33,7 @@ export default function ReferralScreen({ navigation }) {
     try {
       await Share.share({ message: info.shareMessage });
     } catch (err) {
-      Alert.alert("Couldn't share", "Please try again");
+      AppAlert.alert("Couldn't share", "Please try again");
     }
   }
 
@@ -95,7 +96,7 @@ export default function ReferralScreen({ navigation }) {
         <View style={styles.stepLine} />
         <Step num="2" icon="person-add-outline" title="They sign up" desc="Your code goes in during their registration" />
         <View style={styles.stepLine} />
-        <Step num="3" icon="wallet-outline" title="You earn credit" desc="₹30 (quarterly) or ₹50 (yearly) on their first purchase" />
+        <Step num="3" icon="wallet-outline" title="You earn credit" desc="₹30 (6 months) or ₹50 (12 months) on their first purchase" />
       </View>
 
       {info.credits > 0 && (

@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from "react-native";
+import AppAlert from "../components/AppAlert";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -37,12 +38,12 @@ export default function ExamSeriesScreen({ route, navigation }) {
       navigation.navigate("TestTaking", { testId: res.data.test._id });
     } catch (err) {
       if (err.response?.data?.code === "SUBSCRIPTION_REQUIRED") {
-        Alert.alert("Premium test", err.response.data.message, [
+        AppAlert.alert("Premium test", err.response.data.message, [
           { text: "Later", style: "cancel" },
           { text: "Upgrade", onPress: () => navigation.navigate("Subscription") },
         ]);
       } else {
-        Alert.alert("Something went wrong", "Couldn't load the test");
+        AppAlert.alert("Something went wrong", "Couldn't load the test");
       }
     } finally {
       setStarting(null);
@@ -127,6 +128,17 @@ export default function ExamSeriesScreen({ route, navigation }) {
                     {locked ? "Premium" : "Free"}
                   </Text>
                 </View>
+                {item.attemptStatus === "completed" ? (
+                  <View style={[styles.tag, styles.tagDone]}>
+                    <Ionicons name="checkmark-done" size={9} color={colors.brand} />
+                    <Text style={[styles.tagText, { color: colors.brand }]}>{item.bestAccuracy}%</Text>
+                  </View>
+                ) : item.attemptStatus === "in_progress" ? (
+                  <View style={[styles.tag, styles.tagResume]}>
+                    <Ionicons name="time" size={9} color={colors.warn} />
+                    <Text style={[styles.tagText, { color: colors.warn }]}>Resume</Text>
+                  </View>
+                ) : null}
               </View>
             </View>
 
@@ -134,7 +146,11 @@ export default function ExamSeriesScreen({ route, navigation }) {
               <ActivityIndicator size="small" color={colors.brand} />
             ) : (
               <View style={styles.playWrap}>
-                <Ionicons name="play" size={13} color={colors.brand} />
+                <Ionicons
+                  name={item.attemptStatus === "completed" ? "refresh" : item.attemptStatus === "in_progress" ? "play-skip-forward" : "play"}
+                  size={13}
+                  color={colors.brand}
+                />
               </View>
             )}
           </TouchableOpacity>
@@ -173,6 +189,8 @@ const styles = StyleSheet.create({
   tag: { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 7, paddingVertical: 3, borderRadius: radius.full },
   tagFree: { backgroundColor: colors.successLight },
   tagPremium: { backgroundColor: colors.warnLight },
+  tagDone: { backgroundColor: colors.brandLight },
+  tagResume: { backgroundColor: colors.warnLight },
   tagText: { fontSize: 10, fontWeight: "700" },
 
   playWrap: {

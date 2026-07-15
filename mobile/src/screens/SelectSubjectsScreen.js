@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from "react-native";
+import AppAlert from "../components/AppAlert";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
@@ -33,7 +34,7 @@ export default function SelectSubjectsScreen({ navigation }) {
 
   async function save() {
     if (selected.length === 0) {
-      Alert.alert("Pick at least one", "Select the subjects you want to practise");
+      AppAlert.alert("Pick at least one", "Select the subjects you want to practise");
       return;
     }
     setSaving(true);
@@ -41,7 +42,7 @@ export default function SelectSubjectsScreen({ navigation }) {
       await api.post("/subjects/select", { subjectIds: selected });
       navigation.goBack();
     } catch (err) {
-      Alert.alert("Couldn't save", "Please try again");
+      AppAlert.alert("Couldn't save", "Please try again");
     } finally {
       setSaving(false);
     }
