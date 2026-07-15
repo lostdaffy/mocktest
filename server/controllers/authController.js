@@ -2,7 +2,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../models/User");
-const { sendPasswordResetOTP } = require("../services/emailService");
+const PhoneOtp = require("../models/PhoneOtp");
+const { generateOtpCode, sendOtp, SMS_ENABLED } = require("../services/otpService");
 
 function generateToken(userId) {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -25,6 +26,48 @@ async function generateUniqueReferralCode(name) {
 }
 
 // POST /api/auth/signup
+// POST /api/auth/signup/request-otp  { phone }
+// Verifies phone ownership BEFORE an account exists. Rate-limited to one
+// send per phone per 60 seconds (via checking the existing record's age)
+// so a signup form can't be used to spam a number with SMS.
+async function sendSignupOtp(req, res) {
+  try {
+    const { phone } = req.body;
+    if (!phone || !/^[6-9]\d{9}$/.test(phone.trim())) {
+      return res.status(400).json({ message: "Valid 10-digit Indian mobile number daalo" });
+    }
+
+    const existing = await User.findOne({ phone });
+    if (existing) {
+      return res.status(409).json({ message: "An account with this phone number already exists" });
+    }
+
+    const recent = await PhoneOtp.findOne({ phone }).sort({ createdAt: -1 });
+    if (recent && Date.now() - recent.createdAt.getTime() < 60 * 1000) {
+      return res.status(429).json({ message: "Thoda ruko, dobara OTP bhejne se pehle 1 minute wait karo" });
+    }
+
+    const otp = generateOtpCode();
+    const otpHash = await bcrypt.hash(otp, 10);
+    await PhoneOtp.findOneAndUpdate(
+      { phone },
+      { otpHash, expiresAt: new Date(Date.now() + 10 * 60 * 1000) },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    const { sent } = await sendOtp(phone, otp);
+
+    res.json({
+      message: sent ? "OTP aapke mobile number pe bhej diya gaya hai" : "OTP generate ho gaya",
+      // Dev mode only (no SMS gateway configured yet) - lets the app show the
+      // OTP on screen for testing. Never sent once SMS_ENABLED=true in .env.
+      devOtp: SMS_ENABLED ? undefined : otp,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "OTP bhejne mein problem hui, thodi der baad try karo" });
+  }
+}
+
 async function signup(req, res) {
   try {
     const { name, phone, email, password, preferredLanguage, examGoals, referralCode } = req.body;
@@ -40,6 +83,21 @@ async function signup(req, res) {
     }
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       return res.status(400).json({ message: "Email format valid nahi hai" });
+    }
+
+    // Phone must have been verified via /auth/signup/request-otp first -
+    // this is what actually stops fake/typo'd numbers from creating accounts.
+    const { otp } = req.body;
+    if (!otp) {
+      return res.status(400).json({ message: "Phone verification zaroori hai. Pehle OTP bhejo." });
+    }
+    const otpRecord = await PhoneOtp.findOne({ phone: phone.trim() });
+    if (!otpRecord || otpRecord.expiresAt < new Date()) {
+      return res.status(400).json({ message: "OTP expire ho gaya hai. Naya OTP mangwao." });
+    }
+    const otpOk = await bcrypt.compare(otp, otpRecord.otpHash);
+    if (!otpOk) {
+      return res.status(400).json({ message: "OTP galat hai" });
     }
 
     const existing = await User.findOne({ phone });
@@ -67,6 +125,9 @@ async function signup(req, res) {
       referralCode: myReferralCode,
       referredBy,
     });
+
+    // OTP can't be reused for another signup attempt now that it's done its job.
+    await PhoneOtp.deleteOne({ phone: phone.trim() });
 
     const token = generateToken(user._id);
 
@@ -151,40 +212,90 @@ async function updateProfile(req, res) {
   }
 }
 
-// POST /api/auth/forgot-password  { phone }
-// Sends a 6-digit OTP to the user's registered email (if they have one on file).
-async function forgotPassword(req, res) {
+// POST /api/auth/request-otp  { phone }
+// Used for BOTH "login with OTP" and "forgot password". Generates a 6-digit
+// OTP tied to the phone number. In dev mode (no SMS gateway) the OTP is
+// returned in the response so it can be shown on screen for testing.
+async function requestOtp(req, res) {
   try {
     const { phone } = req.body;
-    if (!phone) return res.status(400).json({ message: "Phone number chahiye" });
-
-    const user = await User.findOne({ phone });
-    // Always return a generic message even if user not found, so this
-    // endpoint can't be used to check which phone numbers are registered.
-    if (!user || !user.email) {
-      return res.json({
-        message:
-          "Agar ye phone number registered hai aur email set hai, to OTP bhej diya gaya hai. Agar email set nahi hai, admin se contact karo.",
-      });
+    if (!/^[6-9]\d{9}$/.test((phone || "").trim())) {
+      return res.status(400).json({ message: "Valid 10-digit mobile number daalo" });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit
-    const otpHash = await bcrypt.hash(otp, 10);
+    const user = await User.findOne({ phone });
+    if (!user) {
+      return res.status(404).json({ message: "Is number se koi account nahi mila. Pehle signup karo." });
+    }
 
-    user.passwordResetOTPHash = otpHash;
-    user.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    const otp = generateOtpCode();
+    user.passwordResetOTPHash = await bcrypt.hash(otp, 10);
+    user.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
     await user.save();
 
-    await sendPasswordResetOTP(user.email, otp, user.name);
+    const { sent } = await sendOtp(phone, otp);
 
-    res.json({ message: "OTP aapke registered email pe bhej diya gaya hai" });
+    res.json({
+      message: sent ? "OTP aapke mobile number pe bhej diya gaya hai" : "OTP generate ho gaya",
+      // In dev mode (SMS not configured), return the OTP so it can be shown
+      // on screen. In production with SMS_ENABLED=true, this is never sent.
+      devOtp: SMS_ENABLED ? undefined : otp,
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Kuch galat ho gaya, thodi der baad try karo" });
+    res.status(500).json({ message: "OTP bhejne mein problem hui, thodi der baad try karo" });
+  }
+}
+
+// Internal helper: validates an OTP for a phone number. Returns the user if
+// valid, otherwise null.
+async function validateOtp(phone, otp) {
+  const user = await User.findOne({ phone }).select("+passwordResetOTPHash +passwordResetExpires");
+  if (!user || !user.passwordResetOTPHash || !user.passwordResetExpires) return null;
+  if (new Date() > user.passwordResetExpires) return null;
+  const ok = await bcrypt.compare(otp, user.passwordResetOTPHash);
+  return ok ? user : null;
+}
+
+// POST /api/auth/login-otp  { phone, otp }
+// Logs a user in using a mobile OTP instead of a password.
+async function loginWithOtp(req, res) {
+  try {
+    const { phone, otp } = req.body;
+    if (!phone || !otp) return res.status(400).json({ message: "Phone aur OTP dono chahiye" });
+
+    const user = await validateOtp(phone, otp);
+    if (!user) return res.status(400).json({ message: "OTP galat ya expire ho gaya hai" });
+
+    // Consume the OTP so it can't be reused
+    user.passwordResetOTPHash = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+    const token = generateToken(user._id);
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        role: user.role,
+        examGoals: user.examGoals,
+        preferredLanguage: user.preferredLanguage,
+        subscriptionStatus: user.subscriptionStatus,
+        subscriptionExpiresAt: user.subscriptionExpiresAt,
+        streakCount: user.streakCount,
+        topicStats: user.topicStats,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "OTP login fail hua", error: err.message });
   }
 }
 
 // POST /api/auth/reset-password  { phone, otp, newPassword }
+// Resets password after verifying the OTP sent via request-otp.
 async function resetPassword(req, res) {
   try {
     const { phone, otp, newPassword } = req.body;
@@ -195,29 +306,19 @@ async function resetPassword(req, res) {
       return res.status(400).json({ message: "Password kam se kam 6 characters ka hona chahiye" });
     }
 
-    const user = await User.findOne({ phone }).select("+passwordResetOTPHash +passwordResetExpires");
-    if (!user || !user.passwordResetOTPHash || !user.passwordResetExpires) {
-      return res.status(400).json({ message: "Pehle OTP request karo" });
-    }
-    if (new Date() > user.passwordResetExpires) {
-      return res.status(400).json({ message: "OTP expire ho gaya, naya OTP mangao" });
-    }
-
-    const isValidOTP = await bcrypt.compare(otp, user.passwordResetOTPHash);
-    if (!isValidOTP) {
-      return res.status(400).json({ message: "OTP galat hai" });
-    }
+    const user = await validateOtp(phone, otp);
+    if (!user) return res.status(400).json({ message: "OTP galat ya expire ho gaya hai" });
 
     user.passwordHash = await bcrypt.hash(newPassword, 10);
     user.passwordResetOTPHash = undefined;
     user.passwordResetExpires = undefined;
     await user.save();
 
-    res.json({ message: "Password successfully reset ho gaya. Ab login karo." });
+    res.json({ message: "Password reset ho gaya. Ab login karo." });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Password reset fail hua", error: err.message });
   }
 }
 
-module.exports = { signup, login, getMe, updateProfile, forgotPassword, resetPassword };
+module.exports = { signup, sendSignupOtp, login, getMe, updateProfile, requestOtp, loginWithOtp, resetPassword };

@@ -24,8 +24,28 @@ export function AuthProvider({ children }) {
     setUser(res.data.user);
   }
 
-  async function signup(name, phone, password, examGoals, email, referralCode) {
-    const res = await api.post("/auth/signup", { name, phone, password, examGoals, email, referralCode });
+  // Requests an OTP for the given phone (used for OTP login and password reset).
+  // Returns the response so the screen can show the dev OTP when SMS is off.
+  async function requestOtp(phone) {
+    const res = await api.post("/auth/request-otp", { phone });
+    return res.data;
+  }
+
+  // Logs in using a mobile OTP instead of a password.
+  async function loginWithOtp(phone, otp) {
+    const res = await api.post("/auth/login-otp", { phone, otp });
+    await AsyncStorage.setItem("token", res.data.token);
+    await AsyncStorage.setItem("user", JSON.stringify(res.data.user));
+    setUser(res.data.user);
+  }
+
+  async function sendSignupOtp(phone) {
+    const res = await api.post("/auth/signup/request-otp", { phone });
+    return res.data; // { message, devOtp? }
+  }
+
+  async function signup(name, phone, password, examGoals, email, referralCode, otp) {
+    const res = await api.post("/auth/signup", { name, phone, password, examGoals, email, referralCode, otp });
     await AsyncStorage.setItem("token", res.data.token);
     await AsyncStorage.setItem("user", JSON.stringify(res.data.user));
     setUser(res.data.user);
@@ -46,7 +66,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, login, signup, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, setUser, loading, login, signup, sendSignupOtp, logout, refreshUser, requestOtp, loginWithOtp }}>
       {children}
     </AuthContext.Provider>
   );
