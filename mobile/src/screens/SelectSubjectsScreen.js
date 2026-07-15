@@ -20,7 +20,7 @@ export default function SelectSubjectsScreen({ navigation }) {
     try {
       const [allRes, myRes] = await Promise.all([api.get("/subjects"), api.get("/subjects/my")]);
       setAll(allRes.data.subjects || []);
-      setSelected((myRes.data.subjects || []).map((s) => s._id));
+      setSelected((myRes.data.subjects || []).map((s) => s.name));
     } catch (err) {
       // fail quietly
     } finally {
@@ -28,8 +28,8 @@ export default function SelectSubjectsScreen({ navigation }) {
     }
   }
 
-  function toggle(id) {
-    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  function toggle(name) {
+    setSelected((prev) => (prev.includes(name) ? prev.filter((x) => x !== name) : [...prev, name]));
   }
 
   async function save() {
@@ -39,10 +39,10 @@ export default function SelectSubjectsScreen({ navigation }) {
     }
     setSaving(true);
     try {
-      await api.post("/subjects/select", { subjectIds: selected });
+      await api.patch("/subjects/my", { subjects: selected });
       navigation.goBack();
     } catch (err) {
-      AppAlert.alert("Couldn't save", "Please try again");
+      AppAlert.alert("Couldn't save", err.response?.data?.message || "Please try again");
     } finally {
       setSaving(false);
     }
@@ -72,11 +72,11 @@ export default function SelectSubjectsScreen({ navigation }) {
           </View>
         }
         renderItem={({ item }) => {
-          const active = selected.includes(item._id);
+          const active = selected.includes(item.name);
           return (
             <TouchableOpacity
               style={[styles.subjectCard, active && styles.subjectCardActive]}
-              onPress={() => toggle(item._id)}
+              onPress={() => toggle(item.name)}
               activeOpacity={0.75}
             >
               <View style={[styles.iconWrap, active && styles.iconWrapActive]}>
