@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import { isSubscribed } from "../utils/subscription";
 import { colors, gradients, spacing, radius, type, shadow, card } from "../theme/theme";
 
 export default function ProfileScreen({ navigation }) {
@@ -47,7 +48,7 @@ export default function ProfileScreen({ navigation }) {
     ]);
   }
 
-  const isActive = user?.subscriptionStatus === "active";
+  const isActive = isSubscribed(user);
   const lang = user?.preferredLanguage || "en";
 
   return (

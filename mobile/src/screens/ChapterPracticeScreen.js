@@ -4,6 +4,8 @@ import AppAlert from "../components/AppAlert";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
+import { useAuth } from "../context/AuthContext";
+import { isSubscribed } from "../utils/subscription";
 import { colors, spacing, radius, type, card } from "../theme/theme";
 
 // Order matters - this is the ladder, and it drives the lock logic below.
@@ -16,6 +18,8 @@ const LEVELS = [
 
 export default function ChapterPracticeScreen({ route, navigation }) {
   const { subject, chapter, currentLevel, isCompleted } = route.params;
+  const { user } = useAuth();
+  const subscribed = isSubscribed(user);
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(null);
@@ -158,7 +162,8 @@ export default function ChapterPracticeScreen({ route, navigation }) {
           </View>
         }
         renderItem={({ item }) => {
-          const premiumLocked = !item.isFree;
+          const isPremiumItem = !item.isFree;
+          const premiumLocked = isPremiumItem && !subscribed;
           const isStarting = starting === item._id;
 
           return (
@@ -181,10 +186,10 @@ export default function ChapterPracticeScreen({ route, navigation }) {
 
               <View style={styles.testBody}>
                 <View style={styles.topRow}>
-                  {premiumLocked && !activeLocked ? (
+                  {isPremiumItem && !activeLocked ? (
                     <View style={styles.tag}>
-                      <Ionicons name="lock-closed" size={9} color={colors.warn} />
-                      <Text style={[styles.tagText, { color: colors.warn }]}>Premium</Text>
+                      <Ionicons name={premiumLocked ? "lock-closed" : "lock-open"} size={9} color={premiumLocked ? colors.warn : colors.success} />
+                      <Text style={[styles.tagText, { color: premiumLocked ? colors.warn : colors.success }]}>Premium</Text>
                     </View>
                   ) : !activeLocked ? (
                     <View style={styles.tag}>

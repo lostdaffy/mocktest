@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import { isSubscribed } from "../utils/subscription";
 import { colors, gradients, spacing, radius, type, shadow, card } from "../theme/theme";
 
 export default function HomeScreen({ navigation }) {
@@ -71,7 +72,7 @@ export default function HomeScreen({ navigation }) {
     setRefreshing(false);
   }
 
-  const isPremium = user?.subscriptionStatus === "active";
+  const isPremium = isSubscribed(user);
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 

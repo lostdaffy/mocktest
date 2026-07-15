@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import { isSubscribed } from "../utils/subscription";
 import { colors, gradients, spacing, radius, type, shadow, card } from "../theme/theme";
 
 const BENEFITS = [
@@ -56,7 +57,7 @@ export default function SubscriptionScreen({ navigation }) {
     }, [loadCredits])
   );
 
-  const isActive = user?.subscriptionStatus === "active";
+  const isActive = isSubscribed(user);
   const plan = PLANS.find((p) => p.id === selected);
 
   return (

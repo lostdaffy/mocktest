@@ -5,6 +5,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
+import { useAuth } from "../context/AuthContext";
+import { isSubscribed } from "../utils/subscription";
 import { colors, gradients, spacing, radius, type, shadow, card } from "../theme/theme";
 
 // One screen, two modes — PYQ and Live share the same shape.
@@ -32,6 +34,8 @@ const MODES = {
 export default function TestListScreen({ route, navigation }) {
   const mode = route.params?.mode || "pyq";
   const config = MODES[mode];
+  const { user } = useAuth();
+  const subscribed = isSubscribed(user);
 
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -109,7 +113,8 @@ export default function TestListScreen({ route, navigation }) {
         </View>
       }
       renderItem={({ item }) => {
-        const locked = !item.isFree;
+        const isPremiumItem = !item.isFree;
+        const locked = isPremiumItem && !subscribed;
         const isStarting = starting === item._id;
         const scheduled = item.scheduledAt ? new Date(item.scheduledAt) : null;
 
@@ -147,16 +152,17 @@ export default function TestListScreen({ route, navigation }) {
                   </View>
                 ) : null}
 
-                <View style={[styles.tag, locked ? styles.tagPremium : styles.tagFree]}>
-                  <Ionicons
-                    name={locked ? "lock-closed" : "checkmark-circle"}
-                    size={9}
-                    color={locked ? colors.warn : colors.success}
-                  />
-                  <Text style={[styles.tagText, { color: locked ? colors.warn : colors.success }]}>
-                    {locked ? "Premium" : "Free"}
-                  </Text>
-                </View>
+                {isPremiumItem ? (
+                  <View style={[styles.tag, locked ? styles.tagPremium : styles.tagUnlocked]}>
+                    <Ionicons name={locked ? "lock-closed" : "lock-open"} size={9} color={locked ? colors.warn : colors.success} />
+                    <Text style={[styles.tagText, { color: locked ? colors.warn : colors.success }]}>Premium</Text>
+                  </View>
+                ) : (
+                  <View style={[styles.tag, styles.tagFree]}>
+                    <Ionicons name="checkmark-circle" size={9} color={colors.success} />
+                    <Text style={[styles.tagText, { color: colors.success }]}>Free</Text>
+                  </View>
+                )}
               </View>
             </View>
 
@@ -216,6 +222,7 @@ const styles = StyleSheet.create({
   tag: { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 7, paddingVertical: 3, borderRadius: radius.full },
   tagFree: { backgroundColor: colors.successLight },
   tagPremium: { backgroundColor: colors.warnLight },
+  tagUnlocked: { backgroundColor: colors.successLight },
   tagText: { fontSize: 10, fontWeight: "700" },
 
   playWrap: {
