@@ -1,59 +1,71 @@
-// Real SMS OTP delivery via 2Factor.in (https://2factor.in).
+// Real SMS OTP delivery via Twilio (https://twilio.com).
 //
-// Why 2Factor instead of Fast2SMS: Fast2SMS's OTP route requires an
-// account-level "website verification" step (or full DLT registration)
-// before it'll send anything - a real blocker while getting started.
-// 2Factor's custom-OTP send route works with a free trial account with no
-// such gate, and matches our exact flow: WE generate and hash the OTP
-// ourselves (see authController.js), 2Factor just has to deliver the exact
-// code we hand it - no AUTOGEN, no session IDs to track.
+// Why Twilio for now: it's the fastest path to genuinely testing OTP end
+// to end - signup gives ~100 free trial SMS credits immediately, no DLT
+// registration or account-verification wait like the domestic providers
+// require. The one thing to know: a TRIAL Twilio account can only send to
+// phone numbers you've explicitly "verified" in the Twilio console (Phone
+// Numbers -> Verified Caller IDs) - up to 5 numbers. That's fine for
+// testing (verify your own number + a couple of testers' numbers) but
+// isn't meant for real users at launch - swap to a domestic provider
+// (2Factor, MSG91) before going live with real signups, since Twilio's
+// per-SMS cost in India is notably higher and non-DLT delivery isn't
+// guaranteed at scale.
 //
 // SETUP (required before OTP flows will work):
-//   1. Sign up at 2factor.in - free trial credits are issued immediately,
-//      no lengthy verification required to start sending test OTPs.
-//   2. Copy your API key from the 2Factor dashboard.
-//   3. In server/.env, set:
-//        SMS_API_KEY=your_2factor_api_key_here
+//   1. Sign up at twilio.com - trial credits are issued immediately.
+//   2. From the Twilio Console dashboard, copy your Account SID and Auth
+//      Token, and note the trial phone number Twilio assigns you.
+//   3. Under Phone Numbers -> Verified Caller IDs, add and verify every
+//      number you want to be able to receive test OTPs on (your own
+//      number, any testers).
+//   4. In server/.env, set:
+//        TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+//        TWILIO_AUTH_TOKEN=your_auth_token
+//        TWILIO_PHONE_NUMBER=+1xxxxxxxxxx   (the number Twilio gave you)
 //
-// No dev-mode fallback: if SMS_API_KEY isn't set, sendOtp() throws instead
-// of silently succeeding, so a misconfigured server fails loudly at request
+// No dev-mode fallback: if these aren't set, sendOtp() throws instead of
+// silently succeeding, so a misconfigured server fails loudly at request
 // time instead of pretending an OTP went out when it didn't.
-//
-// Later, once you've done DLT registration and have a custom sender/template
-// approved with 2Factor, their dashboard lets you attach that template to
-// this same API key - no code change needed here to pick it up.
 
-const fetch = require("node-fetch");
+const twilio = require("twilio");
 
-const SMS_API_KEY = process.env.SMS_API_KEY;
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 
 function generateOtpCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 // Sends a real OTP SMS. Throws on any failure (missing config, network
-// error, or the gateway itself reporting failure) - callers must handle
+// error, or Twilio itself rejecting the request) - callers must handle
 // this and tell the user honestly rather than assuming delivery.
 async function sendOtp(phone, otp) {
-  if (!SMS_API_KEY) {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
     throw new Error(
-      "SMS_API_KEY is not configured on the server. Add it to .env (see services/otpService.js for setup steps)."
+      "Twilio isn't configured on the server. Add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER to .env (see services/otpService.js for setup steps)."
     );
   }
 
-  const url = `https://2factor.in/API/V1/${SMS_API_KEY}/SMS/${phone}/${otp}`;
+  const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+  const toNumber = phone.startsWith("+") ? phone : `+91${phone}`;
 
-  let response;
   try {
-    response = await fetch(url, { method: "POST" });
+    await client.messages.create({
+      body: `${otp} is your Smart Test Engine verification code. Valid for 10 minutes. Don't share this with anyone.`,
+      from: TWILIO_PHONE_NUMBER,
+      to: toNumber,
+    });
   } catch (err) {
-    throw new Error("Couldn't reach the SMS gateway - check server internet access.");
-  }
-
-  const data = await response.json().catch(() => null);
-  if (!data || data.Status !== "Success") {
-    const reason = data?.Details || "unknown error";
-    throw new Error(`SMS gateway rejected the request: ${reason}`);
+    // Twilio error 21608 = "unverified number" - the single most common
+    // trial-account issue, worth a specific message instead of a generic one.
+    if (err.code === 21608) {
+      throw new Error(
+        `${phone} isn't a verified number in your Twilio trial yet. Add it under Phone Numbers -> Verified Caller IDs in the Twilio console, then try again.`
+      );
+    }
+    throw new Error(`SMS gateway rejected the request: ${err.message}`);
   }
 
   return { sent: true };
