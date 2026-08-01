@@ -3,11 +3,26 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
-    phone: { type: String, required: true, unique: true, trim: true, index: true },
-    email: { type: String, trim: true, lowercase: true, default: null }, // optional - needed for self-service password reset
-    passwordHash: { type: String, required: true },
+    // Not required anymore - a Google-signup user may never set a phone.
+    // Still unique when present (sparse index allows many nulls).
+    phone: { type: String, unique: true, sparse: true, trim: true, index: true },
+    email: { type: String, trim: true, lowercase: true, unique: true, sparse: true, default: null },
+    // Not required anymore - a Google-signup user authenticates via Google,
+    // not a password. Phone+password users always have this set.
+    passwordHash: { type: String, select: false },
     passwordResetOTPHash: { type: String, select: false },
     passwordResetExpires: { type: Date, select: false },
+    googleId: { type: String, unique: true, sparse: true, index: true },
+    authProvider: { type: String, enum: ["password", "google"], default: "password" },
+
+    // Bumped (a fresh random value) on every successful login, regardless of
+    // method. The JWT issued at login embeds this value; the auth
+    // middleware rejects any token whose embedded value doesn't match the
+    // CURRENT value here. That's what makes "only one device at a time"
+    // work - logging in elsewhere invalidates every previously-issued token
+    // without needing to track device IDs or push a logout signal.
+    activeSessionId: { type: String, select: false },
+
     preferredLanguage: { type: String, enum: ["hi", "en"], default: "hi" },
     examGoals: [{ type: String }], // e.g. ["SSC", "UP_POLICE"]
     targetExamDate: { type: Date },

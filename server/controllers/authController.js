@@ -1,14 +1,51 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 const PhoneOtp = require("../models/PhoneOtp");
 const { generateOtpCode, sendOtp } = require("../services/otpService");
 
-function generateToken(userId) {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+// One or more valid audiences for Google ID tokens - Expo's auth flow can
+// present the Web client ID (proxy flow) or a platform-specific client ID
+// (standalone build), so all configured client IDs are accepted.
+const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_ID || "").split(",").map((s) => s.trim()).filter(Boolean);
+const googleClient = new OAuth2Client();
+
+// Starts a fresh session for a user: generates a new random sessionId,
+// saves it as the ONLY valid one on the User document, and returns a JWT
+// carrying it. Any token issued before this call stops working the moment
+// this save() completes - that's the entire single-device mechanism, no
+// device tracking needed.
+async function startSession(user) {
+  const sessionId = crypto.randomBytes(24).toString("hex");
+  user.activeSessionId = sessionId;
+  await user.save();
+  const token = jwt.sign({ id: user._id, sessionId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || "30d",
   });
+  return token;
+}
+
+// Shape returned to the client after any successful login/signup - kept in
+// one place so every entry point (password, OTP, Google, signup) returns
+// exactly the same fields.
+function publicUser(user) {
+  return {
+    id: user._id,
+    name: user.name,
+    phone: user.phone,
+    email: user.email,
+    role: user.role,
+    authProvider: user.authProvider,
+    examGoals: user.examGoals,
+    preferredLanguage: user.preferredLanguage,
+    subscriptionStatus: user.subscriptionStatus,
+    subscriptionExpiresAt: user.subscriptionExpiresAt,
+    streakCount: user.streakCount,
+    topicStats: user.topicStats,
+    referralCode: user.referralCode,
+  };
 }
 
 // Generates a short, human-friendly referral code (e.g. "SATYA4K2"). Retries
@@ -25,7 +62,6 @@ async function generateUniqueReferralCode(name) {
   return `U${Date.now().toString(36).toUpperCase()}`;
 }
 
-// POST /api/auth/signup
 // POST /api/auth/signup/request-otp  { phone }
 // Verifies phone ownership BEFORE an account exists. Rate-limited to one
 // send per phone per 60 seconds (via checking the existing record's age)
@@ -63,9 +99,10 @@ async function sendSignupOtp(req, res) {
   }
 }
 
+// POST /api/auth/signup - phone + password path (verified via OTP above)
 async function signup(req, res) {
   try {
-    const { name, phone, email, password, preferredLanguage, examGoals, referralCode } = req.body;
+    const { name, phone, email, password, preferredLanguage, examGoals, referralCode, otp } = req.body;
 
     if (!name || !phone || !password) {
       return res.status(400).json({ message: "Name, phone, and password are required" });
@@ -82,7 +119,6 @@ async function signup(req, res) {
 
     // Phone must have been verified via /auth/signup/request-otp first -
     // this is what actually stops fake/typo'd numbers from creating accounts.
-    const { otp } = req.body;
     if (!otp) {
       return res.status(400).json({ message: "Phone verification zaroori hai. Pehle OTP bhejo." });
     }
@@ -115,6 +151,7 @@ async function signup(req, res) {
       phone,
       email: email ? email.trim().toLowerCase() : null,
       passwordHash,
+      authProvider: "password",
       preferredLanguage: preferredLanguage || "hi",
       examGoals: examGoals || [],
       referralCode: myReferralCode,
@@ -124,26 +161,15 @@ async function signup(req, res) {
     // OTP can't be reused for another signup attempt now that it's done its job.
     await PhoneOtp.deleteOne({ phone: phone.trim() });
 
-    const token = generateToken(user._id);
-
-    res.status(201).json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        phone: user.phone,
-        examGoals: user.examGoals,
-        subscriptionStatus: user.subscriptionStatus,
-        referralCode: user.referralCode,
-      },
-    });
+    const token = await startSession(user);
+    res.status(201).json({ token, user: publicUser(user) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Signup failed", error: err.message });
   }
 }
 
-// POST /api/auth/login
+// POST /api/auth/login  { phone, password }
 async function login(req, res) {
   try {
     const { phone, password } = req.body;
@@ -151,38 +177,91 @@ async function login(req, res) {
       return res.status(400).json({ message: "Phone and password are required" });
     }
 
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ phone }).select("+passwordHash");
     if (!user) return res.status(401).json({ message: "Invalid phone number or password" });
+
+    if (!user.passwordHash) {
+      return res.status(400).json({
+        message: "This account was created with Google. Use 'Sign in with Google' instead.",
+        code: "GOOGLE_ACCOUNT",
+      });
+    }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) return res.status(401).json({ message: "Invalid phone number or password" });
 
-    const token = generateToken(user._id);
-
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        phone: user.phone,
-        role: user.role,
-        examGoals: user.examGoals,
-        preferredLanguage: user.preferredLanguage,
-        subscriptionStatus: user.subscriptionStatus,
-        subscriptionExpiresAt: user.subscriptionExpiresAt,
-        streakCount: user.streakCount,
-        topicStats: user.topicStats,
-      },
-    });
+    const token = await startSession(user);
+    res.json({ token, user: publicUser(user) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Login failed", error: err.message });
   }
 }
 
+// POST /api/auth/google  { idToken }
+// One button, two jobs: creates a new account on first use, logs in on
+// every use after. If a phone-signup account already exists with the same
+// (verified) email, Google is linked to it instead of creating a duplicate.
+async function googleAuth(req, res) {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) return res.status(400).json({ message: "idToken is required" });
+    if (GOOGLE_CLIENT_IDS.length === 0) {
+      return res.status(500).json({ message: "Google Sign-In isn't configured on the server yet (GOOGLE_CLIENT_ID missing in .env)" });
+    }
+
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({ idToken, audience: GOOGLE_CLIENT_IDS });
+      payload = ticket.getPayload();
+    } catch (err) {
+      return res.status(401).json({ message: "Google sign-in verification failed. Please try again." });
+    }
+
+    if (!payload?.email_verified) {
+      return res.status(401).json({ message: "Google account email isn't verified" });
+    }
+
+    const email = payload.email.toLowerCase();
+    let user = await User.findOne({ googleId: payload.sub });
+
+    if (!user) {
+      // Same person, previously signed up with phone+password - link
+      // instead of creating a second account for the same email.
+      user = await User.findOne({ email });
+      if (user) {
+        user.googleId = payload.sub;
+        await user.save();
+      }
+    }
+
+    if (!user) {
+      const myReferralCode = await generateUniqueReferralCode(payload.name);
+      user = await User.create({
+        name: payload.name || "Student",
+        email,
+        googleId: payload.sub,
+        authProvider: "google",
+        referralCode: myReferralCode,
+      });
+    }
+
+    const token = await startSession(user);
+    res.json({ token, user: publicUser(user), isNewUser: user.createdAt.getTime() === user.updatedAt.getTime() });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Google sign-in failed", error: err.message });
+  }
+}
+
 // GET /api/auth/me
 async function getMe(req, res) {
-  res.json({ user: req.user });
+  // req.user comes from the auth middleware, which explicitly re-selects
+  // activeSessionId to run the single-device check - strip it back out
+  // before it goes anywhere near the client.
+  const user = req.user.toObject();
+  delete user.activeSessionId;
+  res.json({ user });
 }
 
 // PATCH /api/auth/profile - update name, exam goals, or preferred language
@@ -200,7 +279,7 @@ async function updateProfile(req, res) {
       updates.email = email.trim().toLowerCase();
     }
 
-    const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true }).select("-passwordHash");
+    const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true });
     res.json({ user });
   } catch (err) {
     res.status(500).json({ message: "Profile update failed", error: err.message });
@@ -209,8 +288,7 @@ async function updateProfile(req, res) {
 
 // POST /api/auth/request-otp  { phone }
 // Used for BOTH "login with OTP" and "forgot password". Generates a 6-digit
-// OTP tied to the phone number. In dev mode (no SMS gateway) the OTP is
-// returned in the response so it can be shown on screen for testing.
+// OTP tied to the phone number and delivers it via real SMS.
 async function requestOtp(req, res) {
   try {
     const { phone } = req.body;
@@ -260,24 +338,9 @@ async function loginWithOtp(req, res) {
     // Consume the OTP so it can't be reused
     user.passwordResetOTPHash = undefined;
     user.passwordResetExpires = undefined;
-    await user.save();
 
-    const token = generateToken(user._id);
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        phone: user.phone,
-        role: user.role,
-        examGoals: user.examGoals,
-        preferredLanguage: user.preferredLanguage,
-        subscriptionStatus: user.subscriptionStatus,
-        subscriptionExpiresAt: user.subscriptionExpiresAt,
-        streakCount: user.streakCount,
-        topicStats: user.topicStats,
-      },
-    });
+    const token = await startSession(user); // also saves the user
+    res.json({ token, user: publicUser(user) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "OTP login fail hua", error: err.message });
@@ -302,6 +365,10 @@ async function resetPassword(req, res) {
     user.passwordHash = await bcrypt.hash(newPassword, 10);
     user.passwordResetOTPHash = undefined;
     user.passwordResetExpires = undefined;
+    // Resetting the password also ends every existing session (including
+    // wherever the account is currently logged in) - standard practice,
+    // since a password reset often means "I think someone else has access."
+    user.activeSessionId = null;
     await user.save();
 
     res.json({ message: "Password reset ho gaya. Ab login karo." });
@@ -311,4 +378,14 @@ async function resetPassword(req, res) {
   }
 }
 
-module.exports = { signup, sendSignupOtp, login, getMe, updateProfile, requestOtp, loginWithOtp, resetPassword };
+module.exports = {
+  signup,
+  sendSignupOtp,
+  login,
+  googleAuth,
+  getMe,
+  updateProfile,
+  requestOtp,
+  loginWithOtp,
+  resetPassword,
+};

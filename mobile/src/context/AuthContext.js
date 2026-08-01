@@ -1,12 +1,15 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../api/client";
+import AppAlert from "../components/AppAlert";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const userRef = useRef(null);
+  userRef.current = user;
 
   useEffect(() => {
     async function loadStoredUser() {
@@ -17,15 +20,46 @@ export function AuthProvider({ children }) {
     loadStoredUser();
   }, []);
 
+  // Registered once, lives for the app's lifetime - not tied to any one
+  // screen. Catches the "logged in on another device" response (see
+  // middleware/auth.js's session check) from ANY API call, anywhere in the
+  // app, and forces this device back to the login screen with a clear
+  // explanation instead of a confusing string of failed requests.
+  useEffect(() => {
+    const interceptorId = api.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const code = error.response?.data?.code;
+        if ((code === "SESSION_REPLACED" || code === "TOKEN_INVALID") && userRef.current) {
+          await AsyncStorage.multiRemove(["token", "user"]);
+          setUser(null);
+          if (code === "SESSION_REPLACED") {
+            AppAlert.alert(
+              "Logged out",
+              "Your account was signed in on another device, so you've been logged out here.",
+              [{ text: "OK" }],
+              { type: "warning" }
+            );
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => api.interceptors.response.eject(interceptorId);
+  }, []);
+
+  async function persistSession(data) {
+    await AsyncStorage.setItem("token", data.token);
+    await AsyncStorage.setItem("user", JSON.stringify(data.user));
+    setUser(data.user);
+  }
+
   async function login(phone, password) {
     const res = await api.post("/auth/login", { phone, password });
-    await AsyncStorage.setItem("token", res.data.token);
-    await AsyncStorage.setItem("user", JSON.stringify(res.data.user));
-    setUser(res.data.user);
+    await persistSession(res.data);
   }
 
   // Requests an OTP for the given phone (used for OTP login and password reset).
-  // Returns the response so the screen can show the dev OTP when SMS is off.
   async function requestOtp(phone) {
     const res = await api.post("/auth/request-otp", { phone });
     return res.data;
@@ -34,21 +68,25 @@ export function AuthProvider({ children }) {
   // Logs in using a mobile OTP instead of a password.
   async function loginWithOtp(phone, otp) {
     const res = await api.post("/auth/login-otp", { phone, otp });
-    await AsyncStorage.setItem("token", res.data.token);
-    await AsyncStorage.setItem("user", JSON.stringify(res.data.user));
-    setUser(res.data.user);
+    await persistSession(res.data);
+  }
+
+  // Signs in (or signs up, on first use) with a Google ID token obtained
+  // client-side via expo-auth-session.
+  async function googleLogin(idToken) {
+    const res = await api.post("/auth/google", { idToken });
+    await persistSession(res.data);
+    return res.data; // { user, isNewUser }
   }
 
   async function sendSignupOtp(phone) {
     const res = await api.post("/auth/signup/request-otp", { phone });
-    return res.data; // { message, devOtp? }
+    return res.data;
   }
 
   async function signup(name, phone, password, examGoals, email, referralCode, otp) {
     const res = await api.post("/auth/signup", { name, phone, password, examGoals, email, referralCode, otp });
-    await AsyncStorage.setItem("token", res.data.token);
-    await AsyncStorage.setItem("user", JSON.stringify(res.data.user));
-    setUser(res.data.user);
+    await persistSession(res.data);
   }
 
   async function logout() {
@@ -66,7 +104,21 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, login, signup, sendSignupOtp, logout, refreshUser, requestOtp, loginWithOtp }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+        loading,
+        login,
+        signup,
+        sendSignupOtp,
+        googleLogin,
+        logout,
+        refreshUser,
+        requestOtp,
+        loginWithOtp,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

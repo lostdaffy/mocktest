@@ -1,25 +1,31 @@
-// Real SMS OTP delivery via Fast2SMS (https://fast2sms.com).
+// Real SMS OTP delivery via 2Factor.in (https://2factor.in).
+//
+// Why 2Factor instead of Fast2SMS: Fast2SMS's OTP route requires an
+// account-level "website verification" step (or full DLT registration)
+// before it'll send anything - a real blocker while getting started.
+// 2Factor's custom-OTP send route works with a free trial account with no
+// such gate, and matches our exact flow: WE generate and hash the OTP
+// ourselves (see authController.js), 2Factor just has to deliver the exact
+// code we hand it - no AUTOGEN, no session IDs to track.
 //
 // SETUP (required before OTP flows will work):
-//   1. Sign up at fast2sms.com (comes with ₹50 free credit to start).
-//   2. Copy your API key from the Dev API section of the dashboard.
+//   1. Sign up at 2factor.in - free trial credits are issued immediately,
+//      no lengthy verification required to start sending test OTPs.
+//   2. Copy your API key from the 2Factor dashboard.
 //   3. In server/.env, set:
-//        SMS_API_KEY=your_key_here
-//   4. Optional but recommended once you have DLT-approved templates:
-//        SMS_SENDER_ID=your_6_char_sender_id
-//        SMS_DLT_TEMPLATE_ID=your_approved_template_id
-//      Without these, Fast2SMS sends via its default OTP route, which
-//      works but shows a generic sender rather than your brand name.
+//        SMS_API_KEY=your_2factor_api_key_here
 //
 // No dev-mode fallback: if SMS_API_KEY isn't set, sendOtp() throws instead
 // of silently succeeding, so a misconfigured server fails loudly at request
 // time instead of pretending an OTP went out when it didn't.
+//
+// Later, once you've done DLT registration and have a custom sender/template
+// approved with 2Factor, their dashboard lets you attach that template to
+// this same API key - no code change needed here to pick it up.
 
 const fetch = require("node-fetch");
 
 const SMS_API_KEY = process.env.SMS_API_KEY;
-const SMS_SENDER_ID = process.env.SMS_SENDER_ID;
-const SMS_DLT_TEMPLATE_ID = process.env.SMS_DLT_TEMPLATE_ID;
 
 function generateOtpCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -35,27 +41,18 @@ async function sendOtp(phone, otp) {
     );
   }
 
-  const params = new URLSearchParams({
-    authorization: SMS_API_KEY,
-    route: SMS_DLT_TEMPLATE_ID ? "dlt" : "otp",
-    variables_values: otp,
-    numbers: phone,
-  });
-  if (SMS_SENDER_ID) params.set("sender_id", SMS_SENDER_ID);
-  if (SMS_DLT_TEMPLATE_ID) params.set("template_id", SMS_DLT_TEMPLATE_ID);
+  const url = `https://2factor.in/API/V1/${SMS_API_KEY}/SMS/${phone}/${otp}`;
 
   let response;
   try {
-    response = await fetch(`https://www.fast2sms.com/dev/bulkV2?${params.toString()}`, {
-      method: "GET",
-    });
+    response = await fetch(url, { method: "POST" });
   } catch (err) {
     throw new Error("Couldn't reach the SMS gateway - check server internet access.");
   }
 
   const data = await response.json().catch(() => null);
-  if (!data || data.return !== true) {
-    const reason = Array.isArray(data?.message) ? data.message.join(", ") : data?.message || "unknown error";
+  if (!data || data.Status !== "Success") {
+    const reason = data?.Details || "unknown error";
     throw new Error(`SMS gateway rejected the request: ${reason}`);
   }
 

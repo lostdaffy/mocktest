@@ -64,7 +64,7 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.avatarText}>{user?.name?.charAt(0)?.toUpperCase() || "?"}</Text>
         </View>
         <Text style={styles.name}>{user?.name}</Text>
-        <Text style={styles.phone}>{user?.phone}</Text>
+        <Text style={styles.phone}>{user?.phone || user?.email}</Text>
 
         <View style={styles.planBadge}>
           <Ionicons name={isActive ? "star" : "person"} size={11} color="#fff" />

@@ -14,6 +14,7 @@ import AppAlert from "../components/AppAlert";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 import { colors, gradients, spacing, radius, type, shadow } from "../theme/theme";
 
 const EXAMS = [
@@ -109,6 +110,17 @@ export default function SignupScreen({ navigation }) {
             {step === 1 ? "Free to start — no card needed" : `Code sent to +91 ${phone}`}
           </Text>
         </View>
+
+        {step === 1 && (
+          <View style={styles.googleWrap}>
+            <GoogleSignInButton label="Sign up with Google" />
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR SIGN UP WITH PHONE</Text>
+              <View style={styles.dividerLine} />
+            </View>
+          </View>
+        )}
 
         {/* Step indicator */}
         <View style={styles.steps}>
@@ -322,6 +334,10 @@ const styles = StyleSheet.create({
   container: { flexGrow: 1, backgroundColor: colors.bg, padding: spacing.lg, paddingTop: 46 },
 
   brandWrap: { alignItems: "center", marginBottom: spacing.md },
+  googleWrap: { marginBottom: spacing.md },
+  dividerRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: spacing.md },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  dividerText: { fontSize: 10, fontWeight: "700", color: colors.slateSoft, letterSpacing: 0.3 },
   logoBox: {
     width: 56,
     height: 56,
