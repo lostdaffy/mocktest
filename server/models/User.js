@@ -30,6 +30,7 @@ const userSchema = new mongoose.Schema(
     // Subscription snapshot (source of truth is Subscription collection, this is a fast-read cache)
     subscriptionStatus: { type: String, enum: ["free", "active", "expired"], default: "free" },
     subscriptionExpiresAt: { type: Date },
+    subscriptionPlan: { type: String, enum: ["half_yearly", "yearly"] }, // mirrors the Subscription doc, for quick display in admin
 
     // Gamification
     streakCount: { type: Number, default: 0 },

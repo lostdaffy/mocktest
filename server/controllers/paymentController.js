@@ -85,11 +85,48 @@ async function createOrder(req, res) {
   }
 }
 
+// Shared by both the app's own /verify call and the Razorpay webhook below.
+// Idempotent - calling this twice for the same order (once from each path,
+// whichever arrives first) only activates the subscription once.
+async function activateSubscription({ razorpayOrderId, razorpayPaymentId, razorpaySignature }) {
+  const subscription = await Subscription.findOne({ razorpayOrderId });
+  if (!subscription) return { ok: false, reason: "Subscription record not found" };
+  if (subscription.status === "paid") return { ok: true, subscription, alreadyDone: true };
+
+  subscription.razorpayPaymentId = razorpayPaymentId;
+  if (razorpaySignature) subscription.razorpaySignature = razorpaySignature;
+  subscription.status = "paid";
+  await subscription.save();
+
+  const buyer = await User.findById(subscription.user);
+
+  if (subscription.creditsUsed > 0) {
+    buyer.referralCredits = Math.max(0, buyer.referralCredits - subscription.creditsUsed);
+  }
+
+  buyer.subscriptionStatus = "active";
+  buyer.subscriptionExpiresAt = subscription.endDate;
+  buyer.subscriptionPlan = subscription.plan;
+  await buyer.save();
+
+  if (buyer.referredBy) {
+    const priorPaid = await Subscription.countDocuments({ user: buyer._id, status: "paid" });
+    if (priorPaid === 1) {
+      const reward = REFERRAL_REWARD[subscription.plan] || 0;
+      await User.findByIdAndUpdate(buyer.referredBy, {
+        $inc: { referralCredits: reward, referralCount: 1 },
+      });
+    }
+  }
+
+  return { ok: true, subscription };
+}
+
 // POST /api/payments/verify
 // body: { razorpay_order_id, razorpay_payment_id, razorpay_signature, subscriptionId }
 async function verifyPayment(req, res) {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, subscriptionId } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -100,50 +137,66 @@ async function verifyPayment(req, res) {
       return res.status(400).json({ message: "Payment verification failed - signature mismatch" });
     }
 
-    const subscription = await Subscription.findById(subscriptionId);
-    if (!subscription) return res.status(404).json({ message: "Subscription record not found" });
+    const result = await activateSubscription({
+      razorpayOrderId: razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id,
+      razorpaySignature: razorpay_signature,
+    });
+    if (!result.ok) return res.status(404).json({ message: result.reason });
 
-    // Idempotency guard: if already processed, don't double-apply rewards
-    if (subscription.status === "paid") {
-      return res.json({ message: "Already verified", subscription });
+    res.json({ message: "Payment verified, subscription activated", subscription: result.subscription });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Verification failed", error: err.message });
+  }
+}
+
+// POST /api/payments/webhook - called by Razorpay's servers directly, not
+// the app. This is the safety net: if a student's payment succeeds but the
+// app never gets to call /verify (killed mid-flow, network drops right
+// after paying, etc.), Razorpay's own server-to-server notification still
+// activates the subscription. Without this, that failure mode means money
+// taken with nothing granted - a real support/refund problem, not a
+// hypothetical one, once real payments are flowing.
+// Setup: Razorpay Dashboard -> Settings -> Webhooks -> add this URL,
+// subscribe to "payment.captured", set a webhook secret, and put that
+// secret in RAZORPAY_WEBHOOK_SECRET in .env.
+async function razorpayWebhook(req, res) {
+  try {
+    const signature = req.headers["x-razorpay-signature"];
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error("RAZORPAY_WEBHOOK_SECRET not set - webhook received but ignored");
+      return res.status(200).json({ received: true });
+    }
+    if (!req.rawBody) {
+      console.error("Webhook raw body missing - check server.js json() verify config");
+      return res.status(200).json({ received: true });
     }
 
-    subscription.razorpayPaymentId = razorpay_payment_id;
-    subscription.razorpaySignature = razorpay_signature;
-    subscription.status = "paid";
-    await subscription.save();
-
-    const buyer = await User.findById(subscription.user);
-
-    // Deduct any referral credits the buyer used
-    if (subscription.creditsUsed > 0) {
-      buyer.referralCredits = Math.max(0, buyer.referralCredits - subscription.creditsUsed);
+    const expected = crypto.createHmac("sha256", webhookSecret).update(req.rawBody).digest("hex");
+    if (expected !== signature) {
+      return res.status(400).json({ message: "Invalid webhook signature" });
     }
 
-    // Activate subscription
-    buyer.subscriptionStatus = "active";
-    buyer.subscriptionExpiresAt = subscription.endDate;
-    await buyer.save();
-
-    // Reward the referrer (only on the buyer's FIRST paid purchase, to prevent
-    // farming credits via repeat purchases by the same referred user)
-    if (buyer.referredBy) {
-      const priorPaid = await Subscription.countDocuments({
-        user: buyer._id,
-        status: "paid",
-      });
-      if (priorPaid === 1) {
-        const reward = REFERRAL_REWARD[subscription.plan] || 0;
-        await User.findByIdAndUpdate(buyer.referredBy, {
-          $inc: { referralCredits: reward, referralCount: 1 },
+    const event = req.body.event;
+    if (event === "payment.captured") {
+      const payment = req.body.payload?.payment?.entity;
+      if (payment?.order_id && payment?.id) {
+        await activateSubscription({
+          razorpayOrderId: payment.order_id,
+          razorpayPaymentId: payment.id,
         });
       }
     }
 
-    res.json({ message: "Payment verified, subscription activated", subscription });
+    // Always 200 once signature is valid - Razorpay retries on non-2xx,
+    // and retry-storming our own bug doesn't help anyone.
+    res.status(200).json({ received: true });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Verification failed", error: err.message });
+    console.error("Webhook processing error:", err);
+    res.status(200).json({ received: true });
   }
 }
 
@@ -159,4 +212,4 @@ async function getReferralInfo(req, res) {
   });
 }
 
-module.exports = { createOrder, verifyPayment, getReferralInfo, PLAN_PRICES };
+module.exports = { createOrder, verifyPayment, razorpayWebhook, getReferralInfo, PLAN_PRICES };

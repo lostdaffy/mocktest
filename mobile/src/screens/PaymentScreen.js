@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from "react-native";
 import AppAlert from "../components/AppAlert";
 import { WebView } from "react-native-webview";
 import api from "../api/client";
@@ -230,4 +230,4 @@ const styles = StyleSheet.create({
   payButton: { backgroundColor: colors.brand, borderRadius: radius.md, paddingVertical: 15, alignItems: "center", marginTop: spacing.lg },
   payButtonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
   cancelText: { color: colors.slate, textAlign: "center", marginTop: spacing.md, fontWeight: "600" },
-}); 
+});
