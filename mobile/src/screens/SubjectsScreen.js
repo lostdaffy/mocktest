@@ -46,15 +46,8 @@ export default function SubjectsScreen({ navigation }) {
       contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.headerRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Practice</Text>
-          <Text style={styles.subtitle}>Chapter-wise tests — easy to advanced</Text>
-        </View>
-        <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate("SelectSubjects")} activeOpacity={0.7}>
-          <Ionicons name="options-outline" size={16} color={colors.brand} />
-        </TouchableOpacity>
-      </View>
+      <Text style={styles.title}>Practice</Text>
+      <Text style={styles.subtitle}>Chapter-wise tests — easy to advanced</Text>
 
       {/* Overall progress */}
       {subjects.length > 0 && (
@@ -86,7 +79,13 @@ export default function SubjectsScreen({ navigation }) {
         </View>
       ) : (
         <>
-          <Text style={styles.sectionTitle}>Your subjects</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Your subjects</Text>
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{subjects.length}</Text>
+            </View>
+          </View>
+
           {subjects.map((subj) => {
             const pct = subj.totalChapters ? Math.round((subj.completedCount / subj.totalChapters) * 100) : 0;
             return (
@@ -124,6 +123,24 @@ export default function SubjectsScreen({ navigation }) {
               </TouchableOpacity>
             );
           })}
+
+          {/* Add-more tile - sits right where the student is already looking,
+              styled distinctly (dashed border, no progress bar) so it visually
+              reads as "the next slot," not another subject. */}
+          <TouchableOpacity
+            style={styles.addCard}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate("SelectSubjects")}
+          >
+            <View style={styles.addIconWrap}>
+              <Ionicons name="add" size={22} color={colors.brand} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.addTitle}>Add more subjects</Text>
+              <Text style={styles.addSub}>Or remove ones you're done with</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.slateSoft} />
+          </TouchableOpacity>
         </>
       )}
     </ScrollView>
@@ -134,17 +151,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
 
-  headerRow: { flexDirection: "row", alignItems: "center", marginTop: 6, marginBottom: spacing.md },
-  title: { ...type.h1, color: colors.ink },
-  subtitle: { ...type.small, color: colors.slate, marginTop: 4 },
-  editButton: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.md,
-    backgroundColor: colors.brandLight,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  title: { ...type.h1, color: colors.ink, marginTop: 6 },
+  subtitle: { ...type.small, color: colors.slate, marginTop: 4, marginBottom: spacing.md },
 
   overallCard: {
     flexDirection: "row",
@@ -168,7 +176,18 @@ const styles = StyleSheet.create({
   },
   overallRingText: { fontSize: 14, fontWeight: "800", color: "#fff" },
 
-  sectionTitle: { ...type.h3, color: colors.ink, marginBottom: 12 },
+  sectionHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
+  sectionTitle: { ...type.h3, color: colors.ink },
+  countBadge: {
+    minWidth: 22,
+    height: 22,
+    paddingHorizontal: 6,
+    borderRadius: 11,
+    backgroundColor: colors.brandLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  countBadgeText: { fontSize: 12, fontWeight: "800", color: colors.brand },
 
   subjectCard: { ...card, padding: spacing.md, marginBottom: 10 },
   subjectTop: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 },
@@ -193,6 +212,31 @@ const styles = StyleSheet.create({
 
   barBg: { height: 6, backgroundColor: colors.slateLight, borderRadius: 3, overflow: "hidden" },
   barFill: { height: 6, borderRadius: 3 },
+
+  addCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: colors.brandLight,
+    backgroundColor: colors.brandTint,
+    marginTop: 4,
+  },
+  addIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.brandLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addTitle: { ...type.bodyStrong, color: colors.brand },
+  addSub: { ...type.tiny, color: colors.slate, fontWeight: "500", marginTop: 2 },
 
   empty: { alignItems: "center", paddingVertical: 60, gap: 10 },
   emptyIcon: {

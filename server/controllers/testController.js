@@ -8,7 +8,7 @@ const {
   generatePersonalizedDailyTest,
   generateWeeklyRevisionTest,
 } = require("../services/testGenerator");
-const { FREE_MOCK_TESTS, FREE_LIVE_EXAMS, FREE_PYQ_PAPERS, FREE_TRIAL_DAYS } = require("../config/freeLimits");
+const { FREE_MOCK_TESTS, FREE_LIVE_EXAMS, FREE_TRIAL_DAYS } = require("../config/freeLimits");
 const { updateChapterMastery } = require("./subjectController");
 
 function hasActiveSubscription(user) {
@@ -39,6 +39,15 @@ async function listTests(req, res) {
   res.json({ tests });
 }
 
+// A PYQ paper from this year or last year is free to build trust in the
+// content upfront (this is what genuinely-real, verified papers are for) -
+// older years are the depth that's worth paying for. Computed from the
+// paper's real exam year, not a per-paper flag admin has to set manually.
+function isPyqFree(test) {
+  const currentYear = new Date().getFullYear();
+  return !test.pyqYear || test.pyqYear >= currentYear - 1;
+}
+
 // GET /api/tests/pyq -> published, real previous-year papers for the student's exam
 async function getPyqList(req, res) {
   const examStage = req.user.examGoals?.[0] || "SSC_CGL";
@@ -49,7 +58,14 @@ async function getPyqList(req, res) {
   })
     .sort({ pyqYear: -1, pyqShift: 1 })
     .select("-questions");
-  res.json({ tests });
+
+  const withFreeFlag = tests.map((t) => {
+    const obj = t.toObject();
+    obj.isFree = isPyqFree(t);
+    return obj;
+  });
+
+  res.json({ tests: withFreeFlag });
 }
 
 // Attaches the CURRENT student's attempt status to a list of tests, so the
@@ -121,28 +137,35 @@ async function getTest(req, res) {
   });
   if (!test) return res.status(404).json({ message: "Test not found" });
 
-  // Free-tier gating for live exams and PYQs. Revisiting a test the student
-  // already started (e.g. resuming, or reviewing after submit) never counts
-  // again - only a genuinely NEW live exam or PYQ paper uses up a free slot.
-  if ((test.type === "live" || test.type === "pyq") && !hasActiveSubscription(req.user)) {
+  // PYQ: free-by-recency, not a usage counter - a paper from this year or
+  // last year is always free (see isPyqFree above); older years need a
+  // subscription, checked fresh every time rather than "used up" like the
+  // live-exam trial below.
+  if (test.type === "pyq" && !isPyqFree(test) && !hasActiveSubscription(req.user)) {
+    return res.status(402).json({
+      message: `This is one of our older PYQ papers - unlock the full archive with a subscription. This year's and last year's papers are always free.`,
+      code: "SUBSCRIPTION_REQUIRED",
+    });
+  }
+
+  // Live exams: a genuine "N free tries, then subscribe" trial. Revisiting a
+  // test the student already started (e.g. resuming, or reviewing after
+  // submit) never counts again - only a genuinely NEW live exam uses up a
+  // free slot.
+  if (test.type === "live" && !hasActiveSubscription(req.user)) {
     const alreadyStarted = await Attempt.exists({ user: req.user._id, test: test._id });
 
     if (!alreadyStarted) {
-      const usageField = test.type === "live" ? "liveExamsUsed" : "pyqUsed";
-      const limit = test.type === "live" ? FREE_LIVE_EXAMS : FREE_PYQ_PAPERS;
-      const used = req.user.freeUsage[usageField];
+      const used = req.user.freeUsage.liveExamsUsed;
 
-      if (used >= limit) {
+      if (used >= FREE_LIVE_EXAMS) {
         return res.status(402).json({
-          message:
-            test.type === "live"
-              ? `Aapke ${FREE_LIVE_EXAMS} free live exams khatam ho gaye. Unlimited live exams ke liye subscribe karo.`
-              : `Aapke ${FREE_PYQ_PAPERS} free PYQ papers khatam ho gaye. Poora PYQ bank unlock karne ke liye subscribe karo.`,
+          message: `Aapke ${FREE_LIVE_EXAMS} free live exams khatam ho gaye. Unlimited live exams ke liye subscribe karo.`,
           code: "SUBSCRIPTION_REQUIRED",
         });
       }
 
-      await User.findByIdAndUpdate(req.user._id, { $inc: { [`freeUsage.${usageField}`]: 1 } });
+      await User.findByIdAndUpdate(req.user._id, { $inc: { "freeUsage.liveExamsUsed": 1 } });
     }
   }
 
@@ -446,7 +469,11 @@ async function getFreeLimits(req, res) {
     isSubscribed: isActive,
     mock: { limit: FREE_MOCK_TESTS, used: req.user.freeUsage.mockTestsUsed, remaining: isActive ? null : Math.max(0, FREE_MOCK_TESTS - req.user.freeUsage.mockTestsUsed) },
     live: { limit: FREE_LIVE_EXAMS, used: req.user.freeUsage.liveExamsUsed, remaining: isActive ? null : Math.max(0, FREE_LIVE_EXAMS - req.user.freeUsage.liveExamsUsed) },
-    pyq: { limit: FREE_PYQ_PAPERS, used: req.user.freeUsage.pyqUsed, remaining: isActive ? null : Math.max(0, FREE_PYQ_PAPERS - req.user.freeUsage.pyqUsed) },
+    // PYQ is no longer a usage counter - papers from this year and last
+    // year are always free, older years need a subscription. Reporting
+    // this as a year cutoff instead of a remaining-count, since there's
+    // nothing to "use up" anymore.
+    pyq: { freeSinceYear: new Date().getFullYear() - 1 },
     dailyTest: { trialDays: FREE_TRIAL_DAYS, daysLeft: isActive ? null : trialDaysLeft },
   });
 }

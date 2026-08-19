@@ -19,13 +19,23 @@ export function AuthProvider({ children }) {
     setUser(res.data.user);
   }
 
+  async function loginWithOtp(phone, otp) {
+    const res = await api.post("/auth/login-otp", { phone, otp });
+    if (res.data.user.role !== "admin") {
+      throw new Error("This account doesn't have admin access");
+    }
+    localStorage.setItem("adminToken", res.data.token);
+    localStorage.setItem("adminUser", JSON.stringify(res.data.user));
+    setUser(res.data.user);
+  }
+
   function logout() {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminUser");
     setUser(null);
   }
 
-  return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, login, loginWithOtp, logout }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
