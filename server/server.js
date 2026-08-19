@@ -13,6 +13,7 @@ const adminUserRoutes = require("./routes/adminUserRoutes");
 const subjectRoutes = require("./routes/subjectRoutes");
 const examSeriesRoutes = require("./routes/examSeriesRoutes");
 const pyqRoutes = require("./routes/pyqRoutes");
+const couponRoutes = require("./routes/couponRoutes");
 
 // Security check: refuse to start with placeholder secrets. This catches
 // the common mistake of copying .env.example without changing these values -
@@ -104,6 +105,7 @@ app.use("/api/admin/users", adminUserRoutes);
 app.use("/api/subjects", subjectRoutes);
 app.use("/api/exam-series", examSeriesRoutes);
 app.use("/api/pyq", pyqRoutes);
+app.use("/api/admin/coupons", couponRoutes);
 
 // Fallback error handler
 app.use((err, req, res, next) => {

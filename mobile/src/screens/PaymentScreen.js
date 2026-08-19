@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput } from "react-native";
 import AppAlert from "../components/AppAlert";
 import { WebView } from "react-native-webview";
+import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { colors, spacing, radius } from "../theme/theme";
@@ -59,10 +60,45 @@ export default function PaymentScreen({ route, navigation }) {
   const [showCheckout, setShowCheckout] = useState(false);
   const handledRef = useRef(false);
 
+  // Coupon
+  const [couponInput, setCouponInput] = useState("");
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, finalAmount, discount }
+  const [couponError, setCouponError] = useState("");
+
+  async function handleApplyCoupon() {
+    if (!couponInput.trim()) return;
+    setApplyingCoupon(true);
+    setCouponError("");
+    try {
+      const res = await api.get("/payments/validate-coupon", { params: { code: couponInput.trim(), plan } });
+      if (res.data.valid) {
+        setAppliedCoupon({ code: couponInput.trim().toUpperCase(), finalAmount: res.data.finalAmount, discount: res.data.discount });
+        setUseCredits(false); // coupon and referral credit don't stack - coupon wins
+      } else {
+        setCouponError(res.data.message || "Invalid coupon");
+      }
+    } catch (err) {
+      setCouponError(err.response?.data?.message || "Couldn't check coupon");
+    } finally {
+      setApplyingCoupon(false);
+    }
+  }
+
+  function removeCoupon() {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError("");
+  }
+
   async function createOrder() {
     setLoading(true);
     try {
-      const res = await api.post("/payments/create-order", { plan, useCredits });
+      const res = await api.post("/payments/create-order", {
+        plan,
+        useCredits: !appliedCoupon && useCredits,
+        couponCode: appliedCoupon?.code,
+      });
       setOrderData(res.data);
       setShowCheckout(true);
     } catch (err) {
@@ -133,11 +169,10 @@ export default function PaymentScreen({ route, navigation }) {
     );
   }
 
-  // Step 1: Confirm screen - shows price, lets student toggle referral credits
+  // Step 1: Confirm screen - shows price, coupon input, referral credit toggle
   if (!showCheckout) {
-    const maxDiscount = Math.min(credits, Math.floor(amount * 0.5));
-    const discount = useCredits ? maxDiscount : 0;
-    const payable = amount - discount;
+    const creditDiscount = !appliedCoupon && useCredits ? Math.min(credits, Math.floor(amount * 0.5)) : 0;
+    const payable = appliedCoupon ? appliedCoupon.finalAmount : amount - creditDiscount;
 
     return (
       <View style={styles.confirmContainer}>
@@ -148,21 +183,60 @@ export default function PaymentScreen({ route, navigation }) {
             <Text style={styles.priceLineValue}>₹{amount}</Text>
           </View>
 
-          {credits > 0 && (
+          {/* Coupon */}
+          {appliedCoupon ? (
+            <View style={styles.couponAppliedRow}>
+              <View style={styles.couponBadge}>
+                <Ionicons name="pricetag" size={12} color={colors.success} />
+                <Text style={styles.couponBadgeText}>{appliedCoupon.code}</Text>
+              </View>
+              <TouchableOpacity onPress={removeCoupon}>
+                <Text style={styles.couponRemove}>Remove</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.couponRow}>
+              <TextInput
+                value={couponInput}
+                onChangeText={(t) => {
+                  setCouponInput(t.toUpperCase());
+                  setCouponError("");
+                }}
+                placeholder="Have a coupon code?"
+                placeholderTextColor={colors.slateSoft}
+                autoCapitalize="characters"
+                style={styles.couponInput}
+              />
+              <TouchableOpacity onPress={handleApplyCoupon} disabled={applyingCoupon || !couponInput.trim()} style={styles.couponApplyBtn}>
+                {applyingCoupon ? (
+                  <ActivityIndicator size="small" color={colors.brand} />
+                ) : (
+                  <Text style={styles.couponApplyText}>Apply</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+          {couponError ? <Text style={styles.couponError}>{couponError}</Text> : null}
+
+          {credits > 0 && !appliedCoupon && (
             <TouchableOpacity style={styles.creditToggle} onPress={() => setUseCredits((v) => !v)}>
               <View style={[styles.checkbox, useCredits && styles.checkboxActive]}>
                 {useCredits && <Text style={styles.checkmark}>✓</Text>}
               </View>
               <Text style={styles.creditToggleText}>
-                Use ₹{maxDiscount} referral credit (up to 50% off)
+                Use ₹{Math.min(credits, Math.floor(amount * 0.5))} referral credit (up to 50% off)
               </Text>
             </TouchableOpacity>
           )}
 
-          {discount > 0 && (
+          {(creditDiscount > 0 || appliedCoupon) && (
             <View style={styles.priceLine}>
-              <Text style={[styles.priceLineLabel, { color: colors.success }]}>Credit discount</Text>
-              <Text style={[styles.priceLineValue, { color: colors.success }]}>- ₹{discount}</Text>
+              <Text style={[styles.priceLineLabel, { color: colors.success }]}>
+                {appliedCoupon ? "Coupon discount" : "Credit discount"}
+              </Text>
+              <Text style={[styles.priceLineValue, { color: colors.success }]}>
+                - ₹{appliedCoupon ? appliedCoupon.discount : creditDiscount}
+              </Text>
             </View>
           )}
 
@@ -219,6 +293,45 @@ const styles = StyleSheet.create({
   priceLine: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 6 },
   priceLineLabel: { fontSize: 14, color: colors.slate },
   priceLineValue: { fontSize: 14, fontWeight: "600", color: colors.ink },
+
+  couponRow: { flexDirection: "row", gap: 8, marginTop: spacing.sm, marginBottom: 4 },
+  couponInput: {
+    flex: 1,
+    height: 42,
+    borderRadius: radius.sm,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    color: colors.ink,
+  },
+  couponApplyBtn: {
+    height: 42,
+    paddingHorizontal: 16,
+    borderRadius: radius.sm,
+    backgroundColor: colors.brandLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  couponApplyText: { color: colors.brand, fontWeight: "700", fontSize: 13 },
+  couponError: { color: colors.danger, fontSize: 12, marginBottom: 6 },
+  couponAppliedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: spacing.sm,
+    marginBottom: 4,
+    backgroundColor: colors.successLight,
+    borderRadius: radius.sm,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  couponBadge: { flexDirection: "row", alignItems: "center", gap: 5 },
+  couponBadgeText: { color: colors.success, fontWeight: "800", fontSize: 13, letterSpacing: 0.5 },
+  couponRemove: { color: colors.slate, fontSize: 12, fontWeight: "600" },
+
   creditToggle: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: spacing.sm },
   checkbox: { width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
   checkboxActive: { backgroundColor: colors.brand, borderColor: colors.brand },

@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const Razorpay = require("razorpay");
 const Subscription = require("../models/Subscription");
 const User = require("../models/User");
+const { resolveCoupon } = require("./couponController");
 
 const PLAN_PRICES = {
   half_yearly: 149,
@@ -33,19 +34,33 @@ function getRazorpayInstance() {
 // POST /api/payments/create-order  { plan: "half_yearly" | "yearly", useCredits: boolean }
 async function createOrder(req, res) {
   try {
-    const { plan, useCredits } = req.body;
+    const { plan, useCredits, couponCode } = req.body;
     const basePrice = PLAN_PRICES[plan];
     if (!basePrice) return res.status(400).json({ message: "Invalid plan" });
 
     const user = await User.findById(req.user._id);
 
-    // Apply referral credit as a discount if the student opted in
     let discount = 0;
-    if (useCredits && user.referralCredits > 0) {
+    let finalAmount = basePrice;
+    let appliedCoupon = null;
+
+    if (couponCode) {
+      // A coupon replaces the referral-credit discount rather than
+      // stacking with it - keeps the pricing unambiguous instead of
+      // needing rules for how two discounts combine.
+      try {
+        const result = await resolveCoupon(couponCode, basePrice);
+        appliedCoupon = result.coupon;
+        finalAmount = result.finalAmount;
+        discount = basePrice - finalAmount;
+      } catch (err) {
+        return res.status(400).json({ message: err.message });
+      }
+    } else if (useCredits && user.referralCredits > 0) {
       const maxDiscount = Math.floor((basePrice * MAX_CREDIT_DISCOUNT_PERCENT) / 100);
       discount = Math.min(user.referralCredits, maxDiscount);
+      finalAmount = basePrice - discount;
     }
-    const finalAmount = basePrice - discount;
 
     const razorpay = getRazorpayInstance();
     const order = await razorpay.orders.create({
@@ -63,6 +78,7 @@ async function createOrder(req, res) {
       plan,
       amount: finalAmount,
       creditsUsed: discount,
+      couponCode: appliedCoupon?.code, // harmless if the schema doesn't declare this field - just won't persist
       startDate,
       endDate,
       razorpayOrderId: order.id,
@@ -116,6 +132,15 @@ async function activateSubscription({ razorpayOrderId, razorpayPaymentId, razorp
       await User.findByIdAndUpdate(buyer.referredBy, {
         $inc: { referralCredits: reward, referralCount: 1 },
       });
+    }
+  }
+
+  if (subscription.couponCode) {
+    try {
+      const Coupon = require("../models/Coupon");
+      await Coupon.updateOne({ code: subscription.couponCode }, { $inc: { usedCount: 1 } });
+    } catch (err) {
+      console.error("Coupon usage count update failed (subscription still activated):", err.message);
     }
   }
 

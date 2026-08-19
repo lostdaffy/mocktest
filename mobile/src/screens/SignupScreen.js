@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
 import GoogleSignInButton from "../components/GoogleSignInButton";
+import { GOOGLE_SIGNIN_ENABLED } from "../config/google";
 import { colors, gradients, spacing, radius, type, shadow } from "../theme/theme";
 
 const EXAMS = [
@@ -111,7 +112,7 @@ export default function SignupScreen({ navigation }) {
           </Text>
         </View>
 
-        {step === 1 && (
+        {step === 1 && GOOGLE_SIGNIN_ENABLED && (
           <View style={styles.googleWrap}>
             <GoogleSignInButton label="Sign up with Google" />
             <View style={styles.dividerRow}>

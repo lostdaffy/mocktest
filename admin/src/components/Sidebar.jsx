@@ -12,6 +12,7 @@ import {
   RiGroupLine,
   RiLogoutBoxRLine,
   RiFilePaperLine,
+  RiCoupon3Line,
 } from "@remixicon/react";
 
 const navItems = [
@@ -24,6 +25,7 @@ const navItems = [
   { to: "/exam-patterns", label: "Exam Patterns", Icon: RiLayoutGridLine },
   { to: "/subjects", label: "Subjects", Icon: RiFolderLine },
   { to: "/live-exams", label: "Live Exams", Icon: RiBroadcastLine },
+  { to: "/coupons", label: "Coupons", Icon: RiCoupon3Line },
   { to: "/users", label: "Users", Icon: RiGroupLine },
 ];
 
