@@ -26,7 +26,7 @@ function buildCheckoutHtml({ keyId, amount, orderId, description }) {
         key: "${keyId}",
         amount: "${amount * 100}",
         currency: "INR",
-        name: "Smart Test Engine",
+        name: "Rankveer",
         description: "${description}",
         order_id: "${orderId}",
         handler: function (response) {
@@ -230,4 +230,4 @@ const styles = StyleSheet.create({
   payButton: { backgroundColor: colors.brand, borderRadius: radius.md, paddingVertical: 15, alignItems: "center", marginTop: spacing.lg },
   payButtonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
   cancelText: { color: colors.slate, textAlign: "center", marginTop: spacing.md, fontWeight: "600" },
-});
+}); 

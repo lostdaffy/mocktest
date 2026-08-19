@@ -155,7 +155,7 @@ async function getReferralInfo(req, res) {
     referralCredits: user.referralCredits,
     referralCount: user.referralCount,
     rewards: REFERRAL_REWARD,
-    shareMessage: `Smart Test Engine pe practice karo! Mera referral code "${user.referralCode}" use karo signup pe. SSC, UP Police, Railway, Banking, CTET ke unlimited mock tests, PYQs aur live exams.`,
+    shareMessage: `Rankveer pe practice karo! Mera referral code "${user.referralCode}" use karo signup pe. SSC, UP Police, Railway, Banking, CTET ke unlimited mock tests, PYQs aur live exams.`,
   });
 }
 

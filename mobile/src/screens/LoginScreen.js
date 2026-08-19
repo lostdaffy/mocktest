@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
 import GoogleSignInButton from "../components/GoogleSignInButton";
+import { GOOGLE_SIGNIN_ENABLED } from "../config/google";
 import { colors, gradients, spacing, radius, type, shadow } from "../theme/theme";
 
 export default function LoginScreen({ navigation }) {
@@ -110,7 +111,7 @@ export default function LoginScreen({ navigation }) {
           <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.logoBox}>
             <Ionicons name="school" size={28} color="#fff" />
           </LinearGradient>
-          <Text style={styles.brandName}>Smart Test Engine</Text>
+          <Text style={styles.brandName}>Rankveer</Text>
           <Text style={styles.brandTag}>Practice smarter. Score higher.</Text>
         </View>
 
@@ -229,13 +230,16 @@ export default function LoginScreen({ navigation }) {
             </LinearGradient>
           </TouchableOpacity>
 
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <GoogleSignInButton label="Continue with Google" />
+          {GOOGLE_SIGNIN_ENABLED && (
+            <>
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>OR</Text>
+                <View style={styles.dividerLine} />
+              </View>
+              <GoogleSignInButton label="Continue with Google" />
+            </>
+          )}
         </View>
 
         <View style={styles.footer}>

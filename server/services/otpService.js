@@ -53,7 +53,7 @@ async function sendOtp(phone, otp) {
 
   try {
     await client.messages.create({
-      body: `${otp} is your Smart Test Engine verification code. Valid for 10 minutes. Don't share this with anyone.`,
+      body: `${otp} is your Rankveer verification code. Valid for 10 minutes. Don't share this with anyone.`,
       from: TWILIO_PHONE_NUMBER,
       to: toNumber,
     });

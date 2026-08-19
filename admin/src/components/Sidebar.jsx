@@ -33,7 +33,7 @@ export default function Sidebar() {
   return (
     <aside className="w-64 shrink-0 bg-ink text-white min-h-screen flex flex-col">
       <div className="px-6 py-6 border-b border-white/10">
-        <h1 className="font-display text-lg font-bold tracking-tight">Smart Test Engine</h1>
+        <h1 className="font-display text-lg font-bold tracking-tight">Rankveer</h1>
         <p className="text-xs text-white/50 mt-0.5">Admin Panel</p>
       </div>
 

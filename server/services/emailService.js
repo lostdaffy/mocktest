@@ -28,9 +28,9 @@ async function sendPasswordResetOTP(toEmail, otp, userName) {
   const transporter = getTransporter();
 
   await transporter.sendMail({
-    from: `"Smart Test Engine" <${process.env.EMAIL_USER}>`,
+    from: `"Rankveer" <${process.env.EMAIL_USER}>`,
     to: toEmail,
-    subject: "Password Reset OTP - Smart Test Engine",
+    subject: "Password Reset OTP - Rankveer",
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
         <h2 style="color: #1053F3;">Password Reset</h2>

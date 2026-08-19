@@ -1,4 +1,4 @@
-// Design system for Smart Test Engine.
+// Design system for Rankveer.
 // One source of truth so every screen looks like it belongs to the same app.
 
 export const colors = {
