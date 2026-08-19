@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import { useToast } from "../components/Toast";
 
 export default function Subjects() {
+  const toast = useToast();
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // subject being edited, or null
@@ -45,15 +47,16 @@ export default function Subjects() {
 
   async function save() {
     if (!editing.name) {
-      alert("Subject name daalo");
+      toast.error("Enter a subject name");
       return;
     }
     try {
       await api.post("/subjects", editing);
+      toast.success(`"${editing.name}" saved`);
       setEditing(null);
       load();
     } catch (err) {
-      alert("Save failed: " + (err.response?.data?.message || err.message));
+      toast.error("Save failed: " + (err.response?.data?.message || err.message));
     }
   }
 
@@ -69,8 +72,8 @@ export default function Subjects() {
         </button>
       </div>
       <p className="text-slate-500 mb-8">
-        Ye subjects aur chapters students ke "Chapter-wise Practice" mein dikhte hain. Har chapter ke topics wahi hone
-        chahiye jo questions pe tag kiye gaye hain.
+        These subjects and chapters appear in students' "Chapter-wise Practice." Each chapter's topics should
+        match exactly what's tagged on the questions themselves.
       </p>
 
       {editing && (

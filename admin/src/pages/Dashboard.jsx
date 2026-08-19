@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { RiFileList3Line, RiBookOpenLine, RiQuestionnaireLine, RiFlag2Line, RiFolderLine, RiBroadcastLine, RiArrowRightLine } from "@remixicon/react";
+import { RiFileList3Line, RiBookOpenLine, RiQuestionnaireLine, RiFlag2Line, RiFolderLine, RiBroadcastLine, RiArrowRightLine, RiFilePaperLine, RiCoupon3Line, RiGroupLine } from "@remixicon/react";
 import api from "../api/axios";
 
 function StatCard({ label, value, hint, accent }) {
@@ -23,7 +23,7 @@ export default function Dashboard() {
         const res = await api.get("/questions/stats");
         setStats(res.data);
       } catch (err) {
-        setLoadError("Backend se connect nahi ho paya — check karo ki server chal raha hai aur VITE_API_URL sahi hai");
+        setLoadError("Couldn't connect to the backend — check that the server is running and VITE_API_URL is correct");
       }
     }
     load();
@@ -32,7 +32,7 @@ export default function Dashboard() {
   return (
     <div>
       <h1 className="font-display text-2xl font-bold text-ink mb-1">Dashboard</h1>
-      <p className="text-slate-500 mb-8">Aapke platform ka poora overview</p>
+      <p className="text-slate-500 mb-8">A complete overview of your platform</p>
 
       {loadError && (
         <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3">
@@ -65,7 +65,7 @@ export default function Dashboard() {
         <StatCard
           label="Open Reports"
           value={stats?.openReports ?? "—"}
-          hint="Students ne error report kiye"
+          hint="Flagged as wrong or unclear by students"
           accent={stats?.openReports > 0 ? "text-red-600" : "text-emerald-600"}
         />
       </div>
@@ -76,7 +76,7 @@ export default function Dashboard() {
           to="/exam-series"
           Icon={RiFileList3Line}
           title="Exam Mock Series"
-          desc="Exam-wise mock tests banao, review karke publish karo"
+          desc="Build exam-wise mock tests, review, and publish"
         />
         <ActionCard
           to="/practice-series"
@@ -85,28 +85,46 @@ export default function Dashboard() {
           desc="Chapter-wise practice tests (Easy → Advanced)"
         />
         <ActionCard
+          to="/pyq-bank"
+          Icon={RiFilePaperLine}
+          title="PYQ Bank"
+          desc="Upload real previous-year papers and extract questions"
+        />
+        <ActionCard
           to="/questions"
           Icon={RiQuestionnaireLine}
           title="Manage Questions"
-          desc="Browse, edit, delete — poora question bank"
+          desc="Browse, edit, or delete anything in the question bank"
         />
         <ActionCard
           to="/reports"
           Icon={RiFlag2Line}
           title="Student Reports"
-          desc="Jo questions students ne flag kiye"
+          desc="Questions students have flagged"
         />
         <ActionCard
           to="/subjects"
           Icon={RiFolderLine}
           title="Subjects & Chapters"
-          desc="Practice ke liye subject/chapter structure"
+          desc="The subject/chapter structure used for practice"
         />
         <ActionCard
           to="/live-exams"
           Icon={RiBroadcastLine}
           title="Live Exams"
-          desc="Live exam schedule karo"
+          desc="Schedule a live exam"
+        />
+        <ActionCard
+          to="/coupons"
+          Icon={RiCoupon3Line}
+          title="Coupons"
+          desc="Create and manage discount codes"
+        />
+        <ActionCard
+          to="/users"
+          Icon={RiGroupLine}
+          title="Users"
+          desc="Search students, manage subscriptions"
         />
       </div>
     </div>

@@ -11,6 +11,7 @@ import {
   RiCloseLine,
 } from "@remixicon/react";
 import api from "../api/axios";
+import { useToast } from "../components/Toast";
 
 const PAGE_SIZE = 25;
 const EXAM_LABELS = {
@@ -22,6 +23,7 @@ const EXAM_LABELS = {
 };
 
 export default function Users() {
+  const toast = useToast();
   const [search, setSearch] = useState("");
   const [subscription, setSubscription] = useState("");
   const [examGoal, setExamGoal] = useState("");
@@ -72,7 +74,7 @@ export default function Users() {
       setPages(res.data.pages ?? 1);
       setPage(res.data.page ?? targetPage);
     } catch (err) {
-      alert("Load failed: " + (err.response?.data?.message || err.message));
+      toast.error("Couldn't load users: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -118,7 +120,7 @@ export default function Users() {
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert("Export failed: " + (err.response?.data?.message || err.message));
+      toast.error("Export failed: " + (err.response?.data?.message || err.message));
     } finally {
       setExporting(false);
     }
@@ -127,17 +129,17 @@ export default function Users() {
   async function handleReset(e) {
     e.preventDefault();
     if (!newPassword || newPassword.length < 6) {
-      alert("Password kam se kam 6 characters ka hona chahiye");
+      toast.error("Password must be at least 6 characters");
       return;
     }
     setResetting(true);
     try {
       await api.patch(`/admin/users/${resetTarget._id}/reset-password`, { newPassword });
-      alert(`Password reset ho gaya ${resetTarget.name} ke liye`);
+      toast.success(`Password reset for ${resetTarget.name}`);
       setResetTarget(null);
       setNewPassword("");
     } catch (err) {
-      alert("Reset failed: " + (err.response?.data?.message || err.message));
+      toast.error("Reset failed: " + (err.response?.data?.message || err.message));
     } finally {
       setResetting(false);
     }
@@ -154,16 +156,17 @@ export default function Users() {
     e.preventDefault();
     setSubSaving(true);
     try {
-      await api.patch(`/admin/users/${subTarget._id}/subscription`, {
+      const res = await api.patch(`/admin/users/${subTarget._id}/subscription`, {
         action: subAction,
         plan: subAction !== "revoke" ? subPlan : undefined,
         reason: subReason || undefined,
       });
+      toast.success(res.data.message || "Subscription updated");
       setSubTarget(null);
       load(page, search);
       loadStats();
     } catch (err) {
-      alert("Update failed: " + (err.response?.data?.message || err.message));
+      toast.error("Update failed: " + (err.response?.data?.message || err.message));
     } finally {
       setSubSaving(false);
     }
@@ -183,7 +186,7 @@ export default function Users() {
         </button>
       </div>
       <p className="text-slate-500 mb-6">
-        {total.toLocaleString("en-IN")} total students. Filter, search, ya poori list yahan se manage karo.
+        {total.toLocaleString("en-IN")} total students. Filter, search, or manage the full list here.
       </p>
 
       {/* Stats cards */}
@@ -269,7 +272,7 @@ export default function Users() {
         {loading ? (
           <p className="text-slate-400 text-center py-10">Loading...</p>
         ) : users.length === 0 ? (
-          <p className="text-slate-400 text-center py-10">Koi user nahi mila.</p>
+          <p className="text-slate-400 text-center py-10">No users found.</p>
         ) : (
           users.map((u) => {
             const isExpiring =
@@ -371,14 +374,14 @@ export default function Users() {
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
             <h3 className="font-semibold text-ink mb-1">Password Reset</h3>
             <p className="text-sm text-slate-500 mb-4">
-              {resetTarget.name} ({resetTarget.phone}) ke liye naya password set karo
+              Set a new password for {resetTarget.name} ({resetTarget.phone})
             </p>
             <form onSubmit={handleReset} className="space-y-3">
               <input
                 type="text"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Naya password (min 6 characters)"
+                placeholder="New password (min 6 characters)"
                 className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:border-brand outline-none"
                 autoFocus
               />

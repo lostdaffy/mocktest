@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
   async function login(phone, password) {
     const res = await api.post("/auth/login", { phone, password });
     if (res.data.user.role !== "admin") {
-      throw new Error("Ye account admin nahi hai");
+      throw new Error("This account doesn't have admin access");
     }
     localStorage.setItem("adminToken", res.data.token);
     localStorage.setItem("adminUser", JSON.stringify(res.data.user));

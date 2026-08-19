@@ -9,8 +9,10 @@ import {
   RiEyeLine,
 } from "@remixicon/react";
 import api from "../api/axios";
+import { useToast } from "../components/Toast";
 
 export default function PyqBank() {
+  const toast = useToast();
   const [patterns, setPatterns] = useState([]);
   const [examStage, setExamStage] = useState("");
   const [papers, setPapers] = useState([]);
@@ -71,7 +73,7 @@ export default function PyqBank() {
   async function handleUpload(e) {
     e.preventDefault();
     if (!file) {
-      alert("Pehle PDF chuno");
+      toast.error("Choose a PDF first");
       return;
     }
     setUploading(true);
@@ -98,8 +100,15 @@ export default function PyqBank() {
   }
 
   async function deletePaper(testId) {
-    if (!confirm("Ye paper permanently delete karna hai?")) return;
+    const ok = await toast.confirm({
+      title: "Permanently delete this paper?",
+      message: "This deletes the paper and all its extracted questions. This can't be undone.",
+      confirmLabel: "Delete permanently",
+      danger: true,
+    });
+    if (!ok) return;
     await api.delete(`/pyq/paper/${testId}`);
+    toast.success("Paper deleted");
     loadPapers();
   }
 
@@ -111,9 +120,9 @@ export default function PyqBank() {
     <div>
       <h1 className="font-display text-2xl font-bold text-ink mb-1">PYQ Bank</h1>
       <p className="text-slate-500 mb-8">
-        Real previous-year papers PDF form mein upload karo — Gemini us PDF se genuine questions nikaal ke deta hai
-        (kuch banata nahi). Answer key nahi mili to review mein khud bharni hogi, publish tab hi hoga jab har
-        question ka jawab confirm ho.
+        Upload real previous-year papers as PDFs — Gemini extracts genuine questions straight from the PDF (it
+        doesn't invent anything). If an answer key is missing you'll fill it in during review; publishing is only
+        possible once every question's answer is confirmed.
       </p>
 
       <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 mb-8">
@@ -135,7 +144,7 @@ export default function PyqBank() {
         <form onSubmit={handleUpload} className="flex flex-wrap items-end gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Subject <span className="text-slate-400">(optional, agar paper mixed hai to khaali chodo)</span>
+              Subject <span className="text-slate-400">(optional — leave blank for a mixed-subject paper)</span>
             </label>
             <input
               type="text"
@@ -194,7 +203,7 @@ export default function PyqBank() {
             <label className="block text-sm font-medium text-slate-700 mb-1.5">PDF</label>
             <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-slate-300 hover:border-brand cursor-pointer text-sm text-slate-600">
               <RiUploadCloud2Line size={16} />
-              {file ? file.name : "PDF chuno"}
+              {file ? file.name : "Choose PDF"}
               <input type="file" accept="application/pdf" className="hidden" onChange={(e) => setFile(e.target.files[0])} />
             </label>
           </div>
@@ -203,15 +212,15 @@ export default function PyqBank() {
             disabled={uploading}
             className="px-5 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium transition-colors disabled:opacity-60"
           >
-            {uploading ? "Extract ho raha hai..." : "Upload & Extract"}
+            {uploading ? "Extracting..." : "Upload & Extract"}
           </button>
         </form>
 
         {uploading && (
           <div className="mt-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3 flex items-center gap-3">
             <span className="inline-block w-4 h-4 border-2 border-amber-300 border-t-amber-700 rounded-full animate-spin" />
-            PDF padha ja raha hai aur questions extract ho rahe hain — bade paper mein 1-2 min lag sakta hai. Page
-            band mat karo.
+            Reading the PDF and extracting questions — a large paper can take 1-2 minutes. Please don't close this
+            page.
           </div>
         )}
 
@@ -236,14 +245,14 @@ export default function PyqBank() {
             {drafts.map((p) => (
               <PaperRow key={p._id} paper={p} onReview={() => setReviewing(p._id)} onDelete={() => deletePaper(p._id)} />
             ))}
-            {drafts.length === 0 && <Empty text="Koi draft paper nahi." />}
+            {drafts.length === 0 && <Empty text="No draft papers." />}
           </PaperSection>
 
           <PaperSection title={`✅ Published (${published.length})`}>
             {published.map((p) => (
               <PaperRow key={p._id} paper={p} onReview={() => setReviewing(p._id)} onArchive={() => archivePaper(p._id)} />
             ))}
-            {published.length === 0 && <Empty text="Abhi koi paper published nahi." />}
+            {published.length === 0 && <Empty text="No papers published yet." />}
           </PaperSection>
 
           {archived.length > 0 && (
@@ -325,6 +334,7 @@ function PaperRow({ paper, onReview, onArchive, onDelete }) {
 }
 
 function ReviewModal({ testId, onClose, onChanged }) {
+  const toast = useToast();
   const [test, setTest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
@@ -348,7 +358,13 @@ function ReviewModal({ testId, onClose, onChanged }) {
   }
 
   async function removeQuestion(questionId) {
-    if (!confirm("Ye question hata do? (galat extraction hai)")) return;
+    const ok = await toast.confirm({
+      title: "Remove this question?",
+      message: "Use this when the extraction is wrong or the question shouldn't be included.",
+      confirmLabel: "Remove",
+      danger: true,
+    });
+    if (!ok) return;
     await api.delete(`/pyq/paper/${testId}/question/${questionId}`);
     load();
     onChanged();

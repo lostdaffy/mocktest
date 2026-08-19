@@ -13,7 +13,7 @@ export default function ExamSeries() {
         const res = await api.get("/exam-series/exams");
         setExams(res.data.exams);
       } catch (err) {
-        setError("Exams load nahi hue. Backend chal raha hai? Exam patterns seed kiye?");
+        setError("Couldn't load exams. Is the backend running? Have exam patterns been seeded?");
       } finally {
         setLoading(false);
       }
@@ -25,7 +25,8 @@ export default function ExamSeries() {
     <div>
       <h1 className="font-display text-2xl font-bold text-ink mb-1">Exam Mock Series</h1>
       <p className="text-slate-500 mb-8">
-        Har exam ke liye mock test series banao. Generate → Review → Publish. Sirf published mocks students ko dikhte hain.
+        Build a mock test series for each exam. Generate → Review → Publish. Only published mocks are visible to
+        students.
       </p>
 
       {error && (
@@ -36,7 +37,7 @@ export default function ExamSeries() {
         <p className="text-slate-400">Loading...</p>
       ) : exams.length === 0 ? (
         <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center text-slate-500">
-          Koi exam pattern nahi mila. Pehle "Exam Patterns" page se exam add karo, ya <code>npm run seed:patterns</code> chalao.
+          No exam patterns found. Add an exam from the "Exam Patterns" page first, or run <code>npm run seed:patterns</code>.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

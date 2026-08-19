@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { RiRadioButtonLine, RiCalendarEventLine, RiCheckboxCircleFill } from "@remixicon/react";
 import api from "../api/axios";
+import { useToast } from "../components/Toast";
 
 export default function LiveExams() {
+  const toast = useToast();
   const [exams, setExams] = useState([]);
   const [patterns, setPatterns] = useState([]);
   const [examType, setExamType] = useState("");
@@ -45,17 +47,18 @@ export default function LiveExams() {
   async function handleSchedule(e) {
     e.preventDefault();
     if (!mockTestId) {
-      alert("Pick a published mock first");
+      toast.error("Pick a published mock first");
       return;
     }
     setSaving(true);
     try {
       await api.post("/exams/live/schedule", { mockTestId, scheduledAt });
+      toast.success("Live exam scheduled");
       setScheduledAt("");
       setMockTestId("");
       load();
     } catch (err) {
-      alert("Schedule failed: " + (err.response?.data?.message || err.message));
+      toast.error("Schedule failed: " + (err.response?.data?.message || err.message));
     } finally {
       setSaving(false);
     }

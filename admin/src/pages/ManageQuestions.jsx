@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import { useToast } from "../components/Toast";
 
 export default function ManageQuestions() {
+  const toast = useToast();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ subject: "", topic: "", status: "published" });
@@ -29,29 +31,37 @@ export default function ManageQuestions() {
   }, []);
 
   async function handleDelete(id) {
-    if (!confirm("Ye question delete karein? Wapas nahi aayega.")) return;
+    const ok = await toast.confirm({
+      title: "Delete this question?",
+      message: "This can't be undone.",
+      confirmLabel: "Delete",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await api.delete(`/questions/${id}`);
       setQuestions((prev) => prev.filter((q) => q._id !== id));
+      toast.success("Question deleted");
     } catch (err) {
-      alert("Delete failed");
+      toast.error("Delete failed");
     }
   }
 
   async function handleSaveEdit() {
     try {
       await api.put(`/questions/${editing._id}`, editing);
+      toast.success("Question saved");
       setEditing(null);
       load();
     } catch (err) {
-      alert("Save failed: " + (err.response?.data?.message || err.message));
+      toast.error("Save failed: " + (err.response?.data?.message || err.message));
     }
   }
 
   return (
     <div>
       <h1 className="font-display text-2xl font-bold text-ink mb-1">Manage Questions</h1>
-      <p className="text-slate-500 mb-6">Poora question bank browse karo, edit ya delete karo.</p>
+      <p className="text-slate-500 mb-6">Browse the full question bank, edit or delete entries.</p>
 
       <div className="flex gap-3 mb-6 flex-wrap">
         <input
@@ -87,7 +97,7 @@ export default function ManageQuestions() {
       {loading ? (
         <p className="text-slate-400">Loading...</p>
       ) : questions.length === 0 ? (
-        <p className="text-slate-400">Koi question nahi mila is filter mein.</p>
+        <p className="text-slate-400">No questions match this filter.</p>
       ) : (
         <div className="space-y-3">
           {questions.map((q) => (

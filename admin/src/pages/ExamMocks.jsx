@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../api/axios";
+import { useToast } from "../components/Toast";
 
 export default function ExamMocks() {
+  const toast = useToast();
   const { examStage } = useParams();
   const [mocks, setMocks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +72,7 @@ export default function ExamMocks() {
       setCreateAsLive(false);
       load();
     } catch (err) {
-      setGenMessage("Error: " + (err.response?.data?.message || "fail"));
+      setGenMessage("Error: " + (err.response?.data?.message || "Something went wrong"));
     } finally {
       setGenerating(false);
     }
@@ -79,7 +81,7 @@ export default function ExamMocks() {
   // Option 2b: add a batch of questions to an existing draft mock
   async function addQuestions(testId) {
     if (!addForm.subject.trim()) {
-      alert("Subject daalo (jaise Maths)");
+      toast.error("Enter a subject (e.g. Maths)");
       return;
     }
     setAddBusy(true);
@@ -90,7 +92,7 @@ export default function ExamMocks() {
       load();
       loadSectionStatus(testId); // refresh per-section counts
     } catch (err) {
-      setGenMessage("Error: " + (err.response?.data?.message || "add fail hua"));
+      setGenMessage("Error: " + (err.response?.data?.message || "Couldn't add questions"));
     } finally {
       setAddBusy(false);
     }
@@ -102,7 +104,7 @@ export default function ExamMocks() {
       const res = await api.get(`/exam-series/mock/${testId}`);
       setReviewMock(res.data.test);
     } catch (err) {
-      alert("Review load nahi hua");
+      toast.error("Couldn't load the review");
     } finally {
       setReviewLoading(false);
     }
@@ -111,41 +113,60 @@ export default function ExamMocks() {
   async function publish(testId, isFree) {
     try {
       await api.patch(`/exam-series/mock/${testId}/publish`, { isFree });
+      toast.success("Mock published");
       setReviewMock(null);
       load();
     } catch (err) {
-      alert("Publish fail hua");
+      toast.error(err.response?.data?.message || "Publish failed");
     }
   }
 
   async function archive(testId) {
-    if (!confirm("Ye mock students se hide kar dein?")) return;
+    const ok = await toast.confirm({
+      title: "Hide this mock from students?",
+      message: "It will be moved to Archived and won't show in the Mock Tests tab anymore.",
+      confirmLabel: "Hide it",
+    });
+    if (!ok) return;
     try {
       await api.patch(`/exam-series/mock/${testId}/archive`);
+      toast.success("Mock hidden from students");
       load();
     } catch (err) {
-      alert("Fail");
+      toast.error("Something went wrong");
     }
   }
 
   async function deleteMock(testId) {
-    if (!confirm("Ye mock aur uske saare questions PERMANENTLY delete kar dein? Wapas nahi aayega.")) return;
+    const ok = await toast.confirm({
+      title: "Permanently delete this mock?",
+      message: "This deletes the mock and all its questions. This can't be undone.",
+      confirmLabel: "Delete permanently",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await api.delete(`/exam-series/mock/${testId}`);
+      toast.success("Mock deleted");
       setReviewMock(null);
       load();
     } catch (err) {
-      alert("Delete fail hua");
+      toast.error("Delete failed");
     }
   }
 
   async function removeQuestion(testId, questionId) {
-    if (!confirm("Ye question is mock se hata dein?")) return;
+    const ok = await toast.confirm({
+      title: "Remove this question from the mock?",
+      message: "The question stays in the bank, just removed from this specific mock.",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     try {
       await api.delete(`/exam-series/mock/${testId}/question/${questionId}`);
       openReview(testId); // refresh review view
     } catch (err) {
-      alert("Fail");
+      toast.error("Something went wrong");
     }
   }
 
@@ -156,7 +177,7 @@ export default function ExamMocks() {
   return (
     <div>
       <Link to="/exam-series" className="text-sm text-brand hover:underline">
-        ← Saare Exams
+        ← All Exams
       </Link>
       <div className="flex items-center justify-between mt-2 mb-1">
         <h1 className="font-display text-2xl font-bold text-ink">{examStage} Mock Series</h1>
@@ -175,17 +196,17 @@ export default function ExamMocks() {
             disabled={generating}
             className="px-5 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium transition-colors disabled:opacity-60"
           >
-            {generating ? "Ban raha hai..." : "+ Naya Mock Banao"}
+            {generating ? "Creating..." : "+ New Mock"}
           </button>
         </div>
       </div>
       <p className="text-slate-500 mb-6">
-        Naya mock banao, phir usme <b>"Add Questions"</b> se thoda-thoda karke questions add karo (12-12). 100 questions
-        hone par publish kar sakte ho. Sirf is exam ka content — quality guaranteed.
+        Create a new mock, then use <b>"Add Questions"</b> to build it up in small batches (12 at a time). Publish
+        once it reaches 100 questions. Content is scoped strictly to this exam — quality guaranteed.
         {createAsLive && (
           <span className="block mt-1 text-brand font-medium">
-            "Live Exam Exclusive" checked hai — ye mock Mock Tests tab mein students ko kabhi nahi dikhega, sirf Live
-            Exam schedule karne ke liye available hoga.
+            "Live Exam Exclusive" is checked — this mock will never appear in the Mock Tests tab, and is only
+            available to schedule as a Live Exam.
           </span>
         )}
       </p>
@@ -193,8 +214,7 @@ export default function ExamMocks() {
       {addBusy && (
         <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3 flex items-center gap-3">
           <span className="inline-block w-4 h-4 border-2 border-amber-300 border-t-amber-700 rounded-full animate-spin"></span>
-          Questions generate ho rahe hain... thoda ruko (rate limit ki wajah se 30-60 sec lag sakta hai). Page band mat
-          karo.
+          Generating questions... this can take 30-60 seconds due to rate limits. Please don't close this page.
         </div>
       )}
 
@@ -206,7 +226,7 @@ export default function ExamMocks() {
         <p className="text-slate-400">Loading...</p>
       ) : (
         <>
-          <Section title={`📝 Drafts (${drafts.length})`} hint="Review karke publish karo (100 questions zaroori)">
+          <Section title={`📝 Drafts (${drafts.length})`} hint="Review and publish once it reaches 100 questions">
             {drafts.map((m) => (
               <div key={m._id} className="mb-3">
                 <div className="bg-white border border-slate-100 rounded-xl p-4 flex items-center justify-between">
@@ -221,7 +241,7 @@ export default function ExamMocks() {
                     </p>
                     <p className={`text-xs mt-0.5 ${(m.questions?.length || 0) >= 100 ? "text-emerald-600" : "text-amber-600"}`}>
                       {m.questions?.length || 0} / 100 questions
-                      {(m.questions?.length || 0) < 100 && " — publish ke liye aur chahiye"}
+                      {(m.questions?.length || 0) < 100 && " — needs more before it can be published"}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -247,8 +267,8 @@ export default function ExamMocks() {
                 {addingTo === m._id && (
                   <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-2">
                     <p className="text-xs text-slate-500 mb-3">
-                      Questions real exam pattern (PYQ style) ke hisaab se banenge — asli exam jaisa mix. Is exam ke
-                      section choose karo:
+                      Questions are generated to match the real exam pattern (PYQ style) — the same mix as the actual
+                      paper. Pick a section for this exam:
                     </p>
                     <div className="flex gap-2 items-end flex-wrap">
                       <div>
@@ -293,7 +313,7 @@ export default function ExamMocks() {
                         {addBusy ? (
                           <>
                             <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-                            Ban raha hai...
+                            Generating...
                           </>
                         ) : (
                           "Generate & Add"
@@ -303,7 +323,7 @@ export default function ExamMocks() {
                     {sectionStatus?.sections?.length > 0 && (
                       <div className="mt-4 pt-3 border-t border-slate-200">
                         <p className="text-xs font-medium text-slate-600 mb-2">
-                          Section Progress ({sectionStatus.totalHave}/{sectionStatus.totalRequired} total):
+                          Section progress ({sectionStatus.totalHave}/{sectionStatus.totalRequired} total):
                         </p>
                         <div className="space-y-1.5">
                           {sectionStatus.sections.map((s) => (
@@ -322,7 +342,8 @@ export default function ExamMocks() {
                           ))}
                         </div>
                         <p className="text-xs text-slate-400 mt-2">
-                          Har section utna hi bharo jitna asli exam mein aata hai. Full (✓) section mein aur add nahi hoga.
+                          Fill each section to match its real weight in the exam. A full (✓) section stops accepting
+                          more questions.
                         </p>
                       </div>
                     )}
@@ -330,24 +351,24 @@ export default function ExamMocks() {
                 )}
               </div>
             ))}
-            {drafts.length === 0 && <Empty text="Koi draft nahi. Naya generate karo." />}
+            {drafts.length === 0 && <Empty text="No drafts yet. Create a new mock to get started." />}
           </Section>
 
           <Section
             title={`✅ Published — Mock Tests tab (${published.filter((m) => !m.liveExclusive).length})`}
-            hint="Students ko ye normal Mock Tests mein dikh rahe hain"
+            hint="Visible to students in the regular Mock Tests tab"
           >
             {published
               .filter((m) => !m.liveExclusive)
               .map((m) => (
                 <MockRow key={m._id} mock={m} onReview={() => openReview(m._id)} onArchive={() => archive(m._id)} published />
               ))}
-            {published.filter((m) => !m.liveExclusive).length === 0 && <Empty text="Abhi koi mock live nahi." />}
+            {published.filter((m) => !m.liveExclusive).length === 0 && <Empty text="No mocks published yet." />}
           </Section>
 
           <Section
             title={`🔴 Live Exam Exclusive pool (${published.filter((m) => m.liveExclusive).length})`}
-            hint="Students ko kahin nahi dikhte — sirf Live Exams page se schedule karne ke liye"
+            hint="Never shown to students directly — only used to schedule Live Exams"
           >
             {published
               .filter((m) => m.liveExclusive)
@@ -355,7 +376,7 @@ export default function ExamMocks() {
                 <MockRow key={m._id} mock={m} onReview={() => openReview(m._id)} onArchive={() => archive(m._id)} published />
               ))}
             {published.filter((m) => m.liveExclusive).length === 0 && (
-              <Empty text="Koi Live Exam Exclusive mock nahi bana abhi. Upar checkbox tick karke banao." />
+              <Empty text='No Live Exam Exclusive mocks yet. Tick the checkbox above to build one.' />
             )}
           </Section>
 
@@ -369,7 +390,7 @@ export default function ExamMocks() {
         </>
       )}
 
-      {reviewLoading && <p className="text-slate-400 mt-4">Review load ho raha hai...</p>}
+      {reviewLoading && <p className="text-slate-400 mt-4">Loading review...</p>}
 
       {reviewMock && (
         <ReviewModal
@@ -441,7 +462,7 @@ function ReviewModal({ mock, onClose, onPublish, onDelete, onRemoveQuestion }) {
         <div className="flex items-center justify-between p-5 border-b border-slate-100">
           <div>
             <h3 className="font-display text-lg font-bold text-ink">{mock.title}</h3>
-            <p className="text-xs text-slate-400">{mock.questions.length} questions · Review karke publish karo</p>
+            <p className="text-xs text-slate-400">{mock.questions.length} questions · Review before publishing</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-xl">
             ✕
@@ -459,7 +480,7 @@ function ReviewModal({ mock, onClose, onPublish, onDelete, onRemoveQuestion }) {
                   onClick={() => onRemoveQuestion(mock._id, q._id)}
                   className="text-red-500 text-xs whitespace-nowrap hover:underline"
                 >
-                  Hata do
+                  Remove
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-1 mt-2">
@@ -475,7 +496,7 @@ function ReviewModal({ mock, onClose, onPublish, onDelete, onRemoveQuestion }) {
                 ))}
               </div>
               <p className="text-xs text-slate-500 mt-2">
-                <b>Sol:</b> {q.solution}
+                <b>Solution:</b> {q.solution}
               </p>
               <p className="text-[10px] text-slate-300 mt-1">
                 {q.subject} · {q.difficulty}

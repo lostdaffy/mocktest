@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { RiCoupon3Line, RiDeleteBinLine } from "@remixicon/react";
 import api from "../api/axios";
+import { useToast } from "../components/Toast";
 
 const TYPE_LABELS = {
   fixed_price: "Fixed price",
@@ -9,6 +10,7 @@ const TYPE_LABELS = {
 };
 
 export default function Coupons() {
+  const toast = useToast();
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +38,7 @@ export default function Coupons() {
   async function handleCreate(e) {
     e.preventDefault();
     if (!code || !value) {
-      alert("Code aur value dono chahiye");
+      toast.error("Enter both a code and a value");
       return;
     }
     setSaving(true);
@@ -48,13 +50,14 @@ export default function Coupons() {
         maxUses: maxUses ? Number(maxUses) : null,
         note,
       });
+      toast.success(`Coupon "${code}" created`);
       setCode("");
       setValue("");
       setMaxUses("");
       setNote("");
       load();
     } catch (err) {
-      alert("Create failed: " + (err.response?.data?.message || err.message));
+      toast.error(err.response?.data?.message || "Couldn't create the coupon");
     } finally {
       setSaving(false);
     }
@@ -66,8 +69,15 @@ export default function Coupons() {
   }
 
   async function handleDelete(c) {
-    if (!confirm(`"${c.code}" delete karna hai?`)) return;
+    const ok = await toast.confirm({
+      title: `Delete "${c.code}"?`,
+      message: "This coupon will no longer be usable. This can't be undone.",
+      confirmLabel: "Delete",
+      danger: true,
+    });
+    if (!ok) return;
     await api.delete(`/admin/coupons/${c._id}`);
+    toast.success("Coupon deleted");
     load();
   }
 
@@ -75,8 +85,8 @@ export default function Coupons() {
     <div>
       <h1 className="font-display text-2xl font-bold text-ink mb-1">Coupons</h1>
       <p className="text-slate-500 mb-8">
-        Discount codes banao subscription ke liye — testing ke liye, launch offers ke liye, ya kisi ko manually
-        discount dene ke liye.
+        Create discount codes for subscriptions — for testing, launch offers, or a manual discount for a specific
+        student.
       </p>
 
       <form onSubmit={handleCreate} className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 mb-8">
@@ -86,7 +96,7 @@ export default function Coupons() {
             <input
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="TEST1"
+              placeholder="LAUNCH50"
               className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none uppercase"
             />
           </div>
@@ -135,7 +145,7 @@ export default function Coupons() {
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Note (e.g. 'live payment testing, delete after use')"
+          placeholder="Note (e.g. 'Launch week offer, ends Sept 1')"
           className="w-full mt-3 px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none text-sm"
         />
       </form>
@@ -143,7 +153,7 @@ export default function Coupons() {
       {loading ? (
         <p className="text-slate-400 text-center py-10">Loading...</p>
       ) : coupons.length === 0 ? (
-        <p className="text-slate-400 text-center py-10">Koi coupon nahi bana abhi.</p>
+        <p className="text-slate-400 text-center py-10">No coupons created yet.</p>
       ) : (
         <div className="space-y-3">
           {coupons.map((c) => (

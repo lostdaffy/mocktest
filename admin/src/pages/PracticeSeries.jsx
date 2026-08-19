@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import { useToast } from "../components/Toast";
 
 const LEVELS = ["easy", "medium", "hard", "advanced"];
 const LEVEL_COLORS = {
@@ -10,6 +11,7 @@ const LEVEL_COLORS = {
 };
 
 export default function PracticeSeries() {
+  const toast = useToast();
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +34,7 @@ export default function PracticeSeries() {
       const res = await api.get(`/exam-series/mock/${testId}`);
       setReviewTest(res.data.test);
     } catch (err) {
-      alert("Review load nahi hua");
+      toast.error("Couldn't load the review");
     } finally {
       setReviewLoading(false);
     }
@@ -40,13 +42,18 @@ export default function PracticeSeries() {
 
   // Remove a single bad question from the test
   async function removeQuestion(testId, questionId) {
-    if (!confirm("Ye question hata dein?")) return;
+    const ok = await toast.confirm({
+      title: "Remove this question?",
+      message: "It will be taken out of this test.",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     try {
       await api.delete(`/exam-series/mock/${testId}/question/${questionId}`);
       openReview(testId); // refresh the review
       loadChapterTests(selectedSubject.name, openChapter.name);
     } catch (err) {
-      alert("Remove fail");
+      toast.error("Couldn't remove the question");
     }
   }
 
@@ -61,7 +68,7 @@ export default function PracticeSeries() {
         if (updated) setSelectedSubject(updated);
       }
     } catch (err) {
-      setMessage("Subjects load nahi hue. Backend chal raha hai?");
+      setMessage("Couldn't load subjects. Is the backend running?");
     } finally {
       setLoading(false);
     }
@@ -110,7 +117,7 @@ export default function PracticeSeries() {
       loadChapterTests(selectedSubject.name, chapter.name);
       load(selectedSubject.name);
     } catch (err) {
-      setMessage("❌ " + (err.response?.data?.message || "Generate fail hua"));
+      setMessage("❌ " + (err.response?.data?.message || "Couldn't generate the test"));
     } finally {
       setGenBusy(null);
     }
@@ -119,21 +126,29 @@ export default function PracticeSeries() {
   async function publishTest(testId, isFree) {
     try {
       await api.patch(`/exam-series/practice/${testId}/publish`, { isFree });
+      toast.success("Test published");
       loadChapterTests(selectedSubject.name, openChapter.name);
       load(selectedSubject.name);
     } catch (err) {
-      alert("Publish fail: " + (err.response?.data?.message || ""));
+      toast.error("Publish failed: " + (err.response?.data?.message || ""));
     }
   }
 
   async function deleteTest(testId) {
-    if (!confirm("Ye test delete karein? Wapas nahi aayega.")) return;
+    const ok = await toast.confirm({
+      title: "Delete this test?",
+      message: "This can't be undone.",
+      confirmLabel: "Delete",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await api.delete(`/exam-series/mock/${testId}`);
+      toast.success("Test deleted");
       loadChapterTests(selectedSubject.name, openChapter.name);
       load(selectedSubject.name);
     } catch (err) {
-      alert("Delete fail");
+      toast.error("Delete failed");
     }
   }
 
@@ -143,7 +158,7 @@ export default function PracticeSeries() {
       <div>
         <h1 className="font-display text-2xl font-bold text-ink mb-1">Subject Practice</h1>
         <p className="text-slate-500 mb-8">
-          Subject choose karo → chapters dikhenge → har chapter ke Easy/Medium/Hard/Advanced tests banao.
+          Pick a subject to see its chapters, then build Easy/Medium/Hard/Advanced tests for each one.
         </p>
 
         {message && (
@@ -156,9 +171,9 @@ export default function PracticeSeries() {
           <p className="text-slate-400">Loading...</p>
         ) : subjects.length === 0 ? (
           <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl px-6 py-8 text-center">
-            <p className="font-medium mb-1">Koi subject nahi mila</p>
+            <p className="font-medium mb-1">No subjects found</p>
             <p className="text-sm">
-              Terminal mein <code className="bg-white px-1.5 py-0.5 rounded">npm run seed:subjects</code> chalao
+              Run <code className="bg-white px-1.5 py-0.5 rounded">npm run seed:subjects</code> in the terminal
             </p>
           </div>
         ) : (
@@ -205,7 +220,7 @@ export default function PracticeSeries() {
         }}
         className="text-sm text-brand hover:underline mb-3"
       >
-        ← Saare Subjects
+        ← All Subjects
       </button>
 
       <div className="flex items-center gap-3 mb-1">
@@ -213,7 +228,7 @@ export default function PracticeSeries() {
         <h1 className="font-display text-2xl font-bold text-ink">{selectedSubject.name}</h1>
       </div>
       <p className="text-slate-500 mb-6">
-        Chapter pe click karo → uske tests dikhenge aur naye bana sakte ho. Har chapter mein 4 levels: Easy → Advanced.
+        Click a chapter to see its tests and build new ones. Each chapter has 4 levels: Easy → Advanced.
       </p>
 
       {message && (
@@ -223,7 +238,7 @@ export default function PracticeSeries() {
       {genBusy && (
         <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3 flex items-center gap-3">
           <span className="inline-block w-4 h-4 border-2 border-amber-300 border-t-amber-700 rounded-full animate-spin"></span>
-          Test ban raha hai... 10-30 second lag sakte hain. Page band mat karo.
+          Building the test... this can take 10-30 seconds. Please don't close this page.
         </div>
       )}
 
@@ -249,7 +264,7 @@ export default function PracticeSeries() {
 
               {isOpen && (
                 <div className="border-t border-slate-100 p-5 bg-slate-50">
-                  <p className="text-xs font-medium text-slate-600 mb-2">Naya test banao (level choose karo):</p>
+                  <p className="text-xs font-medium text-slate-600 mb-2">Build a new test — pick a level:</p>
                   <div className="flex gap-2 flex-wrap mb-5">
                     {LEVELS.map((level) => {
                       const busy = genBusy === `${ch.name}-${level}`;
@@ -263,7 +278,7 @@ export default function PracticeSeries() {
                           {busy ? (
                             <>
                               <span className="inline-block w-3.5 h-3.5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin"></span>
-                              Ban raha...
+                              Building...
                             </>
                           ) : (
                             `+ ${level}`
@@ -273,11 +288,11 @@ export default function PracticeSeries() {
                     })}
                   </div>
 
-                  <p className="text-xs font-medium text-slate-600 mb-2">Is chapter ke tests:</p>
+                  <p className="text-xs font-medium text-slate-600 mb-2">Tests in this chapter:</p>
                   {testsLoading ? (
                     <p className="text-sm text-slate-400">Loading...</p>
                   ) : chapterTests.length === 0 ? (
-                    <p className="text-sm text-slate-400">Koi test nahi. Upar se banao.</p>
+                    <p className="text-sm text-slate-400">No tests yet — build one above.</p>
                   ) : (
                     <div className="space-y-2">
                       {chapterTests.map((t) => (
@@ -338,7 +353,7 @@ export default function PracticeSeries() {
                   )}
 
                   <p className="text-xs text-slate-400 mt-4">
-                    💡 Har chapter ke pehle 2 test <b>FREE</b> rakho, baaki <b>Premium</b>.
+                    💡 Keep the first 2 tests in each chapter <b>FREE</b>, the rest <b>Premium</b>.
                   </p>
                 </div>
               )}
@@ -370,7 +385,7 @@ export default function PracticeSeries() {
               {reviewLoading ? (
                 <p className="text-slate-400 text-sm">Loading questions...</p>
               ) : reviewTest?.questions?.length === 0 ? (
-                <p className="text-slate-400 text-sm">Is test mein koi question nahi.</p>
+                <p className="text-slate-400 text-sm">This test has no questions.</p>
               ) : (
                 <div className="space-y-4">
                   {reviewTest?.questions?.map((q, idx) => (
@@ -384,7 +399,7 @@ export default function PracticeSeries() {
                           onClick={() => removeQuestion(reviewTest._id, q._id)}
                           className="shrink-0 px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium"
                         >
-                          Hatao
+                          Remove
                         </button>
                       </div>
 
@@ -440,7 +455,7 @@ export default function PracticeSeries() {
                   onClick={() => setReviewTest(null)}
                   className="px-4 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-medium"
                 >
-                  Band Karo
+                  Close
                 </button>
               </div>
             )}

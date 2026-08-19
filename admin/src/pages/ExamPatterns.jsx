@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import { useToast } from "../components/Toast";
 
 const emptySection = () => ({ subject: "", questionCount: 25, difficultyMix: { easy: 30, medium: 50, hard: 20 } });
 
 export default function ExamPatterns() {
+  const toast = useToast();
   const [patterns, setPatterns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -51,11 +53,12 @@ export default function ExamPatterns() {
     setSaving(true);
     try {
       await api.post("/exams", form);
+      toast.success(`"${form.displayName}" saved`);
       setShowForm(false);
       setForm({ examType: "", displayName: "", durationMinutes: 60, negativeMarking: 0.25, sections: [emptySection()] });
       load();
     } catch (err) {
-      alert("Save failed: " + (err.response?.data?.message || err.message));
+      toast.error("Save failed: " + (err.response?.data?.message || err.message));
     } finally {
       setSaving(false);
     }
@@ -73,7 +76,8 @@ export default function ExamPatterns() {
         </button>
       </div>
       <p className="text-slate-500 mb-8">
-        Ek baar pattern define karo — mock tests uske baad hamesha automatic ban jayenge, manually test banane ki zaroorat nahi.
+        Define a pattern once — mock tests are automatically built to match it from then on, no need to configure
+        each test individually.
       </p>
 
       {showForm && (

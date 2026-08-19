@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import { useToast } from "../components/Toast";
 
 const REASON_LABELS = {
-  wrong_answer: "Galat Answer",
-  unclear_question: "Unclear Question",
+  wrong_answer: "Wrong answer",
+  unclear_question: "Unclear question",
   typo: "Typo",
-  duplicate_options: "Duplicate Options",
+  duplicate_options: "Duplicate options",
   other: "Other",
 };
 
 export default function Reports() {
+  const toast = useToast();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,32 +35,41 @@ export default function Reports() {
     try {
       await api.patch(`/questions/reports/${id}/resolve`);
       setReports((prev) => prev.filter((r) => r._id !== id));
+      toast.success("Report resolved");
     } catch (err) {
-      alert("Failed");
+      toast.error("Something went wrong");
     }
   }
 
   async function rejectQuestion(questionId) {
-    if (!confirm("Is question ko reject/hide karein?")) return;
+    const ok = await toast.confirm({
+      title: "Reject this question?",
+      message: "It will be hidden from students immediately.",
+      confirmLabel: "Reject & hide",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await api.patch(`/questions/${questionId}/reject`, { reason: "Rejected via student report" });
-      alert("Question hide ho gaya");
+      toast.success("Question hidden from students");
     } catch (err) {
-      alert("Failed");
+      toast.error("Something went wrong");
     }
   }
 
   return (
     <div>
       <h1 className="font-display text-2xl font-bold text-ink mb-1">Student Reports</h1>
-      <p className="text-slate-500 mb-8">Jo questions students ne galat/confusing mark kiye — inhe check karke fix ya resolve karo.</p>
+      <p className="text-slate-500 mb-8">
+        Questions students have flagged as wrong or confusing — review and resolve or hide each one.
+      </p>
 
       {loading ? (
         <p className="text-slate-400">Loading...</p>
       ) : reports.length === 0 ? (
         <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl px-6 py-10 text-center">
           <p className="text-2xl mb-2">✅</p>
-          <p className="font-medium">Koi pending report nahi — sab clean hai!</p>
+          <p className="font-medium">No pending reports — all clear.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -95,19 +106,19 @@ export default function Reports() {
                   </p>
                 </>
               ) : (
-                <p className="text-slate-400 mb-4">(Question delete ho chuka hai)</p>
+                <p className="text-slate-400 mb-4">(This question has already been deleted)</p>
               )}
 
               <div className="flex gap-3">
                 <button onClick={() => resolve(r._id)} className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium">
-                  Sahi hai, Resolve karo
+                  Looks fine — Resolve
                 </button>
                 {r.question && (
                   <button
                     onClick={() => rejectQuestion(r.question._id)}
                     className="px-4 py-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-sm font-medium"
                   >
-                    Question Hide Karo
+                    Hide this question
                   </button>
                 )}
               </div>
