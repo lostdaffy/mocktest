@@ -3,10 +3,12 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingVi
 import AppAlert from "../components/AppAlert";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../api/client";
 import { colors, gradients, spacing, radius, type, shadow } from "../theme/theme";
 
 export default function ForgotPasswordScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [step, setStep] = useState(1); // 1 = request code, 2 = reset
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -25,8 +27,8 @@ export default function ForgotPasswordScreen({ navigation }) {
     setError("");
     setLoading(true);
     try {
-      const res = await api.post("/auth/forgot-password", { phone });
-      setSentTo(res.data.maskedEmail || "your registered email");
+      await api.post("/auth/request-otp", { phone });
+      setSentTo(phone);
       setStep(2);
     } catch (err) {
       setError(err.response?.data?.message || "Couldn't send the code. Please try again.");
@@ -63,14 +65,18 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.container, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.brandWrap}>
           <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.logoBox}>
             <Ionicons name="lock-open" size={25} color="#fff" />
           </LinearGradient>
           <Text style={styles.title}>Reset password</Text>
           <Text style={styles.subtitle}>
-            {step === 1 ? "We'll email you a verification code" : `Code sent to ${sentTo}`}
+            {step === 1 ? "We'll text you a verification code" : `Code sent by SMS to ${sentTo}`}
           </Text>
         </View>
 
@@ -115,7 +121,7 @@ export default function ForgotPasswordScreen({ navigation }) {
               <View style={styles.hintBox}>
                 <Ionicons name="information-circle-outline" size={15} color={colors.brand} />
                 <Text style={styles.hintText}>
-                  The code goes to the email saved on your account. No email saved? Contact support.
+                  The code will be texted to this phone number via SMS.
                 </Text>
               </View>
 

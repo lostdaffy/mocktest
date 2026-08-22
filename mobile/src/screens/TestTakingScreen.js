@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, BackHandler, Modal, FlatList } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AppAlert from "../components/AppAlert";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { colors, spacing, radius } from "../theme/theme";
 
 export default function TestTakingScreen({ route, navigation }) {
+  const insets = useSafeAreaInsets();
   const { testId } = route.params;
   const { user } = useAuth();
   const [test, setTest] = useState(null);
@@ -270,7 +272,7 @@ export default function TestTakingScreen({ route, navigation }) {
   return (
     <View style={styles.container}>
       {/* Top bar: title, timer, palette toggle */}
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
         <View style={{ flex: 1 }}>
           <Text style={styles.testTitle} numberOfLines={1}>
             {test.title}
@@ -363,7 +365,7 @@ export default function TestTakingScreen({ route, navigation }) {
       </ScrollView>
 
       {/* Bottom action bar */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.md }]}>
         <TouchableOpacity style={styles.clearButton} onPress={() => clearResponse(question._id)}>
           <Text style={styles.clearButtonText}>Clear</Text>
         </TouchableOpacity>
@@ -385,7 +387,7 @@ export default function TestTakingScreen({ route, navigation }) {
 
       {/* Question palette modal */}
       <Modal visible={paletteVisible} animationType="slide" onRequestClose={() => setPaletteVisible(false)}>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { paddingTop: insets.top + spacing.lg }]}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Questions</Text>
             <TouchableOpacity onPress={() => setPaletteVisible(false)}>
@@ -489,7 +491,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: spacing.md,
-    paddingTop: 50,
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
     borderColor: colors.border,
@@ -578,7 +579,7 @@ const styles = StyleSheet.create({
   saveButton: { flex: 1.3, paddingVertical: 12, borderRadius: radius.md, backgroundColor: colors.brand, alignItems: "center" },
   submitButton: { flex: 1.3, paddingVertical: 12, borderRadius: radius.md, backgroundColor: colors.success, alignItems: "center" },
   saveButtonText: { color: "#fff", fontWeight: "700", fontSize: 13 },
-  modalContainer: { flex: 1, backgroundColor: "#fff", paddingTop: 50 },
+  modalContainer: { flex: 1, backgroundColor: "#fff" },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",

@@ -3,8 +3,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
 import { colors, gradients, spacing, radius, type, shadow, card } from "../theme/theme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function AnalysisScreen() {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const topicStats = user?.topicStats || [];
 
@@ -21,7 +23,7 @@ export default function AnalysisScreen() {
       data={sorted}
       keyExtractor={(item, idx) => `${item.subject}-${item.topic}-${idx}`}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl + insets.bottom }}
       ListHeaderComponent={
         <View>
           <Text style={styles.title}>My Analysis</Text>

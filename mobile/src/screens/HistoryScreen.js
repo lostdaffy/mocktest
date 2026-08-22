@@ -4,8 +4,10 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
 import { colors, spacing, radius, type, card } from "../theme/theme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function HistoryScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +43,7 @@ export default function HistoryScreen({ navigation }) {
       data={history}
       keyExtractor={(item) => item.attemptId}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl + insets.bottom }}
       ListHeaderComponent={
         history.length > 0 ? (
           <View style={styles.header}>

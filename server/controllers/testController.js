@@ -9,6 +9,7 @@ const {
   generateWeeklyRevisionTest,
 } = require("../services/testGenerator");
 const { FREE_MOCK_TESTS, FREE_LIVE_EXAMS, FREE_TRIAL_DAYS } = require("../config/freeLimits");
+const { liveWindow, liveState, secondsRemaining } = require("../utils/liveExam");
 const { updateChapterMastery } = require("./subjectController");
 
 function hasActiveSubscription(user) {
@@ -66,6 +67,40 @@ async function getPyqList(req, res) {
   });
 
   res.json({ tests: withFreeFlag });
+}
+
+// GET /api/tests/pyq/:examStage/years -> distinct years with paper counts,
+// newest first. Powers the "pick a year" screen once a student has picked
+// an exam - students can browse ANY exam's PYQs, not just their own goal.
+async function getPyqYears(req, res) {
+  const { examStage } = req.params;
+  const years = await Test.aggregate([
+    { $match: { examStage, type: "pyq", publishStatus: "published" } },
+    { $group: { _id: "$pyqYear", count: { $sum: 1 } } },
+    { $sort: { _id: -1 } },
+  ]);
+  res.json({ years: years.map((y) => ({ year: y._id, count: y.count })) });
+}
+
+// GET /api/tests/pyq/:examStage/papers/:year -> papers for one exam+year
+async function getPyqPapersByYear(req, res) {
+  const { examStage, year } = req.params;
+  const tests = await Test.find({
+    examStage,
+    type: "pyq",
+    pyqYear: Number(year),
+    publishStatus: "published",
+  })
+    .sort({ pyqShift: 1 })
+    .select("-questions");
+
+  const withFreeFlag = tests.map((t) => {
+    const obj = t.toObject ? t.toObject() : t;
+    obj.isFree = isPyqFree(t);
+    return obj;
+  });
+
+  res.json({ tests: await withAttemptStatus(withFreeFlag, req.user._id) });
 }
 
 // Attaches the CURRENT student's attempt status to a list of tests, so the
@@ -148,6 +183,46 @@ async function getTest(req, res) {
     });
   }
 
+  // ---- Live exam: the exam-hall rules ----
+  //
+  // A live exam only opens at its scheduled moment and closes at the same
+  // wall-clock moment for everyone. Without this check the "live" exam was
+  // live in name only - any student could open it days early, take it
+  // alone, and land on a leaderboard against people who hadn't sat it yet.
+  if (test.type === "live") {
+    const state = liveState(test);
+    const { startsAt, endsAt } = liveWindow(test);
+
+    if (state === "upcoming") {
+      return res.status(403).json({
+        message: "This live exam hasn't started yet. Come back at the scheduled time.",
+        code: "LIVE_NOT_STARTED",
+        startsAt,
+        endsAt,
+      });
+    }
+
+    if (state === "ended") {
+      return res.status(403).json({
+        message: "This live exam has ended. Check the rankings to see how you did.",
+        code: "LIVE_ENDED",
+        startsAt,
+        endsAt,
+      });
+    }
+
+    // One shot only - a live exam can't be re-entered after submitting,
+    // the way a practice test can.
+    const existing = await Attempt.findOne({ user: req.user._id, test: test._id });
+    if (existing && existing.status !== "in_progress") {
+      return res.status(403).json({
+        message: "You've already submitted this live exam.",
+        code: "LIVE_ALREADY_ATTEMPTED",
+        attemptId: existing._id,
+      });
+    }
+  }
+
   // Live exams: a genuine "N free tries, then subscribe" trial. Revisiting a
   // test the student already started (e.g. resuming, or reviewing after
   // submit) never counts again - only a genuinely NEW live exam uses up a
@@ -178,6 +253,22 @@ async function getTest(req, res) {
     return res.status(402).json({
       message: "This is a Premium test. Subscribe to unlock it.",
       code: "SUBSCRIPTION_REQUIRED",
+    });
+  }
+
+  if (test.type === "live") {
+    const { startsAt, endsAt } = liveWindow(test);
+    // The client must run its countdown on THIS, not on durationMinutes -
+    // a student joining 10 minutes late gets the 50 minutes that are left,
+    // not a fresh 60, so everyone still finishes together.
+    return res.json({
+      test,
+      live: {
+        startsAt,
+        endsAt,
+        secondsRemaining: secondsRemaining(test),
+        serverTime: new Date(),
+      },
     });
   }
 
@@ -412,7 +503,7 @@ async function getAttemptResult(req, res) {
       path: "answers.question",
       select: "text textHi options optionsHi correctIndex solution solutionHi subject topic",
     })
-    .populate("test", "title type examType");
+    .populate("test", "title type examType scheduledAt durationMinutes");
 
   if (!attempt) return res.status(404).json({ message: "Attempt not found" });
   if (String(attempt.user) !== String(req.user._id) && req.user.role !== "admin") {
@@ -423,8 +514,41 @@ async function getAttemptResult(req, res) {
   const slowWrong = attempt.answers.filter((a) => !a.isCorrect && a.timeTakenSeconds > 60).length;
   const fastWrong = attempt.answers.filter((a) => !a.isCorrect && a.timeTakenSeconds <= 60).length;
 
+  // Rank: only meaningful for a live exam, and only once the shared window
+  // has closed (before that most people haven't submitted, so any "rank"
+  // would be against a fraction of the field and would keep changing).
+  const attemptObj = attempt.toObject();
+  attemptObj.testTitle = attempt.test?.title || "Test";
+
+  if (attempt.test?.type === "live") {
+    const ended = liveState(attempt.test) === "ended";
+
+    if (ended) {
+      const [better, total] = await Promise.all([
+        Attempt.countDocuments({
+          test: attempt.test._id,
+          status: { $ne: "in_progress" },
+          score: { $gt: attempt.score },
+        }),
+        Attempt.countDocuments({
+          test: attempt.test._id,
+          status: { $ne: "in_progress" },
+        }),
+      ]);
+
+      attemptObj.rank = better + 1;
+      attemptObj.totalParticipants = total;
+      attemptObj.resultsReleased = true;
+    } else {
+      attemptObj.rank = null;
+      attemptObj.totalParticipants = null;
+      attemptObj.resultsReleased = false;
+      attemptObj.rankAvailableAt = liveWindow(attempt.test).endsAt;
+    }
+  }
+
   res.json({
-    attempt,
+    attempt: attemptObj,
     insight: {
       slowAndWrong: slowWrong,
       fastAndWrong: fastWrong,
@@ -488,6 +612,8 @@ module.exports = {
   submitTest,
   getAttemptResult,
   getPyqList,
+  getPyqYears,
+  getPyqPapersByYear,
   listMyAttempts,
   getFreeLimits,
   getExamSeries,

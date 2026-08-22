@@ -6,8 +6,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import api from "../api/client";
 import { colors, gradients, spacing, radius, type, shadow, card } from "../theme/theme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ReferralScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -48,7 +50,7 @@ export default function ReferralScreen({ navigation }) {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl + insets.bottom }}
       showsVerticalScrollIndicator={false}
     >
       <LinearGradient colors={gradients.success} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>

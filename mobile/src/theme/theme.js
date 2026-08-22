@@ -1,69 +1,104 @@
-// Design system for Rankveer.
-// One source of truth so every screen looks like it belongs to the same app.
+// Rankveer design system v2 — warm, soft, card-based visual language.
+// Colors and layout patterns match the approved reference design; content
+// and features stay Rankveer's own (SSC/Railway/Police/Banking/CTET, not
+// the reference's JEE/NEET example content).
+//
+// NOTE ON BRAND COLOR: this switches the mobile app's primary accent from
+// the blue (#1053F3) used everywhere else (admin panel, logo, emails) to
+// the warm coral used in the reference design, per explicit instruction
+// that colors should match the reference too, not just the layout. This
+// means the mobile app and admin panel will look like different brands
+// side by side until/unless the admin panel is updated to match - flagging
+// this clearly since it's a real, visible inconsistency now.
 
 export const colors = {
-  // Brand
-  brand: "#1053F3",
-  brandDark: "#0B3EC1",
-  brandDarker: "#082C8C",
-  brandLight: "#E8EFFE",
-  brandTint: "#F5F8FF",
+  // Brand — warm coral, matching the reference
+  brand: "#FF6B4A",
+  brandDark: "#E8532F",
+  brandDarker: "#C23F1F",
+  brandLight: "#FFE4DB",
+  brandTint: "#FFF3EF",
+
+  // Secondary dark (used for high-emphasis buttons like "Start Practice",
+  // "Choose Plan" in the reference — a near-black, not the coral)
+  ink2: "#1F2A37",
+  ink2Light: "#EEF0F2",
 
   // Text
-  ink: "#0F1729",
-  inkSoft: "#334155",
-  slate: "#64748B",
-  slateSoft: "#94A3B8",
+  ink: "#1A2027",
+  inkSoft: "#3D4A5C",
+  slate: "#6B7684",
+  slateSoft: "#9AA3AF",
 
   // Surfaces
-  bg: "#F7F9FC",
+  bg: "#F8F8FB",
   surface: "#FFFFFF",
-  slateLight: "#F1F5F9",
-  border: "#E7ECF3",
-  borderSoft: "#F1F5F9",
+  slateLight: "#F2F2F6",
+  border: "#EDEDF2",
+  borderSoft: "#F5F5F8",
 
   // Semantic
-  success: "#059669",
-  successLight: "#ECFDF5",
-  successBorder: "#A7F3D0",
-  danger: "#DC2626",
-  dangerLight: "#FEF2F2",
-  dangerBorder: "#FECACA",
+  success: "#16A34A",
+  successLight: "#EAFBF0",
+  successBorder: "#BBF0D0",
+  danger: "#E11D48",
+  dangerLight: "#FEF1F4",
+  dangerBorder: "#FBD0DB",
   warn: "#D97706",
-  warnLight: "#FFFBEB",
-  warnBorder: "#FDE68A",
+  warnLight: "#FFF7EA",
+  warnBorder: "#FCE2AE",
   flag: "#F59E0B",
-  flagLight: "#FFFBEB",
+  flagLight: "#FFF7EA",
 
   // Difficulty ladder
-  easy: "#059669",
-  easyBg: "#ECFDF5",
-  medium: "#0284C7",
-  mediumBg: "#E0F2FE",
+  easy: "#16A34A",
+  easyBg: "#EAFBF0",
+  medium: "#2563EB",
+  mediumBg: "#EAF1FE",
   hard: "#EA580C",
-  hardBg: "#FFF7ED",
+  hardBg: "#FFF1E8",
   advanced: "#7C3AED",
-  advancedBg: "#F3E8FF",
+  advancedBg: "#F3EBFE",
 
   white: "#FFFFFF",
+
+  // Soft hero card tones (the "Practice Today" card in the reference is a
+  // light lavender tint, not a bold gradient - distinct from the coral
+  // brand color used everywhere else)
+  heroTint: "#EEEAFB",
+  heroAccent: "#7C5CFC",
+  heroRing: "#FFD9CE",
+
+  // Category palette — for subject/feature icon badges (Physics/Chemistry-
+  // style colorful chips in the reference). Cycle through these by index
+  // for any list of subjects/categories so each one reads distinctly.
+  categories: [
+    { bg: "#EAF1FE", fg: "#3B7BFF" }, // blue
+    { bg: "#FEF1F4", fg: "#F43F7A" }, // pink
+    { bg: "#EAFBF0", fg: "#16A34A" }, // green
+    { bg: "#F3EBFE", fg: "#8B5CF6" }, // purple
+    { bg: "#FFF1E8", fg: "#F97316" }, // orange
+    { bg: "#EAFCFC", fg: "#0EA5A5" }, // teal
+  ],
 };
 
-// Subtle gradients — depth without looking gimmicky.
 export const gradients = {
-  brand: ["#1E5FFF", "#0B3EC1"],
-  brandVivid: ["#3B7BFF", "#0B3EC1"],
-  hero: ["#2563EB", "#1053F3", "#0B3EC1"],
+  brand: ["#FF8563", "#FF6B4A"],
+  brandVivid: ["#FF9B7A", "#E8532F"],
+  hero: ["#FF9B7A", "#FF6B4A", "#E8532F"],
   premium: ["#F59E0B", "#D97706"],
-  success: ["#10B981", "#059669"],
-  danger: ["#EF4444", "#DC2626"],
-  dark: ["#1E293B", "#0F1729"],
+  success: ["#34D399", "#16A34A"],
+  danger: ["#F87171", "#E11D48"],
+  dark: ["#2B3542", "#1A2027"],
 };
 
+// Base spacing scale — unchanged in *values* (dp scales naturally with
+// screen size in RN), but every screen now reads insets for edge spacing
+// instead of hardcoding top/bottom padding. See safeArea below.
 export const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 44 };
 
-export const radius = { xs: 6, sm: 10, md: 14, lg: 18, xl: 24, xxl: 28, full: 999 };
+export const radius = { xs: 8, sm: 12, md: 16, lg: 20, xl: 26, xxl: 32, full: 999 };
 
-// Type scale — consistent hierarchy across screens.
 export const type = {
   display: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5 },
   h1: { fontSize: 22, fontWeight: "800", letterSpacing: -0.3 },
@@ -76,39 +111,37 @@ export const type = {
   micro: { fontSize: 10, fontWeight: "700", letterSpacing: 0.5 },
 };
 
-// Elevation — soft, layered shadows (not the harsh default).
 export const shadow = {
   sm: {
-    shadowColor: "#0F1729",
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: "#1A2027",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
     elevation: 2,
   },
   md: {
-    shadowColor: "#0F1729",
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 4 },
+    shadowColor: "#1A2027",
+    shadowOpacity: 0.07,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 6 },
     elevation: 4,
   },
   lg: {
-    shadowColor: "#0F1729",
+    shadowColor: "#1A2027",
     shadowOpacity: 0.1,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 26,
+    shadowOffset: { width: 0, height: 10 },
     elevation: 8,
   },
   brand: {
-    shadowColor: "#1053F3",
-    shadowOpacity: 0.28,
+    shadowColor: "#FF6B4A",
+    shadowOpacity: 0.3,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 8 },
     elevation: 8,
   },
 };
 
-// Reusable card style so every card matches.
 export const card = {
   backgroundColor: colors.surface,
   borderRadius: radius.lg,
@@ -116,3 +149,29 @@ export const card = {
   borderColor: colors.border,
   ...shadow.sm,
 };
+
+// --- Responsive / device-safety helpers ---
+//
+// Every screen should size against the ACTUAL device rather than a fixed
+// number, so this works on a notch, a punch-hole, an old small phone, and
+// a big modern 6.7" screen without special-casing any of them individually.
+//
+// Usage pattern (in each screen):
+//   import { useSafeAreaInsets } from "react-native-safe-area-context";
+//   const insets = useSafeAreaInsets();
+//   <View style={{ paddingTop: insets.top + spacing.sm }}>
+//
+// TAB_BAR_HEIGHT is the *content* height of the bottom nav bar, not
+// including the safe-area inset - add insets.bottom on top of this when
+// sizing the actual nav bar, and add both together as scroll-content
+// bottom padding so the last item is never hidden behind the bar.
+export const TAB_BAR_HEIGHT = 60;
+
+// Standard breakpoint for "large" phones (most modern phones, 6.5"+) vs
+// smaller/older devices - used sparingly to nudge a handful of values
+// (e.g. hero card image size) rather than to fork entire layouts, since
+// flex-based layouts should adapt on their own for anything else.
+import { Dimensions } from "react-native";
+export function isLargeScreen() {
+  return Dimensions.get("window").width >= 390;
+}

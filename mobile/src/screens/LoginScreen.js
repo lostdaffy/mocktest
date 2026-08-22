@@ -12,12 +12,14 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import GoogleSignInButton from "../components/GoogleSignInButton";
 import { GOOGLE_SIGNIN_ENABLED } from "../config/google";
 import { colors, gradients, spacing, radius, type, shadow } from "../theme/theme";
 
 export default function LoginScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const { login, requestOtp, loginWithOtp } = useAuth();
 
   const [mode, setMode] = useState("password"); // "password" | "otp"
@@ -106,7 +108,11 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.container, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.brandWrap}>
           <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.logoBox}>
             <Ionicons name="school" size={28} color="#fff" />

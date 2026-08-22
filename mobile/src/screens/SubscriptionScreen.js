@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-nati
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { isSubscribed } from "../utils/subscription";
@@ -38,6 +39,7 @@ const PLANS = [
 ];
 
 export default function SubscriptionScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [credits, setCredits] = useState(0);
   const [selected, setSelected] = useState("yearly");
@@ -62,7 +64,7 @@ export default function SubscriptionScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 130 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 130 + insets.bottom }} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <LinearGradient colors={gradients.premium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.header}>
           <View style={styles.ring} />

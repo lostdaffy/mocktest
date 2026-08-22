@@ -1,297 +1,1842 @@
-import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import api from "../api/client";
-import { colors, gradients, spacing, radius, type, shadow, card } from "../theme/theme";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
-export default function ResultScreen({ route, navigation }) {
-  const { attemptId } = route.params;
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+} from "react-native";
+
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import api from "../api/client";
+
+import {
+  colors,
+  spacing,
+  radius,
+  shadow,
+  card,
+} from "../theme/theme";
+
+/* =========================================================
+   LANGUAGE HELPERS
+========================================================= */
+
+function normalizeLanguage(language) {
+  if (!language) return "en";
+
+  const value = String(language)
+    .trim()
+    .toLowerCase();
+
+  if (
+    value === "hi" ||
+    value === "hindi" ||
+    value.startsWith("hi-")
+  ) {
+    return "hi";
+  }
+
+  if (
+    value === "en" ||
+    value === "english" ||
+    value.startsWith("en-")
+  ) {
+    return "en";
+  }
+
+  return value;
+}
+
+/**
+ * Detect language used for the test.
+ *
+ * Supported:
+ * attempt.language
+ * attempt.testLanguage
+ * attempt.languageCode
+ * attempt.test.language
+ * attempt.test.languageCode
+ * question.language
+ */
+function getTestLanguage(
+  attempt,
+  question
+) {
+  return normalizeLanguage(
+    attempt?.language ||
+      attempt?.testLanguage ||
+      attempt?.languageCode ||
+      attempt?.test?.language ||
+      attempt?.test?.languageCode ||
+      question?.language ||
+      question?.languageCode ||
+      "en"
+  );
+}
+
+/**
+ * Get solution in the language
+ * used by the test.
+ *
+ * Supported API formats:
+ *
+ * question.solution
+ * question.solutionText
+ *
+ * question.solutionTranslations
+ * {
+ *   en: "...",
+ *   hi: "..."
+ * }
+ *
+ * question.solutions
+ * {
+ *   en: "...",
+ *   hi: "..."
+ * }
+ *
+ * question.solutionHi
+ * question.solutionEn
+ *
+ * question.hindiSolution
+ * question.englishSolution
+ *
+ * NOTE: none of these translation-object formats are actually populated
+ * by the backend today (Question documents only ever store a single
+ * `solution` field, in whatever language the source paper/generation used
+ * - there's no per-language solution storage yet). This function is
+ * future-proofed for if/when that's added, but right now every path here
+ * falls through to the plain `question.solution` fallback at the bottom -
+ * which is why the "language" badge next to a solution should be read as
+ * "the test's language", not "this solution was translated for you".
+ */
+function getLocalizedSolution(
+  question,
+  language
+) {
+  if (!question) return "";
+
+  const lang =
+    normalizeLanguage(language);
+
+  const translations =
+    question.solutionTranslations ||
+    question.solutions ||
+    question.translation?.solution ||
+    question.translations?.solution;
+
+  /* -------------------------------------------------------
+     OBJECT TRANSLATIONS
+  ------------------------------------------------------- */
+
+  if (
+    translations &&
+    typeof translations === "object" &&
+    !Array.isArray(translations)
+  ) {
+    const possibleKeys = [
+      lang,
+      language,
+      lang === "hi"
+        ? "hindi"
+        : "english",
+      lang === "hi"
+        ? "hi-IN"
+        : "en-IN",
+    ];
+
+    for (const key of possibleKeys) {
+      if (
+        typeof translations[key] ===
+          "string" &&
+        translations[key].trim()
+      ) {
+        return translations[key];
+      }
+    }
+  }
+
+  /* -------------------------------------------------------
+     ARRAY TRANSLATIONS
+  ------------------------------------------------------- */
+
+  if (Array.isArray(translations)) {
+    const match =
+      translations.find(
+        (item) =>
+          normalizeLanguage(
+            item?.language ||
+              item?.languageCode ||
+              item?.lang
+          ) === lang
+      );
+
+    if (
+      match?.solution ||
+      match?.text
+    ) {
+      return (
+        match.solution ||
+        match.text
+      );
+    }
+  }
+
+  /* -------------------------------------------------------
+     EXPLICIT LANGUAGE FIELDS
+  ------------------------------------------------------- */
+
+  if (lang === "hi") {
+    if (
+      typeof question.solutionHi ===
+        "string" &&
+      question.solutionHi.trim()
+    ) {
+      return question.solutionHi;
+    }
+
+    if (
+      typeof question.hindiSolution ===
+        "string" &&
+      question.hindiSolution.trim()
+    ) {
+      return question.hindiSolution;
+    }
+  }
+
+  if (lang === "en") {
+    if (
+      typeof question.solutionEn ===
+        "string" &&
+      question.solutionEn.trim()
+    ) {
+      return question.solutionEn;
+    }
+
+    if (
+      typeof question.englishSolution ===
+        "string" &&
+      question.englishSolution.trim()
+    ) {
+      return question.englishSolution;
+    }
+  }
+
+  /* -------------------------------------------------------
+     FALLBACK
+  ------------------------------------------------------- */
+
+  return (
+    question.solution ||
+    question.solutionText ||
+    ""
+  );
+}
+
+/* =========================================================
+   RESULT SCREEN
+========================================================= */
+
+export default function ResultScreen({
+  route,
+  navigation,
+}) {
+  const insets =
+    useSafeAreaInsets();
+
+  const { attemptId } =
+    route.params;
+
+  const [data, setData] =
+    useState(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const scrollRef = useRef(null);
+  const mistakesY = useRef(0);
 
   useEffect(() => {
     load();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function load() {
     try {
-      const res = await api.get(`/tests/attempts/${attemptId}`);
+      const res =
+        await api.get(
+          `/tests/attempts/${attemptId}`
+        );
+
       setData(res.data);
     } catch (err) {
-      // stays in failed state
+      console.log(
+        "Result loading error:",
+        err
+      );
     } finally {
       setLoading(false);
     }
   }
 
+  /* =======================================================
+     LOADING
+  ======================================================= */
+
   if (loading || !data) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.brand} />
+      <View
+        style={styles.centered}
+      >
+        <ActivityIndicator
+          size="large"
+          color={colors.brand}
+        />
+
+        <Text
+          style={styles.loadingText}
+        >
+          Preparing your result...
+        </Text>
       </View>
     );
   }
 
-  const { attempt, insight } = data;
-  const wrongAnswers = attempt.answers.filter((a) => a.question && !a.isCorrect && a.selectedIndex !== null);
-  const pct = attempt.totalMarks > 0 ? Math.round((attempt.score / attempt.totalMarks) * 100) : 0;
+  const {
+    attempt,
+    insight,
+  } = data;
 
-  // Honest feedback — a low score should not be dressed up as a win.
-  const verdict =
+  const answers =
+    attempt.answers || [];
+
+  const testLanguage =
+    getTestLanguage(
+      attempt,
+      answers?.[0]?.question
+    );
+
+  const wrongAnswers =
+    answers.filter(
+      (a) =>
+        a.question &&
+        !a.isCorrect &&
+        a.selectedIndex !== null
+    );
+
+  const pct =
+    attempt.totalMarks > 0
+      ? Math.round(
+          (attempt.score /
+            attempt.totalMarks) *
+            100
+        )
+      : 0;
+
+  const safePct =
+    Math.max(
+      0,
+      Math.min(100, pct)
+    );
+
+  const scoreColor =
+    safePct >= 80
+      ? colors.success
+      : safePct >= 40
+      ? colors.brand
+      : colors.danger;
+
+  const completedDate =
+    attempt.submittedAt ||
+    attempt.createdAt;
+
+  const performanceText =
     pct >= 80
-      ? { grad: gradients.success, icon: "trophy", title: "Excellent", note: "You're tracking well for the real exam." }
+      ? "Excellent performance"
       : pct >= 60
-      ? { grad: gradients.brand, icon: "trending-up", title: "Good progress", note: "Close the gaps below and you'll be there." }
+      ? "Good progress"
       : pct >= 40
-      ? { grad: ["#FB923C", "#EA580C"], icon: "fitness", title: "Keep working", note: "Your mistakes below are the fastest way up." }
-      : { grad: gradients.danger, icon: "book", title: "Back to basics", note: "Study the solutions below before the next attempt." };
+      ? "Keep improving"
+      : "More practice needed";
+
+  const correctCount =
+    attempt.correctCount || 0;
+
+  const wrongCount =
+    attempt.wrongCount || 0;
+
+  const skippedCount =
+    attempt.skippedCount || 0;
+
+  // "View Solutions" scrolls down to the mistakes review below instead of
+  // doing nothing - that section already IS the solutions review, no
+  // separate screen needed for it.
+  function scrollToMistakes() {
+    scrollRef.current?.scrollTo({
+      y: Math.max(mistakesY.current - 12, 0),
+      animated: true,
+    });
+  }
 
   return (
     <ScrollView
+      ref={scrollRef}
       style={styles.container}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}
-      showsVerticalScrollIndicator={false}
+      contentContainerStyle={[
+        styles.contentContainer,
+        {
+          paddingTop: Math.max(
+            insets.top + 12,
+            spacing.lg
+          ),
+          paddingBottom:
+            spacing.xxl +
+            insets.bottom,
+        },
+      ]}
+      showsVerticalScrollIndicator={
+        false
+      }
     >
-      {/* Score hero */}
-      <LinearGradient colors={verdict.grad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.scoreCard}>
-        <View style={styles.ring} />
+      {/* =================================================
+          TEST IDENTITY
+      ================================================= */}
 
-        <View style={styles.verdictPill}>
-          <Ionicons name={verdict.icon} size={13} color="#fff" />
-          <Text style={styles.verdictText}>{verdict.title}</Text>
+      <View
+        style={styles.testCard}
+      >
+        <View
+          style={styles.testIcon}
+        >
+          <Ionicons
+            name="document-text"
+            size={19}
+            color={colors.brand}
+          />
         </View>
 
-        <View style={styles.scoreRow}>
-          <Text style={styles.scoreValue}>{attempt.score}</Text>
-          <Text style={styles.scoreOutOf}>/ {attempt.totalMarks}</Text>
-        </View>
-        <Text style={styles.verdictNote}>{verdict.note}</Text>
+        <View
+          style={styles.testInfo}
+        >
+          <Text
+            style={styles.testTitle}
+            numberOfLines={2}
+          >
+            {attempt.testTitle ||
+              "Test"}
+          </Text>
 
-        <View style={styles.pctBarBg}>
-          <View style={[styles.pctBarFill, { width: `${Math.max(pct, 2)}%` }]} />
-        </View>
-        <Text style={styles.pctLabel}>{pct}% score</Text>
-
-        {attempt.rank ? (
-          <View style={styles.rankBadge}>
-            <Ionicons name="podium" size={12} color="#fff" />
-            <Text style={styles.rankText}>
-              Rank #{attempt.rank}
-              {attempt.percentile ? ` · ${attempt.percentile} percentile` : ""}
+          <View
+            style={styles.testMetaRow}
+          >
+            <Text
+              style={styles.testDate}
+            >
+              Completed on{" "}
+              {completedDate
+                ? new Date(
+                    completedDate
+                  ).toLocaleDateString(
+                    "en-IN",
+                    {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    }
+                  )
+                : "—"}
             </Text>
-          </View>
-        ) : null}
-      </LinearGradient>
 
-      {/* Breakdown */}
-      <View style={styles.statsRow}>
-        <Stat icon="checkmark-circle" label="Correct" value={attempt.correctCount} tint={colors.success} bg={colors.successLight} />
-        <Stat icon="close-circle" label="Wrong" value={attempt.wrongCount} tint={colors.danger} bg={colors.dangerLight} />
-        <Stat icon="remove-circle" label="Skipped" value={attempt.skippedCount} tint={colors.slate} bg={colors.slateLight} />
+            <View
+              style={
+                styles.languageBadge
+              }
+            >
+              <Text
+                style={
+                  styles.languageBadgeText
+                }
+              >
+                {testLanguage === "hi"
+                  ? "हिंदी"
+                  : "English"}
+              </Text>
+            </View>
+          </View>
+        </View>
       </View>
 
-      {/* Insight */}
-      {insight?.note ? (
-        <View style={styles.insightCard}>
-          <View style={styles.insightIcon}>
-            <Ionicons name="bulb" size={15} color={colors.brand} />
+      {/* =================================================
+          SCORE HERO
+      ================================================= */}
+
+      <View
+        style={styles.scoreSection}
+      >
+        <Text
+          style={styles.scoreEyebrow}
+        >
+          TEST RESULT
+        </Text>
+
+        <Text
+          style={styles.performanceText}
+          numberOfLines={2}
+        >
+          {performanceText}
+        </Text>
+
+        {/* MAIN SCORE */}
+
+        <View
+          style={styles.scoreBlock}
+        >
+          <Text
+            style={[
+              styles.scorePercentage,
+              {
+                color: scoreColor,
+              },
+            ]}
+          >
+            {pct}%
+          </Text>
+
+          <View
+            style={styles.scoreLine}
+          >
+            <Text
+              style={styles.scoreNumber}
+            >
+              {attempt.score}
+            </Text>
+
+            <Text
+              style={styles.scoreTotal}
+            >
+              / {attempt.totalMarks}
+            </Text>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.insightTitle}>Speed vs accuracy</Text>
-            <Text style={styles.insightText}>{insight.note}</Text>
+
+          <Text
+            style={styles.scoreLabel}
+          >
+            TOTAL SCORE
+          </Text>
+        </View>
+
+    
+        {/* SCORE META */}
+
+        <View
+          style={styles.metaRow}
+        >
+          <ScoreMeta
+            value={correctCount}
+            label="Correct"
+          />
+
+          <View
+            style={styles.metaDivider}
+          />
+
+          <ScoreMeta
+            value={wrongCount}
+            label="Incorrect"
+          />
+
+          <View
+            style={styles.metaDivider}
+          />
+
+          <ScoreMeta
+            value={
+              attempt.rank ||
+              "—"
+            }
+            label={
+              attempt.totalParticipants
+                ? `Rank / ${attempt.totalParticipants}`
+                : "Rank"
+            }
+          />
+        </View>
+      </View>
+
+      {/* =================================================
+          PERFORMANCE ANALYSIS
+      ================================================= */}
+
+      <View
+        style={styles.analysisCard}
+      >
+        <View
+          style={
+            styles.cardHeadingRow
+          }
+        >
+          <View
+            style={styles.headingContent}
+          >
+            <Text
+              style={
+                styles.analysisTitle
+              }
+            >
+              Performance Analysis
+            </Text>
+
+            <Text
+              style={
+                styles.cardSubtitle
+              }
+            >
+              Your question-wise performance
+            </Text>
+          </View>
+
+          <View
+            style={
+              styles.analysisIcon
+            }
+          >
+            <Ionicons
+              name="stats-chart"
+              size={17}
+              color={colors.brand}
+            />
+          </View>
+        </View>
+
+        <View
+          style={styles.analysisRow}
+        >
+          <AnalysisStat
+            dotColor={
+              colors.success
+            }
+            value={correctCount}
+            label="Correct"
+          />
+
+          <AnalysisStat
+            dotColor={
+              colors.danger
+            }
+            value={wrongCount}
+            label="Incorrect"
+          />
+
+          <AnalysisStat
+            dotColor={
+              colors.slateSoft
+            }
+            value={skippedCount}
+            label="Unattempted"
+          />
+        </View>
+      </View>
+
+      {/* =================================================
+          INSIGHT
+      ================================================= */}
+
+      {insight?.note ? (
+        <View
+          style={styles.insightCard}
+        >
+          <View
+            style={styles.insightIcon}
+          >
+            <Ionicons
+              name="bulb"
+              size={17}
+              color={colors.brand}
+            />
+          </View>
+
+          <View
+            style={
+              styles.insightContent
+            }
+          >
+            <Text
+              style={
+                styles.insightTitle
+              }
+            >
+              Speed vs accuracy
+            </Text>
+
+            <Text
+              style={styles.insightText}
+            >
+              {insight.note}
+            </Text>
           </View>
         </View>
       ) : null}
 
-      {/* Mistakes */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Learn from mistakes</Text>
-        {wrongAnswers.length > 0 && (
-          <View style={styles.countBadge}>
-            <Text style={styles.countBadgeText}>{wrongAnswers.length}</Text>
+      {/* =================================================
+          SOLUTIONS BUTTON
+      ================================================= */}
+
+      <TouchableOpacity
+        style={
+          styles.solutionsButton
+        }
+        activeOpacity={0.88}
+        onPress={scrollToMistakes}
+      >
+        <View
+          style={
+            styles.solutionButtonIcon
+          }
+        >
+          <Ionicons
+            name="document-text-outline"
+            size={18}
+            color="#fff"
+          />
+        </View>
+
+        <View
+          style={
+            styles.solutionButtonContent
+          }
+        >
+          <Text
+            style={
+              styles.solutionsButtonText
+            }
+          >
+            View Solutions
+          </Text>
+
+          <Text
+            style={
+              styles.solutionsButtonSub
+            }
+          >
+            Review questions and answers
+          </Text>
+        </View>
+
+        <Ionicons
+          name="chevron-forward"
+          size={19}
+          color="rgba(255,255,255,0.7)"
+        />
+      </TouchableOpacity>
+
+      {/* =================================================
+          MISTAKES HEADER
+      ================================================= */}
+
+      <View
+        style={styles.sectionHeader}
+        onLayout={(e) => {
+          mistakesY.current = e.nativeEvent.layout.y;
+        }}
+      >
+        <View
+          style={
+            styles.sectionHeaderText
+          }
+        >
+          <Text
+            style={styles.sectionTitle}
+          >
+            Learn from mistakes
+          </Text>
+
+          <Text
+            style={
+              styles.sectionSubtitle
+            }
+          >
+            Review questions you missed
+          </Text>
+        </View>
+
+        {wrongAnswers.length >
+          0 && (
+          <View
+            style={styles.countBadge}
+          >
+            <Text
+              style={
+                styles.countBadgeText
+              }
+            >
+              {wrongAnswers.length}
+            </Text>
           </View>
         )}
       </View>
 
-      {wrongAnswers.length === 0 ? (
-        <View style={styles.allCorrectBox}>
-          <Ionicons name="checkmark-done-circle" size={30} color={colors.success} />
-          <Text style={styles.allCorrectText}>No wrong answers — outstanding work</Text>
-        </View>
-      ) : (
-        wrongAnswers.map((a, idx) => (
-          <View key={idx} style={styles.wrongCard}>
-            <Text style={styles.wrongQuestion}>
-              <Text style={styles.qNum}>Q{idx + 1}. </Text>
-              {a.question.text}
+      {/* =================================================
+          NO MISTAKES
+      ================================================= */}
+
+      {wrongAnswers.length ===
+      0 ? (
+        <View
+          style={
+            styles.allCorrectBox
+          }
+        >
+          <View
+            style={
+              styles.allCorrectIcon
+            }
+          >
+            <Ionicons
+              name="checkmark"
+              size={21}
+              color={colors.success}
+            />
+          </View>
+
+          <View
+            style={
+              styles.allCorrectContent
+            }
+          >
+            <Text
+              style={
+                styles.allCorrectTitle
+              }
+            >
+              No mistakes
             </Text>
 
-            <View style={styles.answerBox}>
-              <View style={styles.answerRow}>
-                <Ionicons name="close-circle" size={14} color={colors.danger} />
-                <Text style={styles.answerLabel}>You chose</Text>
-                <Text style={styles.wrongAnswerText} numberOfLines={2}>
-                  {a.question.options[a.selectedIndex]}
-                </Text>
-              </View>
-
-              <View style={styles.answerDivider} />
-
-              <View style={styles.answerRow}>
-                <Ionicons name="checkmark-circle" size={14} color={colors.success} />
-                <Text style={styles.answerLabel}>Correct</Text>
-                <Text style={styles.correctAnswerText} numberOfLines={2}>
-                  {a.question.options[a.question.correctIndex]}
-                </Text>
-              </View>
-            </View>
-
-            {a.question.solution ? (
-              <View style={styles.solutionBox}>
-                <View style={styles.solutionHeader}>
-                  <Ionicons name="bulb-outline" size={12} color={colors.brand} />
-                  <Text style={styles.solutionLabel}>SOLUTION</Text>
-                </View>
-                <Text style={styles.solutionText}>{a.question.solution}</Text>
-              </View>
-            ) : null}
+            <Text
+              style={
+                styles.allCorrectText
+              }
+            >
+              Outstanding work — all
+              attempted questions were
+              correct.
+            </Text>
           </View>
-        ))
+        </View>
+      ) : (
+        wrongAnswers.map(
+          (answer, idx) => (
+            <WrongAnswerCard
+              key={idx}
+              answer={answer}
+              index={idx}
+              language={getTestLanguage(
+                attempt,
+                answer.question
+              )}
+            />
+          )
+        )
       )}
 
-      {/* Actions */}
-      <TouchableOpacity onPress={() => navigation.navigate("Analysis")} activeOpacity={0.85} style={{ marginTop: spacing.md }}>
-        <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.primaryButton}>
-          <Ionicons name="stats-chart" size={16} color="#fff" />
-          <Text style={styles.primaryButtonText}>View Full Analysis</Text>
-        </LinearGradient>
+      {/* =================================================
+          ACTIONS
+      ================================================= */}
+
+      <TouchableOpacity
+        style={
+          styles.primaryButton
+        }
+        activeOpacity={0.88}
+        onPress={() =>
+          navigation.navigate(
+            "Analysis"
+          )
+        }
+      >
+        <Ionicons
+          name="stats-chart"
+          size={18}
+          color="#fff"
+        />
+
+        <Text
+          style={
+            styles.primaryButtonText
+          }
+        >
+          View Full Analysis
+        </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate("Home")} activeOpacity={0.7}>
-        <Text style={styles.secondaryButtonText}>Back to Home</Text>
+      <TouchableOpacity
+        style={
+          styles.secondaryButton
+        }
+        activeOpacity={0.7}
+        onPress={() =>
+          navigation.navigate(
+            "Home"
+          )
+        }
+      >
+        <Text
+          style={
+            styles.secondaryButtonText
+          }
+        >
+          Back to Home
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
-function Stat({ icon, label, value, tint, bg }) {
+/* =========================================================
+   SCORE META
+========================================================= */
+
+function ScoreMeta({
+  value,
+  label,
+}) {
   return (
-    <View style={styles.stat}>
-      <View style={[styles.statIcon, { backgroundColor: bg }]}>
-        <Ionicons name={icon} size={15} color={tint} />
-      </View>
-      <Text style={[styles.statValue, { color: tint }]}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+    <View
+      style={styles.metaItem}
+    >
+      <Text
+        style={styles.metaValue}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.75}
+      >
+        {value}
+      </Text>
+
+      <Text
+        style={styles.metaLabel}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
 
+/* =========================================================
+   ANALYSIS STAT
+========================================================= */
+
+function AnalysisStat({
+  dotColor,
+  value,
+  label,
+}) {
+  return (
+    <View
+      style={styles.analysisStat}
+    >
+      <View
+        style={styles.analysisTop}
+      >
+        <View
+          style={[
+            styles.dot,
+            {
+              backgroundColor:
+                dotColor,
+            },
+          ]}
+        />
+
+        <Text
+          style={styles.analysisLabel}
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
+      </View>
+
+      <Text
+        style={styles.analysisValue}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+/* =========================================================
+   WRONG ANSWER CARD
+========================================================= */
+
+function WrongAnswerCard({
+  answer,
+  index,
+  language,
+}) {
+  const question =
+    answer.question;
+
+  if (!question) return null;
+
+  const selectedAnswer =
+    question.options?.[
+      answer.selectedIndex
+    ];
+
+  const correctAnswer =
+    question.options?.[
+      question.correctIndex
+    ];
+
+  const solution =
+    getLocalizedSolution(
+      question,
+      language
+    );
+
+  return (
+    <View
+      style={styles.wrongCard}
+    >
+      {/* QUESTION */}
+
+      <View
+        style={styles.questionRow}
+      >
+        <View
+          style={
+            styles.questionNumber
+          }
+        >
+          <Text
+            style={
+              styles.questionNumberText
+            }
+          >
+            Q{index + 1}
+          </Text>
+        </View>
+
+        <Text
+          style={styles.wrongQuestion}
+        >
+          {question.text}
+        </Text>
+      </View>
+
+      {/* ANSWERS */}
+
+      <View
+        style={styles.answerBox}
+      >
+        <View
+          style={styles.answerRow}
+        >
+          <Ionicons
+            name="close-circle"
+            size={18}
+            color={colors.danger}
+          />
+
+          <View
+            style={
+              styles.answerContent
+            }
+          >
+            <Text
+              style={
+                styles.answerLabel
+              }
+            >
+              You chose
+            </Text>
+
+            <Text
+              style={
+                styles.wrongAnswerText
+              }
+            >
+              {selectedAnswer ||
+                "—"}
+            </Text>
+          </View>
+        </View>
+
+        <View
+          style={styles.answerDivider}
+        />
+
+        <View
+          style={styles.answerRow}
+        >
+          <Ionicons
+            name="checkmark-circle"
+            size={18}
+            color={colors.success}
+          />
+
+          <View
+            style={
+              styles.answerContent
+            }
+          >
+            <Text
+              style={
+                styles.answerLabel
+              }
+            >
+              Correct answer
+            </Text>
+
+            <Text
+              style={
+                styles.correctAnswerText
+              }
+            >
+              {correctAnswer ||
+                "—"}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* SOLUTION */}
+
+      {solution ? (
+        <View
+          style={styles.solutionBox}
+        >
+          <View
+            style={
+              styles.solutionHeader
+            }
+          >
+            <View
+              style={
+                styles.solutionIcon
+              }
+            >
+              <Ionicons
+                name="bulb-outline"
+                size={14}
+                color={colors.brand}
+              />
+            </View>
+
+            <Text
+              style={
+                styles.solutionLabel
+              }
+            >
+              SOLUTION
+            </Text>
+
+            <Text
+              style={
+                styles.solutionLanguage
+              }
+            >
+              {language === "hi"
+                ? "हिंदी"
+                : "English"}
+            </Text>
+          </View>
+
+          <Text
+            style={styles.solutionText}
+          >
+            {solution}
+          </Text>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+/* =========================================================
+   STYLES
+========================================================= */
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
+  container: {
+    flex: 1,
+    backgroundColor:
+      colors.bg,
+  },
 
-  scoreCard: {
-    borderRadius: radius.xxl,
-    padding: spacing.lg,
+  contentContainer: {
+    paddingHorizontal:
+      spacing.lg,
+  },
+
+  centered: {
+    flex: 1,
     alignItems: "center",
-    marginBottom: spacing.md,
-    overflow: "hidden",
-    ...shadow.lg,
+    justifyContent: "center",
+    backgroundColor:
+      colors.bg,
   },
-  ring: {
-    position: "absolute",
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    borderWidth: 28,
-    borderColor: "rgba(255,255,255,0.06)",
-    top: -80,
-    right: -60,
+
+  loadingText: {
+    fontSize: 13,
+    color: colors.slate,
+    fontWeight: "600",
+    marginTop: 12,
   },
-  verdictPill: {
+
+  /* =====================================================
+     TEST CARD
+  ===================================================== */
+
+  testCard: {
+    ...card,
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radius.full,
+    padding: 15,
+    marginBottom: 20,
   },
-  verdictText: { fontSize: 12, fontWeight: "800", color: "#fff" },
 
-  scoreRow: { flexDirection: "row", alignItems: "baseline", marginTop: spacing.md },
-  scoreValue: { fontSize: 52, fontWeight: "800", color: "#fff", lineHeight: 58, letterSpacing: -1 },
-  scoreOutOf: { fontSize: 17, fontWeight: "600", color: "rgba(255,255,255,0.7)", marginLeft: 5 },
-  verdictNote: { fontSize: 13, color: "rgba(255,255,255,0.85)", textAlign: "center", marginTop: 4, marginBottom: spacing.md },
+  testIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 13,
+    backgroundColor:
+      colors.brandTint,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
 
-  pctBarBg: { width: "100%", height: 7, backgroundColor: "rgba(255,255,255,0.22)", borderRadius: 4, overflow: "hidden" },
-  pctBarFill: { height: 7, backgroundColor: "#fff", borderRadius: 4 },
-  pctLabel: { fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 7, fontWeight: "600" },
+  testInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
 
-  rankBadge: {
+  testTitle: {
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: "800",
+    color: colors.ink,
+  },
+
+  testMetaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    backgroundColor: "rgba(255,255,255,0.18)",
+    flexWrap: "wrap",
+    marginTop: 5,
+  },
+
+  testDate: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: colors.slate,
+    fontWeight: "500",
+  },
+
+  languageBadge: {
+    marginLeft: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 7,
+    backgroundColor:
+      colors.brandTint,
+  },
+
+  languageBadgeText: {
+    fontSize: 9,
+    lineHeight: 12,
+    color: colors.brand,
+    fontWeight: "800",
+  },
+
+  /* =====================================================
+     SCORE HERO
+  ===================================================== */
+
+  scoreSection: {
+    alignItems: "center",
+    marginBottom: 23,
+    paddingHorizontal: 4,
+  },
+
+  scoreEyebrow: {
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: "800",
+    color: colors.slateSoft,
+    letterSpacing: 1.4,
+  },
+
+  performanceText: {
+    fontSize: 21,
+    lineHeight: 28,
+    fontWeight: "800",
+    color: colors.ink,
+    textAlign: "center",
+    marginTop: 5,
+    marginBottom: 17,
+  },
+
+  /* =====================================================
+     MAIN SCORE
+  ===================================================== */
+
+  scoreBlock: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
+    marginBottom: 2,
+  },
+
+  scorePercentage: {
+    fontSize: 50,
+    lineHeight: 57,
+    fontWeight: "900",
+    letterSpacing: -1.8,
+  },
+
+  scoreLine: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "center",
+    marginTop: 1,
+  },
+
+  scoreNumber: {
+    fontSize: 21,
+    lineHeight: 27,
+    fontWeight: "800",
+    color: colors.ink,
+  },
+
+  scoreTotal: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "600",
+    color: colors.slateSoft,
+    marginLeft: 3,
+  },
+
+  scoreLabel: {
+    fontSize: 9,
+    lineHeight: 13,
+    fontWeight: "800",
+    color: colors.slateSoft,
+    letterSpacing: 1.2,
+    marginTop: 4,
+  },
+
+  /* =====================================================
+     ACCURACY (unused - kept only because the earlier design had a
+     standalone accuracy pill here; this version shows accuracy via the
+     big percentage in the score hero instead, so nothing in the JSX
+     references these anymore. Harmless, but flagging in case you want
+     them removed too.)
+  ===================================================== */
+
+  accuracyPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: radius.full,
-    marginTop: spacing.md,
+    borderWidth: 1,
+    marginTop: 15,
   },
-  rankText: { fontSize: 12, fontWeight: "700", color: "#fff" },
 
-  statsRow: { flexDirection: "row", gap: 10, marginBottom: spacing.md },
-  stat: { ...card, flex: 1, paddingVertical: spacing.md, alignItems: "center" },
-  statIcon: { width: 32, height: 32, borderRadius: radius.sm, alignItems: "center", justifyContent: "center" },
-  statValue: { fontSize: 20, fontWeight: "800", marginTop: 6 },
-  statLabel: { ...type.tiny, color: colors.slateSoft, fontWeight: "600", marginTop: 1 },
+  accuracyDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    marginRight: 6,
+  },
 
-  insightCard: { ...card, flexDirection: "row", gap: 10, padding: spacing.md, marginBottom: spacing.lg },
-  insightIcon: {
-    width: 32,
+  accuracyText: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "800",
+  },
+
+  /* =====================================================
+     SCORE META
+  ===================================================== */
+
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 19,
+    width: "100%",
+    minHeight: 48,
+  },
+
+  metaItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 0,
+  },
+
+  metaValue: {
+    fontSize: 19,
+    lineHeight: 24,
+    fontWeight: "800",
+    color: colors.ink,
+  },
+
+  metaLabel: {
+    fontSize: 9.5,
+    lineHeight: 14,
+    color: colors.slateSoft,
+    fontWeight: "600",
+    marginTop: 2,
+    textAlign: "center",
+  },
+
+  metaDivider: {
+    width: 1,
     height: 32,
-    borderRadius: radius.sm,
-    backgroundColor: colors.brandLight,
+    backgroundColor:
+      colors.border,
+  },
+
+  /* =====================================================
+     ANALYSIS
+  ===================================================== */
+
+  analysisCard: {
+    ...card,
+    padding: 16,
+    marginBottom: 12,
+  },
+
+  cardHeadingRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: 17,
+  },
+
+  headingContent: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 10,
+  },
+
+  analysisTitle: {
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: "800",
+    color: colors.ink,
+  },
+
+  cardSubtitle: {
+    fontSize: 10.5,
+    lineHeight: 15,
+    color: colors.slateSoft,
+    marginTop: 3,
+  },
+
+  analysisIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor:
+      colors.brandTint,
     alignItems: "center",
     justifyContent: "center",
   },
-  insightTitle: { ...type.bodyStrong, color: colors.ink, fontSize: 13 },
-  insightText: { ...type.small, color: colors.slate, marginTop: 2, lineHeight: 18 },
 
-  sectionHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
-  sectionTitle: { ...type.h2, color: colors.ink },
-  countBadge: { backgroundColor: colors.dangerLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full },
-  countBadgeText: { fontSize: 11, fontWeight: "800", color: colors.danger },
+  analysisRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+
+  analysisStat: {
+    flex: 1,
+    alignItems: "center",
+    minWidth: 0,
+  },
+
+  analysisTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 6,
+    minHeight: 17,
+  },
+
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 5,
+  },
+
+  analysisLabel: {
+    fontSize: 10,
+    lineHeight: 14,
+    color: colors.slate,
+    fontWeight: "600",
+  },
+
+  analysisValue: {
+    fontSize: 22,
+    lineHeight: 27,
+    fontWeight: "800",
+    color: colors.ink,
+  },
+
+  /* =====================================================
+     INSIGHT
+  ===================================================== */
+
+  insightCard: {
+    ...card,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    padding: 15,
+    marginBottom: 12,
+  },
+
+  insightIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    backgroundColor:
+      colors.brandLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 11,
+  },
+
+  insightContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  insightTitle: {
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "800",
+    color: colors.ink,
+  },
+
+  insightText: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.slate,
+    marginTop: 3,
+  },
+
+  /* =====================================================
+     SOLUTIONS BUTTON
+  ===================================================== */
+
+  solutionsButton: {
+    minHeight: 62,
+    borderRadius: radius.lg,
+    backgroundColor:
+      colors.ink2,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    marginBottom: 24,
+    ...shadow.sm,
+  },
+
+  solutionButtonIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    backgroundColor:
+      "rgba(255,255,255,0.13)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 11,
+  },
+
+  solutionButtonContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  solutionsButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "800",
+  },
+
+  solutionsButtonSub: {
+    color:
+      "rgba(255,255,255,0.62)",
+    fontSize: 10.5,
+    lineHeight: 15,
+    marginTop: 2,
+  },
+
+  /* =====================================================
+     SECTION HEADER
+  ===================================================== */
+
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 13,
+  },
+
+  sectionHeaderText: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "800",
+    color: colors.ink,
+  },
+
+  sectionSubtitle: {
+    fontSize: 10.5,
+    lineHeight: 15,
+    color: colors.slateSoft,
+    marginTop: 2,
+  },
+
+  countBadge: {
+    minWidth: 31,
+    height: 31,
+    paddingHorizontal: 8,
+    borderRadius: radius.full,
+    backgroundColor:
+      colors.dangerLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 10,
+  },
+
+  countBadgeText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: colors.danger,
+  },
+
+  /* =====================================================
+     ALL CORRECT
+  ===================================================== */
 
   allCorrectBox: {
+    flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    backgroundColor: colors.successLight,
+    backgroundColor:
+      colors.successLight,
     borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
+    padding: 15,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: colors.successBorder,
+    borderColor:
+      colors.successBorder,
   },
-  allCorrectText: { ...type.bodyStrong, color: colors.success },
 
-  wrongCard: { ...card, padding: spacing.md, marginBottom: 10, borderLeftWidth: 3, borderLeftColor: colors.danger },
-  wrongQuestion: { ...type.body, fontWeight: "600", color: colors.ink, marginBottom: 12, lineHeight: 21 },
-  qNum: { color: colors.slateSoft, fontWeight: "800" },
+  allCorrectIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor:
+      colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 11,
+  },
 
-  answerBox: { backgroundColor: colors.bg, borderRadius: radius.md, padding: 12 },
-  answerRow: { flexDirection: "row", alignItems: "center", gap: 7 },
-  answerLabel: { ...type.tiny, color: colors.slateSoft, fontWeight: "600", width: 52 },
-  wrongAnswerText: { flex: 1, ...type.small, fontWeight: "700", color: colors.danger },
-  correctAnswerText: { flex: 1, ...type.small, fontWeight: "700", color: colors.success },
-  answerDivider: { height: 1, backgroundColor: colors.border, marginVertical: 9 },
+  allCorrectContent: {
+    flex: 1,
+    minWidth: 0,
+  },
 
-  solutionBox: { backgroundColor: colors.brandTint, borderRadius: radius.md, padding: 12, marginTop: 10, borderWidth: 1, borderColor: colors.brandLight },
-  solutionHeader: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 5 },
-  solutionLabel: { ...type.micro, color: colors.brand },
-  solutionText: { ...type.small, color: colors.inkSoft, lineHeight: 19 },
+  allCorrectTitle: {
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "800",
+    color: colors.success,
+  },
+
+  allCorrectText: {
+    fontSize: 11,
+    lineHeight: 17,
+    color: colors.slate,
+    marginTop: 2,
+  },
+
+  /* =====================================================
+     WRONG CARD
+  ===================================================== */
+
+  wrongCard: {
+    ...card,
+    padding: 15,
+    marginBottom: 11,
+    borderLeftWidth: 3,
+    borderLeftColor:
+      colors.danger,
+  },
+
+  questionRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+
+  questionNumber: {
+    minWidth: 31,
+    height: 29,
+    paddingHorizontal: 7,
+    borderRadius: 9,
+    backgroundColor:
+      colors.dangerLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 9,
+  },
+
+  questionNumberText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: colors.danger,
+  },
+
+  wrongQuestion: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "700",
+    color: colors.ink,
+  },
+
+  /* =====================================================
+     ANSWERS
+  ===================================================== */
+
+  answerBox: {
+    backgroundColor:
+      colors.bg,
+    borderRadius: radius.md,
+    padding: 12,
+    marginTop: 13,
+  },
+
+  answerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+
+  answerContent: {
+    flex: 1,
+    minWidth: 0,
+    marginLeft: 7,
+  },
+
+  answerLabel: {
+    fontSize: 9.5,
+    lineHeight: 14,
+    color: colors.slateSoft,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+
+  wrongAnswerText: {
+    fontSize: 12.5,
+    lineHeight: 19,
+    fontWeight: "700",
+    color: colors.danger,
+  },
+
+  correctAnswerText: {
+    fontSize: 12.5,
+    lineHeight: 19,
+    fontWeight: "700",
+    color: colors.success,
+  },
+
+  answerDivider: {
+    height: 1,
+    backgroundColor:
+      colors.border,
+    marginVertical: 10,
+  },
+
+  /* =====================================================
+     SOLUTION
+  ===================================================== */
+
+  solutionBox: {
+    backgroundColor:
+      colors.brandTint,
+    borderRadius: radius.md,
+    padding: 13,
+    marginTop: 11,
+    borderWidth: 1,
+    borderColor:
+      colors.brandLight,
+  },
+
+  solutionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 7,
+  },
+
+  solutionIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 7,
+    backgroundColor:
+      colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  solutionLabel: {
+    fontSize: 8.5,
+    lineHeight: 12,
+    fontWeight: "800",
+    color: colors.brand,
+    letterSpacing: 0.7,
+    marginLeft: 6,
+  },
+
+  solutionLanguage: {
+    marginLeft: "auto",
+    fontSize: 9,
+    lineHeight: 13,
+    color: colors.brand,
+    fontWeight: "700",
+  },
+
+  solutionText: {
+    fontSize: 12.5,
+    lineHeight: 20,
+    color: colors.inkSoft,
+  },
+
+  /* =====================================================
+     ACTIONS
+  ===================================================== */
 
   primaryButton: {
     flexDirection: "row",
@@ -300,9 +1845,30 @@ const styles = StyleSheet.create({
     gap: 8,
     height: 54,
     borderRadius: radius.md,
+    backgroundColor:
+      colors.brand,
+    marginTop: spacing.md,
     ...shadow.brand,
   },
-  primaryButtonText: { color: "#fff", fontSize: 15, fontWeight: "700" },
-  secondaryButton: { alignItems: "center", paddingVertical: spacing.md },
-  secondaryButtonText: { color: colors.slate, ...type.bodyStrong },
+
+  primaryButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "800",
+  },
+
+  secondaryButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 50,
+    paddingVertical: spacing.sm,
+  },
+
+  secondaryButtonText: {
+    color: colors.slate,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
+  },
 });

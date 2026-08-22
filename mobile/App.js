@@ -2,12 +2,13 @@ import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { ActivityIndicator, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
-import { colors } from "./src/theme/theme";
+import { colors, TAB_BAR_HEIGHT } from "./src/theme/theme";
 import { AppAlertHost } from "./src/components/AppAlert";
+import SplashScreen from "./src/screens/SplashScreen";
 
 import LoginScreen from "./src/screens/LoginScreen";
 import SignupScreen from "./src/screens/SignupScreen";
@@ -28,6 +29,9 @@ import ReferralScreen from "./src/screens/ReferralScreen";
 import ExamSeriesScreen from "./src/screens/ExamSeriesScreen";
 import ExamPickerScreen from "./src/screens/ExamPickerScreen";
 import ChapterPracticeScreen from "./src/screens/ChapterPracticeScreen";
+import PyqExamPickerScreen from "./src/screens/PyqExamPickerScreen";
+import PyqYearListScreen from "./src/screens/PyqYearListScreen";
+import PyqPapersScreen from "./src/screens/PyqPapersScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -46,11 +50,8 @@ function AuthStack() {
   );
 }
 
-// PYQ and Live Exam are the same TestList screen with a different mode.
-// Small wrappers let them sit in the bottom tab bar.
-function PyqTab({ navigation }) {
-  return <TestListScreen navigation={navigation} route={{ params: { mode: "pyq" } }} />;
-}
+// Live Exam still uses the shared TestList screen in "live" mode - only PYQ
+// moved to its own dedicated exam -> year -> papers flow (see PyqExamPickerScreen).
 function LiveTab({ navigation }) {
   return <TestListScreen navigation={navigation} route={{ params: { mode: "live" } }} />;
 }
@@ -58,6 +59,8 @@ function LiveTab({ navigation }) {
 // Bottom tab bar - the 5 things a student actually does.
 // Profile is NOT here: it's the avatar in the top-left of Home (modern app pattern).
 function MainTabs() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -65,8 +68,12 @@ function MainTabs() {
         tabBarActiveTintColor: colors.brand,
         tabBarInactiveTintColor: colors.slate,
         tabBarStyle: {
-          height: 64,
-          paddingBottom: 10,
+          // Real device safe-area bottom inset (0 on old/notch-free phones,
+          // ~20-34 on gesture-nav phones) instead of a fixed guess - the
+          // bar always sits above the home indicator, never under it or
+          // floating with a big dead gap on devices that don't need one.
+          height: TAB_BAR_HEIGHT + insets.bottom,
+          paddingBottom: insets.bottom + 8,
           paddingTop: 8,
           backgroundColor: "#fff",
           borderTopWidth: 1,
@@ -106,7 +113,7 @@ function MainTabs() {
       />
       <Tab.Screen
         name="PyqTab"
-        component={PyqTab}
+        component={PyqExamPickerScreen}
         options={{
           title: "PYQs",
           tabBarIcon: ({ focused, color }) => <TabIcon name="library" focused={focused} color={color} />,
@@ -142,6 +149,8 @@ function AppStack() {
       <Stack.Screen name="ExamSeries" component={ExamSeriesScreen} options={{ title: "Mock Series" }} />
       <Stack.Screen name="ExamPicker" component={ExamPickerScreen} options={{ title: "Mock Tests" }} />
       <Stack.Screen name="ChapterPractice" component={ChapterPracticeScreen} options={{ title: "Practice Tests" }} />
+      <Stack.Screen name="PyqYears" component={PyqYearListScreen} options={{ title: "Previous Year Papers" }} />
+      <Stack.Screen name="PyqPapers" component={PyqPapersScreen} options={{ title: "Papers" }} />
     </Stack.Navigator>
   );
 }
@@ -150,11 +159,7 @@ function RootNavigator() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" color={colors.brand} />
-      </View>
-    );
+    return <SplashScreen />;
   }
 
   return <NavigationContainer>{user ? <AppStack /> : <AuthStack />}</NavigationContainer>;
@@ -162,10 +167,12 @@ function RootNavigator() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <StatusBar style="dark" />
-      <RootNavigator />
-      <AppAlertHost />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <StatusBar style="dark" />
+        <RootNavigator />
+        <AppAlertHost />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
