@@ -1,7 +1,6 @@
 import {
   useCallback,
   useLayoutEffect,
-  useMemo,
   useState,
 } from "react";
 
@@ -14,10 +13,21 @@ import {
   ActivityIndicator,
 } from "react-native";
 
-import { useFocusEffect } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  useFocusEffect,
+} from "@react-navigation/native";
+
+import {
+  Ionicons,
+} from "@expo/vector-icons";
+
+import {
+  LinearGradient,
+} from "expo-linear-gradient";
+
+import {
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import api from "../api/client";
 
@@ -27,7 +37,6 @@ import {
   spacing,
   radius,
   shadow,
-  card,
 } from "../theme/theme";
 
 /* =========================================================
@@ -37,45 +46,55 @@ import {
 const EXAM_META = {
   SSC_CGL: {
     icon: "school",
-    grad: ["#3B7BFF", "#1053F3"],
-    bg: "#EEF3FF",
+    grad: ["#4F6EF7", "#3048D8"],
+    bg: "#EEF2FF",
   },
 
   SSC_MTS: {
     icon: "briefcase",
-    grad: ["#10B981", "#059669"],
+    grad: ["#18C98A", "#079B68"],
     bg: "#ECFDF5",
   },
 
   SSC_CHSL: {
     icon: "document-text",
-    grad: ["#A78BFA", "#7C3AED"],
+    grad: ["#A879F8", "#7335D8"],
     bg: "#F5F3FF",
   },
 
   UP_POLICE: {
     icon: "shield-checkmark",
-    grad: ["#F87171", "#DC2626"],
+    grad: ["#F66D70", "#D92E38"],
     bg: "#FEF2F2",
   },
 
   RAILWAY: {
     icon: "train",
-    grad: ["#FB923C", "#EA580C"],
+    grad: ["#FB9B50", "#E76518"],
     bg: "#FFF7ED",
   },
 
   BANKING: {
     icon: "card",
-    grad: ["#22D3EE", "#0891B2"],
+    grad: ["#32D5E8", "#078CA5"],
     bg: "#ECFEFF",
   },
 
   CTET: {
     icon: "person",
-    grad: ["#F472B6", "#DB2777"],
+    grad: ["#F47CB5", "#D82C78"],
     bg: "#FDF2F8",
   },
+};
+
+/* =========================================================
+   DEFAULT META
+========================================================= */
+
+const DEFAULT_META = {
+  icon: "document-text",
+  grad: ["#4F6EF7", "#3048D8"],
+  bg: "#EEF2FF",
 };
 
 /* =========================================================
@@ -85,7 +104,8 @@ const EXAM_META = {
 export default function PyqExamPickerScreen({
   navigation,
 }) {
-  const insets = useSafeAreaInsets();
+  const insets =
+    useSafeAreaInsets();
 
   const [exams, setExams] =
     useState([]);
@@ -115,10 +135,15 @@ export default function PyqExamPickerScreen({
         const res =
           await api.get("/exams");
 
-        setExams(
+        const data =
           res.data?.patterns ||
           res.data?.exams ||
-          []
+          [];
+
+        setExams(
+          Array.isArray(data)
+            ? data
+            : []
         );
       } catch (err) {
         console.log(
@@ -141,16 +166,6 @@ export default function PyqExamPickerScreen({
   );
 
   /* =======================================================
-     STATS
-  ======================================================= */
-
-  const stats = useMemo(() => {
-    return {
-      exams: exams.length,
-    };
-  }, [exams]);
-
-  /* =======================================================
      LOADING
   ======================================================= */
 
@@ -158,7 +173,7 @@ export default function PyqExamPickerScreen({
     return (
       <View
         style={[
-          styles.centered,
+          styles.loadingContainer,
           {
             paddingTop:
               insets.top,
@@ -180,12 +195,38 @@ export default function PyqExamPickerScreen({
 
         <Text
           style={
-            styles.loadingText
+            styles.loadingTitle
           }
         >
-          Loading exams...
+          Loading previous papers
+        </Text>
+
+        <Text
+          style={
+            styles.loadingSubtitle
+          }
+        >
+          Preparing your exam list...
         </Text>
       </View>
+    );
+  }
+
+  /* =======================================================
+     OPEN EXAM
+  ======================================================= */
+
+  function openExam(item) {
+    navigation.navigate(
+      "PyqYears",
+      {
+        examStage:
+          item.examType,
+
+        examName:
+          item.displayName ||
+          item.examType,
+      }
     );
   }
 
@@ -199,8 +240,13 @@ export default function PyqExamPickerScreen({
     >
       <FlatList
         data={exams}
-        keyExtractor={(item) =>
-          item.examType
+        keyExtractor={(
+          item,
+          index
+        ) =>
+          item.examType ||
+          item._id ||
+          String(index)
         }
         showsVerticalScrollIndicator={
           false
@@ -213,13 +259,14 @@ export default function PyqExamPickerScreen({
             ),
           paddingBottom:
             spacing.xxl +
-            insets.bottom,
+            insets.bottom +
+            10,
         }}
         ListHeaderComponent={
           <>
-            {/* =============================================
+            {/* =================================================
                 HEADER
-            ============================================= */}
+            ================================================= */}
 
             <View
               style={
@@ -230,7 +277,9 @@ export default function PyqExamPickerScreen({
                 style={
                   styles.headerButton
                 }
-                activeOpacity={0.75}
+                activeOpacity={
+                  0.75
+                }
                 onPress={() =>
                   navigation.goBack()
                 }
@@ -253,6 +302,7 @@ export default function PyqExamPickerScreen({
                   style={
                     styles.headerTitle
                   }
+                  numberOfLines={1}
                 >
                   Previous Year Papers
                 </Text>
@@ -261,6 +311,7 @@ export default function PyqExamPickerScreen({
                   style={
                     styles.headerSubtitle
                   }
+                  numberOfLines={1}
                 >
                   Practice from real exam papers
                 </Text>
@@ -270,7 +321,9 @@ export default function PyqExamPickerScreen({
                 style={
                   styles.headerButton
                 }
-                activeOpacity={0.75}
+                activeOpacity={
+                  0.75
+                }
                 onPress={load}
               >
                 <Ionicons
@@ -283,9 +336,9 @@ export default function PyqExamPickerScreen({
               </TouchableOpacity>
             </View>
 
-            {/* =============================================
+            {/* =================================================
                 HERO
-            ============================================= */}
+            ================================================= */}
 
             <View
               style={
@@ -293,9 +346,11 @@ export default function PyqExamPickerScreen({
               }
             >
               <LinearGradient
-                colors={
-                  gradients.brand
-                }
+                colors={[
+                  "#0C115F",
+                  "#2114B7",
+                  "#5521E8",
+                ]}
                 start={{
                   x: 0,
                   y: 0,
@@ -308,17 +363,27 @@ export default function PyqExamPickerScreen({
                   styles.hero
                 }
               >
+                {/* Decorative elements */}
+
                 <View
                   style={
-                    styles.heroOrbOne
+                    styles.heroGlowOne
                   }
                 />
 
                 <View
                   style={
-                    styles.heroOrbTwo
+                    styles.heroGlowTwo
                   }
                 />
+
+                <View
+                  style={
+                    styles.heroRing
+                  }
+                />
+
+                {/* Hero content */}
 
                 <View
                   style={
@@ -351,7 +416,8 @@ export default function PyqExamPickerScreen({
                     }
                   >
                     Master Previous
-                    Papers
+                    {"\n"}
+                    Year Papers
                   </Text>
 
                   <Text
@@ -359,39 +425,73 @@ export default function PyqExamPickerScreen({
                       styles.heroSubtitle
                     }
                   >
-                    Choose an exam and
-                    practice real questions
-                    year by year.
+                    Solve real exam questions
+                    and understand the pattern
+                    before your exam.
                   </Text>
                 </View>
 
+                {/* Hero artwork */}
+
                 <View
                   style={
-                    styles.heroIcon
+                    styles.heroArtwork
                   }
                 >
-                  <Ionicons
-                    name="trophy-outline"
-                    size={27}
-                    color="#FFFFFF"
-                  />
-
-                  <Text
+                  <View
                     style={
-                      styles.heroIconText
+                      styles.heroPaper
                     }
                   >
-                    PYQ
-                  </Text>
+                    <Ionicons
+                      name="document-text"
+                      size={29}
+                      color="#FFFFFF"
+                    />
+
+                    <View
+                      style={
+                        styles.heroPaperLine
+                      }
+                    />
+
+                    <View
+                      style={
+                        styles.heroPaperLineShort
+                      }
+                    />
+
+                    <View
+                      style={
+                        styles.heroCheck
+                      }
+                    >
+                      <Ionicons
+                        name="checkmark"
+                        size={11}
+                        color="#FFFFFF"
+                      />
+                    </View>
+                  </View>
+
+                  <View
+                    style={
+                      styles.heroFloating
+                    }
+                  >
+                    <Ionicons
+                      name="trophy"
+                      size={17}
+                      color="#FFD84D"
+                    />
+                  </View>
                 </View>
               </LinearGradient>
             </View>
 
-         
-
-            {/* =============================================
-                SECTION
-            ============================================= */}
+            {/* =================================================
+                SECTION HEADER
+            ================================================= */}
 
             <View
               style={
@@ -400,7 +500,7 @@ export default function PyqExamPickerScreen({
             >
               <View
                 style={
-                  styles.sectionContent
+                  styles.sectionText
                 }
               >
                 <Text
@@ -417,7 +517,7 @@ export default function PyqExamPickerScreen({
                   }
                 >
                   Select an exam to browse
-                  its previous papers
+                  previous papers
                 </Text>
               </View>
 
@@ -458,17 +558,7 @@ export default function PyqExamPickerScreen({
             item={item}
             index={index}
             onPress={() =>
-              navigation.navigate(
-                "PyqYears",
-                {
-                  examStage:
-                    item.examType,
-
-                  examName:
-                    item.displayName ||
-                    item.examType,
-                }
-              )
+              openExam(item)
             }
           />
         )}
@@ -488,19 +578,13 @@ function ExamCard({
 }) {
   const meta =
     EXAM_META[
-    item.examType
-    ] || {
-      icon: "document-text",
-      grad: [
-        "#3B7BFF",
-        "#1053F3",
-      ],
-      bg: "#EEF3FF",
-    };
+      item.examType
+    ] || DEFAULT_META;
 
   const name =
     item.displayName ||
-    item.examType;
+    item.examType ||
+    "Exam";
 
   return (
     <TouchableOpacity
@@ -510,7 +594,7 @@ function ExamCard({
       activeOpacity={0.78}
       onPress={onPress}
     >
-      {/* ACCENT */}
+      {/* Left accent */}
 
       <View
         style={[
@@ -522,7 +606,7 @@ function ExamCard({
         ]}
       />
 
-      {/* ICON */}
+      {/* Exam icon */}
 
       <LinearGradient
         colors={
@@ -542,12 +626,12 @@ function ExamCard({
       >
         <Ionicons
           name={meta.icon}
-          size={22}
+          size={21}
           color="#FFFFFF"
         />
       </LinearGradient>
 
-      {/* CONTENT */}
+      {/* Content */}
 
       <View
         style={
@@ -556,7 +640,7 @@ function ExamCard({
       >
         <View
           style={
-            styles.examTopRow
+            styles.examTitleRow
           }
         >
           <Text
@@ -567,10 +651,65 @@ function ExamCard({
           >
             {name}
           </Text>
+
+          <View
+            style={[
+              styles.numberBadge,
+              {
+                backgroundColor:
+                  meta.bg,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.numberText,
+                {
+                  color:
+                    meta.grad[1],
+                },
+              ]}
+            >
+              {String(
+                index + 1
+              ).padStart(2, "0")}
+            </Text>
+          </View>
+        </View>
+
+        <Text
+          style={
+            styles.examSubtitle
+          }
+          numberOfLines={1}
+        >
+          Previous year papers
+        </Text>
+
+        <View
+          style={
+            styles.examMeta
+          }
+        >
+          <Ionicons
+            name="calendar-outline"
+            size={11}
+            color={
+              colors.slateSoft
+            }
+          />
+
+          <Text
+            style={
+              styles.examMetaText
+            }
+          >
+            Year-wise papers
+          </Text>
         </View>
       </View>
 
-      {/* ACTION */}
+      {/* Arrow */}
 
       <View
         style={[
@@ -594,7 +733,7 @@ function ExamCard({
 }
 
 /* =========================================================
-   EMPTY
+   EMPTY STATE
 ========================================================= */
 
 function EmptyState({
@@ -608,7 +747,7 @@ function EmptyState({
     >
       <View
         style={
-          styles.emptyIconWrap
+          styles.emptyArtwork
         }
       >
         <View
@@ -618,7 +757,7 @@ function EmptyState({
         >
           <Ionicons
             name="document-text-outline"
-            size={28}
+            size={29}
             color={
               colors.brand
             }
@@ -652,8 +791,8 @@ function EmptyState({
         }
       >
         Previous year papers are
-        being added. Check again
-        shortly.
+        being added. Please check
+        again shortly.
       </Text>
 
       <TouchableOpacity
@@ -697,35 +836,48 @@ const styles =
         colors.bg,
     },
 
-    centered: {
+    /* =====================================================
+       LOADING
+    ===================================================== */
+
+    loadingContainer: {
       flex: 1,
+      backgroundColor:
+        colors.bg,
       alignItems:
         "center",
       justifyContent:
         "center",
-      backgroundColor:
-        colors.bg,
     },
 
     loaderCircle: {
-      width: 46,
-      height: 46,
-      borderRadius: 23,
+      width: 48,
+      height: 48,
+      borderRadius: 24,
       backgroundColor:
         "#FFFFFF",
       alignItems:
         "center",
       justifyContent:
         "center",
-      marginBottom: 10,
+      marginBottom: 12,
       ...shadow.soft,
     },
 
-    loadingText: {
-      fontSize: 12,
-      fontWeight: "600",
+    loadingTitle: {
+      fontSize: 13,
+      lineHeight: 18,
+      fontWeight: "800",
+      color:
+        colors.ink,
+    },
+
+    loadingSubtitle: {
+      fontSize: 10.5,
+      lineHeight: 15,
       color:
         colors.slate,
+      marginTop: 2,
     },
 
     /* =====================================================
@@ -733,9 +885,9 @@ const styles =
     ===================================================== */
 
     header: {
-      minHeight: 57,
+      minHeight: 58,
       paddingHorizontal: 18,
-      paddingBottom: 13,
+      paddingBottom: 14,
       flexDirection:
         "row",
       alignItems:
@@ -743,9 +895,9 @@ const styles =
     },
 
     headerButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 41,
+      height: 41,
+      borderRadius: 14,
       backgroundColor:
         "#FFFFFF",
       borderWidth: 1,
@@ -761,13 +913,13 @@ const styles =
     headerContent: {
       flex: 1,
       minWidth: 0,
-      marginHorizontal: 12,
+      marginHorizontal: 11,
     },
 
     headerTitle: {
       fontSize: 18,
-      lineHeight: 22,
-      fontWeight: "800",
+      lineHeight: 23,
+      fontWeight: "900",
       color:
         colors.ink,
       letterSpacing:
@@ -779,7 +931,7 @@ const styles =
       lineHeight: 15,
       color:
         colors.slate,
-      marginTop: 2,
+      marginTop: 1,
       fontWeight: "500",
     },
 
@@ -789,14 +941,14 @@ const styles =
 
     heroWrap: {
       marginHorizontal: 18,
-      marginBottom: 14,
+      marginBottom: 22,
     },
 
     hero: {
-      minHeight: 130,
-      borderRadius: 21,
-      paddingHorizontal: 17,
-      paddingVertical: 16,
+      minHeight: 172,
+      borderRadius: 23,
+      paddingHorizontal: 18,
+      paddingVertical: 18,
       flexDirection:
         "row",
       alignItems:
@@ -807,164 +959,190 @@ const styles =
 
     heroContent: {
       flex: 1,
-      zIndex: 3,
+      minWidth: 0,
+      zIndex: 5,
     },
 
     heroBadge: {
       alignSelf:
         "flex-start",
+      height: 25,
+      paddingHorizontal: 8,
+      borderRadius:
+        radius.full,
+      backgroundColor:
+        "rgba(255,255,255,0.14)",
+      borderWidth: 1,
+      borderColor:
+        "rgba(255,255,255,0.12)",
       flexDirection:
         "row",
       alignItems:
         "center",
       gap: 4,
-      paddingHorizontal: 7,
-      paddingVertical: 4,
-      borderRadius:
-        radius.full,
-      backgroundColor:
-        "rgba(255,255,255,0.15)",
-      marginBottom: 7,
+      marginBottom: 9,
     },
 
     heroBadgeText: {
       fontSize: 7.5,
-      fontWeight: "800",
+      fontWeight: "900",
       color: "#FFFFFF",
-      letterSpacing: 0.4,
+      letterSpacing: 0.6,
     },
 
     heroTitle: {
-      fontSize: 20,
-      lineHeight: 25,
+      fontSize: 21,
+      lineHeight: 26,
       fontWeight: "900",
       color: "#FFFFFF",
-      letterSpacing: -0.4,
-      maxWidth: 220,
+      letterSpacing: -0.5,
     },
 
     heroSubtitle: {
+      maxWidth: 225,
       fontSize: 10.5,
-      lineHeight: 15,
+      lineHeight: 16,
       color:
-        "rgba(255,255,255,0.78)",
-      marginTop: 3,
-      maxWidth: 235,
+        "rgba(255,255,255,0.76)",
+      marginTop: 5,
     },
 
-    heroIcon: {
-      width: 66,
-      height: 66,
-      borderRadius: 20,
+    /* =====================================================
+       HERO ARTWORK
+    ===================================================== */
+
+    heroArtwork: {
+      width: 91,
+      height: 120,
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+      position:
+        "relative",
+      marginLeft: 7,
+    },
+
+    heroPaper: {
+      width: 64,
+      height: 79,
+      borderRadius: 16,
       backgroundColor:
         "rgba(255,255,255,0.13)",
       borderWidth: 1,
       borderColor:
-        "rgba(255,255,255,0.14)",
+        "rgba(255,255,255,0.25)",
       alignItems:
         "center",
       justifyContent:
         "center",
-      marginLeft: 10,
-      zIndex: 3,
+      transform: [
+        {
+          rotate: "7deg",
+        },
+      ],
+      position:
+        "relative",
     },
 
-    heroIconText: {
-      fontSize: 7,
-      fontWeight: "900",
-      color:
-        "rgba(255,255,255,0.7)",
-      marginTop: 2,
-      letterSpacing: 0.5,
+    heroPaperLine: {
+      width: 29,
+      height: 3,
+      borderRadius: 2,
+      backgroundColor:
+        "rgba(255,255,255,0.45)",
+      marginTop: 8,
     },
 
-    heroOrbOne: {
+    heroPaperLineShort: {
+      width: 20,
+      height: 3,
+      borderRadius: 2,
+      backgroundColor:
+        "rgba(255,255,255,0.28)",
+      marginTop: 5,
+    },
+
+    heroCheck: {
       position:
         "absolute",
-      width: 155,
-      height: 155,
-      borderRadius: 78,
-      right: -72,
-      top: -85,
+      right: 5,
+      bottom: 6,
+      width: 19,
+      height: 19,
+      borderRadius: 10,
+      backgroundColor:
+        "#10B981",
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+    },
+
+    heroFloating: {
+      position:
+        "absolute",
+      width: 38,
+      height: 38,
+      borderRadius: 13,
+      right: 0,
+      bottom: 7,
+      backgroundColor:
+        "rgba(255,255,255,0.13)",
+      borderWidth: 1,
+      borderColor:
+        "rgba(255,255,255,0.16)",
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+      transform: [
+        {
+          rotate: "-7deg",
+        },
+      ],
+    },
+
+    heroGlowOne: {
+      position:
+        "absolute",
+      width: 210,
+      height: 210,
+      borderRadius: 105,
+      right: -95,
+      top: -100,
       backgroundColor:
         "rgba(255,255,255,0.08)",
     },
 
-    heroOrbTwo: {
+    heroGlowTwo: {
       position:
         "absolute",
-      width: 95,
-      height: 95,
-      borderRadius: 48,
-      left: -48,
-      bottom: -63,
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      left: -60,
+      bottom: -75,
       backgroundColor:
         "rgba(255,255,255,0.06)",
     },
 
-    /* =====================================================
-       INFO CARD
-    ===================================================== */
-
-    infoCard: {
-      marginHorizontal: 18,
-      marginBottom: 21,
-      minHeight: 66,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      backgroundColor:
-        "#FFFFFF",
-      borderRadius: 17,
-      borderWidth: 1,
+    heroRing: {
+      position:
+        "absolute",
+      width: 180,
+      height: 180,
+      borderRadius: 90,
+      borderWidth: 20,
       borderColor:
-        colors.border,
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      ...shadow.soft,
-    },
-
-    infoIcon: {
-      width: 33,
-      height: 33,
-      borderRadius: 11,
-      backgroundColor:
-        colors.brandLight,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-    },
-
-    infoContent: {
-      flex: 1,
-      marginLeft: 7,
-    },
-
-    infoValue: {
-      fontSize: 13,
-      lineHeight: 17,
-      fontWeight: "900",
-      color:
-        colors.ink,
-    },
-
-    infoLabel: {
-      fontSize: 8.5,
-      lineHeight: 11,
-      color:
-        colors.slateSoft,
-      marginTop: 1,
-      fontWeight: "600",
-    },
-
-    infoDivider: {
-      width: 1,
-      height: 30,
-      backgroundColor:
-        colors.border,
-      marginHorizontal: 9,
+        "rgba(255,255,255,0.035)",
+      right: -75,
+      bottom: -85,
+      transform: [
+        {
+          rotate: "20deg",
+        },
+      ],
     },
 
     /* =====================================================
@@ -982,14 +1160,16 @@ const styles =
         "space-between",
     },
 
-    sectionContent: {
+    sectionText: {
       flex: 1,
+      minWidth: 0,
+      paddingRight: 10,
     },
 
     sectionTitle: {
       fontSize: 19,
-      lineHeight: 23,
-      fontWeight: "800",
+      lineHeight: 24,
+      fontWeight: "900",
       color:
         colors.ink,
       letterSpacing:
@@ -1002,12 +1182,13 @@ const styles =
       color:
         colors.slate,
       marginTop: 2,
+      fontWeight: "500",
     },
 
     countBadge: {
-      minWidth: 43,
-      height: 42,
-      borderRadius: 13,
+      width: 48,
+      height: 44,
+      borderRadius: 14,
       backgroundColor:
         "#FFFFFF",
       borderWidth: 1,
@@ -1017,10 +1198,12 @@ const styles =
         "center",
       justifyContent:
         "center",
+      ...shadow.soft,
     },
 
     countNumber: {
-      fontSize: 13,
+      fontSize: 14,
+      lineHeight: 17,
       fontWeight: "900",
       color:
         colors.brand,
@@ -1028,11 +1211,12 @@ const styles =
 
     countLabel: {
       fontSize: 6.5,
-      fontWeight: "800",
+      lineHeight: 9,
+      fontWeight: "900",
       color:
         colors.slateSoft,
+      letterSpacing: 0.5,
       marginTop: 1,
-      letterSpacing: 0.3,
     },
 
     /* =====================================================
@@ -1040,22 +1224,23 @@ const styles =
     ===================================================== */
 
     examCard: {
-      ...card,
-      minHeight: 86,
       marginHorizontal: 18,
       marginBottom: 10,
-      padding: 11,
-      borderRadius: 18,
+      minHeight: 82,
+      paddingVertical: 10,
+      paddingHorizontal: 11,
       backgroundColor:
         "#FFFFFF",
+      borderRadius: 19,
+      borderWidth: 1,
+      borderColor:
+        colors.border,
       flexDirection:
         "row",
       alignItems:
         "center",
       overflow: "hidden",
-      borderWidth: 1,
-      borderColor:
-        colors.border,
+      ...shadow.soft,
     },
 
     cardAccent: {
@@ -1069,16 +1254,15 @@ const styles =
     },
 
     examIcon: {
-      width: 47,
-      height: 47,
+      width: 48,
+      height: 48,
       borderRadius: 15,
       alignItems:
         "center",
       justifyContent:
         "center",
-      marginLeft: 2,
+      marginLeft: 3,
       marginRight: 11,
-      ...shadow.brand,
     },
 
     examContent: {
@@ -1086,57 +1270,56 @@ const styles =
       minWidth: 0,
     },
 
-    examTopRow: {
+    examTitleRow: {
       flexDirection:
         "row",
       alignItems:
         "center",
-      justifyContent:
-        "space-between",
-      gap: 7,
+      minWidth: 0,
     },
 
     examName: {
       flex: 1,
-      fontSize: 15,
+      minWidth: 0,
+      fontSize: 14.5,
       lineHeight: 19,
-      fontWeight: "800",
+      fontWeight: "850",
       color:
         colors.ink,
     },
 
-    indexBadge: {
-      minWidth: 28,
-      height: 22,
-      paddingHorizontal: 5,
+    numberBadge: {
+      width: 29,
+      height: 23,
       borderRadius: 8,
       alignItems:
         "center",
       justifyContent:
         "center",
+      marginLeft: 7,
     },
 
-    indexText: {
+    numberText: {
       fontSize: 8.5,
       fontWeight: "900",
     },
 
-    examSub: {
-      fontSize: 9.5,
+    examSubtitle: {
+      fontSize: 10,
       lineHeight: 14,
       color:
-        colors.slateSoft,
+        colors.slate,
       marginTop: 2,
       fontWeight: "500",
     },
 
-    examMetaRow: {
+    examMeta: {
       flexDirection:
         "row",
       alignItems:
         "center",
-      marginTop: 6,
       gap: 4,
+      marginTop: 5,
     },
 
     examMetaText: {
@@ -1147,19 +1330,10 @@ const styles =
       fontWeight: "600",
     },
 
-    metaDot: {
-      width: 3,
-      height: 3,
-      borderRadius: 2,
-      backgroundColor:
-        colors.border,
-      marginHorizontal: 3,
-    },
-
     actionButton: {
-      width: 35,
-      height: 35,
-      borderRadius: 18,
+      width: 36,
+      height: 36,
+      borderRadius: 13,
       alignItems:
         "center",
       justifyContent:
@@ -1168,26 +1342,26 @@ const styles =
     },
 
     /* =====================================================
-       EMPTY
+       EMPTY STATE
     ===================================================== */
 
     empty: {
       alignItems:
         "center",
       paddingHorizontal: 28,
-      paddingVertical: 55,
+      paddingVertical: 50,
     },
 
-    emptyIconWrap: {
+    emptyArtwork: {
       position:
         "relative",
-      marginBottom: 14,
+      marginBottom: 15,
     },
 
     emptyIcon: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+      width: 76,
+      height: 76,
+      borderRadius: 38,
       backgroundColor:
         colors.brandLight,
       alignItems:
@@ -1199,11 +1373,11 @@ const styles =
     emptySpark: {
       position:
         "absolute",
-      right: -3,
-      top: -2,
-      width: 25,
-      height: 25,
+      width: 26,
+      height: 26,
       borderRadius: 13,
+      right: -3,
+      top: -3,
       backgroundColor:
         "#FFF8DF",
       borderWidth: 2,
@@ -1217,20 +1391,20 @@ const styles =
 
     emptyTitle: {
       fontSize: 18,
-      lineHeight: 22,
-      fontWeight: "800",
+      lineHeight: 23,
+      fontWeight: "900",
       color:
         colors.ink,
       marginBottom: 5,
     },
 
     emptyText: {
-      fontSize: 12,
+      maxWidth: 285,
+      fontSize: 11.5,
       lineHeight: 18,
       color:
         colors.slate,
       textAlign: "center",
-      maxWidth: 290,
     },
 
     emptyButton: {
@@ -1246,7 +1420,7 @@ const styles =
       justifyContent:
         "center",
       gap: 6,
-      marginTop: 16,
+      marginTop: 17,
       ...shadow.brand,
     },
 

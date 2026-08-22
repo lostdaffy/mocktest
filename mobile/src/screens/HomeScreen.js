@@ -14,6 +14,9 @@ import {
   RefreshControl,
   ActivityIndicator,
   Dimensions,
+  Image,
+  Animated,
+  Easing,
 } from "react-native";
 
 import AppAlert from "../components/AppAlert";
@@ -30,7 +33,6 @@ import {
   spacing,
   radius,
   type,
-  shadow,
   card,
 } from "../theme/theme";
 
@@ -38,7 +40,15 @@ const { width: SCREEN_WIDTH } =
   Dimensions.get("window");
 
 /* =========================================================
-   HOME CAROUSEL DATA
+   LOGO
+========================================================= */
+
+const RANKVEER_LOGO = require(
+  "../../assets/brand-logo.png"
+);
+
+/* =========================================================
+   CAROUSEL DATA
 ========================================================= */
 
 const HOME_CAROUSEL_DATA = [
@@ -49,7 +59,7 @@ const HOME_CAROUSEL_DATA = [
       "Practice with full-length papers designed like the real exam.",
     icon: "document-text",
     secondaryIcon: "timer-outline",
-    background: "#F0F2FF",
+    background: "#F2F3FF",
     primary: "#5B5FEF",
     statOne: "Full Length",
     statTwo: "Real Pattern",
@@ -136,6 +146,61 @@ export default function HomeScreen({
     useState(false);
 
   /* =======================================================
+     GREETING EMOJI ANIMATION
+  ======================================================= */
+
+  const waveAnim = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.delay(300),
+
+      Animated.timing(waveAnim, {
+        toValue: 1,
+        duration: 180,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+
+      Animated.timing(waveAnim, {
+        toValue: -1,
+        duration: 180,
+        easing: Easing.inOut(
+          Easing.ease
+        ),
+        useNativeDriver: true,
+      }),
+
+      Animated.timing(waveAnim, {
+        toValue: 0.65,
+        duration: 140,
+        easing: Easing.inOut(
+          Easing.ease
+        ),
+        useNativeDriver: true,
+      }),
+
+      Animated.timing(waveAnim, {
+        toValue: -0.45,
+        duration: 120,
+        easing: Easing.inOut(
+          Easing.ease
+        ),
+        useNativeDriver: true,
+      }),
+
+      Animated.timing(waveAnim, {
+        toValue: 0,
+        duration: 120,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [waveAnim]);
+
+  /* =======================================================
      LOAD DATA
   ======================================================= */
 
@@ -158,7 +223,10 @@ export default function HomeScreen({
         ) {
           setUpcomingLive(
             liveRes.value.data
-              ?.exams?.[0] || null
+              ?.exams?.[0] ||
+              liveRes.value.data
+                ?.tests?.[0] ||
+              null
           );
         }
 
@@ -190,16 +258,17 @@ export default function HomeScreen({
   );
 
   /* =======================================================
-     TODAY'S PRACTICE
+     TODAY TEST
   ======================================================= */
 
   async function startTodayTest() {
     setLoadingTest(true);
 
     try {
-      const res = await api.get(
-        "/tests/today"
-      );
+      const res =
+        await api.get(
+          "/tests/today"
+        );
 
       navigation.navigate(
         "TestTaking",
@@ -221,6 +290,7 @@ export default function HomeScreen({
               text: "Later",
               style: "cancel",
             },
+
             {
               text: "Upgrade",
               onPress: () =>
@@ -267,6 +337,29 @@ export default function HomeScreen({
     "Aspirant";
 
   /* =======================================================
+     ANIMATED GREETING TRANSFORM
+  ======================================================= */
+
+  const emojiRotate =
+    waveAnim.interpolate({
+      inputRange: [-1, 1],
+      outputRange: [
+        "-24deg",
+        "24deg",
+      ],
+    });
+
+  const emojiScale =
+    waveAnim.interpolate({
+      inputRange: [-1, 0, 1],
+      outputRange: [
+        0.92,
+        1,
+        1.08,
+      ],
+    });
+
+  /* =======================================================
      RENDER
   ======================================================= */
 
@@ -300,53 +393,120 @@ export default function HomeScreen({
             paddingTop:
               Math.max(
                 insets.top,
-                20
-              ) + spacing.md,
+                10
+              ),
           },
         ]}
       >
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate(
-              "Profile"
-            )
-          }
-          hitSlop={10}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name="menu"
-            size={25}
-            color={colors.ink}
-          />
-        </TouchableOpacity>
+        {/* LOGO */}
 
-        <TouchableOpacity
-          hitSlop={10}
-          activeOpacity={0.7}
+        <View
+          style={styles.brandArea}
         >
-          <Ionicons
-            name="notifications-outline"
-            size={23}
-            color={colors.ink}
+          <Image
+            source={RANKVEER_LOGO}
+            style={styles.brandLogo}
+            resizeMode="contain"
           />
-        </TouchableOpacity>
+        </View>
+
+        {/* ACTIONS */}
+
+        <View
+          style={
+            styles.headerActions
+          }
+        >
+          <TouchableOpacity
+            style={
+              styles.headerIconButton
+            }
+            activeOpacity={0.72}
+            hitSlop={8}
+            onPress={() =>
+              navigation.navigate(
+                "Profile"
+              )
+            }
+          >
+            <Ionicons
+              name="person-outline"
+              size={20}
+              color={colors.ink}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={
+              styles.headerIconButton
+            }
+            activeOpacity={0.72}
+            hitSlop={8}
+          >
+            <Ionicons
+              name="notifications-outline"
+              size={20}
+              color={colors.ink}
+            />
+
+            <View
+              style={
+                styles.notificationDot
+              }
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* =================================================
           GREETING
       ================================================= */}
 
-      <View style={styles.section}>
-        <Text style={styles.greeting}>
-          Hi, {firstName} 👋
-        </Text>
+      <View
+        style={
+          styles.greetingSection
+        }
+      >
+        <View
+          style={
+            styles.greetingRow
+          }
+        >
+          <Text
+            style={styles.greeting}
+            numberOfLines={1}
+          >
+            Hi, {firstName}
+          </Text>
+
+          <Animated.Text
+            style={[
+              styles.greetingEmoji,
+              {
+                transform: [
+                  {
+                    rotate:
+                      emojiRotate,
+                  },
+                  {
+                    scale:
+                      emojiScale,
+                  },
+                ],
+              },
+            ]}
+          >
+            👋
+          </Animated.Text>
+        </View>
 
         <Text
-          style={styles.greetingSub}
+          style={
+            styles.greetingSub
+          }
         >
-          Let's learn and grow
-          together
+          Ready to improve your
+          score today?
         </Text>
       </View>
 
@@ -354,8 +514,24 @@ export default function HomeScreen({
           PRACTICE TODAY
       ================================================= */}
 
-      <View style={styles.section}>
-        <View style={styles.hero}>
+      <View
+        style={styles.section}
+      >
+        <View
+          style={styles.hero}
+        >
+          <View
+            style={
+              styles.heroDecorationOne
+            }
+          />
+
+          <View
+            style={
+              styles.heroDecorationTwo
+            }
+          />
+
           {loadingTest ? (
             <View
               style={
@@ -382,10 +558,32 @@ export default function HomeScreen({
               style={styles.heroRow}
             >
               <View
-                style={{
-                  flex: 1,
-                }}
+                style={
+                  styles.heroContent
+                }
               >
+                <View
+                  style={
+                    styles.heroEyebrow
+                  }
+                >
+                  <Ionicons
+                    name="flash"
+                    size={11}
+                    color={
+                      colors.heroAccent
+                    }
+                  />
+
+                  <Text
+                    style={
+                      styles.heroEyebrowText
+                    }
+                  >
+                    DAILY PRACTICE
+                  </Text>
+                </View>
+
                 <Text
                   style={
                     styles.heroTitle
@@ -400,6 +598,7 @@ export default function HomeScreen({
                   }
                 >
                   Improve your score
+                  with a focused test
                 </Text>
 
                 <TouchableOpacity
@@ -418,6 +617,12 @@ export default function HomeScreen({
                   >
                     Start Practice
                   </Text>
+
+                  <Ionicons
+                    name="arrow-forward"
+                    size={15}
+                    color="#FFFFFF"
+                  />
                 </TouchableOpacity>
               </View>
 
@@ -461,10 +666,12 @@ export default function HomeScreen({
       </View>
 
       {/* =================================================
-          AUTO CAROUSEL
+          CAROUSEL
       ================================================= */}
 
-      <View style={styles.section}>
+      <View
+        style={styles.section}
+      >
         <HomeCarousel
           navigation={navigation}
         />
@@ -475,7 +682,9 @@ export default function HomeScreen({
       ================================================= */}
 
       {subjects.length > 0 && (
-        <View style={styles.section}>
+        <View
+          style={styles.section}
+        >
           <View
             style={
               styles.sectionHead
@@ -483,7 +692,7 @@ export default function HomeScreen({
           >
             <Text
               style={
-                styles.sectionTitle
+                styles.sectionTitleNoMargin
               }
             >
               Continue Learning
@@ -537,7 +746,8 @@ export default function HomeScreen({
                         screen:
                           "ChapterList",
                         params: {
-                          subject: subj,
+                          subject:
+                            subj,
                         },
                       }
                     )
@@ -550,7 +760,7 @@ export default function HomeScreen({
                   >
                     <Text
                       style={{
-                        fontSize: 20,
+                        fontSize: 21,
                       }}
                     >
                       {subj.icon ||
@@ -561,12 +771,14 @@ export default function HomeScreen({
                   <View
                     style={{
                       flex: 1,
+                      minWidth: 0,
                     }}
                   >
                     <Text
                       style={
                         styles.learnName
                       }
+                      numberOfLines={1}
                     >
                       {subj.name}
                     </Text>
@@ -600,13 +812,11 @@ export default function HomeScreen({
                       styles.learnFraction
                     }
                   >
-                    {
-                      subj.completedCount
-                    }{" "}
+                    {subj.completedCount ||
+                      0}{" "}
                     /{" "}
-                    {
-                      subj.totalChapters
-                    }
+                    {subj.totalChapters ||
+                      0}
                   </Text>
                 </TouchableOpacity>
               );
@@ -618,7 +828,9 @@ export default function HomeScreen({
           QUICK ACTIONS
       ================================================= */}
 
-      <View style={styles.section}>
+      <View
+        style={styles.section}
+      >
         <Text
           style={
             styles.sectionTitle
@@ -628,7 +840,9 @@ export default function HomeScreen({
         </Text>
 
         <View
-          style={styles.actionsRow}
+          style={
+            styles.actionsRow
+          }
         >
           <QuickAction
             icon="document-text"
@@ -654,7 +868,7 @@ export default function HomeScreen({
             bg={
               colors.categories[4].bg
             }
-            label="Subject Practice"
+            label="Practice"
             onPress={() =>
               navigation.navigate(
                 "PracticeTab"
@@ -700,7 +914,9 @@ export default function HomeScreen({
           RECOMMENDED
       ================================================= */}
 
-      <View style={styles.section}>
+      <View
+        style={styles.section}
+      >
         <Text
           style={
             styles.sectionTitle
@@ -708,8 +924,6 @@ export default function HomeScreen({
         >
           Recommended For You
         </Text>
-
-        {/* LIVE EXAM */}
 
         {upcomingLive ? (
           <TouchableOpacity
@@ -746,6 +960,7 @@ export default function HomeScreen({
             <View
               style={{
                 flex: 1,
+                minWidth: 0,
               }}
             >
               <Text
@@ -761,6 +976,7 @@ export default function HomeScreen({
                 style={
                   styles.recSub
                 }
+                numberOfLines={1}
               >
                 Live ·{" "}
                 {new Date(
@@ -777,13 +993,19 @@ export default function HomeScreen({
               </Text>
             </View>
 
-            <Ionicons
-              name="chevron-forward"
-              size={18}
-              color={
-                colors.slateSoft
+            <View
+              style={
+                styles.recArrow
               }
-            />
+            >
+              <Ionicons
+                name="chevron-forward"
+                size={16}
+                color={
+                  colors.brand
+                }
+              />
+            </View>
           </TouchableOpacity>
         ) : !isPremium ? (
           <PremiumCard
@@ -824,6 +1046,7 @@ export default function HomeScreen({
             <View
               style={{
                 flex: 1,
+                minWidth: 0,
               }}
             >
               <Text
@@ -839,18 +1062,24 @@ export default function HomeScreen({
                   styles.recSub
                 }
               >
-                Invite a friend, both
-                of you get credits
+                Invite a friend and
+                earn credits
               </Text>
             </View>
 
-            <Ionicons
-              name="chevron-forward"
-              size={18}
-              color={
-                colors.slateSoft
+            <View
+              style={
+                styles.recArrow
               }
-            />
+            >
+              <Ionicons
+                name="chevron-forward"
+                size={16}
+                color={
+                  colors.brand
+                }
+              />
+            </View>
           </TouchableOpacity>
         )}
       </View>
@@ -877,8 +1106,6 @@ function PremiumCard({
         )
       }
     >
-      {/* DECORATION */}
-
       <View
         style={
           styles.premiumGlowOne
@@ -893,14 +1120,6 @@ function PremiumCard({
 
       <View
         style={
-          styles.premiumGlowThree
-        }
-      />
-
-      {/* TOP ROW */}
-
-      <View
-        style={
           styles.premiumTopRow
         }
       >
@@ -911,7 +1130,7 @@ function PremiumCard({
         >
           <Ionicons
             name="diamond"
-            size={21}
+            size={20}
             color="#FFFFFF"
           />
         </View>
@@ -924,7 +1143,7 @@ function PremiumCard({
           <Ionicons
             name="sparkles"
             size={11}
-            color="#FBBF24"
+            color="#B7791F"
           />
 
           <Text
@@ -936,8 +1155,6 @@ function PremiumCard({
           </Text>
         </View>
       </View>
-
-      {/* TITLE */}
 
       <Text
         style={
@@ -952,13 +1169,10 @@ function PremiumCard({
           styles.premiumDescription
         }
       >
-        Get unlimited mock tests,
-        subject practice, PYQs and
-        detailed performance
-        analytics.
+        Unlimited mock tests,
+        practice, PYQs and detailed
+        performance analytics.
       </Text>
-
-      {/* FEATURES */}
 
       <View
         style={
@@ -977,8 +1191,6 @@ function PremiumCard({
           text="Previous Year Papers"
         />
       </View>
-
-      {/* BOTTOM */}
 
       <View
         style={
@@ -1032,7 +1244,7 @@ function PremiumCard({
 
           <Ionicons
             name="arrow-forward"
-            size={16}
+            size={15}
             color="#FFFFFF"
           />
         </View>
@@ -1098,8 +1310,7 @@ function QuickAction({
         style={[
           styles.actionIcon,
           {
-            backgroundColor:
-              bg,
+            backgroundColor: bg,
           },
         ]}
       >
@@ -1114,6 +1325,7 @@ function QuickAction({
         style={
           styles.actionLabel
         }
+        numberOfLines={2}
       >
         {label}
       </Text>
@@ -1134,7 +1346,9 @@ function HomeCarousel({
   const [activeIndex, setActiveIndex] =
     useState(0);
 
-  /* AUTO SLIDE */
+  const slideWidth =
+    SCREEN_WIDTH -
+    spacing.lg * 2;
 
   useEffect(() => {
     const interval =
@@ -1143,8 +1357,8 @@ function HomeCarousel({
           (currentIndex) => {
             const nextIndex =
               currentIndex ===
-              HOME_CAROUSEL_DATA.length -
-                1
+                HOME_CAROUSEL_DATA.length -
+                  1
                 ? 0
                 : currentIndex + 1;
 
@@ -1152,8 +1366,7 @@ function HomeCarousel({
               {
                 x:
                   nextIndex *
-                  (SCREEN_WIDTH -
-                    36),
+                  slideWidth,
                 animated: true,
               }
             );
@@ -1161,22 +1374,15 @@ function HomeCarousel({
             return nextIndex;
           }
         );
-      }, 3500);
+      }, 4000);
 
     return () =>
       clearInterval(interval);
-  }, []);
-
-  /* SLIDE CHANGE */
+  }, [slideWidth]);
 
   function handleSlideChange(
     event
   ) {
-    const slideWidth =
-      event.nativeEvent
-        .layoutMeasurement
-        .width;
-
     const offset =
       event.nativeEvent
         .contentOffset.x;
@@ -1225,24 +1431,23 @@ function HomeCarousel({
           (item) => (
             <TouchableOpacity
               key={item.id}
-              activeOpacity={0.95}
+              activeOpacity={0.94}
               onPress={() =>
                 openSlide(item)
               }
             >
               <HomeCarouselSlide
                 item={item}
+                slideWidth={
+                  slideWidth
+                }
               />
             </TouchableOpacity>
           )
         )}
       </ScrollView>
 
-      {/* DOTS */}
-
-      <View
-        style={styles.dots}
-      >
+      <View style={styles.dots}>
         {HOME_CAROUSEL_DATA.map(
           (item, index) => (
             <View
@@ -1267,19 +1472,19 @@ function HomeCarousel({
 
 function HomeCarouselSlide({
   item,
+  slideWidth,
 }) {
   return (
     <View
       style={[
         styles.carouselCard,
         {
+          width: slideWidth,
           backgroundColor:
             item.background,
         },
       ]}
     >
-      {/* CONTENT */}
-
       <View
         style={
           styles.carouselContent
@@ -1368,8 +1573,6 @@ function HomeCarouselSlide({
         </View>
       </View>
 
-      {/* ART */}
-
       <View
         style={
           styles.carouselArt
@@ -1380,7 +1583,7 @@ function HomeCarouselSlide({
             styles.artCircleOne,
             {
               backgroundColor:
-                `${item.primary}18`,
+                `${item.primary}16`,
             },
           ]}
         />
@@ -1390,7 +1593,7 @@ function HomeCarouselSlide({
             styles.artCircleTwo,
             {
               backgroundColor:
-                `${item.primary}12`,
+                `${item.primary}10`,
             },
           ]}
         />
@@ -1400,13 +1603,13 @@ function HomeCarouselSlide({
             styles.mainArtCard,
             {
               borderColor:
-                item.primary,
+                `${item.primary}55`,
             },
           ]}
         >
           <Ionicons
             name={item.icon}
-            size={42}
+            size={40}
             color={item.primary}
           />
 
@@ -1436,32 +1639,10 @@ function HomeCarouselSlide({
             name={
               item.secondaryIcon
             }
-            size={21}
+            size={20}
             color={item.primary}
           />
         </View>
-
-        <View
-          style={[
-            styles.decorDot,
-            styles.decorDotOne,
-            {
-              backgroundColor:
-                item.primary,
-            },
-          ]}
-        />
-
-        <View
-          style={[
-            styles.decorDot,
-            styles.decorDotTwo,
-            {
-              backgroundColor:
-                item.primary,
-            },
-          ]}
-        />
       </View>
     </View>
   );
@@ -1471,797 +1652,1269 @@ function HomeCarouselSlide({
    STYLES
 ========================================================= */
 
-const styles = StyleSheet.create({
-  /* =======================================================
-     GENERAL
-  ======================================================= */
-
-  container: {
-    flex: 1,
-    backgroundColor:
-      colors.bg,
-  },
-
-  section: {
-    paddingHorizontal:
-      spacing.lg,
-    marginBottom:
-      spacing.lg,
-  },
-
-  /* =======================================================
-     HEADER
-  ======================================================= */
-
-  header: {
-    flexDirection: "row",
-    justifyContent:
-      "space-between",
-    alignItems: "center",
-    paddingHorizontal:
-      spacing.lg,
-    paddingBottom:
-      spacing.md,
-  },
-
-  /* =======================================================
-     GREETING
-  ======================================================= */
-
-  greeting: {
-    ...type.h1,
-    color: colors.ink,
-  },
-
-  greetingSub: {
-    ...type.small,
-    color: colors.slate,
-    marginTop: 3,
-  },
-
-  /* =======================================================
-     PRACTICE TODAY
-  ======================================================= */
-
-  hero: {
-    backgroundColor:
-      colors.heroTint,
-    borderRadius:
-      radius.xxl,
-    padding:
-      spacing.lg,
-    minHeight: 150,
-    justifyContent:
-      "center",
-    overflow: "hidden",
-  },
-
-  heroLoading: {
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 20,
-  },
-
-  heroLoadingText: {
-    color: colors.slate,
-    ...type.small,
-  },
-
-  heroRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  heroTitle: {
-    color: colors.ink,
-    fontSize: 22,
-    fontWeight: "800",
-    letterSpacing: -0.3,
-  },
-
-  heroSub: {
-    color: colors.slate,
-    fontSize: 13,
-    marginTop: 3,
-    marginBottom: 16,
-  },
-
-  heroButton: {
-    alignSelf:
-      "flex-start",
-    backgroundColor:
-      colors.ink2,
-    paddingHorizontal: 20,
-    paddingVertical: 11,
-    borderRadius:
-      radius.full,
-  },
-
-  heroButtonText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-
-  targetWrap: {
-    width: 84,
-    height: 84,
-    alignItems: "center",
-    justifyContent:
-      "center",
-  },
-
-  targetRingOuter: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    backgroundColor:
-      colors.heroRing,
-    alignItems: "center",
-    justifyContent:
-      "center",
-  },
-
-  targetRingMid: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor:
-      "#FF9B85",
-    alignItems: "center",
-    justifyContent:
-      "center",
-  },
-
-  targetRingInner: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor:
-      "#FFFFFF",
-  },
-
-  targetArrow: {
-    position: "absolute",
-    top: 6,
-    right: 10,
-    transform: [
-      {
-        rotate: "35deg",
-      },
-    ],
-  },
-
-  /* =======================================================
-     CAROUSEL
-  ======================================================= */
-
-  carouselWrapper: {
-    width: "100%",
-  },
-
-  carouselCard: {
-    width:
-      SCREEN_WIDTH - 36,
-    minHeight: 174,
-    borderRadius: 25,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    flexDirection: "row",
-    overflow: "hidden",
-  },
-
-  carouselContent: {
-    flex: 1,
-    justifyContent:
-      "center",
-    zIndex: 5,
-  },
-
-  carouselTitle: {
-    fontSize: 24,
-    lineHeight: 29,
-    fontWeight: "800",
-    color: "#17202E",
-    marginBottom: 7,
-    letterSpacing: -0.3,
-  },
-
-  carouselDescription: {
-    fontSize: 13,
-    lineHeight: 19,
-    color: "#667085",
-    maxWidth: 205,
-  },
-
-  carouselStats: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 15,
-    gap: 12,
-  },
-
-  carouselStat: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-
-  carouselStatIcon: {
-    width: 25,
-    height: 25,
-    borderRadius: 8,
-    backgroundColor:
-      "#FFFFFF",
-    alignItems: "center",
-    justifyContent:
-      "center",
-  },
-
-  carouselStatText: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: "#667085",
-  },
-
-  carouselArt: {
-    width: 122,
-    position: "relative",
-    alignItems: "center",
-    justifyContent:
-      "center",
-  },
-
-  artCircleOne: {
-    position: "absolute",
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    right: -34,
-  },
-
-  artCircleTwo: {
-    position: "absolute",
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    right: 0,
-    top: 10,
-  },
-
-  mainArtCard: {
-    width: 76,
-    height: 92,
-    borderRadius: 16,
-    backgroundColor:
-      "#FFFFFF",
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent:
-      "center",
-    transform: [
-      {
-        rotate: "7deg",
-      },
-    ],
-    shadowColor:
-      "#17202E",
-    shadowOffset: {
-      width: 0,
-      height: 5,
+const styles =
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor:
+        colors.bg,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
 
-  artCheck: {
-    position: "absolute",
-    right: 7,
-    bottom: 7,
-    width: 19,
-    height: 19,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent:
-      "center",
-  },
-
-  floatingIcon: {
-    position: "absolute",
-    left: -1,
-    bottom: 12,
-    width: 43,
-    height: 43,
-    borderRadius: 22,
-    backgroundColor:
-      "#FFFFFF",
-    alignItems: "center",
-    justifyContent:
-      "center",
-    shadowColor:
-      "#17202E",
-    shadowOffset: {
-      width: 0,
-      height: 4,
+    section: {
+      paddingHorizontal:
+        spacing.lg,
+      marginBottom:
+        spacing.lg,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 7,
-    elevation: 3,
-  },
 
-  decorDot: {
-    position: "absolute",
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    opacity: 0.7,
-  },
+    /* =====================================================
+       HEADER
+    ===================================================== */
 
-  decorDotOne: {
-    right: 3,
-    top: 14,
-  },
+    header: {
+      minHeight: 88,
 
-  decorDotTwo: {
-    left: 13,
-    top: 21,
-  },
+      flexDirection:
+        "row",
 
-  dots: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent:
-      "center",
-    gap: 5,
-    marginTop: 9,
-  },
+      alignItems:
+        "center",
 
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor:
-      "#D7DCE5",
-  },
+      justifyContent:
+        "space-between",
 
-  activeDot: {
-    width: 20,
-    backgroundColor:
-      "#FF684A",
-  },
+      paddingHorizontal:
+        spacing.lg,
 
-  /* =======================================================
-     CONTINUE LEARNING
-  ======================================================= */
+      paddingBottom: 2,
+    },
 
-  sectionHead: {
-    flexDirection: "row",
-    justifyContent:
-      "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
+    /*
+     * Logo container is intentionally wider.
+     * This prevents the actual logo image from
+     * being clipped on either side.
+     */
 
-  sectionTitle: {
-    ...type.h3,
-    color: colors.ink,
-    marginBottom: 12,
-  },
+    brandArea: {
+      width: 170,
+      height: 70,
 
-  viewAll: {
-    ...type.small,
-    color: colors.slate,
-    fontWeight: "600",
-  },
+      justifyContent:
+        "center",
 
-  learnCard: {
-    ...card,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    padding:
-      spacing.md,
-  },
+      alignItems:
+        "flex-start",
 
-  learnIcon: {
-    width: 44,
-    height: 44,
-    borderRadius:
-      radius.md,
-    backgroundColor:
-      colors.heroTint,
-    alignItems: "center",
-    justifyContent:
-      "center",
-  },
+      overflow: "visible",
 
-  learnName: {
-    ...type.bodyStrong,
-    color: colors.ink,
-  },
+      flexShrink: 1,
+    },
 
-  learnSub: {
-    ...type.tiny,
-    color:
-      colors.slateSoft,
-    fontWeight: "500",
-    marginTop: 1,
-    marginBottom: 6,
-  },
+    brandLogo: {
+      width: 155,
+      height: 68,
 
-  learnBarBg: {
-    height: 5,
-    backgroundColor:
-      colors.slateLight,
-    borderRadius: 3,
-    overflow: "hidden",
-  },
+      maxWidth: "100%",
 
-  learnBarFill: {
-    height: 5,
-    borderRadius: 3,
-    backgroundColor:
-      colors.heroAccent,
-  },
+      marginLeft: 0,
+    },
 
-  learnFraction: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: colors.slate,
-  },
+    headerActions: {
+      flexDirection:
+        "row",
 
-  /* =======================================================
-     QUICK ACTIONS
-  ======================================================= */
+      alignItems:
+        "center",
 
-  actionsRow: {
-    flexDirection: "row",
-    justifyContent:
-      "space-between",
-  },
+      gap: 9,
 
-  action: {
-    alignItems: "center",
-    flex: 1,
-  },
+      marginLeft: "auto",
 
-  actionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius:
-      radius.lg,
-    alignItems: "center",
-    justifyContent:
-      "center",
-    marginBottom: 8,
-  },
+      flexShrink: 0,
+    },
 
-  actionLabel: {
-    ...type.tiny,
-    color:
-      colors.inkSoft,
-    fontWeight: "600",
-    textAlign: "center",
-  },
+    headerIconButton: {
+      width: 42,
+      height: 42,
 
-  /* =======================================================
-     RECOMMENDED
-  ======================================================= */
+      borderRadius: 14,
 
-  recCard: {
-    ...card,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    padding:
-      spacing.md,
-  },
+      backgroundColor:
+        colors.surface,
 
-  recIcon: {
-    width: 42,
-    height: 42,
-    borderRadius:
-      radius.md,
-    alignItems: "center",
-    justifyContent:
-      "center",
-  },
+      borderWidth: 1,
 
-  recTitle: {
-    ...type.bodyStrong,
-    color: colors.ink,
-  },
+      borderColor:
+        colors.border,
 
-  recSub: {
-    ...type.tiny,
-    color: colors.slate,
-    fontWeight: "500",
-    marginTop: 2,
-  },
+      alignItems:
+        "center",
 
-  /* =======================================================
-     PREMIUM CARD
-  ======================================================= */
+      justifyContent:
+        "center",
+    },
 
-  premiumCard: {
-    backgroundColor: "#FFFFFF",
+    notificationDot: {
+      position:
+        "absolute",
 
-    borderRadius: 24,
+      width: 7,
+      height: 7,
 
-    padding: 18,
+      borderRadius: 4,
 
-    overflow: "hidden",
+      backgroundColor:
+        colors.danger,
 
-    borderWidth: 1,
+      top: 9,
+      right: 9,
 
-    borderColor: "#E9E8FF",
+      borderWidth: 1.5,
 
-    shadowColor: "#5B5FEF",
+      borderColor:
+        colors.surface,
+    },
 
-    shadowOffset: {
-      width: 0,
+    /* =====================================================
+       GREETING
+    ===================================================== */
+
+    greetingSection: {
+      paddingHorizontal:
+        spacing.lg,
+
+      marginTop: 2,
+
+      marginBottom: 18,
+    },
+
+    greetingRow: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      flexWrap:
+        "nowrap",
+
+      minWidth: 0,
+    },
+
+    greeting: {
+      ...type.h1,
+
+      color:
+        colors.ink,
+
+      fontSize: 25,
+
+      lineHeight: 31,
+
+      fontWeight:
+        "800",
+
+      letterSpacing:
+        -0.45,
+
+      flexShrink: 1,
+    },
+
+    greetingEmoji: {
+      fontSize: 25,
+
+      lineHeight: 31,
+
+      marginLeft: 7,
+
+      includeFontPadding:
+        false,
+    },
+
+    greetingSub: {
+      color:
+        colors.slate,
+
+      fontSize: 13,
+
+      lineHeight: 19,
+
+      fontWeight:
+        "500",
+
+      marginTop: 3,
+    },
+
+    /* =====================================================
+       PRACTICE HERO
+    ===================================================== */
+
+    hero: {
+      backgroundColor:
+        colors.heroTint,
+
+      borderRadius: 24,
+
+      padding: 18,
+
+      minHeight: 158,
+
+      justifyContent:
+        "center",
+
+      overflow: "hidden",
+
+      borderWidth: 1,
+
+      borderColor:
+        colors.heroRing,
+    },
+
+    heroDecorationOne: {
+      position:
+        "absolute",
+
+      width: 145,
+      height: 145,
+
+      borderRadius: 73,
+
+      backgroundColor:
+        "rgba(255,255,255,0.30)",
+
+      right: -48,
+      top: -55,
+    },
+
+    heroDecorationTwo: {
+      position:
+        "absolute",
+
+      width: 72,
+      height: 72,
+
+      borderRadius: 36,
+
+      backgroundColor:
+        "rgba(255,255,255,0.20)",
+
+      right: 56,
+      bottom: -42,
+    },
+
+    heroLoading: {
+      alignItems:
+        "center",
+
+      gap: 10,
+
+      paddingVertical: 20,
+    },
+
+    heroLoadingText: {
+      color:
+        colors.slate,
+
+      ...type.small,
+    },
+
+    heroRow: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+    },
+
+    heroContent: {
+      flex: 1,
+
+      minWidth: 0,
+
+      zIndex: 2,
+    },
+
+    heroEyebrow: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 5,
+
+      marginBottom: 5,
+    },
+
+    heroEyebrowText: {
+      fontSize: 9,
+
+      fontWeight:
+        "800",
+
+      color:
+        colors.heroAccent,
+
+      letterSpacing: 0.6,
+    },
+
+    heroTitle: {
+      color:
+        colors.ink,
+
+      fontSize: 22,
+
+      lineHeight: 28,
+
+      fontWeight:
+        "800",
+
+      letterSpacing:
+        -0.35,
+    },
+
+    heroSub: {
+      color:
+        colors.slate,
+
+      fontSize: 12.5,
+
+      lineHeight: 18,
+
+      marginTop: 3,
+
+      marginBottom: 15,
+
+      maxWidth: 190,
+    },
+
+    heroButton: {
+      alignSelf:
+        "flex-start",
+
+      height: 40,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      gap: 7,
+
+      backgroundColor:
+        colors.ink2,
+
+      paddingHorizontal: 16,
+
+      borderRadius: 13,
+    },
+
+    heroButtonText: {
+      color:
+        "#FFFFFF",
+
+      fontSize: 12,
+
+      fontWeight:
+        "800",
+    },
+
+    targetWrap: {
+      width: 88,
+      height: 88,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginLeft: 8,
+    },
+
+    targetRingOuter: {
+      width: 86,
+      height: 86,
+
+      borderRadius: 43,
+
+      backgroundColor:
+        colors.heroRing,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    targetRingMid: {
+      width: 59,
+      height: 59,
+
+      borderRadius: 30,
+
+      backgroundColor:
+        "#FF9B85",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    targetRingInner: {
+      width: 30,
+      height: 30,
+
+      borderRadius: 15,
+
+      backgroundColor:
+        "#FFFFFF",
+    },
+
+    targetArrow: {
+      position:
+        "absolute",
+
+      top: 5,
+
+      right: 9,
+
+      transform: [
+        {
+          rotate: "35deg",
+        },
+      ],
+    },
+
+    /* =====================================================
+       CAROUSEL
+    ===================================================== */
+
+    carouselWrapper: {
+      width: "100%",
+    },
+
+    carouselCard: {
+      minHeight: 174,
+
+      borderRadius: 24,
+
+      paddingHorizontal: 19,
+
+      paddingVertical: 19,
+
+      flexDirection:
+        "row",
+
+      overflow: "hidden",
+    },
+
+    carouselContent: {
+      flex: 1,
+
+      justifyContent:
+        "center",
+
+      zIndex: 5,
+    },
+
+    carouselTitle: {
+      fontSize: 22,
+
+      lineHeight: 27,
+
+      fontWeight:
+        "800",
+
+      color:
+        colors.ink,
+
+      marginBottom: 6,
+
+      letterSpacing:
+        -0.3,
+    },
+
+    carouselDescription: {
+      fontSize: 12.5,
+
+      lineHeight: 18,
+
+      color:
+        colors.slate,
+
+      maxWidth: 205,
+    },
+
+    carouselStats: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      marginTop: 14,
+
+      gap: 10,
+    },
+
+    carouselStat: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 5,
+    },
+
+    carouselStatIcon: {
+      width: 25,
+      height: 25,
+
+      borderRadius: 8,
+
+      backgroundColor:
+        "rgba(255,255,255,0.88)",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    carouselStatText: {
+      fontSize: 9,
+
+      fontWeight:
+        "700",
+
+      color:
+        colors.slate,
+    },
+
+    carouselArt: {
+      width: 116,
+
+      position:
+        "relative",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    artCircleOne: {
+      position:
+        "absolute",
+
+      width: 130,
+      height: 130,
+
+      borderRadius: 65,
+
+      right: -38,
+    },
+
+    artCircleTwo: {
+      position:
+        "absolute",
+
+      width: 78,
+      height: 78,
+
+      borderRadius: 39,
+
+      right: 0,
+      top: 10,
+    },
+
+    mainArtCard: {
+      width: 73,
+      height: 88,
+
+      borderRadius: 17,
+
+      backgroundColor:
+        "#FFFFFF",
+
+      borderWidth: 1.5,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      transform: [
+        {
+          rotate: "6deg",
+        },
+      ],
+
+      shadowColor:
+        "#17202E",
+
+      shadowOffset: {
+        width: 0,
+        height: 5,
+      },
+
+      shadowOpacity:
+        0.08,
+
+      shadowRadius: 8,
+
+      elevation: 3,
+    },
+
+    artCheck: {
+      position:
+        "absolute",
+
+      right: 7,
+      bottom: 7,
+
+      width: 19,
+      height: 19,
+
+      borderRadius: 10,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    floatingIcon: {
+      position:
+        "absolute",
+
+      left: 0,
+      bottom: 12,
+
+      width: 41,
+      height: 41,
+
+      borderRadius: 21,
+
+      backgroundColor:
+        "#FFFFFF",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      shadowColor:
+        "#17202E",
+
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+
+      shadowOpacity:
+        0.08,
+
+      shadowRadius: 7,
+
+      elevation: 3,
+    },
+
+    dots: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      gap: 5,
+
+      marginTop: 9,
+    },
+
+    dot: {
+      width: 6,
       height: 6,
+
+      borderRadius: 3,
+
+      backgroundColor:
+        colors.border,
     },
 
-    shadowOpacity: 0.08,
+    activeDot: {
+      width: 20,
 
-    shadowRadius: 14,
-
-    elevation: 4,
-  },
-
-  premiumGlowOne: {
-    position: "absolute",
-
-    width: 150,
-    height: 150,
-
-    borderRadius: 75,
-
-    backgroundColor: "#EEF0FF",
-
-    right: -65,
-    top: -65,
-  },
-
-  premiumGlowTwo: {
-    position: "absolute",
-
-    width: 100,
-    height: 100,
-
-    borderRadius: 50,
-
-    backgroundColor: "#FFF0EB",
-
-    left: -55,
-    bottom: -45,
-  },
-
-  premiumGlowThree: {
-    position: "absolute",
-
-    width: 70,
-    height: 70,
-
-    borderRadius: 35,
-
-    backgroundColor: "#FFF8DF",
-
-    right: 45,
-    bottom: -40,
-  },
-
-  premiumTopRow: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    justifyContent:
-      "space-between",
-
-    marginBottom: 14,
-  },
-
-  premiumIcon: {
-    width: 44,
-    height: 44,
-
-    borderRadius: 14,
-
-    backgroundColor: "#5B5FEF",
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    shadowColor: "#5B5FEF",
-
-    shadowOffset: {
-      width: 0,
-      height: 4,
+      backgroundColor:
+        colors.brand,
     },
 
-    shadowOpacity: 0.2,
+    /* =====================================================
+       SECTIONS
+    ===================================================== */
 
-    shadowRadius: 7,
+    sectionHead: {
+      flexDirection:
+        "row",
 
-    elevation: 3,
-  },
+      justifyContent:
+        "space-between",
 
-  premiumBadge: {
-    flexDirection: "row",
+      alignItems:
+        "center",
 
-    alignItems: "center",
+      marginBottom: 12,
+    },
 
-    gap: 5,
+    sectionTitle: {
+      ...type.h3,
 
-    paddingHorizontal: 10,
+      color:
+        colors.ink,
 
-    paddingVertical: 5,
+      fontSize: 18,
 
-    borderRadius: 20,
+      marginBottom: 12,
+    },
 
-    backgroundColor: "#FFF7DF",
+    sectionTitleNoMargin: {
+      ...type.h3,
 
-    borderWidth: 1,
+      color:
+        colors.ink,
 
-    borderColor: "#FDE7A7",
-  },
+      fontSize: 18,
+    },
 
-  premiumBadgeText: {
-    fontSize: 9,
+    viewAll: {
+      ...type.small,
 
-    fontWeight: "800",
+      color:
+        colors.brand,
 
-    letterSpacing: 0.5,
+      fontWeight:
+        "700",
+    },
 
-    color: "#D99700",
-  },
+    /* =====================================================
+       LEARNING
+    ===================================================== */
 
-  premiumTitle: {
-    fontSize: 23,
+    learnCard: {
+      ...card,
 
-    lineHeight: 28,
+      flexDirection:
+        "row",
 
-    fontWeight: "800",
+      alignItems:
+        "center",
 
-    color: "#17202E",
+      gap: 12,
 
-    letterSpacing: -0.4,
+      padding: spacing.md,
+    },
 
-    marginBottom: 6,
-  },
+    learnIcon: {
+      width: 46,
+      height: 46,
 
-  premiumDescription: {
-    fontSize: 12.5,
+      borderRadius: 14,
 
-    lineHeight: 18,
+      backgroundColor:
+        colors.heroTint,
 
-    color: "#687587",
+      alignItems:
+        "center",
 
-    maxWidth: 310,
+      justifyContent:
+        "center",
+    },
 
-    marginBottom: 16,
-  },
+    learnName: {
+      ...type.bodyStrong,
 
-  premiumFeatures: {
-    gap: 9,
+      color:
+        colors.ink,
 
-    marginBottom: 18,
-  },
+      fontSize: 14,
+    },
 
-  premiumFeature: {
-    flexDirection: "row",
+    learnSub: {
+      ...type.tiny,
 
-    alignItems: "center",
+      color:
+        colors.slateSoft,
 
-    gap: 8,
-  },
+      fontWeight:
+        "500",
 
-  premiumCheck: {
-    width: 18,
-    height: 18,
+      marginTop: 1,
 
-    borderRadius: 9,
+      marginBottom: 6,
+    },
 
-    backgroundColor: "#10B981",
-
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  premiumFeatureText: {
-    fontSize: 11.5,
-
-    fontWeight: "600",
-
-    color: "#4E5969",
-  },
-
-  premiumBottom: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    justifyContent:
-      "space-between",
-
-    paddingTop: 15,
-
-    borderTopWidth: 1,
-
-    borderTopColor: "#EEF0F4",
-  },
-
-  premiumStarting: {
-    fontSize: 9,
-
-    color: "#8A95A5",
-
-    marginBottom: 1,
-  },
-
-  priceRow: {
-    flexDirection: "row",
-
-    alignItems: "baseline",
-  },
-
-  price: {
-    fontSize: 21,
-
-    fontWeight: "800",
-
-    color: "#17202E",
-  },
-
-  priceSuffix: {
-    fontSize: 10,
-
-    fontWeight: "600",
-
-    color: "#8A95A5",
-
-    marginLeft: 3,
-  },
-
-  upgradeButton: {
-    height: 40,
-
-    paddingHorizontal: 16,
-
-    borderRadius: 13,
-
-    backgroundColor: "#FF684A",
-
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    justifyContent: "center",
-
-    gap: 7,
-
-    shadowColor: "#FF684A",
-
-    shadowOffset: {
-      width: 0,
+    learnBarBg: {
       height: 5,
+
+      backgroundColor:
+        colors.slateLight,
+
+      borderRadius: 3,
+
+      overflow:
+        "hidden",
     },
 
-    shadowOpacity: 0.22,
+    learnBarFill: {
+      height: 5,
 
-    shadowRadius: 8,
+      borderRadius: 3,
 
-    elevation: 3,
-  },
+      backgroundColor:
+        colors.heroAccent,
+    },
 
-  upgradeButtonText: {
-    fontSize: 12,
+    learnFraction: {
+      fontSize: 11.5,
 
-    fontWeight: "800",
+      fontWeight:
+        "700",
 
-    color: "#FFFFFF",
-  },
-});
+      color:
+        colors.slate,
+
+      marginLeft: 4,
+    },
+
+    /* =====================================================
+       QUICK ACTIONS
+    ===================================================== */
+
+    actionsRow: {
+      flexDirection:
+        "row",
+
+      justifyContent:
+        "space-between",
+    },
+
+    action: {
+      alignItems:
+        "center",
+
+      flex: 1,
+
+      paddingHorizontal: 3,
+    },
+
+    actionIcon: {
+      width: 50,
+      height: 50,
+
+      borderRadius: 15,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginBottom: 7,
+    },
+
+    actionLabel: {
+      ...type.tiny,
+
+      color:
+        colors.inkSoft,
+
+      fontSize: 10,
+
+      lineHeight: 14,
+
+      fontWeight:
+        "600",
+
+      textAlign:
+        "center",
+    },
+
+    /* =====================================================
+       RECOMMENDED
+    ===================================================== */
+
+    recCard: {
+      ...card,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 11,
+
+      padding: spacing.md,
+    },
+
+    recIcon: {
+      width: 44,
+      height: 44,
+
+      borderRadius: 14,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    recTitle: {
+      ...type.bodyStrong,
+
+      color:
+        colors.ink,
+
+      fontSize: 13.5,
+    },
+
+    recSub: {
+      ...type.tiny,
+
+      color:
+        colors.slate,
+
+      fontWeight:
+        "500",
+
+      marginTop: 2,
+    },
+
+    recArrow: {
+      width: 32,
+      height: 32,
+
+      borderRadius: 10,
+
+      backgroundColor:
+        colors.brandTint,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    /* =====================================================
+       PREMIUM
+    ===================================================== */
+
+    premiumCard: {
+      backgroundColor:
+        colors.surface,
+
+      borderRadius: 22,
+
+      padding: 18,
+
+      overflow:
+        "hidden",
+
+      borderWidth: 1,
+
+      borderColor:
+        colors.border,
+
+      shadowColor:
+        colors.brand,
+
+      shadowOffset: {
+        width: 0,
+        height: 6,
+      },
+
+      shadowOpacity:
+        0.07,
+
+      shadowRadius: 14,
+
+      elevation: 3,
+    },
+
+    premiumGlowOne: {
+      position:
+        "absolute",
+
+      width: 150,
+      height: 150,
+
+      borderRadius: 75,
+
+      backgroundColor:
+        colors.brandTint,
+
+      right: -65,
+      top: -65,
+    },
+
+    premiumGlowTwo: {
+      position:
+        "absolute",
+
+      width: 100,
+      height: 100,
+
+      borderRadius: 50,
+
+      backgroundColor:
+        colors.heroTint,
+
+      left: -55,
+      bottom: -45,
+    },
+
+    premiumTopRow: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "space-between",
+
+      marginBottom: 13,
+    },
+
+    premiumIcon: {
+      width: 43,
+      height: 43,
+
+      borderRadius: 14,
+
+      backgroundColor:
+        colors.brand,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    premiumBadge: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 5,
+
+      paddingHorizontal: 10,
+
+      paddingVertical: 5,
+
+      borderRadius: 20,
+
+      backgroundColor:
+        "#FFF8E6",
+
+      borderWidth: 1,
+
+      borderColor:
+        "#F5E2A9",
+    },
+
+    premiumBadgeText: {
+      fontSize: 9,
+
+      fontWeight:
+        "800",
+
+      letterSpacing: 0.5,
+
+      color:
+        "#A66B0A",
+    },
+
+    premiumTitle: {
+      fontSize: 22,
+
+      lineHeight: 27,
+
+      fontWeight:
+        "800",
+
+      color:
+        colors.ink,
+
+      letterSpacing:
+        -0.4,
+
+      marginBottom: 5,
+    },
+
+    premiumDescription: {
+      fontSize: 12.5,
+
+      lineHeight: 18,
+
+      color:
+        colors.slate,
+
+      maxWidth: 310,
+
+      marginBottom: 15,
+    },
+
+    premiumFeatures: {
+      gap: 9,
+
+      marginBottom: 17,
+    },
+
+    premiumFeature: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 8,
+    },
+
+    premiumCheck: {
+      width: 18,
+      height: 18,
+
+      borderRadius: 9,
+
+      backgroundColor:
+        colors.success,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    premiumFeatureText: {
+      fontSize: 11.5,
+
+      fontWeight:
+        "600",
+
+      color:
+        colors.inkSoft,
+    },
+
+    premiumBottom: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "space-between",
+
+      paddingTop: 14,
+
+      borderTopWidth: 1,
+
+      borderTopColor:
+        colors.border,
+    },
+
+    premiumStarting: {
+      fontSize: 9,
+
+      color:
+        colors.slateSoft,
+
+      marginBottom: 1,
+    },
+
+    priceRow: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "baseline",
+    },
+
+    price: {
+      fontSize: 21,
+
+      fontWeight:
+        "800",
+
+      color:
+        colors.ink,
+    },
+
+    priceSuffix: {
+      fontSize: 10,
+
+      fontWeight:
+        "600",
+
+      color:
+        colors.slateSoft,
+
+      marginLeft: 3,
+    },
+
+    upgradeButton: {
+      height: 40,
+
+      paddingHorizontal: 16,
+
+      borderRadius: 13,
+
+      backgroundColor:
+        colors.brand,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      gap: 7,
+    },
+
+    upgradeButtonText: {
+      fontSize: 12,
+
+      fontWeight:
+        "800",
+
+      color:
+        "#FFFFFF",
+    },
+  });

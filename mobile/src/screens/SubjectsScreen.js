@@ -26,15 +26,11 @@ import {
   gradients,
   spacing,
   radius,
-  type,
   shadow,
-  card,
 } from "../theme/theme";
 
 /* =========================================================
    SUBJECT META
-   Gives each subject a subtle visual identity without
-   changing the API data.
 ========================================================= */
 
 const SUBJECT_META = [
@@ -71,7 +67,7 @@ const SUBJECT_META = [
 ];
 
 /* =========================================================
-   MAIN SCREEN
+   SCREEN
 ========================================================= */
 
 export default function SubjectsScreen({
@@ -79,14 +75,11 @@ export default function SubjectsScreen({
 }) {
   const insets = useSafeAreaInsets();
 
-  const [subjects, setSubjects] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(true);
+  const [subjects, setSubjects] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   /* =======================================================
-     HIDE NATIVE HEADER
+     HEADER
   ======================================================= */
 
   useLayoutEffect(() => {
@@ -96,33 +89,27 @@ export default function SubjectsScreen({
   }, [navigation]);
 
   /* =======================================================
-     LOAD SUBJECTS
+     LOAD
   ======================================================= */
 
-  const load = useCallback(
-    async () => {
-      setLoading(true);
+  const load = useCallback(async () => {
+    setLoading(true);
 
-      try {
-        const res =
-          await api.get(
-            "/subjects/my"
-          );
+    try {
+      const res = await api.get("/subjects/my");
 
-        setSubjects(
-          res.data?.subjects || []
-        );
-      } catch (err) {
-        console.log(
-          "Subjects loading error:",
-          err
-        );
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+      setSubjects(
+        res.data?.subjects || []
+      );
+    } catch (err) {
+      console.log(
+        "Subjects loading error:",
+        err
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -135,54 +122,60 @@ export default function SubjectsScreen({
   ======================================================= */
 
   const progress = useMemo(() => {
-    const total =
-      subjects.reduce(
-        (sum, subject) =>
-          sum +
-          (subject.totalChapters ||
-            0),
-        0
-      );
+    const total = subjects.reduce(
+      (sum, subject) =>
+        sum +
+        Number(
+          subject.totalChapters || 0
+        ),
+      0
+    );
 
-    const completed =
-      subjects.reduce(
-        (sum, subject) =>
-          sum +
-          (subject.completedCount ||
-            0),
-        0
-      );
+    const completed = subjects.reduce(
+      (sum, subject) =>
+        sum +
+        Number(
+          subject.completedCount || 0
+        ),
+      0
+    );
 
     const percentage = total
-      ? Math.round(
-          (completed / total) *
-            100
+      ? Math.min(
+          Math.round(
+            (completed / total) * 100
+          ),
+          100
         )
       : 0;
 
     return {
       total,
       completed,
+      remaining: Math.max(
+        total - completed,
+        0
+      ),
       percentage,
     };
   }, [subjects]);
 
-  /* =======================================================
-     COMPLETED SUBJECTS
-  ======================================================= */
-
-  const completedSubjects =
-    useMemo(
-      () =>
-        subjects.filter(
-          (subject) =>
-            subject.totalChapters >
-              0 &&
-            subject.completedCount >=
-              subject.totalChapters
-        ).length,
-      [subjects]
-    );
+  const completedSubjects = useMemo(
+    () =>
+      subjects.filter(
+        (subject) =>
+          Number(
+            subject.totalChapters || 0
+          ) > 0 &&
+          Number(
+            subject.completedCount || 0
+          ) >=
+            Number(
+              subject.totalChapters || 0
+            )
+      ).length,
+    [subjects]
+  );
 
   /* =======================================================
      LOADING
@@ -190,25 +183,15 @@ export default function SubjectsScreen({
 
   if (loading) {
     return (
-      <View
-        style={styles.centered}
-      >
-        <View
-          style={
-            styles.loaderCircle
-          }
-        >
+      <View style={styles.centered}>
+        <View style={styles.loaderCircle}>
           <ActivityIndicator
             size="small"
             color={colors.brand}
           />
         </View>
 
-        <Text
-          style={
-            styles.loadingText
-          }
-        >
+        <Text style={styles.loadingText}>
           Loading your practice...
         </Text>
       </View>
@@ -220,17 +203,14 @@ export default function SubjectsScreen({
   ======================================================= */
 
   return (
-    <View
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <ScrollView
-        showsVerticalScrollIndicator={
-          false
-        }
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingBottom:
             spacing.xxl +
-            insets.bottom,
+            insets.bottom +
+            10,
         }}
       >
         {/* =================================================
@@ -243,60 +223,44 @@ export default function SubjectsScreen({
             {
               paddingTop:
                 Math.max(
-                  insets.top,
-                  12
+                  insets.top + 4,
+                  16
                 ),
             },
           ]}
         >
           <TouchableOpacity
-            style={
-              styles.headerButton
-            }
-            activeOpacity={0.7}
+            style={styles.headerButton}
+            activeOpacity={0.75}
             onPress={() =>
               navigation.goBack()
             }
           >
             <Ionicons
               name="arrow-back"
-              size={21}
+              size={20}
               color={colors.ink}
             />
           </TouchableOpacity>
 
-          <View
-            style={
-              styles.headerCenter
-            }
-          >
-            <Text
-              style={
-                styles.headerTitle
-              }
-            >
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>
               Practice
             </Text>
 
-            <Text
-              style={
-                styles.headerSubtitle
-              }
-            >
+            <Text style={styles.headerSubtitle}>
               Chapter-wise learning
             </Text>
           </View>
 
           <TouchableOpacity
-            style={
-              styles.headerButton
-            }
-            activeOpacity={0.7}
+            style={styles.headerButton}
+            activeOpacity={0.75}
             onPress={load}
           >
             <Ionicons
               name="refresh-outline"
-              size={19}
+              size={18}
               color={colors.slate}
             />
           </TouchableOpacity>
@@ -306,26 +270,14 @@ export default function SubjectsScreen({
             INTRO
         ================================================= */}
 
-        <View
-          style={
-            styles.introSection
-          }
-        >
-          <Text
-            style={
-              styles.introTitle
-            }
-          >
+        <View style={styles.intro}>
+          <Text style={styles.introTitle}>
             Build your preparation
           </Text>
 
-          <Text
-            style={
-              styles.introSubtitle
-            }
-          >
-            Practice chapter by chapter,
-            from easy to advanced.
+          <Text style={styles.introSubtitle}>
+            Practice chapter by chapter and
+            track your progress.
           </Text>
         </View>
 
@@ -335,15 +287,10 @@ export default function SubjectsScreen({
 
         {subjects.length > 0 && (
           <ProgressHero
-            progress={
-              progress.percentage
-            }
-            completed={
-              progress.completed
-            }
-            total={
-              progress.total
-            }
+            progress={progress.percentage}
+            completed={progress.completed}
+            total={progress.total}
+            remaining={progress.remaining}
             completedSubjects={
               completedSubjects
             }
@@ -361,50 +308,35 @@ export default function SubjectsScreen({
         ) : (
           <>
             {/* =============================================
-                SECTION HEADER
+                SECTION
             ============================================= */}
 
             <View
-              style={
-                styles.sectionHeader
-              }
+              style={styles.sectionHeader}
             >
-              <View>
+              <View style={styles.sectionContent}>
                 <Text
-                  style={
-                    styles.sectionTitle
-                  }
+                  style={styles.sectionTitle}
                 >
                   Your Subjects
                 </Text>
 
                 <Text
-                  style={
-                    styles.sectionSubtitle
-                  }
+                  style={styles.sectionSubtitle}
                 >
-                  Continue where you left
-                  off
+                  Continue where you left off
                 </Text>
               </View>
 
-              <View
-                style={
-                  styles.countBadge
-                }
-              >
+              <View style={styles.countBadge}>
                 <Text
-                  style={
-                    styles.countNumber
-                  }
+                  style={styles.countNumber}
                 >
                   {subjects.length}
                 </Text>
 
                 <Text
-                  style={
-                    styles.countLabel
-                  }
+                  style={styles.countLabel}
                 >
                   SUBJECTS
                 </Text>
@@ -412,7 +344,7 @@ export default function SubjectsScreen({
             </View>
 
             {/* =============================================
-                SUBJECTS
+                SUBJECT CARDS
             ============================================= */}
 
             {subjects.map(
@@ -434,64 +366,46 @@ export default function SubjectsScreen({
             )}
 
             {/* =============================================
-                ADD SUBJECTS
+                MANAGE
             ============================================= */}
 
             <TouchableOpacity
-              style={
-                styles.addCard
-              }
-              activeOpacity={0.75}
+              style={styles.manageCard}
+              activeOpacity={0.78}
               onPress={() =>
                 navigation.navigate(
                   "SelectSubjects"
                 )
               }
             >
-              <View
-                style={
-                  styles.addIcon
-                }
-              >
+              <View style={styles.manageIcon}>
                 <Ionicons
-                  name="add"
-                  size={20}
+                  name="options-outline"
+                  size={19}
                   color={colors.brand}
                 />
               </View>
 
-              <View
-                style={
-                  styles.addContent
-                }
-              >
+              <View style={styles.manageContent}>
                 <Text
-                  style={
-                    styles.addTitle
-                  }
+                  style={styles.manageTitle}
                 >
                   Manage Subjects
                 </Text>
 
                 <Text
-                  style={
-                    styles.addSubtitle
-                  }
+                  style={styles.manageSubtitle}
                 >
-                  Add new subjects or
-                  update your selection
+                  Add, remove or update your
+                  subjects
                 </Text>
               </View>
 
-              <View
-                style={
-                  styles.addArrow
-                }
-              >
+              <View style={styles.manageArrow}>
                 <Ionicons
                   name="chevron-forward"
                   size={16}
-                  color={colors.slateSoft}
+                  color={colors.brand}
                 />
               </View>
             </TouchableOpacity>
@@ -510,14 +424,11 @@ function ProgressHero({
   progress,
   completed,
   total,
+  remaining,
   completedSubjects,
 }) {
   return (
-    <View
-      style={
-        styles.progressHeroWrap
-      }
-    >
+    <View style={styles.heroWrap}>
       <LinearGradient
         colors={gradients.brand}
         start={{
@@ -528,182 +439,94 @@ function ProgressHero({
           x: 1,
           y: 1,
         }}
-        style={
-          styles.progressHero
-        }
+        style={styles.hero}
       >
         {/* DECORATION */}
 
-        <View
-          style={
-            styles.progressOrbOne
-          }
-        />
+        <View style={styles.heroOrbOne} />
+        <View style={styles.heroOrbTwo} />
 
-        <View
-          style={
-            styles.progressOrbTwo
-          }
-        />
+        {/* LEFT */}
 
-        {/* CONTENT */}
-
-        <View
-          style={
-            styles.progressContent
-          }
-        >
-          <View
-            style={
-              styles.progressBadge
-            }
-          >
+        <View style={styles.heroContent}>
+          <View style={styles.heroBadge}>
             <Ionicons
               name="trending-up"
               size={10}
               color="#FFFFFF"
             />
 
-            <Text
-              style={
-                styles.progressBadgeText
-              }
-            >
+            <Text style={styles.heroBadgeText}>
               YOUR PROGRESS
             </Text>
           </View>
 
-          <Text
-            style={
-              styles.progressTitle
-            }
-          >
+          <Text style={styles.heroTitle}>
             Keep moving forward
           </Text>
 
-          <Text
-            style={
-              styles.progressSubtitle
-            }
-          >
+          <Text style={styles.heroSubtitle}>
             {completed} of {total} chapters
             completed
           </Text>
 
-          <View
-            style={
-              styles.progressStats
-            }
-          >
-            <ProgressStat
+          <View style={styles.heroStats}>
+            <HeroStat
               value={`${progress}%`}
               label="Overall"
             />
 
-            <View
-              style={
-                styles.progressDivider
-              }
-            />
+            <View style={styles.heroDivider} />
 
-            <ProgressStat
+            <HeroStat
               value={completedSubjects}
-              label="Completed"
+              label="Done"
             />
 
-            <View
-              style={
-                styles.progressDivider
-              }
-            />
+            <View style={styles.heroDivider} />
 
-            <ProgressStat
-              value={Math.max(
-                total - completed,
-                0
-              )}
-              label="Remaining"
+            <HeroStat
+              value={remaining}
+              label="Left"
             />
           </View>
         </View>
 
         {/* RING */}
 
-        <ProgressRing
-          percentage={progress}
-        />
+        <View style={styles.progressRing}>
+          <View style={styles.progressRingInner}>
+            <Text style={styles.ringValue}>
+              {progress}%
+            </Text>
+
+            <Text style={styles.ringLabel}>
+              DONE
+            </Text>
+          </View>
+        </View>
       </LinearGradient>
     </View>
   );
 }
 
 /* =========================================================
-   PROGRESS STAT
+   HERO STAT
 ========================================================= */
 
-function ProgressStat({
+function HeroStat({
   value,
   label,
 }) {
   return (
-    <View
-      style={
-        styles.progressStat
-      }
-    >
-      <Text
-        style={
-          styles.progressStatValue
-        }
-      >
+    <View style={styles.heroStat}>
+      <Text style={styles.heroStatValue}>
         {value}
       </Text>
 
-      <Text
-        style={
-          styles.progressStatLabel
-        }
-      >
+      <Text style={styles.heroStatLabel}>
         {label}
       </Text>
-    </View>
-  );
-}
-
-/* =========================================================
-   PROGRESS RING
-========================================================= */
-
-function ProgressRing({
-  percentage,
-}) {
-  return (
-    <View
-      style={
-        styles.ringOuter
-      }
-    >
-      <View
-        style={
-          styles.ringInner
-        }
-      >
-        <Text
-          style={
-            styles.ringValue
-          }
-        >
-          {percentage}%
-        </Text>
-
-        <Text
-          style={
-            styles.ringLabel
-          }
-        >
-          DONE
-        </Text>
-      </View>
     </View>
   );
 }
@@ -718,16 +541,15 @@ function SubjectCard({
   onPress,
 }) {
   const total =
-    subject.totalChapters || 0;
+    Number(subject.totalChapters || 0);
 
   const completed =
-    subject.completedCount || 0;
+    Number(subject.completedCount || 0);
 
   const percentage = total
     ? Math.min(
         Math.round(
-          (completed / total) *
-            100
+          (completed / total) * 100
         ),
         100
       )
@@ -739,42 +561,34 @@ function SubjectCard({
 
   const meta =
     SUBJECT_META[
-      index %
-        SUBJECT_META.length
+      index % SUBJECT_META.length
     ];
 
   return (
     <TouchableOpacity
-      style={
-        styles.subjectCard
-      }
+      style={[
+        styles.subjectCard,
+        isComplete &&
+          styles.subjectCardComplete,
+      ]}
       activeOpacity={0.8}
       onPress={onPress}
     >
       {/* TOP */}
 
-      <View
-        style={
-          styles.subjectTop
-        }
-      >
+      <View style={styles.subjectTop}>
         {/* ICON */}
 
         <View
           style={[
-            styles.subjectIconWrap,
+            styles.subjectIcon,
             {
-              backgroundColor:
-                meta.bg,
+              backgroundColor: meta.bg,
             },
           ]}
         >
           {subject.icon ? (
-            <Text
-              style={
-                styles.subjectEmoji
-              }
-            >
+            <Text style={styles.subjectEmoji}>
               {subject.icon}
             </Text>
           ) : (
@@ -788,16 +602,16 @@ function SubjectCard({
           {isComplete && (
             <View
               style={[
-                styles.completeDot,
+                styles.completeBadge,
                 {
                   backgroundColor:
-                    meta.accent,
+                    colors.success,
                 },
               ]}
             >
               <Ionicons
                 name="checkmark"
-                size={7}
+                size={8}
                 color="#FFFFFF"
               />
             </View>
@@ -806,25 +620,15 @@ function SubjectCard({
 
         {/* NAME */}
 
-        <View
-          style={
-            styles.subjectInfo
-          }
-        >
+        <View style={styles.subjectInfo}>
           <Text
-            style={
-              styles.subjectName
-            }
+            style={styles.subjectName}
             numberOfLines={1}
           >
             {subject.name}
           </Text>
 
-          <View
-            style={
-              styles.subjectMetaRow
-            }
-          >
+          <View style={styles.subjectMeta}>
             <Ionicons
               name={
                 isComplete
@@ -834,22 +638,18 @@ function SubjectCard({
               size={11}
               color={
                 isComplete
-                  ? "#10B981"
+                  ? colors.success
                   : colors.slateSoft
               }
             />
 
-            <Text
-              style={
-                styles.subjectMeta
-              }
-            >
+            <Text style={styles.subjectMetaText}>
               {completed} of {total} chapters
             </Text>
           </View>
         </View>
 
-        {/* PERCENTAGE */}
+        {/* PERCENT */}
 
         <View
           style={[
@@ -872,16 +672,8 @@ function SubjectCard({
 
       {/* PROGRESS */}
 
-      <View
-        style={
-          styles.progressRow
-        }
-      >
-        <View
-          style={
-            styles.progressTrack
-          }
-        >
+      <View style={styles.progressRow}>
+        <View style={styles.progressTrack}>
           {percentage > 0 && (
             <LinearGradient
               colors={
@@ -902,7 +694,7 @@ function SubjectCard({
                 {
                   width: `${Math.max(
                     percentage,
-                    2
+                    3
                   )}%`,
                 },
               ]}
@@ -913,30 +705,22 @@ function SubjectCard({
         <Ionicons
           name="chevron-forward"
           size={15}
-          color={
-            colors.slateSoft
-          }
+          color={colors.slateSoft}
         />
       </View>
 
-      {/* COMPLETE MESSAGE */}
+      {/* COMPLETE */}
 
       {isComplete && (
-        <View
-          style={
-            styles.completeMessage
-          }
-        >
+        <View style={styles.completeMessage}>
           <Ionicons
             name="checkmark-circle"
             size={11}
-            color="#10B981"
+            color={colors.success}
           />
 
           <Text
-            style={
-              styles.completeMessageText
-            }
+            style={styles.completeMessageText}
           >
             Subject completed
           </Text>
@@ -947,42 +731,24 @@ function SubjectCard({
 }
 
 /* =========================================================
-   EMPTY STATE
+   EMPTY
 ========================================================= */
 
 function EmptyState({
   navigation,
 }) {
   return (
-    <View
-      style={
-        styles.empty
-      }
-    >
-      {/* ICON */}
-
-      <View
-        style={
-          styles.emptyIconWrap
-        }
-      >
-        <View
-          style={
-            styles.emptyIcon
-          }
-        >
+    <View style={styles.empty}>
+      <View style={styles.emptyIconWrap}>
+        <View style={styles.emptyIcon}>
           <Ionicons
-            name="book-outline"
-            size={28}
+            name="library-outline"
+            size={29}
             color={colors.brand}
           />
         </View>
 
-        <View
-          style={
-            styles.emptySparkle
-          }
-        >
+        <View style={styles.emptySpark}>
           <Ionicons
             name="sparkles"
             size={10}
@@ -991,28 +757,18 @@ function EmptyState({
         </View>
       </View>
 
-      <Text
-        style={
-          styles.emptyTitle
-        }
-      >
+      <Text style={styles.emptyTitle}>
         No subjects yet
       </Text>
 
-      <Text
-        style={
-          styles.emptyText
-        }
-      >
+      <Text style={styles.emptyText}>
         Choose the subjects you're
         preparing for and start
         chapter-wise practice.
       </Text>
 
       <TouchableOpacity
-        style={
-          styles.emptyButton
-        }
+        style={styles.emptyButton}
         activeOpacity={0.85}
         onPress={() =>
           navigation.navigate(
@@ -1020,19 +776,28 @@ function EmptyState({
           )
         }
       >
-        <Text
-          style={
-            styles.emptyButtonText
-          }
+        <LinearGradient
+          colors={gradients.brand}
+          start={{
+            x: 0,
+            y: 0,
+          }}
+          end={{
+            x: 1,
+            y: 0,
+          }}
+          style={styles.emptyButtonGradient}
         >
-          Choose Subjects
-        </Text>
+          <Text style={styles.emptyButtonText}>
+            Choose Subjects
+          </Text>
 
-        <Ionicons
-          name="arrow-forward"
-          size={15}
-          color="#FFFFFF"
-        />
+          <Ionicons
+            name="arrow-forward"
+            size={15}
+            color="#FFFFFF"
+          />
+        </LinearGradient>
       </TouchableOpacity>
     </View>
   );
@@ -1042,703 +807,603 @@ function EmptyState({
    STYLES
 ========================================================= */
 
-const styles =
-  StyleSheet.create({
-    /* =====================================================
-       GENERAL
-    ===================================================== */
-
-    container: {
-      flex: 1,
-      backgroundColor:
-        colors.bg,
-    },
-
-    centered: {
-      flex: 1,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      backgroundColor:
-        colors.bg,
-    },
-
-    loaderCircle: {
-      width: 46,
-      height: 46,
-      borderRadius: 23,
-      backgroundColor:
-        "#FFFFFF",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginBottom: 10,
-      ...shadow.soft,
-    },
-
-    loadingText: {
-      fontSize: 12,
-      color: colors.slate,
-      fontWeight:
-        "600",
-    },
-
-    /* =====================================================
-       HEADER
-    ===================================================== */
-
-    header: {
-      minHeight: 74,
-      paddingHorizontal:
-        spacing.lg,
-      paddingBottom:
-        spacing.sm,
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      backgroundColor:
-        colors.bg,
-    },
-
-    headerButton: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
-      backgroundColor:
-        "#FFFFFF",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      borderWidth: 1,
-      borderColor:
-        colors.border,
-      ...shadow.soft,
-    },
-
-    headerCenter: {
-      flex: 1,
-      marginHorizontal: 12,
-    },
-
-    headerTitle: {
-      fontSize: 18,
-      lineHeight: 22,
-      fontWeight:
-        "800",
-      color: colors.ink,
-      letterSpacing:
-        -0.3,
-    },
-
-    headerSubtitle: {
-      fontSize: 10,
-      color: colors.slate,
-      marginTop: 2,
-      fontWeight:
-        "500",
-    },
-
-    /* =====================================================
-       INTRO
-    ===================================================== */
-
-    introSection: {
-      paddingHorizontal:
-        spacing.lg,
-      marginBottom:
-        spacing.md,
-    },
-
-    introTitle: {
-      fontSize: 21,
-      lineHeight: 26,
-      fontWeight:
-        "800",
-      color: colors.ink,
-      letterSpacing:
-        -0.4,
-    },
-
-    introSubtitle: {
-      fontSize: 11.5,
-      lineHeight: 17,
-      color: colors.slate,
-      marginTop: 3,
-    },
-
-    /* =====================================================
-       PROGRESS HERO
-    ===================================================== */
-
-    progressHeroWrap: {
-      marginHorizontal: 18,
-      marginBottom: 22,
-    },
-
-    progressHero: {
-      minHeight: 158,
-      borderRadius: 24,
-      paddingHorizontal: 18,
-      paddingVertical: 17,
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      overflow: "hidden",
-      ...shadow.brand,
-    },
-
-    progressContent: {
-      flex: 1,
-      zIndex: 5,
-    },
-
-    progressBadge: {
-      alignSelf:
-        "flex-start",
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      gap: 4,
-      paddingHorizontal: 7,
-      paddingVertical: 4,
-      borderRadius:
-        radius.full,
-      backgroundColor:
-        "rgba(255,255,255,0.15)",
-      marginBottom: 7,
-    },
-
-    progressBadgeText: {
-      fontSize: 7.5,
-      fontWeight:
-        "800",
-      color: "#FFFFFF",
-      letterSpacing:
-        0.4,
-    },
-
-    progressTitle: {
-      fontSize: 19,
-      lineHeight: 24,
-      fontWeight:
-        "800",
-      color: "#FFFFFF",
-      letterSpacing:
-        -0.3,
-    },
-
-    progressSubtitle: {
-      fontSize: 10.5,
-      color:
-        "rgba(255,255,255,0.78)",
-      marginTop: 3,
-    },
-
-    progressStats: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      marginTop: 11,
-    },
-
-    progressStat: {
-      minWidth: 40,
-    },
-
-    progressStatValue: {
-      fontSize: 12,
-      fontWeight:
-        "800",
-      color: "#FFFFFF",
-    },
-
-    progressStatLabel: {
-      fontSize: 7.5,
-      color:
-        "rgba(255,255,255,0.68)",
-      marginTop: 1,
-      fontWeight:
-        "600",
-    },
-
-    progressDivider: {
-      width: 1,
-      height: 22,
-      backgroundColor:
-        "rgba(255,255,255,0.22)",
-      marginHorizontal: 7,
-    },
-
-    progressOrbOne: {
-      position:
-        "absolute",
-      width: 150,
-      height: 150,
-      borderRadius: 75,
-      right: -70,
-      top: -70,
-      backgroundColor:
-        "rgba(255,255,255,0.08)",
-    },
-
-    progressOrbTwo: {
-      position:
-        "absolute",
-      width: 95,
-      height: 95,
-      borderRadius: 48,
-      right: 20,
-      bottom: -55,
-      backgroundColor:
-        "rgba(255,255,255,0.07)",
-    },
-
-    /* =====================================================
-       PROGRESS RING
-    ===================================================== */
-
-    ringOuter: {
-      width: 82,
-      height: 82,
-      borderRadius: 41,
-      borderWidth: 7,
-      borderColor:
-        "rgba(255,255,255,0.24)",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginLeft: 8,
-      zIndex: 3,
-    },
-
-    ringInner: {
-      width: 66,
-      height: 66,
-      borderRadius: 33,
-      backgroundColor:
-        "rgba(255,255,255,0.12)",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-    },
-
-    ringValue: {
-      fontSize: 17,
-      fontWeight:
-        "800",
-      color: "#FFFFFF",
-    },
-
-    ringLabel: {
-      fontSize: 6.5,
-      fontWeight:
-        "800",
-      color:
-        "rgba(255,255,255,0.68)",
-      marginTop: 1,
-      letterSpacing:
-        0.5,
-    },
-
-    /* =====================================================
-       SECTION HEADER
-    ===================================================== */
-
-    sectionHeader: {
-      marginHorizontal: 18,
-      marginBottom: 11,
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      justifyContent:
-        "space-between",
-    },
-
-    sectionTitle: {
-      fontSize: 19,
-      fontWeight:
-        "800",
-      color: colors.ink,
-      letterSpacing:
-        -0.3,
-    },
-
-    sectionSubtitle: {
-      fontSize: 10,
-      color: colors.slate,
-      marginTop: 2,
-    },
-
-    countBadge: {
-      minWidth: 43,
-      height: 42,
-      borderRadius: 13,
-      backgroundColor:
-        "#FFFFFF",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      borderWidth: 1,
-      borderColor:
-        colors.border,
-    },
-
-    countNumber: {
-      fontSize: 13,
-      fontWeight:
-        "800",
-      color:
-        colors.brand,
-    },
-
-    countLabel: {
-      fontSize: 6.5,
-      fontWeight:
-        "800",
-      color:
-        colors.slateSoft,
-      marginTop: 1,
-    },
-
-    /* =====================================================
-       SUBJECT CARD
-    ===================================================== */
-
-    subjectCard: {
-      marginHorizontal: 18,
-      marginBottom: 10,
-      padding: 12,
-      backgroundColor:
-        "#FFFFFF",
-      borderRadius: 19,
-      borderWidth: 1,
-      borderColor:
-        colors.border,
-      ...shadow.soft,
-    },
-
-    subjectTop: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      minHeight: 49,
-    },
-
-    subjectIconWrap: {
-      width: 47,
-      height: 47,
-      borderRadius: 15,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginRight: 11,
-      position:
-        "relative",
-    },
-
-    subjectEmoji: {
-      fontSize: 21,
-    },
-
-    completeDot: {
-      position:
-        "absolute",
-      right: -2,
-      bottom: -2,
-      width: 16,
-      height: 16,
-      borderRadius: 8,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      borderWidth: 2,
-      borderColor:
-        "#FFFFFF",
-    },
-
-    subjectInfo: {
-      flex: 1,
-      minWidth: 0,
-    },
-
-    subjectName: {
-      fontSize: 15,
-      fontWeight:
-        "800",
-      color:
-        colors.ink,
-      marginBottom: 3,
-    },
-
-    subjectMetaRow: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      gap: 4,
-    },
-
-    subjectMeta: {
-      fontSize: 9.5,
-      color:
-        colors.slateSoft,
-      fontWeight:
-        "600",
-    },
-
-    percentBadge: {
-      minWidth: 43,
-      paddingHorizontal: 8,
-      paddingVertical: 5,
-      borderRadius:
-        radius.full,
-      backgroundColor:
-        colors.brandLight,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginLeft: 7,
-    },
-
-    percentBadgeComplete: {
-      backgroundColor:
-        colors.successLight,
-    },
-
-    percentText: {
-      fontSize: 11,
-      fontWeight:
-        "800",
-      color:
-        colors.brand,
-    },
-
-    percentTextComplete: {
-      color:
-        colors.success,
-    },
-
-    /* =====================================================
-       SUBJECT PROGRESS
-    ===================================================== */
-
-    progressRow: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      gap: 7,
-      marginTop: 11,
-    },
-
-    progressTrack: {
-      flex: 1,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor:
-        colors.slateLight,
-      overflow: "hidden",
-    },
-
-    progressFill: {
-      height: 6,
-      borderRadius: 3,
-    },
-
-    completeMessage: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      gap: 4,
-      marginTop: 7,
-    },
-
-    completeMessageText: {
-      fontSize: 8.5,
-      fontWeight:
-        "700",
-      color:
-        colors.success,
-    },
-
-    /* =====================================================
-       ADD SUBJECTS
-    ===================================================== */
-
-    addCard: {
-      marginHorizontal: 18,
-      marginTop: 2,
-      marginBottom: 5,
-      minHeight: 67,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      borderRadius: 18,
-      borderWidth: 1,
-      borderStyle: "dashed",
-      borderColor:
-        colors.brandLight,
-      backgroundColor:
-        colors.brandTint,
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-    },
-
-    addIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 13,
-      backgroundColor:
-        "#FFFFFF",
-      borderWidth: 1,
-      borderColor:
-        colors.brandLight,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginRight: 10,
-    },
-
-    addContent: {
-      flex: 1,
-    },
-
-    addTitle: {
-      fontSize: 13,
-      fontWeight:
-        "800",
-      color:
-        colors.brand,
-    },
-
-    addSubtitle: {
-      fontSize: 9.5,
-      color:
-        colors.slate,
-      marginTop: 2,
-      fontWeight:
-        "500",
-    },
-
-    addArrow: {
-      width: 30,
-      height: 30,
-      borderRadius: 15,
-      backgroundColor:
-        "#FFFFFF",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginLeft: 7,
-    },
-
-    /* =====================================================
-       EMPTY
-    ===================================================== */
-
-    empty: {
-      alignItems:
-        "center",
-      paddingHorizontal: 28,
-      paddingVertical: 55,
-    },
-
-    emptyIconWrap: {
-      position:
-        "relative",
-      marginBottom: 14,
-    },
-
-    emptyIcon: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
-      backgroundColor:
-        colors.brandLight,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-    },
-
-    emptySparkle: {
-      position:
-        "absolute",
-      right: -3,
-      top: -2,
-      width: 25,
-      height: 25,
-      borderRadius: 13,
-      backgroundColor:
-        "#FFF8DF",
-      borderWidth: 2,
-      borderColor:
-        colors.bg,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-    },
-
-    emptyTitle: {
-      fontSize: 18,
-      fontWeight:
-        "800",
-      color:
-        colors.ink,
-      marginBottom: 5,
-    },
-
-    emptyText: {
-      fontSize: 12,
-      lineHeight: 18,
-      color:
-        colors.slate,
-      textAlign:
-        "center",
-      maxWidth: 285,
-    },
-
-    emptyButton: {
-      height: 42,
-      paddingHorizontal: 18,
-      borderRadius: 13,
-      backgroundColor:
-        colors.brand,
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      gap: 7,
-      marginTop: 16,
-      ...shadow.brand,
-    },
-
-    emptyButtonText: {
-      color: "#FFFFFF",
-      fontSize: 12,
-      fontWeight:
-        "800",
-    },
-  });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.bg,
+  },
+
+  loaderCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+    ...shadow.soft,
+  },
+
+  loadingText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.slate,
+  },
+
+  /* =====================================================
+     HEADER
+  ===================================================== */
+
+  header: {
+    minHeight: 72,
+    paddingHorizontal: 18,
+    paddingBottom: 9,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.soft,
+  },
+
+  headerContent: {
+    flex: 1,
+    minWidth: 0,
+    marginHorizontal: 12,
+  },
+
+  headerTitle: {
+    fontSize: 19,
+    lineHeight: 23,
+    fontWeight: "900",
+    color: colors.ink,
+    letterSpacing: -0.4,
+  },
+
+  headerSubtitle: {
+    fontSize: 10.5,
+    lineHeight: 15,
+    color: colors.slate,
+    marginTop: 2,
+    fontWeight: "500",
+  },
+
+  /* =====================================================
+     INTRO
+  ===================================================== */
+
+  intro: {
+    paddingHorizontal: 18,
+    marginBottom: 15,
+  },
+
+  introTitle: {
+    fontSize: 21,
+    lineHeight: 27,
+    fontWeight: "900",
+    color: colors.ink,
+    letterSpacing: -0.5,
+  },
+
+  introSubtitle: {
+    fontSize: 11.5,
+    lineHeight: 17,
+    color: colors.slate,
+    marginTop: 3,
+  },
+
+  /* =====================================================
+     HERO
+  ===================================================== */
+
+  heroWrap: {
+    marginHorizontal: 18,
+    marginBottom: 22,
+  },
+
+  hero: {
+    minHeight: 164,
+    borderRadius: 23,
+    paddingHorizontal: 17,
+    paddingVertical: 17,
+    flexDirection: "row",
+    alignItems: "center",
+    overflow: "hidden",
+    ...shadow.brand,
+  },
+
+  heroContent: {
+    flex: 1,
+    minWidth: 0,
+    zIndex: 5,
+  },
+
+  heroBadge: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    backgroundColor:
+      "rgba(255,255,255,0.15)",
+    marginBottom: 7,
+  },
+
+  heroBadgeText: {
+    fontSize: 7.5,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    letterSpacing: 0.5,
+  },
+
+  heroTitle: {
+    fontSize: 19,
+    lineHeight: 24,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    letterSpacing: -0.35,
+  },
+
+  heroSubtitle: {
+    fontSize: 10.5,
+    lineHeight: 15,
+    color:
+      "rgba(255,255,255,0.78)",
+    marginTop: 3,
+  },
+
+  heroStats: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
+  },
+
+  heroStat: {
+    minWidth: 38,
+  },
+
+  heroStatValue: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+    color: "#FFFFFF",
+  },
+
+  heroStatLabel: {
+    fontSize: 7.5,
+    lineHeight: 11,
+    color:
+      "rgba(255,255,255,0.68)",
+    marginTop: 1,
+    fontWeight: "600",
+  },
+
+  heroDivider: {
+    width: 1,
+    height: 23,
+    backgroundColor:
+      "rgba(255,255,255,0.22)",
+    marginHorizontal: 8,
+  },
+
+  heroOrbOne: {
+    position: "absolute",
+    width: 155,
+    height: 155,
+    borderRadius: 78,
+    right: -74,
+    top: -75,
+    backgroundColor:
+      "rgba(255,255,255,0.08)",
+  },
+
+  heroOrbTwo: {
+    position: "absolute",
+    width: 95,
+    height: 95,
+    borderRadius: 48,
+    right: 30,
+    bottom: -57,
+    backgroundColor:
+      "rgba(255,255,255,0.06)",
+  },
+
+  /* =====================================================
+     RING
+  ===================================================== */
+
+  progressRing: {
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+    borderWidth: 7,
+    borderColor:
+      "rgba(255,255,255,0.25)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 8,
+    zIndex: 4,
+  },
+
+  progressRingInner: {
+    width: 66,
+    height: 66,
+    borderRadius: 33,
+    backgroundColor:
+      "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  ringValue: {
+    fontSize: 17,
+    lineHeight: 21,
+    fontWeight: "900",
+    color: "#FFFFFF",
+  },
+
+  ringLabel: {
+    fontSize: 6.5,
+    lineHeight: 9,
+    fontWeight: "900",
+    color:
+      "rgba(255,255,255,0.68)",
+    marginTop: 1,
+    letterSpacing: 0.5,
+  },
+
+  /* =====================================================
+     SECTION
+  ===================================================== */
+
+  sectionHeader: {
+    marginHorizontal: 18,
+    marginBottom: 11,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  sectionContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  sectionTitle: {
+    fontSize: 19,
+    lineHeight: 24,
+    fontWeight: "900",
+    color: colors.ink,
+    letterSpacing: -0.35,
+  },
+
+  sectionSubtitle: {
+    fontSize: 10,
+    lineHeight: 15,
+    color: colors.slate,
+    marginTop: 2,
+  },
+
+  countBadge: {
+    minWidth: 44,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+
+  countNumber: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: "900",
+    color: colors.brand,
+  },
+
+  countLabel: {
+    fontSize: 6.5,
+    lineHeight: 9,
+    fontWeight: "900",
+    color: colors.slateSoft,
+    marginTop: 1,
+    letterSpacing: 0.25,
+  },
+
+  /* =====================================================
+     SUBJECT CARD
+  ===================================================== */
+
+  subjectCard: {
+    marginHorizontal: 18,
+    marginBottom: 10,
+    padding: 13,
+    borderRadius: 19,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.soft,
+  },
+
+  subjectCardComplete: {
+    borderColor:
+      colors.successBorder,
+  },
+
+  subjectTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 49,
+  },
+
+  subjectIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 11,
+    position: "relative",
+  },
+
+  subjectEmoji: {
+    fontSize: 21,
+  },
+
+  completeBadge: {
+    position: "absolute",
+    right: -3,
+    bottom: -3,
+    width: 17,
+    height: 17,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
+
+  subjectInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  subjectName: {
+    fontSize: 15,
+    lineHeight: 19,
+    fontWeight: "900",
+    color: colors.ink,
+    marginBottom: 4,
+  },
+
+  subjectMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+
+  subjectMetaText: {
+    fontSize: 9.5,
+    lineHeight: 13,
+    color: colors.slateSoft,
+    fontWeight: "600",
+  },
+
+  percentBadge: {
+    minWidth: 45,
+    height: 28,
+    paddingHorizontal: 8,
+    borderRadius: radius.full,
+    backgroundColor: colors.brandLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 8,
+  },
+
+  percentBadgeComplete: {
+    backgroundColor:
+      colors.successLight,
+  },
+
+  percentText: {
+    fontSize: 11,
+    fontWeight: "900",
+    color: colors.brand,
+  },
+
+  percentTextComplete: {
+    color: colors.success,
+  },
+
+  /* =====================================================
+     PROGRESS
+  ===================================================== */
+
+  progressRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 12,
+  },
+
+  progressTrack: {
+    flex: 1,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.slateLight,
+    overflow: "hidden",
+  },
+
+  progressFill: {
+    height: 6,
+    borderRadius: 3,
+  },
+
+  completeMessage: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 7,
+  },
+
+  completeMessageText: {
+    fontSize: 8.5,
+    lineHeight: 12,
+    fontWeight: "800",
+    color: colors.success,
+  },
+
+  /* =====================================================
+     MANAGE
+  ===================================================== */
+
+  manageCard: {
+    marginHorizontal: 18,
+    marginTop: 1,
+    marginBottom: 6,
+    minHeight: 68,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 18,
+    backgroundColor: colors.brandTint,
+    borderWidth: 1,
+    borderColor: colors.brandLight,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  manageIcon: {
+    width: 41,
+    height: 41,
+    borderRadius: 13,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+
+  manageContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  manageTitle: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+    color: colors.brand,
+  },
+
+  manageSubtitle: {
+    fontSize: 9.5,
+    lineHeight: 14,
+    color: colors.slate,
+    marginTop: 2,
+    fontWeight: "500",
+  },
+
+  manageArrow: {
+    width: 31,
+    height: 31,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 8,
+  },
+
+  /* =====================================================
+     EMPTY
+  ===================================================== */
+
+  empty: {
+    alignItems: "center",
+    paddingHorizontal: 28,
+    paddingVertical: 58,
+  },
+
+  emptyIconWrap: {
+    position: "relative",
+    marginBottom: 15,
+  },
+
+  emptyIcon: {
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    backgroundColor: colors.brandLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  emptySpark: {
+    position: "absolute",
+    right: -3,
+    top: -2,
+    width: 25,
+    height: 25,
+    borderRadius: 13,
+    backgroundColor: "#FFF8DF",
+    borderWidth: 2,
+    borderColor: colors.bg,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  emptyTitle: {
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "900",
+    color: colors.ink,
+    marginBottom: 5,
+  },
+
+  emptyText: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.slate,
+    textAlign: "center",
+    maxWidth: 285,
+  },
+
+  emptyButton: {
+    marginTop: 17,
+    borderRadius: 14,
+    overflow: "hidden",
+    ...shadow.brand,
+  },
+
+  emptyButtonGradient: {
+    height: 44,
+    paddingHorizontal: 19,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+  },
+
+  emptyButtonText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+    color: "#FFFFFF",
+  },
+});

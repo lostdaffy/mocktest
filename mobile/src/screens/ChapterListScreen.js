@@ -1,8 +1,6 @@
 import {
-  useCallback,
   useLayoutEffect,
   useMemo,
-  useState,
 } from "react";
 
 import {
@@ -11,12 +9,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
+  useColorScheme,
 } from "react-native";
-
-import {
-  useFocusEffect,
-} from "@react-navigation/native";
 
 import {
   Ionicons,
@@ -31,45 +25,15 @@ import {
 } from "react-native-safe-area-context";
 
 import {
-  colors,
+  getColors,
+  getCard,
   gradients,
   spacing,
   radius,
   type,
   shadow,
-  card,
 } from "../theme/theme";
 
-/* =========================================================
-   LEVELS
-========================================================= */
-
-const LEVELS = [
-  {
-    key: "easy",
-    label: "Easy",
-    short: "E",
-    tint: colors.easy,
-  },
-  {
-    key: "medium",
-    label: "Medium",
-    short: "M",
-    tint: colors.medium,
-  },
-  {
-    key: "hard",
-    label: "Hard",
-    short: "H",
-    tint: colors.hard,
-  },
-  {
-    key: "advanced",
-    label: "Advanced",
-    short: "A",
-    tint: colors.advanced,
-  },
-];
 
 /* =========================================================
    MAIN SCREEN
@@ -82,12 +46,25 @@ export default function ChapterListScreen({
   const insets =
     useSafeAreaInsets();
 
+  const scheme =
+    useColorScheme();
+
+  const isDark =
+    scheme === "dark";
+
+  const colors =
+    getColors(isDark);
+
+  const chapterCard =
+    getCard(isDark);
+
   const {
     subject,
-  } = route.params;
+  } = route.params || {};
 
   const chapters =
     subject?.chapters || [];
+
 
   /* =======================================================
      HIDE NATIVE HEADER
@@ -98,6 +75,42 @@ export default function ChapterListScreen({
       headerShown: false,
     });
   }, [navigation]);
+
+
+  /* =======================================================
+     LEVELS
+  ======================================================= */
+
+  const LEVELS = useMemo(
+    () => [
+      {
+        key: "easy",
+        label: "Easy",
+        short: "E",
+        tint: colors.easy,
+      },
+      {
+        key: "medium",
+        label: "Medium",
+        short: "M",
+        tint: colors.medium,
+      },
+      {
+        key: "hard",
+        label: "Hard",
+        short: "H",
+        tint: colors.hard,
+      },
+      {
+        key: "advanced",
+        label: "Advanced",
+        short: "A",
+        tint: colors.advanced,
+      },
+    ],
+    [colors]
+  );
+
 
   /* =======================================================
      CHAPTER STATS
@@ -110,22 +123,24 @@ export default function ChapterListScreen({
     const completed =
       chapters.filter(
         (chapter) =>
-          chapter.isCompleted
+          !!chapter.isCompleted
       ).length;
 
     const started =
       chapters.filter(
         (chapter) =>
-          chapter.testsCompleted >
-          0
+          Number(
+            chapter.testsCompleted || 0
+          ) > 0
       ).length;
 
-    const percentage = total
-      ? Math.round(
-          (completed / total) *
-            100
-        )
-      : 0;
+    const percentage =
+      total > 0
+        ? Math.round(
+            (completed / total) *
+              100
+          )
+        : 0;
 
     return {
       total,
@@ -135,13 +150,20 @@ export default function ChapterListScreen({
     };
   }, [chapters]);
 
+
   /* =======================================================
      RENDER
   ======================================================= */
 
   return (
     <View
-      style={styles.container}
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            colors.bg,
+        },
+      ]}
     >
       <ScrollView
         showsVerticalScrollIndicator={
@@ -153,8 +175,9 @@ export default function ChapterListScreen({
             insets.bottom,
         }}
       >
+
         {/* =================================================
-            HEADER
+            TOP HEADER
         ================================================= */}
 
         <View
@@ -164,26 +187,39 @@ export default function ChapterListScreen({
               paddingTop:
                 Math.max(
                   insets.top,
-                  12
+                  10
                 ),
             },
           ]}
         >
+
+          {/* BACK */}
+
           <TouchableOpacity
-            style={
-              styles.headerButton
-            }
-            activeOpacity={0.7}
+            style={[
+              styles.headerButton,
+              {
+                backgroundColor:
+                  colors.surface,
+
+                borderColor:
+                  colors.border,
+              },
+            ]}
+            activeOpacity={0.72}
             onPress={() =>
               navigation.goBack()
             }
           >
             <Ionicons
               name="arrow-back"
-              size={21}
+              size={20}
               color={colors.ink}
             />
           </TouchableOpacity>
+
+
+          {/* TITLE */}
 
           <View
             style={
@@ -191,9 +227,13 @@ export default function ChapterListScreen({
             }
           >
             <Text
-              style={
-                styles.headerTitle
-              }
+              style={[
+                styles.headerTitle,
+                {
+                  color:
+                    colors.ink,
+                },
+              ]}
               numberOfLines={1}
             >
               {subject?.name ||
@@ -201,36 +241,60 @@ export default function ChapterListScreen({
             </Text>
 
             <Text
-              style={
-                styles.headerSubtitle
-              }
+              style={[
+                styles.headerSubtitle,
+                {
+                  color:
+                    colors.slate,
+                },
+              ]}
             >
               Chapter practice
             </Text>
           </View>
 
+
+          {/* COUNT */}
+
           <View
-            style={
-              styles.chapterCountBadge
-            }
+            style={[
+              styles.chapterCountBadge,
+              {
+                backgroundColor:
+                  colors.brandTint,
+
+                borderColor:
+                  colors.brandLight,
+              },
+            ]}
           >
             <Text
-              style={
-                styles.chapterCountNumber
-              }
+              style={[
+                styles.chapterCountNumber,
+                {
+                  color:
+                    colors.brand,
+                },
+              ]}
             >
               {stats.total}
             </Text>
 
             <Text
-              style={
-                styles.chapterCountLabel
-              }
+              style={[
+                styles.chapterCountLabel,
+                {
+                  color:
+                    colors.slate,
+                },
+              ]}
             >
               CHAPTERS
             </Text>
           </View>
+
         </View>
+
 
         {/* =================================================
             SUBJECT HERO
@@ -239,9 +303,10 @@ export default function ChapterListScreen({
         <SubjectHero
           subject={subject}
           stats={stats}
+          colors={colors}
         />
 
-   
+
         {/* =================================================
             SECTION HEADER
         ================================================= */}
@@ -251,69 +316,104 @@ export default function ChapterListScreen({
             styles.sectionHeader
           }
         >
-          <View>
+
+          <View
+            style={
+              styles.sectionCopy
+            }
+          >
             <Text
-              style={
-                styles.sectionTitle
-              }
+              style={[
+                styles.sectionTitle,
+                {
+                  color:
+                    colors.ink,
+                },
+              ]}
             >
               Chapters
             </Text>
 
             <Text
-              style={
-                styles.sectionSubtitle
-              }
+              style={[
+                styles.sectionSubtitle,
+                {
+                  color:
+                    colors.slate,
+                },
+              ]}
             >
               Continue your preparation
             </Text>
           </View>
 
+
           <View
-            style={
-              styles.progressBadge
-            }
+            style={[
+              styles.progressBadge,
+              {
+                backgroundColor:
+                  colors.successLight,
+              },
+            ]}
           >
             <Ionicons
               name="checkmark-circle"
-              size={12}
-              color={colors.success}
+              size={13}
+              color={
+                colors.success
+              }
             />
 
             <Text
-              style={
-                styles.progressBadgeText
-              }
+              style={[
+                styles.progressBadgeText,
+                {
+                  color:
+                    colors.success,
+                },
+              ]}
             >
               {stats.completed}/
               {stats.total}
             </Text>
           </View>
+
         </View>
+
 
         {/* =================================================
             CHAPTER LIST
         ================================================= */}
 
         {chapters.length === 0 ? (
-          <EmptyState />
+          <EmptyState
+            colors={colors}
+          />
         ) : (
           chapters.map(
-            (chapter, index) => (
+            (
+              chapter,
+              index
+            ) => (
               <ChapterCard
                 key={
                   chapter._id ||
                   chapter.id ||
                   index
                 }
-                chapter={chapter}
-                index={index}
+                chapter={
+                  chapter
+                }
+                index={
+                  index
+                }
                 onPress={() =>
                   navigation.navigate(
                     "ChapterPractice",
                     {
                       subject:
-                        subject.name,
+                        subject?.name,
                       chapter:
                         chapter.name,
                       currentLevel:
@@ -323,14 +423,25 @@ export default function ChapterListScreen({
                     }
                   )
                 }
+                LEVELS={
+                  LEVELS
+                }
+                colors={
+                  colors
+                }
+                chapterCard={
+                  chapterCard
+                }
               />
             )
           )
         )}
+
       </ScrollView>
     </View>
   );
 }
+
 
 /* =========================================================
    SUBJECT HERO
@@ -339,6 +450,7 @@ export default function ChapterListScreen({
 function SubjectHero({
   subject,
   stats,
+  colors,
 }) {
   return (
     <View
@@ -347,7 +459,9 @@ function SubjectHero({
       }
     >
       <LinearGradient
-        colors={gradients.brand}
+        colors={
+          gradients.brand
+        }
         start={{
           x: 0,
           y: 0,
@@ -356,25 +470,40 @@ function SubjectHero({
           x: 1,
           y: 1,
         }}
-        style={
-          styles.hero
-        }
+        style={[
+          styles.hero,
+          {
+            shadowColor:
+              colors.brand,
+          },
+        ]}
       >
-        {/* DECORATION */}
+
+        {/* DECORATIVE ORBS */}
 
         <View
+          pointerEvents="none"
           style={
             styles.heroOrbOne
           }
         />
 
         <View
+          pointerEvents="none"
           style={
             styles.heroOrbTwo
           }
         />
 
-        {/* ICON */}
+        <View
+          pointerEvents="none"
+          style={
+            styles.heroOrbThree
+          }
+        />
+
+
+        {/* SUBJECT ICON */}
 
         <View
           style={
@@ -382,9 +511,13 @@ function SubjectHero({
           }
         >
           <View
-            style={
-              styles.heroIconInner
-            }
+            style={[
+              styles.heroIconInner,
+              {
+                backgroundColor:
+                  colors.surface,
+              },
+            ]}
           >
             <Text
               style={
@@ -397,6 +530,7 @@ function SubjectHero({
           </View>
         </View>
 
+
         {/* CONTENT */}
 
         <View
@@ -404,6 +538,7 @@ function SubjectHero({
             styles.heroContent
           }
         >
+
           <View
             style={
               styles.heroLabel
@@ -424,6 +559,7 @@ function SubjectHero({
             </Text>
           </View>
 
+
           <Text
             style={
               styles.heroTitle
@@ -434,6 +570,7 @@ function SubjectHero({
               "Subject"}
           </Text>
 
+
           <Text
             style={
               styles.heroSubtitle
@@ -443,6 +580,7 @@ function SubjectHero({
             {stats.total} chapters
             completed
           </Text>
+
 
           {/* PROGRESS */}
 
@@ -466,6 +604,7 @@ function SubjectHero({
             />
           </View>
 
+
           <View
             style={
               styles.heroBottom
@@ -476,7 +615,8 @@ function SubjectHero({
                 styles.heroProgressText
               }
             >
-              {stats.percentage}% complete
+              {stats.percentage}%
+              {" "}complete
             </Text>
 
             <Text
@@ -487,11 +627,14 @@ function SubjectHero({
               {stats.started} started
             </Text>
           </View>
+
         </View>
+
       </LinearGradient>
     </View>
   );
 }
+
 
 /* =========================================================
    CHAPTER CARD
@@ -501,41 +644,55 @@ function ChapterCard({
   chapter,
   index,
   onPress,
+  LEVELS,
+  colors,
+  chapterCard,
 }) {
   const started =
-    (chapter.testsCompleted ||
-      0) > 0;
+    Number(
+      chapter.testsCompleted ||
+        0
+    ) > 0;
 
   const completed =
     !!chapter.isCompleted;
 
-  const levelIndex = Math.max(
-    LEVELS.findIndex(
-      (level) =>
-        level.key ===
-        chapter.currentLevel
-    ),
-    0
-  );
+  const levelIndex =
+    Math.max(
+      LEVELS.findIndex(
+        (level) =>
+          level.key ===
+          chapter.currentLevel
+      ),
+      0
+    );
 
   const activeLevel =
     LEVELS[levelIndex] ||
     LEVELS[0];
 
   const testsCompleted =
-    chapter.testsCompleted ||
-    0;
+    Number(
+      chapter.testsCompleted ||
+        0
+    );
+
 
   return (
     <TouchableOpacity
       style={[
+        chapterCard,
         styles.chapterCard,
-        completed &&
-          styles.chapterCardComplete,
+
+        completed && {
+          borderColor:
+            colors.warnBorder,
+        },
       ]}
       activeOpacity={0.78}
       onPress={onPress}
     >
+
       {/* =================================================
           TOP ROW
       ================================================= */}
@@ -545,26 +702,40 @@ function ChapterCard({
           styles.chapterTop
         }
       >
+
         {/* NUMBER */}
 
         <View
           style={[
             styles.numberBox,
-            completed &&
-              styles.numberBoxComplete,
+            {
+              backgroundColor:
+                completed
+                  ? colors.success
+                  : colors.brandTint,
+
+              borderColor:
+                completed
+                  ? colors.success
+                  : colors.brandLight,
+            },
           ]}
         >
           {completed ? (
             <Ionicons
               name="checkmark"
-              size={15}
+              size={16}
               color="#FFFFFF"
             />
           ) : (
             <Text
-              style={
-                styles.numberText
-              }
+              style={[
+                styles.numberText,
+                {
+                  color:
+                    colors.brand,
+                },
+              ]}
             >
               {String(
                 index + 1
@@ -573,6 +744,7 @@ function ChapterCard({
           )}
         </View>
 
+
         {/* CONTENT */}
 
         <View
@@ -580,42 +752,64 @@ function ChapterCard({
             styles.chapterContent
           }
         >
+
           <View
             style={
               styles.chapterTitleRow
             }
           >
+
             <Text
-              style={
-                styles.chapterName
-              }
+              style={[
+                styles.chapterName,
+                {
+                  color:
+                    colors.ink,
+                },
+              ]}
               numberOfLines={1}
             >
-              {chapter.name}
+              {chapter.name ||
+                "Untitled chapter"}
             </Text>
+
 
             {completed && (
               <View
-                style={
-                  styles.completedBadge
-                }
+                style={[
+                  styles.completedBadge,
+                  {
+                    backgroundColor:
+                      colors.warnLight,
+                    borderColor:
+                      colors.warnBorder,
+                  },
+                ]}
               >
                 <Ionicons
                   name="trophy"
                   size={9}
-                  color="#D99700"
+                  color={
+                    colors.warn
+                  }
                 />
 
                 <Text
-                  style={
-                    styles.completedBadgeText
-                  }
+                  style={[
+                    styles.completedBadgeText,
+                    {
+                      color:
+                        colors.warn,
+                    },
+                  ]}
                 >
                   DONE
                 </Text>
               </View>
             )}
+
           </View>
+
 
           {started ? (
             <View
@@ -632,9 +826,13 @@ function ChapterCard({
               />
 
               <Text
-                style={
-                  styles.chapterMeta
-                }
+                style={[
+                  styles.chapterMeta,
+                  {
+                    color:
+                      colors.slateSoft,
+                  },
+                ]}
                 numberOfLines={1}
               >
                 Best{" "}
@@ -663,23 +861,33 @@ function ChapterCard({
               />
 
               <Text
-                style={
-                  styles.chapterMetaNew
-                }
+                style={[
+                  styles.chapterMetaNew,
+                  {
+                    color:
+                      colors.slateSoft,
+                  },
+                ]}
               >
                 Not started yet
               </Text>
             </View>
           )}
+
         </View>
 
-        {/* ARROW */}
+
+        {/* CHEVRON */}
 
         <View
           style={[
             styles.chevron,
-            completed &&
-              styles.chevronComplete,
+            {
+              backgroundColor:
+                completed
+                  ? colors.successLight
+                  : colors.slateLight,
+            },
           ]}
         >
           <Ionicons
@@ -692,7 +900,9 @@ function ChapterCard({
             }
           />
         </View>
+
       </View>
+
 
       {/* =================================================
           CURRENT LEVEL
@@ -703,6 +913,7 @@ function ChapterCard({
           styles.levelHeader
         }
       >
+
         <View
           style={
             styles.currentLevelLabel
@@ -721,15 +932,20 @@ function ChapterCard({
           />
 
           <Text
-            style={
-              styles.currentLevelText
-            }
+            style={[
+              styles.currentLevelText,
+              {
+                color:
+                  colors.slate,
+              },
+            ]}
           >
             {completed
               ? "All levels cleared"
               : `Current level · ${activeLevel.label}`}
           </Text>
         </View>
+
 
         {!completed && (
           <Text
@@ -745,7 +961,9 @@ function ChapterCard({
             {LEVELS.length}
           </Text>
         )}
+
       </View>
+
 
       {/* =================================================
           LEVEL LADDER
@@ -757,20 +975,25 @@ function ChapterCard({
         }
       >
         {LEVELS.map(
-          (level, levelIndex) => {
+          (
+            level,
+            currentIndex
+          ) => {
+            const chapterLevelIndex =
+              levelIndexFromChapter(
+                chapter,
+                LEVELS
+              );
+
             const isPast =
               completed ||
-              levelIndex <
-                levelIndexFromChapter(
-                  chapter
-                );
+              currentIndex <
+                chapterLevelIndex;
 
             const current =
               !completed &&
-              levelIndex ===
-                levelIndexFromChapter(
-                  chapter
-                );
+              currentIndex ===
+                chapterLevelIndex;
 
             return (
               <View
@@ -781,39 +1004,54 @@ function ChapterCard({
                   styles.ladderStep
                 }
               >
+
                 <View
-                  style={
-                    styles.ladderTrack
-                  }
+                  style={[
+                    styles.ladderTrack,
+                    {
+                      backgroundColor:
+                        colors.slateLight,
+                    },
+                  ]}
                 >
                   <View
                     style={[
                       styles.ladderBar,
+
                       isPast && {
+                        width:
+                          "100%",
+
                         backgroundColor:
                           completed
                             ? colors.warn
                             : level.tint,
                       },
+
                       current && {
+                        width:
+                          "100%",
+
                         backgroundColor:
                           level.tint,
                       },
-                      current &&
-                        styles.ladderBarCurrent,
                     ]}
                   />
                 </View>
 
+
                 <Text
                   style={[
                     styles.ladderLabel,
-                    isPast && {
+                    {
                       color:
-                        completed
-                          ? colors.warn
-                          : level.tint,
+                        isPast
+                          ? completed
+                            ? colors.warn
+                            : level.tint
+                          : colors.slateSoft,
                     },
+
                     current && {
                       fontWeight:
                         "800",
@@ -822,21 +1060,25 @@ function ChapterCard({
                 >
                   {level.label}
                 </Text>
+
               </View>
             );
           }
         )}
       </View>
+
     </TouchableOpacity>
   );
 }
 
+
 /* =========================================================
-   LEVEL INDEX HELPER
+   LEVEL INDEX
 ========================================================= */
 
 function levelIndexFromChapter(
-  chapter
+  chapter,
+  LEVELS
 ) {
   const index =
     LEVELS.findIndex(
@@ -850,49 +1092,81 @@ function levelIndexFromChapter(
     : 0;
 }
 
+
 /* =========================================================
-   EMPTY
+   EMPTY STATE
 ========================================================= */
 
-function EmptyState() {
+function EmptyState({
+  colors,
+}) {
   return (
     <View
-      style={
-        styles.empty
-      }
+      style={[
+        styles.empty,
+        {
+          backgroundColor:
+            colors.surface,
+
+          borderColor:
+            colors.border,
+        },
+      ]}
     >
+
       <View
-        style={
-          styles.emptyIcon
-        }
+        style={[
+          styles.emptyIcon,
+          {
+            backgroundColor:
+              colors.brandTint,
+
+            borderColor:
+              colors.brandLight,
+          },
+        ]}
       >
         <Ionicons
           name="documents-outline"
           size={27}
-          color={colors.brand}
+          color={
+            colors.brand
+          }
         />
       </View>
 
+
       <Text
-        style={
-          styles.emptyTitle
-        }
+        style={[
+          styles.emptyTitle,
+          {
+            color:
+              colors.ink,
+          },
+        ]}
       >
         No chapters yet
       </Text>
 
+
       <Text
-        style={
-          styles.emptyText
-        }
+        style={[
+          styles.emptyText,
+          {
+            color:
+              colors.slate,
+          },
+        ]}
       >
         Chapters for this subject
         will appear here when they
         are available.
       </Text>
+
     </View>
   );
 }
+
 
 /* =========================================================
    STYLES
@@ -900,152 +1174,192 @@ function EmptyState() {
 
 const styles =
   StyleSheet.create({
+
     /* =====================================================
        GENERAL
     ===================================================== */
 
     container: {
       flex: 1,
-      backgroundColor:
-        colors.bg,
     },
+
 
     /* =====================================================
        HEADER
     ===================================================== */
 
     header: {
-      minHeight: 72,
+      minHeight: 68,
+
       paddingHorizontal:
         spacing.lg,
+
       paddingBottom:
         spacing.sm,
+
       flexDirection:
         "row",
+
       alignItems:
         "center",
     },
 
     headerButton: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
-      backgroundColor:
-        "#FFFFFF",
+      width: 40,
+      height: 40,
+
+      borderRadius: 14,
+
       borderWidth: 1,
-      borderColor:
-        colors.border,
+
       alignItems:
         "center",
+
       justifyContent:
         "center",
+
       ...shadow.soft,
     },
 
     headerCenter: {
       flex: 1,
+
+      minWidth: 0,
+
       marginHorizontal: 12,
     },
 
     headerTitle: {
       fontSize: 18,
+
       lineHeight: 22,
+
       fontWeight:
         "800",
-      color: colors.ink,
+
       letterSpacing:
         -0.3,
     },
 
     headerSubtitle: {
       fontSize: 10,
-      color: colors.slate,
+
+      lineHeight: 14,
+
       fontWeight:
         "500",
+
       marginTop: 2,
     },
 
     chapterCountBadge: {
-      minWidth: 46,
+      minWidth: 52,
+
       height: 40,
+
       borderRadius: 13,
-      backgroundColor:
-        "#FFFFFF",
+
       borderWidth: 1,
-      borderColor:
-        colors.border,
+
       alignItems:
         "center",
+
       justifyContent:
         "center",
     },
 
     chapterCountNumber: {
       fontSize: 13,
+
+      lineHeight: 15,
+
       fontWeight:
         "800",
-      color:
-        colors.brand,
-      lineHeight: 15,
     },
 
     chapterCountLabel: {
       fontSize: 6.5,
+
+      lineHeight: 9,
+
       fontWeight:
         "800",
-      color:
-        colors.slateSoft,
+
       marginTop: 1,
+
+      letterSpacing:
+        0.25,
     },
+
 
     /* =====================================================
        HERO
     ===================================================== */
 
     heroWrap: {
-      marginHorizontal: 18,
-      marginBottom: 15,
+      marginHorizontal:
+        spacing.lg,
+
+      marginBottom: 18,
     },
 
     hero: {
-      minHeight: 146,
-      borderRadius: 24,
+      minHeight: 148,
+
+      borderRadius:
+        radius.xl,
+
       padding: 17,
+
       flexDirection:
         "row",
+
       alignItems:
         "center",
-      overflow: "hidden",
+
+      overflow:
+        "hidden",
+
       ...shadow.brand,
     },
 
     heroContent: {
       flex: 1,
+
+      minWidth: 0,
+
       marginLeft: 13,
+
       zIndex: 5,
     },
 
     heroIconOuter: {
       width: 58,
       height: 58,
+
       borderRadius: 19,
+
       backgroundColor:
         "rgba(255,255,255,0.18)",
+
       alignItems:
         "center",
+
       justifyContent:
         "center",
+
       zIndex: 5,
     },
 
     heroIconInner: {
       width: 46,
       height: 46,
+
       borderRadius: 15,
-      backgroundColor:
-        "#FFFFFF",
+
       alignItems:
         "center",
+
       justifyContent:
         "center",
     },
@@ -1057,58 +1371,88 @@ const styles =
     heroLabel: {
       alignSelf:
         "flex-start",
+
       flexDirection:
         "row",
+
       alignItems:
         "center",
+
       gap: 4,
+
       paddingHorizontal: 7,
+
       paddingVertical: 4,
+
       borderRadius:
         radius.full,
+
       backgroundColor:
-        "rgba(255,255,255,0.15)",
+        "rgba(255,255,255,0.14)",
+
       marginBottom: 6,
     },
 
     heroLabelText: {
       fontSize: 7,
+
+      lineHeight: 10,
+
       fontWeight:
         "800",
-      color: "#FFFFFF",
+
+      color:
+        "#FFFFFF",
+
       letterSpacing:
         0.4,
     },
 
     heroTitle: {
       fontSize: 19,
+
       lineHeight: 23,
+
       fontWeight:
         "800",
-      color: "#FFFFFF",
+
+      color:
+        "#FFFFFF",
+
       letterSpacing:
         -0.3,
     },
 
     heroSubtitle: {
       fontSize: 10,
+
+      lineHeight: 14,
+
       color:
-        "rgba(255,255,255,0.75)",
+        "rgba(255,255,255,0.76)",
+
       marginTop: 2,
     },
 
     heroProgressTrack: {
       height: 5,
+
       borderRadius: 3,
+
       backgroundColor:
-        "rgba(255,255,255,0.2)",
-      overflow: "hidden",
+        "rgba(255,255,255,0.20)",
+
+      overflow:
+        "hidden",
+
       marginTop: 10,
     },
 
     heroProgressFill: {
       height: 5,
+
       borderRadius: 3,
+
       backgroundColor:
         "#FFFFFF",
     },
@@ -1116,37 +1460,52 @@ const styles =
     heroBottom: {
       flexDirection:
         "row",
+
       justifyContent:
         "space-between",
+
       alignItems:
         "center",
+
       marginTop: 5,
     },
 
     heroProgressText: {
       fontSize: 8.5,
+
+      lineHeight: 12,
+
       fontWeight:
         "700",
+
       color:
-        "rgba(255,255,255,0.85)",
+        "rgba(255,255,255,0.86)",
     },
 
     heroStartedText: {
       fontSize: 8.5,
+
+      lineHeight: 12,
+
       fontWeight:
         "600",
+
       color:
-        "rgba(255,255,255,0.6)",
+        "rgba(255,255,255,0.62)",
     },
 
     heroOrbOne: {
       position:
         "absolute",
-      width: 150,
-      height: 150,
-      borderRadius: 75,
-      right: -72,
-      top: -70,
+
+      width: 155,
+      height: 155,
+
+      borderRadius: 80,
+
+      right: -75,
+      top: -75,
+
       backgroundColor:
         "rgba(255,255,255,0.08)",
     },
@@ -1154,222 +1513,219 @@ const styles =
     heroOrbTwo: {
       position:
         "absolute",
-      width: 85,
-      height: 85,
-      borderRadius: 43,
-      right: 10,
-      bottom: -50,
+
+      width: 90,
+      height: 90,
+
+      borderRadius: 45,
+
+      right: 8,
+      bottom: -52,
+
       backgroundColor:
         "rgba(255,255,255,0.06)",
     },
 
-    /* =====================================================
-       INFO
-    ===================================================== */
+    heroOrbThree: {
+      position:
+        "absolute",
 
-    infoCard: {
-      marginHorizontal: 18,
-      marginBottom: 20,
-      padding: 11,
-      borderRadius: 17,
+      width: 55,
+      height: 55,
+
+      borderRadius: 28,
+
+      left: 85,
+      bottom: -30,
+
       backgroundColor:
-        colors.brandTint,
-      borderWidth: 1,
-      borderColor:
-        colors.brandLight,
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
+        "rgba(167,139,250,0.10)",
     },
 
-    infoIcon: {
-      width: 35,
-      height: 35,
-      borderRadius: 11,
-      backgroundColor:
-        "#FFFFFF",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginRight: 9,
-    },
-
-    infoContent: {
-      flex: 1,
-    },
-
-    infoTitle: {
-      fontSize: 11,
-      fontWeight:
-        "800",
-      color:
-        colors.brand,
-      marginBottom: 2,
-    },
-
-    infoText: {
-      fontSize: 9.5,
-      lineHeight: 14,
-      color:
-        colors.slate,
-      fontWeight:
-        "500",
-    },
 
     /* =====================================================
        SECTION
     ===================================================== */
 
     sectionHeader: {
-      marginHorizontal: 18,
+      marginHorizontal:
+        spacing.lg,
+
       marginBottom: 11,
+
       flexDirection:
         "row",
+
       alignItems:
         "center",
+
       justifyContent:
         "space-between",
     },
 
+    sectionCopy: {
+      flex: 1,
+
+      minWidth: 0,
+
+      paddingRight: 10,
+    },
+
     sectionTitle: {
       fontSize: 19,
+
+      lineHeight: 23,
+
       fontWeight:
         "800",
-      color:
-        colors.ink,
+
       letterSpacing:
         -0.3,
     },
 
     sectionSubtitle: {
       fontSize: 10,
-      color:
-        colors.slate,
+
+      lineHeight: 14,
+
+      fontWeight:
+        "500",
+
       marginTop: 2,
     },
 
     progressBadge: {
       height: 31,
+
       paddingHorizontal: 9,
+
       borderRadius:
         radius.full,
-      backgroundColor:
-        colors.successLight,
+
       flexDirection:
         "row",
+
       alignItems:
         "center",
+
       gap: 4,
     },
 
     progressBadgeText: {
       fontSize: 10,
+
+      lineHeight: 13,
+
       fontWeight:
         "800",
-      color:
-        colors.success,
     },
+
 
     /* =====================================================
        CHAPTER CARD
     ===================================================== */
 
     chapterCard: {
-      marginHorizontal: 18,
-      marginBottom: 10,
-      padding: 12,
-      backgroundColor:
-        "#FFFFFF",
-      borderRadius: 19,
-      borderWidth: 1,
-      borderColor:
-        colors.border,
-      ...shadow.soft,
-    },
+      marginHorizontal:
+        spacing.lg,
 
-    chapterCardComplete: {
-      borderColor:
-        "#FDE7A7",
+      marginBottom: 10,
+
+      padding: 13,
+
+      borderRadius: 19,
+
+      borderWidth: 1,
     },
 
     chapterTop: {
       flexDirection:
         "row",
+
       alignItems:
         "center",
     },
 
     numberBox: {
-      width: 39,
-      height: 39,
+      width: 40,
+      height: 40,
+
       borderRadius: 13,
-      backgroundColor:
-        colors.brandLight,
+
+      borderWidth: 1,
+
       alignItems:
         "center",
+
       justifyContent:
         "center",
-      marginRight: 10,
-    },
 
-    numberBoxComplete: {
-      backgroundColor:
-        colors.success,
+      marginRight: 10,
     },
 
     numberText: {
       fontSize: 11,
+
+      lineHeight: 14,
+
       fontWeight:
         "800",
-      color:
-        colors.brand,
     },
 
     chapterContent: {
       flex: 1,
+
       minWidth: 0,
     },
 
     chapterTitleRow: {
       flexDirection:
         "row",
+
       alignItems:
         "center",
+
       gap: 6,
     },
 
     chapterName: {
+      flexShrink: 1,
+
       fontSize: 14,
+
       lineHeight: 18,
+
       fontWeight:
         "800",
-      color:
-        colors.ink,
-      flexShrink: 1,
     },
 
     completedBadge: {
       flexDirection:
         "row",
+
       alignItems:
         "center",
+
       gap: 3,
+
       paddingHorizontal: 6,
+
       paddingVertical: 3,
+
       borderRadius:
         radius.full,
-      backgroundColor:
-        "#FFF7DF",
+
+      borderWidth: 1,
     },
 
     completedBadgeText: {
       fontSize: 6.5,
+
+      lineHeight: 9,
+
       fontWeight:
         "800",
-      color:
-        "#D99700",
+
       letterSpacing:
         0.3,
     },
@@ -1377,124 +1733,169 @@ const styles =
     chapterMetaRow: {
       flexDirection:
         "row",
+
       alignItems:
         "center",
+
       gap: 4,
+
       marginTop: 3,
     },
 
     chapterMeta: {
+      flexShrink: 1,
+
       fontSize: 9,
-      color:
-        colors.slateSoft,
+
+      lineHeight: 13,
+
       fontWeight:
         "500",
-      flexShrink: 1,
     },
 
     chapterMetaNew: {
       fontSize: 9,
-      color:
-        colors.slateSoft,
+
+      lineHeight: 13,
+
       fontWeight:
         "500",
+
       fontStyle:
         "italic",
     },
 
     chevron: {
-      width: 29,
-      height: 29,
+      width: 30,
+      height: 30,
+
       borderRadius: 15,
-      backgroundColor:
-        colors.slateLight,
+
       alignItems:
         "center",
+
       justifyContent:
         "center",
+
       marginLeft: 8,
     },
 
-    chevronComplete: {
-      backgroundColor:
-        colors.successLight,
-    },
 
     /* =====================================================
-   LEVEL HEADER
-===================================================== */
+       LEVEL HEADER
+    ===================================================== */
 
-levelHeader: {
-  marginTop: 12,
-  marginBottom: 8,
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-},
+    levelHeader: {
+      marginTop: 13,
 
-currentLevelLabel: {
-  flexDirection: "row",
-  alignItems: "center",
-  gap: 6,
-},
+      marginBottom: 8,
 
-currentLevelDot: {
-  width: 7,
-  height: 7,
-  borderRadius: 4,
-},
+      flexDirection:
+        "row",
 
-currentLevelText: {
-  fontSize: 10.5,
-  fontWeight: "700",
-  color: colors.slate,
-},
+      alignItems:
+        "center",
 
-levelStepText: {
-  fontSize: 10,
-  fontWeight: "800",
-},
+      justifyContent:
+        "space-between",
+    },
 
-/* =====================================================
-   LEVEL LADDER
-===================================================== */
+    currentLevelLabel: {
+      flexDirection:
+        "row",
 
-ladder: {
-  flexDirection: "row",
-  gap: 7,
-},
+      alignItems:
+        "center",
 
-ladderStep: {
-  flex: 1,
-  alignItems: "center",
-},
+      gap: 6,
 
-ladderTrack: {
-  width: "100%",
-  height: 6,
-  borderRadius: 3,
-  backgroundColor: colors.slateLight,
-  overflow: "hidden",
-},
+      flex: 1,
 
-ladderBar: {
-  width: "0%",
-  height: 6,
-  borderRadius: 3,
-},
+      minWidth: 0,
+    },
 
-ladderBarCurrent: {
-  height: 6,
-},
+    currentLevelDot: {
+      width: 7,
 
-ladderLabel: {
-  fontSize: 10.5,
-  lineHeight: 14,
-  fontWeight: "600",
-  color: colors.slateSoft,
-  marginTop: 5,
-  textAlign: "center",
-},
+      height: 7,
+
+      borderRadius: 4,
+    },
+
+    currentLevelText: {
+      fontSize: 10.5,
+
+      lineHeight: 14,
+
+      fontWeight:
+        "700",
+
+      flexShrink: 1,
+    },
+
+    levelStepText: {
+      fontSize: 10,
+
+      lineHeight: 13,
+
+      fontWeight:
+        "800",
+
+      marginLeft: 8,
+    },
+
+
+    /* =====================================================
+       LEVEL LADDER
+    ===================================================== */
+
+    ladder: {
+      flexDirection:
+        "row",
+
+      gap: 7,
+    },
+
+    ladderStep: {
+      flex: 1,
+
+      alignItems:
+        "center",
+    },
+
+    ladderTrack: {
+      width: "100%",
+
+      height: 6,
+
+      borderRadius: 3,
+
+      overflow:
+        "hidden",
+    },
+
+    ladderBar: {
+      width: "0%",
+
+      height: 6,
+
+      borderRadius: 3,
+    },
+
+    ladderLabel: {
+      fontSize: 10,
+
+      lineHeight: 14,
+
+      fontWeight:
+        "600",
+
+      marginTop: 5,
+
+      textAlign:
+        "center",
+    },
+
 
     /* =====================================================
        EMPTY
@@ -1503,39 +1904,58 @@ ladderLabel: {
     empty: {
       alignItems:
         "center",
+
+      marginHorizontal:
+        spacing.lg,
+
       paddingHorizontal: 25,
-      paddingVertical: 60,
+
+      paddingVertical: 55,
+
+      borderRadius:
+        radius.xl,
+
+      borderWidth: 1,
     },
 
     emptyIcon: {
-      width: 65,
-      height: 65,
-      borderRadius: 33,
-      backgroundColor:
-        colors.brandLight,
+      width: 66,
+      height: 66,
+
+      borderRadius: 20,
+
+      borderWidth: 1,
+
       alignItems:
         "center",
+
       justifyContent:
         "center",
-      marginBottom: 12,
+
+      marginBottom: 13,
     },
 
     emptyTitle: {
+      ...type.h3,
+
       fontSize: 17,
-      fontWeight:
-        "800",
-      color:
-        colors.ink,
-      marginBottom: 5,
+
+      lineHeight: 22,
     },
 
     emptyText: {
-      fontSize: 12,
+      ...type.small,
+
+      fontSize: 11.5,
+
       lineHeight: 18,
-      color:
-        colors.slate,
+
       textAlign:
         "center",
-      maxWidth: 280,
+
+      marginTop: 5,
+
+      maxWidth: 285,
     },
+
   });

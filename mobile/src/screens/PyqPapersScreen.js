@@ -16,14 +16,27 @@ import {
 
 import AppAlert from "../components/AppAlert";
 
-import { useFocusEffect } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import {
+  useFocusEffect,
+} from "@react-navigation/native";
+
+import {
+  Ionicons,
+} from "@expo/vector-icons";
+
+import {
+  LinearGradient,
+} from "expo-linear-gradient";
 
 import api from "../api/client";
 
-import { useAuth } from "../context/AuthContext";
-import { isSubscribed } from "../utils/subscription";
+import {
+  useAuth,
+} from "../context/AuthContext";
+
+import {
+  isSubscribed,
+} from "../utils/subscription";
 
 import {
   colors,
@@ -46,7 +59,8 @@ export default function PyqPapersScreen({
   route,
   navigation,
 }) {
-  const insets = useSafeAreaInsets();
+  const insets =
+    useSafeAreaInsets();
 
   const {
     examStage,
@@ -54,7 +68,8 @@ export default function PyqPapersScreen({
     year,
   } = route.params;
 
-  const { user } = useAuth();
+  const { user } =
+    useAuth();
 
   const subscribed =
     isSubscribed(user);
@@ -97,7 +112,11 @@ export default function PyqPapersScreen({
           );
 
         setTests(
-          res.data?.tests || []
+          Array.isArray(
+            res.data?.tests
+          )
+            ? res.data.tests
+            : []
         );
       } catch (err) {
         console.log(
@@ -124,7 +143,9 @@ export default function PyqPapersScreen({
   ======================================================= */
 
   async function startTest(test) {
-    if (!test?._id) return;
+    if (!test?._id) {
+      return;
+    }
 
     setStarting(test._id);
 
@@ -204,14 +225,12 @@ export default function PyqPapersScreen({
           item.isFree
       ).length;
 
-    const premium =
-      tests.length - free;
-
     return {
       completed,
       inProgress,
       free,
-      premium,
+      premium:
+        tests.length - free,
     };
   }, [tests]);
 
@@ -223,7 +242,7 @@ export default function PyqPapersScreen({
     return (
       <View
         style={[
-          styles.centered,
+          styles.loadingContainer,
           {
             paddingTop:
               insets.top,
@@ -245,10 +264,18 @@ export default function PyqPapersScreen({
 
         <Text
           style={
-            styles.loadingText
+            styles.loadingTitle
           }
         >
-          Loading previous papers...
+          Loading papers
+        </Text>
+
+        <Text
+          style={
+            styles.loadingSubtitle
+          }
+        >
+          Preparing your {year} papers...
         </Text>
       </View>
     );
@@ -264,8 +291,9 @@ export default function PyqPapersScreen({
     >
       <FlatList
         data={tests}
-        keyExtractor={(item) =>
-          item._id
+        keyExtractor={(item, index) =>
+          item?._id ||
+          String(index)
         }
         showsVerticalScrollIndicator={
           false
@@ -278,13 +306,14 @@ export default function PyqPapersScreen({
             ),
           paddingBottom:
             spacing.xxl +
-            insets.bottom,
+            insets.bottom +
+            12,
         }}
         ListHeaderComponent={
           <>
-            {/* =============================================
+            {/* =================================================
                 HEADER
-            ============================================= */}
+            ================================================= */}
 
             <View
               style={
@@ -293,9 +322,11 @@ export default function PyqPapersScreen({
             >
               <TouchableOpacity
                 style={
-                  styles.backButton
+                  styles.headerButton
                 }
-                activeOpacity={0.75}
+                activeOpacity={
+                  0.75
+                }
                 onPress={() =>
                   navigation.goBack()
                 }
@@ -327,6 +358,7 @@ export default function PyqPapersScreen({
                   style={
                     styles.headerSubtitle
                   }
+                  numberOfLines={1}
                 >
                   Previous Year Questions
                 </Text>
@@ -334,9 +366,11 @@ export default function PyqPapersScreen({
 
               <TouchableOpacity
                 style={
-                  styles.refreshButton
+                  styles.headerButton
                 }
-                activeOpacity={0.75}
+                activeOpacity={
+                  0.75
+                }
                 onPress={load}
               >
                 <Ionicons
@@ -349,9 +383,9 @@ export default function PyqPapersScreen({
               </TouchableOpacity>
             </View>
 
-            {/* =============================================
+            {/* =================================================
                 HERO
-            ============================================= */}
+            ================================================= */}
 
             <View
               style={
@@ -359,9 +393,11 @@ export default function PyqPapersScreen({
               }
             >
               <LinearGradient
-                colors={
-                  gradients.brand
-                }
+                colors={[
+                  "#0D1263",
+                  "#2716C8",
+                  "#5725E8",
+                ]}
                 start={{
                   x: 0,
                   y: 0,
@@ -374,6 +410,8 @@ export default function PyqPapersScreen({
                   styles.hero
                 }
               >
+                {/* Decorative background */}
+
                 <View
                   style={
                     styles.heroOrbOne
@@ -385,6 +423,14 @@ export default function PyqPapersScreen({
                     styles.heroOrbTwo
                   }
                 />
+
+                <View
+                  style={
+                    styles.heroRing
+                  }
+                />
+
+                {/* Content */}
 
                 <View
                   style={
@@ -416,7 +462,9 @@ export default function PyqPapersScreen({
                       styles.heroTitle
                     }
                   >
-                    {year} Papers
+                    {year} Previous
+                    {"\n"}
+                    Year Papers
                   </Text>
 
                   <Text
@@ -424,39 +472,65 @@ export default function PyqPapersScreen({
                       styles.heroSubtitle
                     }
                   >
-                    Attempt real exam
-                    papers and improve
-                    your preparation.
+                    Practice real exam papers,
+                    improve accuracy and master
+                    the exam pattern.
                   </Text>
                 </View>
 
+                {/* Year artwork */}
+
                 <View
                   style={
-                    styles.heroYear
+                    styles.heroArtwork
                   }
                 >
-                  <Text
+                  <View
                     style={
-                      styles.heroYearText
+                      styles.heroYearCard
                     }
                   >
-                    {year}
-                  </Text>
+                    <Ionicons
+                      name="calendar-outline"
+                      size={18}
+                      color="#FFFFFF"
+                    />
 
-                  <Ionicons
-                    name="calendar-outline"
-                    size={13}
-                    color={
-                      "rgba(255,255,255,0.75)"
+                    <Text
+                      style={
+                        styles.heroYear
+                      }
+                    >
+                      {year}
+                    </Text>
+
+                    <Text
+                      style={
+                        styles.heroYearLabel
+                      }
+                    >
+                      PAPER
+                    </Text>
+                  </View>
+
+                  <View
+                    style={
+                      styles.heroFloatingIcon
                     }
-                  />
+                  >
+                    <Ionicons
+                      name="trophy"
+                      size={15}
+                      color="#FFD84D"
+                    />
+                  </View>
                 </View>
               </LinearGradient>
             </View>
 
-            {/* =============================================
+            {/* =================================================
                 STATS
-            ============================================= */}
+            ================================================= */}
 
             {tests.length > 0 && (
               <View
@@ -502,9 +576,9 @@ export default function PyqPapersScreen({
               </View>
             )}
 
-            {/* =============================================
-                SECTION HEADER
-            ============================================= */}
+            {/* =================================================
+                SECTION
+            ================================================= */}
 
             <View
               style={
@@ -529,19 +603,19 @@ export default function PyqPapersScreen({
                     styles.sectionSubtitle
                   }
                 >
-                  Choose a paper and
-                  start your test
+                  Choose a paper and start
+                  your test
                 </Text>
               </View>
 
               <View
                 style={
-                  styles.paperCountBadge
+                  styles.countBadge
                 }
               >
                 <Text
                   style={
-                    styles.paperCountNumber
+                    styles.countNumber
                   }
                 >
                   {tests.length}
@@ -549,7 +623,7 @@ export default function PyqPapersScreen({
 
                 <Text
                   style={
-                    styles.paperCountLabel
+                    styles.countLabel
                   }
                 >
                   PAPERS
@@ -615,7 +689,11 @@ function StatItem({
         />
       </View>
 
-      <View>
+      <View
+        style={
+          styles.statText
+        }
+      >
         <Text
           style={
             styles.statValue
@@ -665,6 +743,11 @@ function PaperCard({
     item.attemptStatus ===
     "in_progress";
 
+  const score =
+    item.bestAccuracy ??
+    item.accuracy ??
+    null;
+
   return (
     <TouchableOpacity
       style={[
@@ -672,11 +755,15 @@ function PaperCard({
         locked &&
           styles.paperCardLocked,
       ]}
-      activeOpacity={0.78}
+      activeOpacity={
+        isStarting ? 1 : 0.78
+      }
       onPress={onPress}
       disabled={isStarting}
     >
-      {/* LEFT NUMBER */}
+      {/* =================================================
+          NUMBER
+      ================================================= */}
 
       <View
         style={[
@@ -698,7 +785,9 @@ function PaperCard({
         </Text>
       </View>
 
-      {/* MAIN */}
+      {/* =================================================
+          CONTENT
+      ================================================= */}
 
       <View
         style={
@@ -746,7 +835,9 @@ function PaperCard({
                   },
                 ]}
               >
-                Premium
+                {locked
+                  ? "Premium"
+                  : "Unlocked"}
               </Text>
             </View>
           ) : (
@@ -778,34 +869,35 @@ function PaperCard({
             </View>
           )}
 
-          {completed && (
-            <View
-              style={[
-                styles.badge,
-                styles.scoreBadge,
-              ]}
-            >
-              <Ionicons
-                name="checkmark-done"
-                size={9}
-                color={
-                  colors.brand
-                }
-              />
-
-              <Text
+          {completed &&
+            score !== null && (
+              <View
                 style={[
-                  styles.badgeText,
-                  {
-                    color:
-                      colors.brand,
-                  },
+                  styles.badge,
+                  styles.scoreBadge,
                 ]}
               >
-                {item.bestAccuracy}%
-              </Text>
-            </View>
-          )}
+                <Ionicons
+                  name="stats-chart"
+                  size={9}
+                  color={
+                    colors.brand
+                  }
+                />
+
+                <Text
+                  style={[
+                    styles.badgeText,
+                    {
+                      color:
+                        colors.brand,
+                    },
+                  ]}
+                >
+                  {score}%
+                </Text>
+              </View>
+            )}
 
           {inProgress && (
             <View
@@ -847,7 +939,8 @@ function PaperCard({
           ]}
           numberOfLines={2}
         >
-          {item.title}
+          {item.title ||
+            `Paper ${index + 1}`}
         </Text>
 
         {/* META */}
@@ -865,7 +958,7 @@ function PaperCard({
             >
               <Ionicons
                 name="time-outline"
-                size={12}
+                size={11}
                 color={
                   colors.slateSoft
                 }
@@ -875,6 +968,7 @@ function PaperCard({
                 style={
                   styles.metaText
                 }
+                numberOfLines={1}
               >
                 {item.pyqShift}
               </Text>
@@ -889,7 +983,7 @@ function PaperCard({
             >
               <Ionicons
                 name="hourglass-outline"
-                size={12}
+                size={11}
                 color={
                   colors.slateSoft
                 }
@@ -900,26 +994,30 @@ function PaperCard({
                   styles.metaText
                 }
               >
-                {item.durationMinutes}{" "}
-                min
+                {item.durationMinutes} min
               </Text>
             </View>
           ) : null}
         </View>
       </View>
 
-      {/* ACTION */}
+      {/* =================================================
+          ACTION
+      ================================================= */}
 
       {isStarting ? (
-        <ActivityIndicator
-          size="small"
-          color={
-            colors.brand
-          }
+        <View
           style={
-            styles.loader
+            styles.actionLoader
           }
-        />
+        >
+          <ActivityIndicator
+            size="small"
+            color={
+              colors.brand
+            }
+          />
+        </View>
       ) : (
         <View
           style={[
@@ -966,7 +1064,7 @@ function EmptyState({
     >
       <View
         style={
-          styles.emptyIconWrap
+          styles.emptyArtwork
         }
       >
         <View
@@ -976,7 +1074,7 @@ function EmptyState({
         >
           <Ionicons
             name="document-text-outline"
-            size={28}
+            size={29}
             color={
               colors.brand
             }
@@ -1055,34 +1153,48 @@ const styles =
         colors.bg,
     },
 
-    centered: {
+    /* =====================================================
+       LOADING
+    ===================================================== */
+
+    loadingContainer: {
       flex: 1,
+      backgroundColor:
+        colors.bg,
       alignItems:
         "center",
       justifyContent:
         "center",
-      backgroundColor:
-        colors.bg,
     },
 
     loaderCircle: {
-      width: 46,
-      height: 46,
-      borderRadius: 23,
+      width: 48,
+      height: 48,
+      borderRadius: 24,
       backgroundColor:
         "#FFFFFF",
       alignItems:
         "center",
       justifyContent:
         "center",
-      marginBottom: 10,
+      marginBottom: 12,
       ...shadow.soft,
     },
 
-    loadingText: {
-      fontSize: 12,
-      color: colors.slate,
-      fontWeight: "600",
+    loadingTitle: {
+      fontSize: 13,
+      lineHeight: 18,
+      fontWeight: "800",
+      color:
+        colors.ink,
+    },
+
+    loadingSubtitle: {
+      fontSize: 10.5,
+      lineHeight: 15,
+      color:
+        colors.slate,
+      marginTop: 2,
     },
 
     /* =====================================================
@@ -1090,7 +1202,7 @@ const styles =
     ===================================================== */
 
     header: {
-      minHeight: 56,
+      minHeight: 57,
       paddingHorizontal: 18,
       paddingBottom: 13,
       flexDirection:
@@ -1099,58 +1211,45 @@ const styles =
         "center",
     },
 
-    backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+    headerButton: {
+      width: 41,
+      height: 41,
+      borderRadius: 14,
       backgroundColor:
         "#FFFFFF",
+      borderWidth: 1,
+      borderColor:
+        colors.border,
       alignItems:
         "center",
       justifyContent:
         "center",
-      borderWidth: 1,
-      borderColor:
-        colors.border,
       ...shadow.soft,
     },
 
     headerContent: {
       flex: 1,
       minWidth: 0,
-      marginHorizontal: 12,
+      marginHorizontal: 11,
     },
 
     headerTitle: {
       fontSize: 18,
       lineHeight: 22,
-      fontWeight: "800",
-      color: colors.ink,
-      letterSpacing: -0.3,
+      fontWeight: "900",
+      color:
+        colors.ink,
+      letterSpacing:
+        -0.35,
     },
 
     headerSubtitle: {
       fontSize: 10.5,
       lineHeight: 15,
-      color: colors.slate,
+      color:
+        colors.slate,
       marginTop: 2,
       fontWeight: "500",
-    },
-
-    refreshButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor:
-        "#FFFFFF",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      borderWidth: 1,
-      borderColor:
-        colors.border,
-      ...shadow.soft,
     },
 
     /* =====================================================
@@ -1159,14 +1258,14 @@ const styles =
 
     heroWrap: {
       marginHorizontal: 18,
-      marginBottom: 14,
+      marginBottom: 15,
     },
 
     hero: {
-      minHeight: 126,
-      borderRadius: 21,
-      paddingHorizontal: 17,
-      paddingVertical: 15,
+      minHeight: 164,
+      borderRadius: 23,
+      paddingHorizontal: 18,
+      paddingVertical: 17,
       flexDirection:
         "row",
       alignItems:
@@ -1177,83 +1276,140 @@ const styles =
 
     heroContent: {
       flex: 1,
-      zIndex: 2,
+      minWidth: 0,
+      zIndex: 5,
     },
 
     heroBadge: {
       alignSelf:
         "flex-start",
+      height: 25,
+      paddingHorizontal: 8,
+      borderRadius:
+        radius.full,
+      backgroundColor:
+        "rgba(255,255,255,0.14)",
+      borderWidth: 1,
+      borderColor:
+        "rgba(255,255,255,0.12)",
       flexDirection:
         "row",
       alignItems:
         "center",
       gap: 4,
-      paddingHorizontal: 7,
-      paddingVertical: 4,
-      borderRadius:
-        radius.full,
-      backgroundColor:
-        "rgba(255,255,255,0.15)",
-      marginBottom: 7,
+      marginBottom: 8,
     },
 
     heroBadgeText: {
       fontSize: 7.5,
-      fontWeight: "800",
+      fontWeight: "900",
       color: "#FFFFFF",
-      letterSpacing: 0.4,
+      letterSpacing: 0.6,
     },
 
     heroTitle: {
-      fontSize: 20,
-      lineHeight: 25,
+      fontSize: 21,
+      lineHeight: 26,
       fontWeight: "900",
       color: "#FFFFFF",
-      letterSpacing: -0.4,
+      letterSpacing: -0.5,
     },
 
     heroSubtitle: {
-      fontSize: 10.5,
-      lineHeight: 15,
-      color:
-        "rgba(255,255,255,0.78)",
-      marginTop: 3,
       maxWidth: 225,
+      fontSize: 10.5,
+      lineHeight: 16,
+      color:
+        "rgba(255,255,255,0.76)",
+      marginTop: 5,
     },
 
-    heroYear: {
-      width: 65,
-      height: 65,
-      borderRadius: 20,
-      backgroundColor:
-        "rgba(255,255,255,0.13)",
-      borderWidth: 1,
-      borderColor:
-        "rgba(255,255,255,0.13)",
+    /* =====================================================
+       HERO ART
+    ===================================================== */
+
+    heroArtwork: {
+      width: 82,
+      height: 105,
       alignItems:
         "center",
       justifyContent:
         "center",
-      marginLeft: 10,
-      zIndex: 2,
+      position:
+        "relative",
+      marginLeft: 8,
     },
 
-    heroYearText: {
-      fontSize: 17,
-      lineHeight: 21,
+    heroYearCard: {
+      width: 67,
+      height: 78,
+      borderRadius: 18,
+      backgroundColor:
+        "rgba(255,255,255,0.13)",
+      borderWidth: 1,
+      borderColor:
+        "rgba(255,255,255,0.23)",
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+      transform: [
+        {
+          rotate: "6deg",
+        },
+      ],
+    },
+
+    heroYear: {
+      fontSize: 16,
+      lineHeight: 20,
       fontWeight: "900",
       color: "#FFFFFF",
-      marginBottom: 2,
+      marginTop: 4,
+    },
+
+    heroYearLabel: {
+      fontSize: 6.5,
+      lineHeight: 9,
+      fontWeight: "900",
+      color:
+        "rgba(255,255,255,0.62)",
+      letterSpacing: 0.7,
+      marginTop: 1,
+    },
+
+    heroFloatingIcon: {
+      position:
+        "absolute",
+      right: -2,
+      bottom: 2,
+      width: 35,
+      height: 35,
+      borderRadius: 12,
+      backgroundColor:
+        "rgba(255,255,255,0.14)",
+      borderWidth: 1,
+      borderColor:
+        "rgba(255,255,255,0.17)",
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+      transform: [
+        {
+          rotate: "-8deg",
+        },
+      ],
     },
 
     heroOrbOne: {
       position:
         "absolute",
-      width: 150,
-      height: 150,
-      borderRadius: 75,
-      right: -72,
-      top: -82,
+      width: 205,
+      height: 205,
+      borderRadius: 103,
+      right: -92,
+      top: -110,
       backgroundColor:
         "rgba(255,255,255,0.08)",
     },
@@ -1261,13 +1417,31 @@ const styles =
     heroOrbTwo: {
       position:
         "absolute",
-      width: 95,
-      height: 95,
-      borderRadius: 48,
-      left: -50,
-      bottom: -64,
+      width: 110,
+      height: 110,
+      borderRadius: 55,
+      left: -54,
+      bottom: -72,
       backgroundColor:
         "rgba(255,255,255,0.06)",
+    },
+
+    heroRing: {
+      position:
+        "absolute",
+      width: 165,
+      height: 165,
+      borderRadius: 83,
+      borderWidth: 19,
+      borderColor:
+        "rgba(255,255,255,0.035)",
+      right: -75,
+      bottom: -82,
+      transform: [
+        {
+          rotate: "18deg",
+        },
+      ],
     },
 
     /* =====================================================
@@ -1277,11 +1451,12 @@ const styles =
     statsCard: {
       marginHorizontal: 18,
       marginBottom: 21,
-      padding: 11,
-      minHeight: 67,
+      minHeight: 68,
+      paddingVertical: 11,
+      paddingHorizontal: 8,
       backgroundColor:
         "#FFFFFF",
-      borderRadius: 17,
+      borderRadius: 18,
       borderWidth: 1,
       borderColor:
         colors.border,
@@ -1301,6 +1476,7 @@ const styles =
       justifyContent:
         "center",
       gap: 7,
+      minWidth: 0,
     },
 
     statIcon: {
@@ -1313,13 +1489,19 @@ const styles =
         "center",
       justifyContent:
         "center",
+      flexShrink: 0,
+    },
+
+    statText: {
+      minWidth: 0,
     },
 
     statValue: {
       fontSize: 14,
       lineHeight: 17,
       fontWeight: "900",
-      color: colors.ink,
+      color:
+        colors.ink,
     },
 
     statLabel: {
@@ -1333,7 +1515,7 @@ const styles =
 
     statDivider: {
       width: 1,
-      height: 29,
+      height: 30,
       backgroundColor:
         colors.border,
     },
@@ -1355,27 +1537,32 @@ const styles =
 
     sectionText: {
       flex: 1,
+      minWidth: 0,
+      paddingRight: 10,
     },
 
     sectionTitle: {
       fontSize: 19,
-      lineHeight: 23,
-      fontWeight: "800",
-      color: colors.ink,
-      letterSpacing: -0.35,
+      lineHeight: 24,
+      fontWeight: "900",
+      color:
+        colors.ink,
+      letterSpacing:
+        -0.35,
     },
 
     sectionSubtitle: {
       fontSize: 10.5,
       lineHeight: 15,
-      color: colors.slate,
+      color:
+        colors.slate,
       marginTop: 2,
     },
 
-    paperCountBadge: {
-      minWidth: 43,
-      height: 42,
-      borderRadius: 13,
+    countBadge: {
+      width: 48,
+      height: 44,
+      borderRadius: 14,
       backgroundColor:
         "#FFFFFF",
       borderWidth: 1,
@@ -1385,21 +1572,25 @@ const styles =
         "center",
       justifyContent:
         "center",
+      ...shadow.soft,
     },
 
-    paperCountNumber: {
-      fontSize: 13,
+    countNumber: {
+      fontSize: 14,
+      lineHeight: 17,
       fontWeight: "900",
-      color: colors.brand,
+      color:
+        colors.brand,
     },
 
-    paperCountLabel: {
+    countLabel: {
       fontSize: 6.5,
-      fontWeight: "800",
+      lineHeight: 9,
+      fontWeight: "900",
       color:
         colors.slateSoft,
+      letterSpacing: 0.5,
       marginTop: 1,
-      letterSpacing: 0.3,
     },
 
     /* =====================================================
@@ -1408,29 +1599,34 @@ const styles =
 
     paperCard: {
       ...card,
-      minHeight: 96,
+      minHeight: 98,
       marginHorizontal: 18,
       marginBottom: 10,
       padding: 11,
-      borderRadius: 18,
+      borderRadius: 19,
+      backgroundColor:
+        "#FFFFFF",
+      borderWidth: 1,
+      borderColor:
+        colors.border,
       flexDirection:
         "row",
       alignItems:
         "center",
-      borderWidth: 1,
-      borderColor:
-        colors.border,
-      backgroundColor:
-        "#FFFFFF",
     },
 
     paperCardLocked: {
-      opacity: 0.88,
+      backgroundColor:
+        "#FCFCFE",
     },
 
+    /* =====================================================
+       NUMBER
+    ===================================================== */
+
     numberBox: {
-      width: 43,
-      height: 43,
+      width: 44,
+      height: 44,
       borderRadius: 14,
       backgroundColor:
         colors.brandLight,
@@ -1439,6 +1635,7 @@ const styles =
       justifyContent:
         "center",
       marginRight: 11,
+      flexShrink: 0,
     },
 
     numberBoxLocked: {
@@ -1458,6 +1655,10 @@ const styles =
         colors.warn,
     },
 
+    /* =====================================================
+       CONTENT
+    ===================================================== */
+
     paperContent: {
       flex: 1,
       minWidth: 0,
@@ -1468,22 +1669,23 @@ const styles =
         "row",
       alignItems:
         "center",
-      gap: 5,
       flexWrap:
         "wrap",
+      gap: 5,
       marginBottom: 5,
     },
 
     badge: {
+      minHeight: 20,
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+      borderRadius:
+        radius.full,
       flexDirection:
         "row",
       alignItems:
         "center",
       gap: 3,
-      paddingHorizontal: 6,
-      paddingVertical: 3,
-      borderRadius:
-        radius.full,
     },
 
     freeBadge: {
@@ -1512,15 +1714,17 @@ const styles =
     },
 
     badgeText: {
-      fontSize: 8.5,
+      fontSize: 8,
+      lineHeight: 11,
       fontWeight: "800",
     },
 
     paperTitle: {
       fontSize: 13.5,
       lineHeight: 18,
-      fontWeight: "800",
-      color: colors.ink,
+      fontWeight: "850",
+      color:
+        colors.ink,
     },
 
     paperTitleLocked: {
@@ -1533,10 +1737,10 @@ const styles =
         "row",
       alignItems:
         "center",
-      gap: 10,
-      marginTop: 5,
       flexWrap:
         "wrap",
+      gap: 10,
+      marginTop: 5,
     },
 
     metaItem: {
@@ -1545,20 +1749,26 @@ const styles =
       alignItems:
         "center",
       gap: 4,
+      maxWidth: "100%",
     },
 
     metaText: {
-      fontSize: 9.5,
+      fontSize: 9,
       lineHeight: 13,
       color:
         colors.slateSoft,
       fontWeight: "600",
+      flexShrink: 1,
     },
 
+    /* =====================================================
+       ACTION
+    ===================================================== */
+
     actionButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
+      width: 37,
+      height: 37,
+      borderRadius: 13,
       backgroundColor:
         colors.brandLight,
       alignItems:
@@ -1566,6 +1776,7 @@ const styles =
       justifyContent:
         "center",
       marginLeft: 9,
+      flexShrink: 0,
     },
 
     actionLocked: {
@@ -1573,9 +1784,18 @@ const styles =
         colors.warnLight,
     },
 
-    loader: {
-      width: 36,
+    actionLoader: {
+      width: 37,
+      height: 37,
+      borderRadius: 13,
+      backgroundColor:
+        colors.brandLight,
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
       marginLeft: 9,
+      flexShrink: 0,
     },
 
     /* =====================================================
@@ -1589,16 +1809,16 @@ const styles =
       paddingVertical: 55,
     },
 
-    emptyIconWrap: {
+    emptyArtwork: {
       position:
         "relative",
-      marginBottom: 14,
+      marginBottom: 15,
     },
 
     emptyIcon: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+      width: 76,
+      height: 76,
+      borderRadius: 38,
       backgroundColor:
         colors.brandLight,
       alignItems:
@@ -1611,9 +1831,9 @@ const styles =
       position:
         "absolute",
       right: -3,
-      top: -2,
-      width: 25,
-      height: 25,
+      top: -3,
+      width: 26,
+      height: 26,
       borderRadius: 13,
       backgroundColor:
         "#FFF8DF",
@@ -1628,18 +1848,20 @@ const styles =
 
     emptyTitle: {
       fontSize: 18,
-      lineHeight: 22,
-      fontWeight: "800",
-      color: colors.ink,
+      lineHeight: 23,
+      fontWeight: "900",
+      color:
+        colors.ink,
       marginBottom: 5,
     },
 
     emptyText: {
-      fontSize: 12,
+      maxWidth: 285,
+      fontSize: 11.5,
       lineHeight: 18,
-      color: colors.slate,
+      color:
+        colors.slate,
       textAlign: "center",
-      maxWidth: 290,
     },
 
     emptyButton: {
@@ -1655,7 +1877,7 @@ const styles =
       justifyContent:
         "center",
       gap: 6,
-      marginTop: 16,
+      marginTop: 17,
       ...shadow.brand,
     },
 

@@ -1,4 +1,10 @@
-import { useCallback, useMemo, useState } from "react";
+import {
+  useCallback,
+  useMemo,
+  useState,
+  useLayoutEffect,
+} from "react";
+
 import {
   View,
   Text,
@@ -6,13 +12,29 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  useColorScheme,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+
+import {
+  useFocusEffect,
+} from "@react-navigation/native";
+
+import {
+  Ionicons,
+} from "@expo/vector-icons";
+
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import {
+  getColors,
+  spacing,
+  radius,
+  type,
+  shadow,
+} from "../theme/theme";
+
 
 /* =========================================================
    EXAM META
@@ -20,65 +42,34 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const EXAM_META = {
   SSC_CGL: {
-    icon: "school",
-    grad: ["#5B5FEF", "#4044D8"],
-    light: "#EEF0FF",
-    accent: "#5B5FEF",
+    icon: "school-outline",
   },
 
   SSC_MTS: {
-    icon: "briefcase",
-    grad: ["#10B981", "#059669"],
-    light: "#ECFDF5",
-    accent: "#10B981",
+    icon: "briefcase-outline",
   },
 
   SSC_CHSL: {
-    icon: "document-text",
-    grad: ["#A78BFA", "#7C3AED"],
-    light: "#F5F3FF",
-    accent: "#7C3AED",
+    icon: "document-text-outline",
   },
 
   UP_POLICE: {
-    icon: "shield-checkmark",
-    grad: ["#FB7185", "#E11D48"],
-    light: "#FFF1F2",
-    accent: "#E11D48",
+    icon: "shield-checkmark-outline",
   },
 
   RAILWAY: {
-    icon: "train",
-    grad: ["#FB923C", "#EA580C"],
-    light: "#FFF7ED",
-    accent: "#EA580C",
+    icon: "train-outline",
   },
 
   BANKING: {
-    icon: "card",
-    grad: ["#22D3EE", "#0891B2"],
-    light: "#ECFEFF",
-    accent: "#0891B2",
+    icon: "card-outline",
   },
 
   CTET: {
-    icon: "person",
-    grad: ["#F472B6", "#DB2777"],
-    light: "#FDF2F8",
-    accent: "#DB2777",
+    icon: "person-outline",
   },
 };
 
-/* =========================================================
-   FALLBACK META
-========================================================= */
-
-const DEFAULT_META = {
-  icon: "book",
-  grad: ["#5B5FEF", "#4044D8"],
-  light: "#EEF0FF",
-  accent: "#5B5FEF",
-};
 
 /* =========================================================
    MAIN SCREEN
@@ -87,36 +78,72 @@ const DEFAULT_META = {
 export default function ExamPickerScreen({
   navigation,
 }) {
-  const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const insets =
+    useSafeAreaInsets();
 
-  const [exams, setExams] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const scheme =
+    useColorScheme();
 
-  /* -------------------------------------------------------
+  const isDark =
+    scheme === "dark";
+
+  const colors =
+    getColors(isDark);
+
+
+  const { user } =
+    useAuth();
+
+
+  const [exams, setExams] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+
+  /* =======================================================
+     HIDE NATIVE HEADER
+  ======================================================= */
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
+
+
+  /* =======================================================
      LOAD EXAMS
-  ------------------------------------------------------- */
+  ======================================================= */
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load =
+    useCallback(async () => {
+      setLoading(true);
 
-    try {
-      const res = await api.get("/exams");
+      try {
+        const res =
+          await api.get(
+            "/exams"
+          );
 
-      setExams(
-        res.data.patterns ||
-          res.data.exams ||
-          []
-      );
-    } catch (err) {
-      console.log(
-        "Exam loading error:",
-        err
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        setExams(
+          res.data?.patterns ||
+            res.data?.exams ||
+            []
+        );
+      } catch (err) {
+        console.log(
+          "Exam loading error:",
+          err
+        );
+
+        setExams([]);
+      } finally {
+        setLoading(false);
+      }
+    }, []);
+
 
   useFocusEffect(
     useCallback(() => {
@@ -124,57 +151,46 @@ export default function ExamPickerScreen({
     }, [load])
   );
 
-  /* -------------------------------------------------------
+
+  /* =======================================================
      USER EXAM
-  ------------------------------------------------------- */
+  ======================================================= */
 
-  const myGoal = user?.examGoals?.[0];
+  const myGoal =
+    user?.examGoals?.[0];
 
-  const featured = useMemo(() => {
-    return (
-      exams.find(
+
+  const featured =
+    useMemo(() => {
+      return (
+        exams.find(
+          (exam) =>
+            exam.examType ===
+            myGoal
+        ) || null
+      );
+    }, [
+      exams,
+      myGoal,
+    ]);
+
+
+  const rest =
+    useMemo(() => {
+      return exams.filter(
         (exam) =>
-          exam.examType === myGoal
-      ) || null
-    );
-  }, [exams, myGoal]);
+          exam.examType !==
+          featured?.examType
+      );
+    }, [
+      exams,
+      featured,
+    ]);
 
-  const rest = useMemo(() => {
-    return exams.filter(
-      (exam) =>
-        exam.examType !==
-        featured?.examType
-    );
-  }, [exams, featured]);
 
-  /* -------------------------------------------------------
-     LOADING
-  ------------------------------------------------------- */
-
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <View
-          style={styles.loaderCircle}
-        >
-          <ActivityIndicator
-            size="small"
-            color="#FF684A"
-          />
-        </View>
-
-        <Text
-          style={styles.loadingText}
-        >
-          Loading mock tests...
-        </Text>
-      </View>
-    );
-  }
-
-  /* -------------------------------------------------------
+  /* =======================================================
      NAVIGATION
-  ------------------------------------------------------- */
+  ======================================================= */
 
   function goTo(item) {
     navigation.navigate(
@@ -190,13 +206,80 @@ export default function ExamPickerScreen({
     );
   }
 
+
+  /* =======================================================
+     LOADING
+  ======================================================= */
+
+  if (loading) {
+    return (
+      <View
+        style={[
+          styles.centered,
+          {
+            backgroundColor:
+              colors.bg,
+            paddingTop:
+              insets.top,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.loaderIcon,
+            {
+              backgroundColor:
+                colors.brandTint,
+              borderColor:
+                colors.brandLight,
+            },
+          ]}
+        >
+          <Ionicons
+            name="layers-outline"
+            size={23}
+            color={
+              colors.brand
+            }
+          />
+        </View>
+
+        <ActivityIndicator
+          size="small"
+          color={
+            colors.brand
+          }
+        />
+
+        <Text
+          style={[
+            styles.loadingText,
+            {
+              color:
+                colors.slate,
+            },
+          ]}
+        >
+          Loading mock tests...
+        </Text>
+      </View>
+    );
+  }
+
+
   /* =======================================================
      RENDER
   ======================================================= */
 
   return (
     <View
-      style={styles.screen}
+      style={[
+        styles.screen,
+        {
+          backgroundColor:
+            colors.bg,
+        },
+      ]}
     >
       <FlatList
         data={rest}
@@ -208,141 +291,198 @@ export default function ExamPickerScreen({
         }
         contentContainerStyle={{
           paddingBottom:
-            100 + insets.bottom,
+            spacing.xxl +
+            insets.bottom,
         }}
+
+
+        /* =================================================
+           HEADER
+        ================================================= */
+
         ListHeaderComponent={
           <>
-            {/* =================================================
-                HEADER
-            ================================================= */}
-
             <View
               style={[
-                styles.topHeader,
+                styles.header,
                 {
                   paddingTop:
                     Math.max(
                       insets.top,
-                      14
+                      spacing.sm
                     ),
                 },
               ]}
             >
               <TouchableOpacity
-                style={
-                  styles.backButton
+                style={[
+                  styles.backButton,
+                  {
+                    backgroundColor:
+                      colors.surface,
+                    borderColor:
+                      colors.border,
+                  },
+                ]}
+                activeOpacity={
+                  0.72
                 }
-                activeOpacity={0.7}
                 onPress={() =>
                   navigation.goBack()
                 }
               >
                 <Ionicons
                   name="arrow-back"
-                  size={22}
-                  color="#17202E"
+                  size={20}
+                  color={
+                    colors.ink
+                  }
                 />
               </TouchableOpacity>
 
+
               <View
                 style={
-                  styles.headerTitleWrap
+                  styles.headerCopy
                 }
               >
                 <Text
-                  style={
-                    styles.topHeaderTitle
-                  }
+                  style={[
+                    styles.headerTitle,
+                    {
+                      color:
+                        colors.ink,
+                    },
+                  ]}
                 >
                   Mock Tests
                 </Text>
 
                 <Text
-                  style={
-                    styles.headerSub
-                  }
+                  style={[
+                    styles.headerSubtitle,
+                    {
+                      color:
+                        colors.slate,
+                    },
+                  ]}
                 >
                   Test your exam readiness
                 </Text>
               </View>
 
+
               <View
-                style={
-                  styles.headerRight
-                }
+                style={[
+                  styles.headerCount,
+                  {
+                    backgroundColor:
+                      colors.brandTint,
+                    borderColor:
+                      colors.brandLight,
+                  },
+                ]}
               >
-                <Ionicons
-                  name="options-outline"
-                  size={21}
-                  color="#687587"
-                />
+                <Text
+                  style={[
+                    styles.headerCountNumber,
+                    {
+                      color:
+                        colors.brand,
+                    },
+                  ]}
+                >
+                  {exams.length}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.headerCountLabel,
+                    {
+                      color:
+                        colors.slate,
+                    },
+                  ]}
+                >
+                  EXAMS
+                </Text>
               </View>
             </View>
+
 
             {/* =================================================
                 HERO
             ================================================= */}
 
             <View
-              style={styles.heroBanner}
+              style={[
+                styles.hero,
+                {
+                  backgroundColor:
+                    colors.brand,
+                  shadowColor:
+                    colors.brand,
+                },
+              ]}
             >
-              {/* Background shapes */}
-
               <View
                 style={
-                  styles.heroOrbOne
+                  styles.heroGlowOne
                 }
               />
 
               <View
                 style={
-                  styles.heroOrbTwo
+                  styles.heroGlowTwo
                 }
               />
 
               <View
                 style={
-                  styles.heroBannerContent
+                  styles.heroContent
                 }
               >
                 <View
                   style={
-                    styles.heroLabel
+                    styles.heroEyebrow
                   }
                 >
                   <View
                     style={
-                      styles.heroLabelDot
+                      styles.heroDot
                     }
                   />
 
                   <Text
                     style={
-                      styles.heroLabelText
+                      styles.heroEyebrowText
                     }
                   >
                     EXAM PRACTICE
                   </Text>
                 </View>
 
-                <Text
-                  style={
-                    styles.heroBannerTitle
-                  }
-                >
-                  Practice like{"\n"}
-                  the real exam.
-                </Text>
 
                 <Text
                   style={
-                    styles.heroBannerText
+                    styles.heroTitle
+                  }
+                >
+                  Practice like the{"\n"}
+                  real exam.
+                </Text>
+
+
+                <Text
+                  style={
+                    styles.heroText
                   }
                 >
                   Full-length mock tests
-                  designed to match your
-                  actual exam pattern.
+                  designed around your
+                  exam pattern.
                 </Text>
+
 
                 <View
                   style={
@@ -361,109 +501,45 @@ export default function ExamPickerScreen({
 
                   <MiniFeature
                     icon="analytics-outline"
-                    text="Performance"
+                    text="Analysis"
                   />
                 </View>
               </View>
 
-              {/* Illustration */}
 
               <View
                 style={
-                  styles.heroIllustration
+                  styles.heroVisual
                 }
               >
                 <View
                   style={
-                    styles.illustrationCircle
-                  }
-                />
-
-                <View
-                  style={
-                    styles.paperCard
-                  }
-                >
-                  <View
-                    style={
-                      styles.paperTop
-                    }
-                  >
-                    <View
-                      style={
-                        styles.paperClip
-                      }
-                    />
-                  </View>
-
-                  <View
-                    style={
-                      styles.paperIconCircle
-                    }
-                  >
-                    <Ionicons
-                      name="document-text"
-                      size={25}
-                      color="#5B5FEF"
-                    />
-                  </View>
-
-                  <View
-                    style={
-                      styles.paperLine
-                    }
-                  />
-
-                  <View
-                    style={
-                      styles.paperLineShort
-                    }
-                  />
-
-                  <View
-                    style={
-                      styles.paperLine
-                    }
-                  />
-
-                  <View
-                    style={
-                      styles.paperCheck
-                    }
-                  >
-                    <Ionicons
-                      name="checkmark"
-                      size={12}
-                      color="#FFFFFF"
-                    />
-                  </View>
-                </View>
-
-                <View
-                  style={
-                    styles.timerBubble
+                    styles.heroVisualCircle
                   }
                 >
                   <Ionicons
-                    name="time"
-                    size={20}
-                    color="#FF684A"
+                    name="document-text-outline"
+                    size={37}
+                    color="#FFFFFF"
                   />
                 </View>
 
                 <View
                   style={
-                    styles.starBubble
+                    styles.heroVisualBadge
                   }
                 >
                   <Ionicons
-                    name="sparkles"
-                    size={16}
-                    color="#F59E0B"
+                    name="checkmark"
+                    size={12}
+                    color={
+                      colors.success
+                    }
                   />
                 </View>
               </View>
             </View>
+
 
             {/* =================================================
                 YOUR EXAM
@@ -471,22 +547,33 @@ export default function ExamPickerScreen({
 
             {featured && (
               <>
-                <SectionTitle
+                <SectionHeader
                   title="Your Exam"
                   subtitle="Start where your preparation matters most"
+                  colors={
+                    colors
+                  }
                 />
 
                 <FeaturedExamCard
-                  exam={featured}
+                  exam={
+                    featured
+                  }
+                  colors={
+                    colors
+                  }
                   onPress={() =>
-                    goTo(featured)
+                    goTo(
+                      featured
+                    )
                   }
                 />
               </>
             )}
 
+
             {/* =================================================
-                ALL EXAMS HEADER
+                OTHER EXAMS
             ================================================= */}
 
             {rest.length > 0 && (
@@ -495,11 +582,19 @@ export default function ExamPickerScreen({
                   styles.allExamHeader
                 }
               >
-                <View>
+                <View
+                  style={
+                    styles.allExamCopy
+                  }
+                >
                   <Text
-                    style={
-                      styles.allExamTitle
-                    }
+                    style={[
+                      styles.allExamTitle,
+                      {
+                        color:
+                          colors.ink,
+                      },
+                    ]}
                   >
                     {featured
                       ? "Explore Other Exams"
@@ -507,48 +602,89 @@ export default function ExamPickerScreen({
                   </Text>
 
                   <Text
-                    style={
-                      styles.allExamSubtitle
-                    }
+                    style={[
+                      styles.allExamSubtitle,
+                      {
+                        color:
+                          colors.slateSoft,
+                      },
+                    ]}
                   >
-                    Select an exam to
-                    explore mock series
+                    Select an exam to explore
+                    mock series
                   </Text>
                 </View>
 
                 <View
-                  style={
-                    styles.examCount
-                  }
+                  style={[
+                    styles.examCount,
+                    {
+                      backgroundColor:
+                        colors.surface,
+                      borderColor:
+                        colors.border,
+                    },
+                  ]}
                 >
                   <Text
-                    style={
-                      styles.examCountText
-                    }
+                    style={[
+                      styles.examCountNumber,
+                      {
+                        color:
+                          colors.brand,
+                      },
+                    ]}
                   >
                     {rest.length}
                   </Text>
 
                   <Text
-                    style={
-                      styles.examCountLabel
-                    }
+                    style={[
+                      styles.examCountLabel,
+                      {
+                        color:
+                          colors.slateSoft,
+                      },
+                    ]}
                   >
-                    Exams
+                    EXAMS
                   </Text>
                 </View>
               </View>
             )}
           </>
         }
+
+
+        /* =================================================
+           EMPTY
+        ================================================= */
+
         ListEmptyComponent={
           !featured ? (
-            <EmptyState />
+            <EmptyState
+              colors={
+                colors
+              }
+            />
           ) : null
         }
-        renderItem={({ item }) => (
+
+
+        /* =================================================
+           EXAM LIST
+        ================================================= */
+
+        renderItem={({
+          item,
+        }) => (
           <ExamCard
-            item={item}
+            item={
+              item
+            }
+            colors={
+              colors
+            }
             onPress={() =>
               goTo(item)
             }
@@ -559,38 +695,49 @@ export default function ExamPickerScreen({
   );
 }
 
+
 /* =========================================================
-   SECTION TITLE
+   SECTION HEADER
 ========================================================= */
 
-function SectionTitle({
+function SectionHeader({
   title,
   subtitle,
+  colors,
 }) {
   return (
     <View
       style={
-        styles.sectionTitleWrap
+        styles.sectionHeader
       }
     >
       <Text
-        style={
-          styles.sectionTitle
-        }
+        style={[
+          styles.sectionTitle,
+          {
+            color:
+              colors.ink,
+          },
+        ]}
       >
         {title}
       </Text>
 
       <Text
-        style={
-          styles.sectionSubtitle
-        }
+        style={[
+          styles.sectionSubtitle,
+          {
+            color:
+              colors.slateSoft,
+          },
+        ]}
       >
         {subtitle}
       </Text>
     </View>
   );
 }
+
 
 /* =========================================================
    MINI FEATURE
@@ -614,7 +761,7 @@ function MiniFeature({
         <Ionicons
           name={icon}
           size={12}
-          color="#5B5FEF"
+          color="#FFFFFF"
         />
       </View>
 
@@ -629,82 +776,103 @@ function MiniFeature({
   );
 }
 
+
 /* =========================================================
    FEATURED EXAM
 ========================================================= */
 
 function FeaturedExamCard({
   exam,
+  colors,
   onPress,
 }) {
   const meta =
     EXAM_META[
       exam.examType
-    ] || DEFAULT_META;
+    ] || {
+      icon: "book-outline",
+    };
+
 
   const totalQs =
     exam.sections?.reduce(
-      (sum, section) =>
+      (
+        sum,
+        section
+      ) =>
         sum +
-        (section.questionCount ||
-          0),
+        (
+          section.questionCount ||
+          0
+        ),
       0
     );
 
+
   return (
     <TouchableOpacity
-      style={
-        styles.featuredCard
+      style={[
+        styles.featuredCard,
+        {
+          backgroundColor:
+            colors.surface,
+          borderColor:
+            colors.border,
+          shadowColor:
+            colors.brand,
+        },
+      ]}
+      activeOpacity={
+        0.86
       }
-      activeOpacity={0.9}
-      onPress={onPress}
+      onPress={
+        onPress
+      }
     >
-      {/* Top accent */}
 
       <View
         style={[
           styles.featuredAccent,
           {
             backgroundColor:
-              meta.accent,
+              colors.brand,
           },
         ]}
       />
 
-      {/* Icon */}
+
+      {/* ICON */}
 
       <View
         style={[
           styles.featuredIconBox,
           {
             backgroundColor:
-              meta.light,
+              colors.brandTint,
           },
         ]}
       >
-        <LinearGradient
-          colors={meta.grad}
-          start={{
-            x: 0,
-            y: 0,
-          }}
-          end={{
-            x: 1,
-            y: 1,
-          }}
-          style={
-            styles.featuredIcon
-          }
+        <View
+          style={[
+            styles.featuredIcon,
+            {
+              backgroundColor:
+                colors.brand,
+            },
+          ]}
         >
           <Ionicons
-            name={meta.icon}
+            name={
+              meta.icon
+            }
             size={25}
             color="#FFFFFF"
           />
-        </LinearGradient>
+        </View>
       </View>
 
-      {/* Content */}
+
+      {/* CONTENT */}
 
       <View
         style={
@@ -712,59 +880,86 @@ function FeaturedExamCard({
         }
       >
         <View
-          style={
-            styles.yourExamBadge
-          }
+          style={[
+            styles.targetBadge,
+            {
+              backgroundColor:
+                colors.warnLight,
+            },
+          ]}
         >
           <Ionicons
             name="star"
-            size={10}
-            color="#FF684A"
+            size={9}
+            color={
+              colors.warn
+            }
           />
 
           <Text
-            style={
-              styles.yourExamText
-            }
+            style={[
+              styles.targetBadgeText,
+              {
+                color:
+                  colors.warn,
+              },
+            ]}
           >
             YOUR TARGET EXAM
           </Text>
         </View>
 
+
         <Text
-          style={
-            styles.featuredTitle
-          }
+          style={[
+            styles.featuredTitle,
+            {
+              color:
+                colors.ink,
+            },
+          ]}
           numberOfLines={2}
         >
           {exam.displayName ||
             exam.examType}
         </Text>
 
+
         <View
           style={
             styles.featuredMeta
           }
         >
-          {totalQs ? (
+          {totalQs > 0 && (
             <Meta
               icon="help-circle-outline"
               text={`${totalQs} Questions`}
+              colors={
+                colors
+              }
             />
-          ) : null}
+          )}
 
-          {exam.durationMinutes ? (
+          {exam.durationMinutes && (
             <Meta
               icon="time-outline"
               text={`${exam.durationMinutes} min`}
+              colors={
+                colors
+              }
             />
-          ) : null}
+          )}
         </View>
 
+
         <View
-          style={
-            styles.featuredButton
-          }
+          style={[
+            styles.featuredButton,
+            {
+              backgroundColor:
+                colors.brand,
+            },
+          ]}
         >
           <Text
             style={
@@ -776,14 +971,16 @@ function FeaturedExamCard({
 
           <Ionicons
             name="arrow-forward"
-            size={16}
+            size={15}
             color="#FFFFFF"
           />
         </View>
       </View>
+
     </TouchableOpacity>
   );
 }
+
 
 /* =========================================================
    META
@@ -792,19 +989,30 @@ function FeaturedExamCard({
 function Meta({
   icon,
   text,
+  colors,
 }) {
   return (
     <View
-      style={styles.metaItem}
+      style={
+        styles.metaItem
+      }
     >
       <Ionicons
         name={icon}
         size={13}
-        color="#8A95A5"
+        color={
+          colors.slateSoft
+        }
       />
 
       <Text
-        style={styles.metaText}
+        style={[
+          styles.metaText,
+          {
+            color:
+              colors.slateSoft,
+          },
+        ]}
       >
         {text}
       </Text>
@@ -812,68 +1020,89 @@ function Meta({
   );
 }
 
+
 /* =========================================================
    EXAM CARD
 ========================================================= */
 
 function ExamCard({
   item,
+  colors,
   onPress,
 }) {
   const meta =
     EXAM_META[
       item.examType
-    ] || DEFAULT_META;
+    ] || {
+      icon: "book-outline",
+    };
+
 
   const totalQs =
     item.sections?.reduce(
-      (sum, section) =>
+      (
+        sum,
+        section
+      ) =>
         sum +
-        (section.questionCount ||
-          0),
+        (
+          section.questionCount ||
+          0
+        ),
       0
     );
 
+
   return (
     <TouchableOpacity
-      style={
-        styles.examCard
+      style={[
+        styles.examCard,
+        {
+          backgroundColor:
+            colors.surface,
+
+          borderColor:
+            colors.border,
+        },
+      ]}
+      activeOpacity={
+        0.82
       }
-      activeOpacity={0.84}
-      onPress={onPress}
+      onPress={
+        onPress
+      }
     >
+
       {/* ICON */}
 
       <View
         style={[
-          styles.examIconBackground,
+          styles.examIconBox,
           {
             backgroundColor:
-              meta.light,
+              colors.brandTint,
           },
         ]}
       >
-        <LinearGradient
-          colors={meta.grad}
-          start={{
-            x: 0,
-            y: 0,
-          }}
-          end={{
-            x: 1,
-            y: 1,
-          }}
-          style={
-            styles.examIcon
-          }
+        <View
+          style={[
+            styles.examIcon,
+            {
+              backgroundColor:
+                colors.brand,
+            },
+          ]}
         >
           <Ionicons
-            name={meta.icon}
-            size={22}
+            name={
+              meta.icon
+            }
+            size={21}
             color="#FFFFFF"
           />
-        </LinearGradient>
+        </View>
       </View>
+
 
       {/* CONTENT */}
 
@@ -883,9 +1112,13 @@ function ExamCard({
         }
       >
         <Text
-          style={
-            styles.examName
-          }
+          style={[
+            styles.examName,
+            {
+              color:
+                colors.ink,
+            },
+          ]}
           numberOfLines={1}
         >
           {item.displayName ||
@@ -897,966 +1130,987 @@ function ExamCard({
             styles.examMeta
           }
         >
-          {totalQs ? (
+          {totalQs > 0 && (
             <Meta
               icon="help-circle-outline"
               text={`${totalQs} Questions`}
+              colors={
+                colors
+              }
             />
-          ) : null}
+          )}
 
-          {item.durationMinutes ? (
+          {item.durationMinutes && (
             <Meta
               icon="time-outline"
               text={`${item.durationMinutes} min`}
+              colors={
+                colors
+              }
             />
-          ) : null}
+          )}
         </View>
       </View>
+
 
       {/* ARROW */}
 
       <View
-        style={
-          styles.examArrow
-        }
+        style={[
+          styles.examArrow,
+          {
+            backgroundColor:
+              colors.slateLight,
+          },
+        ]}
       >
         <Ionicons
           name="chevron-forward"
-          size={17}
-          color="#687587"
+          size={16}
+          color={
+            colors.slate
+          }
         />
       </View>
+
     </TouchableOpacity>
   );
 }
+
 
 /* =========================================================
    EMPTY STATE
 ========================================================= */
 
-function EmptyState() {
+function EmptyState({
+  colors,
+}) {
   return (
     <View
-      style={styles.empty}
+      style={
+        styles.empty
+      }
     >
       <View
-        style={
-          styles.emptyIcon
-        }
+        style={[
+          styles.emptyIcon,
+          {
+            backgroundColor:
+              colors.brandTint,
+            borderColor:
+              colors.brandLight,
+          },
+        ]}
       >
         <Ionicons
           name="document-outline"
-          size={28}
-          color="#98A2B3"
+          size={27}
+          color={
+            colors.brand
+          }
         />
       </View>
 
       <Text
-        style={
-          styles.emptyTitle
-        }
+        style={[
+          styles.emptyTitle,
+          {
+            color:
+              colors.ink,
+          },
+        ]}
       >
         No exams available
       </Text>
 
       <Text
-        style={
-          styles.emptyText
-        }
+        style={[
+          styles.emptyText,
+          {
+            color:
+              colors.slate,
+          },
+        ]}
       >
         New mock test series will
-        appear here shortly.
+        appear here when available.
       </Text>
     </View>
   );
 }
 
+
 /* =========================================================
    STYLES
 ========================================================= */
 
-const styles = StyleSheet.create({
-  /* =======================================================
-     SCREEN
-  ======================================================= */
-
-  screen: {
-    flex: 1,
-    backgroundColor: "#F8F9FC",
-  },
-
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F8F9FC",
-  },
-
-  loaderCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-
-  loadingText: {
-    fontSize: 12,
-    color: "#7A8697",
-    fontWeight: "600",
-  },
-
-  /* =======================================================
-     HEADER
-  ======================================================= */
-
-  topHeader: {
-    minHeight: 92,
-
-    paddingHorizontal: 20,
-    paddingBottom: 15,
-
-    flexDirection: "row",
-
-    alignItems: "flex-end",
-
-    backgroundColor: "#F8F9FC",
-  },
-
-  backButton: {
-    width: 34,
-    height: 34,
-
-    borderRadius: 17,
-
-    backgroundColor: "#FFFFFF",
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    shadowColor: "#17202E",
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-
-    elevation: 2,
-  },
-
-  headerTitleWrap: {
-    flex: 1,
-    marginLeft: 12,
-  },
-
-  topHeaderTitle: {
-    fontSize: 19,
-    lineHeight: 23,
-
-    fontWeight: "800",
-
-    color: "#17202E",
-
-    letterSpacing: -0.4,
-  },
-
-  headerSub: {
-    fontSize: 10.5,
-
-    color: "#8A95A5",
-
-    marginTop: 2,
-
-    fontWeight: "500",
-  },
-
-  headerRight: {
-    width: 34,
-    height: 34,
-
-    borderRadius: 17,
-
-    backgroundColor: "#FFFFFF",
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    shadowColor: "#17202E",
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-
-    elevation: 2,
-  },
-
-  /* =======================================================
-     HERO BANNER
-  ======================================================= */
-
-  heroBanner: {
-    marginHorizontal: 18,
-
-    minHeight: 205,
-
-    borderRadius: 26,
-
-    backgroundColor: "#F0F1FF",
-
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-
-    flexDirection: "row",
-
-    overflow: "hidden",
-
-    marginBottom: 24,
-
-    shadowColor: "#5B5FEF",
-    shadowOffset: {
-      width: 0,
-      height: 7,
-    },
-    shadowOpacity: 0.07,
-    shadowRadius: 15,
-
-    elevation: 3,
-  },
-
-  heroBannerContent: {
-    flex: 1,
-    zIndex: 5,
-
-    justifyContent: "center",
-  },
-
-  heroLabel: {
-    alignSelf: "flex-start",
-
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    gap: 5,
-
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-
-    borderRadius: 20,
-
-    backgroundColor:
-      "rgba(91,95,239,0.10)",
-
-    marginBottom: 9,
-  },
-
-  heroLabelDot: {
-    width: 5,
-    height: 5,
-
-    borderRadius: 3,
-
-    backgroundColor: "#5B5FEF",
-  },
-
-  heroLabelText: {
-    fontSize: 8.5,
-
-    fontWeight: "800",
-
-    color: "#5B5FEF",
-
-    letterSpacing: 0.5,
-  },
-
-  heroBannerTitle: {
-    fontSize: 24,
-
-    lineHeight: 28,
-
-    fontWeight: "800",
-
-    color: "#17202E",
-
-    letterSpacing: -0.5,
-
-    marginBottom: 6,
-  },
-
-  heroBannerText: {
-    fontSize: 11.5,
-
-    lineHeight: 17,
-
-    color: "#697586",
-
-    maxWidth: 205,
-  },
-
-  heroFeatures: {
-    flexDirection: "row",
-
-    gap: 9,
-
-    marginTop: 13,
-  },
-
-  miniFeature: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    gap: 4,
-  },
-
-  miniFeatureIcon: {
-    width: 22,
-    height: 22,
-
-    borderRadius: 7,
-
-    backgroundColor: "#FFFFFF",
-
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  miniFeatureText: {
-    fontSize: 8.5,
-
-    fontWeight: "700",
-
-    color: "#6B7280",
-  },
-
-  /* =======================================================
-     HERO ILLUSTRATION
-  ======================================================= */
-
-  heroIllustration: {
-    width: 125,
-
-    position: "relative",
-
-    alignItems: "center",
-
-    justifyContent: "center",
-  },
-
-  heroOrbOne: {
-    position: "absolute",
-
-    width: 155,
-    height: 155,
-
-    borderRadius: 78,
-
-    backgroundColor: "#E2E4FF",
-
-    right: -58,
-    top: 18,
-  },
-
-  heroOrbTwo: {
-    position: "absolute",
-
-    width: 88,
-    height: 88,
-
-    borderRadius: 44,
-
-    backgroundColor: "#D5D8FF",
-
-    right: -3,
-    top: 25,
-  },
-
-  illustrationCircle: {
-    position: "absolute",
-
-    width: 118,
-    height: 118,
-
-    borderRadius: 59,
-
-    backgroundColor:
-      "rgba(255,255,255,0.28)",
-  },
-
-  paperCard: {
-    width: 75,
-    height: 96,
-
-    borderRadius: 13,
-
-    backgroundColor: "#FFFFFF",
-
-    borderWidth: 1.5,
-
-    borderColor: "#5B5FEF",
-
-    alignItems: "center",
-
-    paddingTop: 17,
-
-    transform: [
-      {
-        rotate: "7deg",
-      },
-    ],
-
-    shadowColor: "#5B5FEF",
-
-    shadowOffset: {
-      width: 0,
-      height: 7,
+const styles =
+  StyleSheet.create({
+
+    /* =====================================================
+       SCREEN
+    ===================================================== */
+
+    screen: {
+      flex: 1,
     },
 
-    shadowOpacity: 0.16,
+    centered: {
+      flex: 1,
 
-    shadowRadius: 9,
+      alignItems:
+        "center",
 
-    elevation: 5,
-  },
-
-  paperTop: {
-    position: "absolute",
-
-    top: -7,
-
-    width: 28,
-    height: 13,
-
-    borderRadius: 7,
-
-    backgroundColor: "#5B5FEF",
-
-    alignItems: "center",
-  },
-
-  paperClip: {
-    width: 5,
-    height: 5,
-
-    borderRadius: 3,
-
-    backgroundColor: "#FFFFFF",
-
-    marginTop: 3,
-  },
-
-  paperIconCircle: {
-    width: 35,
-    height: 35,
-
-    borderRadius: 18,
-
-    backgroundColor: "#F0F1FF",
-
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  paperLine: {
-    width: 38,
-    height: 4,
-
-    borderRadius: 3,
-
-    backgroundColor: "#DDE0FF",
-
-    marginTop: 7,
-  },
-
-  paperLineShort: {
-    width: 26,
-    height: 4,
-
-    borderRadius: 3,
-
-    backgroundColor: "#E9EBFF",
-
-    marginTop: 5,
-  },
-
-  paperCheck: {
-    position: "absolute",
-
-    right: 7,
-    bottom: 7,
-
-    width: 18,
-    height: 18,
-
-    borderRadius: 9,
-
-    backgroundColor: "#10B981",
-
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  timerBubble: {
-    position: "absolute",
-
-    width: 42,
-    height: 42,
-
-    borderRadius: 21,
-
-    backgroundColor: "#FFF4EF",
-
-    borderWidth: 3,
-
-    borderColor: "#FFFFFF",
-
-    left: -2,
-    bottom: 20,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    shadowColor: "#FF684A",
-    shadowOffset: {
-      width: 0,
-      height: 4,
+      justifyContent:
+        "center",
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
 
-    elevation: 3,
-  },
+    loaderIcon: {
+      width: 56,
+      height: 56,
 
-  starBubble: {
-    position: "absolute",
+      borderRadius: 18,
 
-    width: 31,
-    height: 31,
+      borderWidth: 1,
 
-    borderRadius: 16,
+      alignItems:
+        "center",
 
-    backgroundColor: "#FFF8DF",
+      justifyContent:
+        "center",
 
-    borderWidth: 2,
+      marginBottom: 13,
+    },
 
-    borderColor: "#FFFFFF",
+    loadingText: {
+      ...type.small,
 
-    right: 0,
-    top: 25,
+      fontSize: 12,
 
-    alignItems: "center",
-    justifyContent: "center",
-  },
+      marginTop: 8,
+    },
 
-  /* =======================================================
-     SECTION TITLE
-  ======================================================= */
 
-  sectionTitleWrap: {
-    paddingHorizontal: 18,
+    /* =====================================================
+       HEADER
+    ===================================================== */
 
-    marginBottom: 12,
-  },
+    header: {
+      minHeight: 82,
 
-  sectionTitle: {
-    fontSize: 20,
+      paddingHorizontal:
+        spacing.lg,
 
-    fontWeight: "800",
+      paddingBottom:
+        spacing.sm,
 
-    color: "#17202E",
+      flexDirection:
+        "row",
 
-    letterSpacing: -0.3,
-  },
+      alignItems:
+        "center",
 
-  sectionSubtitle: {
-    fontSize: 11.5,
+      gap: 11,
+    },
 
-    color: "#8A95A5",
+    backButton: {
+      width: 40,
+      height: 40,
 
-    marginTop: 3,
+      borderRadius: 14,
 
-    lineHeight: 17,
-  },
+      borderWidth: 1,
 
-  /* =======================================================
-     FEATURED EXAM CARD
-  ======================================================= */
+      alignItems:
+        "center",
 
-  featuredCard: {
-    marginHorizontal: 18,
+      justifyContent:
+        "center",
 
-    backgroundColor: "#FFFFFF",
+      ...shadow.soft,
+    },
 
-    borderRadius: 23,
+    headerCopy: {
+      flex: 1,
 
-    padding: 16,
+      minWidth: 0,
+    },
 
-    flexDirection: "row",
+    headerTitle: {
+      ...type.h1,
 
-    marginBottom: 26,
+      fontSize: 21,
 
-    overflow: "hidden",
+      lineHeight: 25,
 
-    shadowColor: "#17202E",
+      letterSpacing:
+        -0.4,
+    },
 
-    shadowOffset: {
-      width: 0,
+    headerSubtitle: {
+      ...type.small,
+
+      fontSize: 11,
+
+      lineHeight: 15,
+
+      marginTop: 2,
+    },
+
+    headerCount: {
+      minWidth: 49,
+
+      height: 40,
+
+      borderRadius: 13,
+
+      borderWidth: 1,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    headerCountNumber: {
+      fontSize: 13,
+
+      lineHeight: 15,
+
+      fontWeight:
+        "800",
+    },
+
+    headerCountLabel: {
+      fontSize: 6.5,
+
+      lineHeight: 9,
+
+      fontWeight:
+        "800",
+
+      letterSpacing:
+        0.3,
+
+      marginTop: 1,
+    },
+
+
+    /* =====================================================
+       HERO
+    ===================================================== */
+
+    hero: {
+      marginHorizontal:
+        spacing.lg,
+
+      minHeight: 190,
+
+      borderRadius:
+        radius.xl,
+
+      paddingHorizontal: 18,
+
+      paddingVertical: 18,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      overflow:
+        "hidden",
+
+      marginBottom:
+        spacing.lg,
+
+      ...shadow.brand,
+    },
+
+    heroContent: {
+      flex: 1,
+
+      minWidth: 0,
+
+      zIndex: 5,
+    },
+
+    heroEyebrow: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 5,
+
+      marginBottom: 7,
+    },
+
+    heroDot: {
+      width: 6,
+
       height: 6,
+
+      borderRadius: 3,
+
+      backgroundColor:
+        "rgba(255,255,255,0.9)",
     },
 
-    shadowOpacity: 0.065,
+    heroEyebrowText: {
+      fontSize: 8.5,
 
-    shadowRadius: 14,
+      lineHeight: 11,
 
-    elevation: 3,
-  },
+      fontWeight:
+        "800",
 
-  featuredAccent: {
-    position: "absolute",
+      color:
+        "rgba(255,255,255,0.78)",
 
-    left: 0,
-    top: 0,
-    bottom: 0,
-
-    width: 4,
-  },
-
-  featuredIconBox: {
-    width: 72,
-    height: 72,
-
-    borderRadius: 21,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    marginTop: 3,
-  },
-
-  featuredIcon: {
-    width: 54,
-    height: 54,
-
-    borderRadius: 17,
-
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  featuredContent: {
-    flex: 1,
-
-    marginLeft: 13,
-  },
-
-  yourExamBadge: {
-    alignSelf: "flex-start",
-
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    gap: 4,
-
-    backgroundColor: "#FFF1EC",
-
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-
-    borderRadius: 20,
-
-    marginBottom: 6,
-  },
-
-  yourExamText: {
-    fontSize: 8,
-
-    fontWeight: "800",
-
-    color: "#FF684A",
-
-    letterSpacing: 0.4,
-  },
-
-  featuredTitle: {
-    fontSize: 18,
-
-    lineHeight: 23,
-
-    fontWeight: "800",
-
-    color: "#17202E",
-
-    marginBottom: 7,
-  },
-
-  featuredMeta: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    gap: 13,
-
-    marginBottom: 12,
-  },
-
-  metaItem: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    gap: 4,
-  },
-
-  metaText: {
-    fontSize: 10.5,
-
-    color: "#8A95A5",
-
-    fontWeight: "600",
-  },
-
-  featuredButton: {
-    height: 38,
-
-    borderRadius: 12,
-
-    backgroundColor: "#FF684A",
-
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    justifyContent: "center",
-
-    gap: 7,
-
-    paddingHorizontal: 12,
-  },
-
-  featuredButtonText: {
-    fontSize: 11.5,
-
-    fontWeight: "800",
-
-    color: "#FFFFFF",
-  },
-
-  /* =======================================================
-     ALL EXAMS HEADER
-  ======================================================= */
-
-  allExamHeader: {
-    marginHorizontal: 18,
-
-    marginBottom: 13,
-
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    justifyContent: "space-between",
-  },
-
-  allExamTitle: {
-    fontSize: 20,
-
-    fontWeight: "800",
-
-    color: "#17202E",
-
-    letterSpacing: -0.3,
-  },
-
-  allExamSubtitle: {
-    fontSize: 11,
-
-    color: "#8A95A5",
-
-    marginTop: 3,
-  },
-
-  examCount: {
-    minWidth: 43,
-
-    height: 43,
-
-    borderRadius: 14,
-
-    backgroundColor: "#FFFFFF",
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    borderWidth: 1,
-
-    borderColor: "#EEF0F4",
-  },
-
-  examCountText: {
-    fontSize: 14,
-
-    fontWeight: "800",
-
-    color: "#5B5FEF",
-
-    lineHeight: 16,
-  },
-
-  examCountLabel: {
-    fontSize: 7.5,
-
-    fontWeight: "700",
-
-    color: "#8A95A5",
-
-    marginTop: 1,
-  },
-
-  /* =======================================================
-     EXAM CARD
-  ======================================================= */
-
-  examCard: {
-    minHeight: 82,
-
-    marginHorizontal: 18,
-
-    marginBottom: 11,
-
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-
-    backgroundColor: "#FFFFFF",
-
-    borderRadius: 20,
-
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    shadowColor: "#17202E",
-
-    shadowOffset: {
-      width: 0,
-      height: 4,
+      letterSpacing:
+        0.55,
     },
 
-    shadowOpacity: 0.045,
+    heroTitle: {
+      fontSize: 24,
 
-    shadowRadius: 10,
+      lineHeight: 29,
 
-    elevation: 2,
-  },
+      fontWeight:
+        "800",
 
-  examIconBackground: {
-    width: 52,
-    height: 52,
+      color: "#FFFFFF",
 
-    borderRadius: 16,
+      letterSpacing:
+        -0.5,
+    },
 
-    alignItems: "center",
-    justifyContent: "center",
-  },
+    heroText: {
+      fontSize: 11.5,
 
-  examIcon: {
-    width: 45,
-    height: 45,
+      lineHeight: 17,
 
-    borderRadius: 14,
+      color:
+        "rgba(255,255,255,0.72)",
 
-    alignItems: "center",
-    justifyContent: "center",
-  },
+      maxWidth: 220,
 
-  examContent: {
-    flex: 1,
+      marginTop: 6,
+    },
 
-    marginLeft: 13,
+    heroFeatures: {
+      flexDirection:
+        "row",
 
-    minWidth: 0,
-  },
+      alignItems:
+        "center",
 
-  examName: {
-    fontSize: 16,
+      gap: 9,
 
-    fontWeight: "800",
+      marginTop: 13,
+    },
 
-    color: "#17202E",
+    miniFeature: {
+      flexDirection:
+        "row",
 
-    marginBottom: 6,
-  },
+      alignItems:
+        "center",
 
-  examMeta: {
-    flexDirection: "row",
+      gap: 4,
+    },
 
-    alignItems: "center",
+    miniFeatureIcon: {
+      width: 21,
 
-    gap: 12,
-  },
+      height: 21,
 
-  examArrow: {
-    width: 34,
-    height: 34,
+      borderRadius: 7,
 
-    borderRadius: 17,
+      backgroundColor:
+        "rgba(255,255,255,0.15)",
 
-    backgroundColor: "#F4F5F8",
+      alignItems:
+        "center",
 
-    alignItems: "center",
-    justifyContent: "center",
+      justifyContent:
+        "center",
+    },
 
-    marginLeft: 8,
-  },
+    miniFeatureText: {
+      fontSize: 8,
 
-  /* =======================================================
-     EMPTY
-  ======================================================= */
+      fontWeight:
+        "700",
 
-  empty: {
-    alignItems: "center",
+      color:
+        "rgba(255,255,255,0.78)",
+    },
 
-    paddingVertical: 70,
+    heroVisual: {
+      width: 105,
 
-    paddingHorizontal: 30,
-  },
+      height: 145,
 
-  emptyIcon: {
-    width: 66,
-    height: 66,
+      alignItems:
+        "center",
 
-    borderRadius: 33,
+      justifyContent:
+        "center",
 
-    backgroundColor: "#EEF1F5",
+      position:
+        "relative",
 
-    alignItems: "center",
-    justifyContent: "center",
+      marginLeft: 4,
+    },
 
-    marginBottom: 12,
-  },
+    heroVisualCircle: {
+      width: 82,
 
-  emptyTitle: {
-    fontSize: 17,
+      height: 82,
 
-    fontWeight: "800",
+      borderRadius: 41,
 
-    color: "#17202E",
+      backgroundColor:
+        "rgba(255,255,255,0.13)",
 
-    marginBottom: 4,
-  },
+      borderWidth: 1,
 
-  emptyText: {
-    fontSize: 13,
+      borderColor:
+        "rgba(255,255,255,0.15)",
 
-    lineHeight: 19,
+      alignItems:
+        "center",
 
-    color: "#7A8697",
+      justifyContent:
+        "center",
+    },
 
-    textAlign: "center",
-  },
-});
+    heroVisualBadge: {
+      position:
+        "absolute",
+
+      right: 3,
+
+      bottom: 23,
+
+      width: 29,
+
+      height: 29,
+
+      borderRadius: 15,
+
+      backgroundColor:
+        "#FFFFFF",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      ...shadow.soft,
+    },
+
+    heroGlowOne: {
+      position:
+        "absolute",
+
+      width: 170,
+
+      height: 170,
+
+      borderRadius: 85,
+
+      right: -85,
+
+      top: -75,
+
+      backgroundColor:
+        "rgba(255,255,255,0.08)",
+    },
+
+    heroGlowTwo: {
+      position:
+        "absolute",
+
+      width: 100,
+
+      height: 100,
+
+      borderRadius: 50,
+
+      left: 90,
+
+      bottom: -75,
+
+      backgroundColor:
+        "rgba(255,255,255,0.06)",
+    },
+
+
+    /* =====================================================
+       SECTION
+    ===================================================== */
+
+    sectionHeader: {
+      paddingHorizontal:
+        spacing.lg,
+
+      marginBottom: 11,
+    },
+
+    sectionTitle: {
+      ...type.h3,
+
+      fontSize: 19,
+
+      lineHeight: 23,
+    },
+
+    sectionSubtitle: {
+      ...type.small,
+
+      fontSize: 10.5,
+
+      lineHeight: 15,
+
+      marginTop: 2,
+    },
+
+
+    /* =====================================================
+       FEATURED CARD
+    ===================================================== */
+
+    featuredCard: {
+      marginHorizontal:
+        spacing.lg,
+
+      marginBottom:
+        spacing.lg,
+
+      padding: 14,
+
+      borderRadius:
+        radius.xl,
+
+      borderWidth: 1,
+
+      flexDirection:
+        "row",
+
+      overflow:
+        "hidden",
+
+      ...shadow.soft,
+    },
+
+    featuredAccent: {
+      position:
+        "absolute",
+
+      left: 0,
+
+      top: 12,
+
+      bottom: 12,
+
+      width: 3,
+
+      borderTopRightRadius: 3,
+
+      borderBottomRightRadius: 3,
+    },
+
+    featuredIconBox: {
+      width: 66,
+
+      height: 66,
+
+      borderRadius: 19,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginTop: 2,
+    },
+
+    featuredIcon: {
+      width: 50,
+
+      height: 50,
+
+      borderRadius: 16,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    featuredContent: {
+      flex: 1,
+
+      minWidth: 0,
+
+      marginLeft: 12,
+    },
+
+    targetBadge: {
+      alignSelf:
+        "flex-start",
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 4,
+
+      paddingHorizontal: 7,
+
+      paddingVertical: 3.5,
+
+      borderRadius:
+        radius.full,
+
+      marginBottom: 5,
+    },
+
+    targetBadgeText: {
+      fontSize: 7.5,
+
+      lineHeight: 10,
+
+      fontWeight:
+        "800",
+
+      letterSpacing:
+        0.3,
+    },
+
+    featuredTitle: {
+      fontSize: 17,
+
+      lineHeight: 22,
+
+      fontWeight:
+        "800",
+
+      letterSpacing:
+        -0.2,
+
+      marginBottom: 6,
+    },
+
+    featuredMeta: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 12,
+
+      marginBottom: 10,
+    },
+
+    featuredButton: {
+      minHeight: 36,
+
+      borderRadius: 11,
+
+      paddingHorizontal: 11,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      gap: 6,
+    },
+
+    featuredButtonText: {
+      fontSize: 10.5,
+
+      lineHeight: 14,
+
+      fontWeight:
+        "800",
+
+      color: "#FFFFFF",
+    },
+
+
+    /* =====================================================
+       ALL EXAMS
+    ===================================================== */
+
+    allExamHeader: {
+      marginHorizontal:
+        spacing.lg,
+
+      marginBottom: 11,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "space-between",
+    },
+
+    allExamCopy: {
+      flex: 1,
+
+      minWidth: 0,
+
+      paddingRight: 10,
+    },
+
+    allExamTitle: {
+      ...type.h3,
+
+      fontSize: 19,
+
+      lineHeight: 23,
+    },
+
+    allExamSubtitle: {
+      ...type.small,
+
+      fontSize: 10.5,
+
+      lineHeight: 15,
+
+      marginTop: 2,
+    },
+
+    examCount: {
+      minWidth: 48,
+
+      height: 39,
+
+      borderRadius: 13,
+
+      borderWidth: 1,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    examCountNumber: {
+      fontSize: 13,
+
+      lineHeight: 15,
+
+      fontWeight:
+        "800",
+    },
+
+    examCountLabel: {
+      fontSize: 6.5,
+
+      lineHeight: 9,
+
+      fontWeight:
+        "800",
+
+      marginTop: 1,
+    },
+
+
+    /* =====================================================
+       EXAM CARD
+    ===================================================== */
+
+    examCard: {
+      minHeight: 78,
+
+      marginHorizontal:
+        spacing.lg,
+
+      marginBottom: 9,
+
+      padding: 11,
+
+      borderRadius:
+        radius.lg,
+
+      borderWidth: 1,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      ...shadow.soft,
+    },
+
+    examIconBox: {
+      width: 51,
+
+      height: 51,
+
+      borderRadius: 16,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    examIcon: {
+      width: 43,
+
+      height: 43,
+
+      borderRadius: 14,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    examContent: {
+      flex: 1,
+
+      minWidth: 0,
+
+      marginLeft: 12,
+    },
+
+    examName: {
+      ...type.bodyStrong,
+
+      fontSize: 14,
+
+      lineHeight: 19,
+
+      marginBottom: 4,
+    },
+
+    examMeta: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 11,
+    },
+
+    metaItem: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 4,
+    },
+
+    metaText: {
+      fontSize: 9.5,
+
+      lineHeight: 13,
+
+      fontWeight:
+        "600",
+    },
+
+    examArrow: {
+      width: 32,
+
+      height: 32,
+
+      borderRadius: 16,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginLeft: 8,
+    },
+
+
+    /* =====================================================
+       EMPTY
+    ===================================================== */
+
+    empty: {
+      alignItems:
+        "center",
+
+      paddingHorizontal:
+        spacing.xl,
+
+      paddingVertical: 55,
+    },
+
+    emptyIcon: {
+      width: 62,
+
+      height: 62,
+
+      borderRadius: 20,
+
+      borderWidth: 1,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginBottom: 12,
+    },
+
+    emptyTitle: {
+      ...type.h3,
+
+      fontSize: 17,
+
+      lineHeight: 22,
+    },
+
+    emptyText: {
+      ...type.small,
+
+      fontSize: 12,
+
+      lineHeight: 18,
+
+      textAlign:
+        "center",
+
+      marginTop: 5,
+
+      maxWidth: 280,
+    },
+  });

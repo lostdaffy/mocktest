@@ -12,11 +12,20 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  useColorScheme,
 } from "react-native";
 
-import { useFocusEffect } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  useFocusEffect,
+} from "@react-navigation/native";
+
+import {
+  Ionicons,
+} from "@expo/vector-icons";
+
+import {
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import AppAlert from "../components/AppAlert";
 import api from "../api/client";
@@ -24,40 +33,14 @@ import { useAuth } from "../context/AuthContext";
 import { isSubscribed } from "../utils/subscription";
 
 import {
-  colors,
+  getColors,
+  getCard,
   spacing,
   radius,
   type,
-  card,
   shadow,
 } from "../theme/theme";
 
-/* =========================================================
-   LEVELS
-========================================================= */
-
-const LEVELS = [
-  {
-    key: "easy",
-    label: "Easy",
-    tint: colors.easy,
-  },
-  {
-    key: "medium",
-    label: "Medium",
-    tint: colors.medium,
-  },
-  {
-    key: "hard",
-    label: "Hard",
-    tint: colors.hard,
-  },
-  {
-    key: "advanced",
-    label: "Advanced",
-    tint: colors.advanced,
-  },
-];
 
 /* =========================================================
    SCREEN
@@ -67,7 +50,21 @@ export default function ChapterPracticeScreen({
   route,
   navigation,
 }) {
-  const insets = useSafeAreaInsets();
+  const insets =
+    useSafeAreaInsets();
+
+  const scheme =
+    useColorScheme();
+
+  const isDark =
+    scheme === "dark";
+
+  const colors =
+    getColors(isDark);
+
+  const testCard =
+    getCard(isDark);
+
 
   const {
     subject,
@@ -76,15 +73,60 @@ export default function ChapterPracticeScreen({
     isCompleted,
   } = route.params || {};
 
-  const { user } = useAuth();
-  const subscribed = isSubscribed(user);
+  const { user } =
+    useAuth();
 
-  const [tests, setTests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [starting, setStarting] = useState(null);
+  const subscribed =
+    isSubscribed(user);
+
 
   /* =======================================================
-     REMOVE NATIVE HEADER
+     LEVELS
+  ======================================================= */
+
+  const LEVELS = useMemo(
+    () => [
+      {
+        key: "easy",
+        label: "Easy",
+        tint: colors.easy,
+      },
+      {
+        key: "medium",
+        label: "Medium",
+        tint: colors.medium,
+      },
+      {
+        key: "hard",
+        label: "Hard",
+        tint: colors.hard,
+      },
+      {
+        key: "advanced",
+        label: "Advanced",
+        tint: colors.advanced,
+      },
+    ],
+    [colors]
+  );
+
+
+  /* =======================================================
+     STATE
+  ======================================================= */
+
+  const [tests, setTests] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [starting, setStarting] =
+    useState(null);
+
+
+  /* =======================================================
+     HIDE NATIVE HEADER
   ======================================================= */
 
   useLayoutEffect(() => {
@@ -93,46 +135,64 @@ export default function ChapterPracticeScreen({
     });
   }, [navigation]);
 
+
   /* =======================================================
      CURRENT LEVEL
   ======================================================= */
 
-  const currentLevelIdx = Math.max(
-    0,
-    LEVELS.findIndex(
-      (level) => level.key === currentLevel
-    )
-  );
+  const currentLevelIdx =
+    Math.max(
+      0,
+      LEVELS.findIndex(
+        (level) =>
+          level.key ===
+          currentLevel
+      )
+    );
+
 
   const [activeIdx, setActiveIdx] =
-    useState(currentLevelIdx);
+    useState(
+      currentLevelIdx
+    );
+
 
   /* =======================================================
      LOAD TESTS
   ======================================================= */
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load =
+    useCallback(async () => {
+      setLoading(true);
 
-    try {
-      const res = await api.get(
-        `/tests/practice-series/${encodeURIComponent(
-          subject || ""
-        )}/${encodeURIComponent(chapter || "")}`
-      );
+      try {
+        const res =
+          await api.get(
+            `/tests/practice-series/${encodeURIComponent(
+              subject || ""
+            )}/${encodeURIComponent(
+              chapter || ""
+            )}`
+          );
 
-      setTests(res.data?.tests || []);
-    } catch (err) {
-      console.log(
-        "ChapterPracticeScreen load error:",
-        err
-      );
+        setTests(
+          res.data?.tests || []
+        );
+      } catch (err) {
+        console.log(
+          "ChapterPracticeScreen load error:",
+          err
+        );
 
-      setTests([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [subject, chapter]);
+        setTests([]);
+      } finally {
+        setLoading(false);
+      }
+    }, [
+      subject,
+      chapter,
+    ]);
+
 
   useFocusEffect(
     useCallback(() => {
@@ -140,15 +200,19 @@ export default function ChapterPracticeScreen({
     }, [load])
   );
 
+
   /* =======================================================
      START TEST
   ======================================================= */
 
   async function startTest(test) {
-    if (!test?._id) return;
+    if (!test?._id) {
+      return;
+    }
 
     const premiumLocked =
-      !test.isFree && !subscribed;
+      !test.isFree &&
+      !subscribed;
 
     if (premiumLocked) {
       AppAlert.alert(
@@ -172,18 +236,24 @@ export default function ChapterPracticeScreen({
       return;
     }
 
-    setStarting(test._id);
+    setStarting(
+      test._id
+    );
 
     try {
-      const res = await api.get(
-        `/tests/${test._id}`
-      );
+      const res =
+        await api.get(
+          `/tests/${test._id}`
+        );
 
-      navigation.navigate("TestTaking", {
-        testId:
-          res.data?.test?._id ||
-          test._id,
-      });
+      navigation.navigate(
+        "TestTaking",
+        {
+          testId:
+            res.data?.test?._id ||
+            test._id,
+        }
+      );
     } catch (err) {
       if (
         err.response?.data?.code ===
@@ -219,54 +289,67 @@ export default function ChapterPracticeScreen({
     }
   }
 
+
   /* =======================================================
      LEVEL COUNTS
   ======================================================= */
 
-  const counts = useMemo(() => {
-    const result = {};
+  const counts =
+    useMemo(() => {
+      const result = {};
 
-    LEVELS.forEach((level) => {
-      result[level.key] = 0;
-    });
+      LEVELS.forEach(
+        (level) => {
+          result[level.key] = 0;
+        }
+      );
 
-    tests.forEach((test) => {
-      if (
-        Object.prototype.hasOwnProperty.call(
-          result,
-          test.difficultyLevel
-        )
-      ) {
-        result[test.difficultyLevel] += 1;
-      }
-    });
+      tests.forEach(
+        (test) => {
+          if (
+            Object.prototype.hasOwnProperty.call(
+              result,
+              test.difficultyLevel
+            )
+          ) {
+            result[
+              test.difficultyLevel
+            ] += 1;
+          }
+        }
+      );
 
-    return result;
-  }, [tests]);
+      return result;
+    }, [tests, LEVELS]);
+
 
   /* =======================================================
      PROGRESS
   ======================================================= */
 
-  const completedTests = useMemo(
-    () =>
-      tests.filter(
-        (test) =>
-          test.attemptStatus ===
-          "completed"
-      ).length,
-    [tests]
-  );
+  const completedTests =
+    useMemo(
+      () =>
+        tests.filter(
+          (test) =>
+            test.attemptStatus ===
+            "completed"
+        ).length,
+      [tests]
+    );
 
-  const inProgressTests = useMemo(
-    () =>
-      tests.filter(
-        (test) =>
-          test.attemptStatus ===
-          "in_progress"
-      ).length,
-    [tests]
-  );
+
+  const inProgressTests =
+    useMemo(
+      () =>
+        tests.filter(
+          (test) =>
+            test.attemptStatus ===
+            "in_progress"
+        ).length,
+      [tests]
+    );
+
 
   const progress =
     tests.length > 0
@@ -277,50 +360,64 @@ export default function ChapterPracticeScreen({
         )
       : 0;
 
+
   /* =======================================================
      ACTIVE LEVEL
   ======================================================= */
 
   const activeLevel =
-    LEVELS[activeIdx] || LEVELS[0];
+    LEVELS[activeIdx] ||
+    LEVELS[0];
+
 
   const activeLocked =
     !isCompleted &&
-    activeIdx > currentLevelIdx;
+    activeIdx >
+      currentLevelIdx;
 
-  const activeTests = useMemo(
-    () =>
-      tests.filter(
-        (test) =>
-          test.difficultyLevel ===
-          activeLevel.key
-      ),
-    [tests, activeLevel.key]
-  );
+
+  const activeTests =
+    useMemo(
+      () =>
+        tests.filter(
+          (test) =>
+            test.difficultyLevel ===
+            activeLevel.key
+        ),
+      [
+        tests,
+        activeLevel.key,
+      ]
+    );
+
 
   /* =======================================================
      FEATURED TEST
   ======================================================= */
 
-  const featuredTest = useMemo(() => {
-    if (!activeTests.length) {
-      return null;
-    }
+  const featuredTest =
+    useMemo(() => {
+      if (
+        !activeTests.length
+      ) {
+        return null;
+      }
 
-    return (
-      activeTests.find(
-        (test) =>
-          test.attemptStatus ===
-          "in_progress"
-      ) ||
-      activeTests.find(
-        (test) =>
-          test.attemptStatus !==
-          "completed"
-      ) ||
-      activeTests[0]
-    );
-  }, [activeTests]);
+      return (
+        activeTests.find(
+          (test) =>
+            test.attemptStatus ===
+            "in_progress"
+        ) ||
+        activeTests.find(
+          (test) =>
+            test.attemptStatus !==
+            "completed"
+        ) ||
+        activeTests[0]
+      );
+    }, [activeTests]);
+
 
   /* =======================================================
      LOADING
@@ -332,42 +429,93 @@ export default function ChapterPracticeScreen({
         style={[
           styles.loadingScreen,
           {
-            paddingTop: insets.top,
+            backgroundColor:
+              colors.bg,
+
+            paddingTop:
+              insets.top,
           },
         ]}
       >
+        <View
+          style={[
+            styles.loadingIcon,
+            {
+              backgroundColor:
+                colors.brandTint,
+
+              borderColor:
+                colors.brandLight,
+            },
+          ]}
+        >
+          <Ionicons
+            name="analytics-outline"
+            size={24}
+            color={
+              colors.brand
+            }
+          />
+        </View>
+
         <ActivityIndicator
-          size="large"
-          color={colors.brand}
+          size="small"
+          color={
+            colors.brand
+          }
         />
 
-        <Text style={styles.loadingText}>
+        <Text
+          style={[
+            styles.loadingText,
+            {
+              color:
+                colors.slate,
+            },
+          ]}
+        >
           Loading practice...
         </Text>
       </View>
     );
   }
 
+
   /* =======================================================
      RENDER
   ======================================================= */
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            colors.bg,
+        },
+      ]}
+    >
       <FlatList
         data={activeTests}
-        keyExtractor={(item) => item._id}
-        showsVerticalScrollIndicator={false}
+        keyExtractor={(item) =>
+          item._id
+        }
+        showsVerticalScrollIndicator={
+          false
+        }
         contentContainerStyle={{
           paddingBottom:
-            spacing.xxl + insets.bottom,
+            spacing.xxl +
+            insets.bottom,
         }}
+
+
+        /* =================================================
+           HEADER
+        ================================================= */
+
         ListHeaderComponent={
           <>
-            {/* =================================================
-                HEADER
-            ================================================= */}
-
             <View
               style={[
                 styles.header,
@@ -375,72 +523,163 @@ export default function ChapterPracticeScreen({
                   paddingTop:
                     Math.max(
                       insets.top,
-                      spacing.md
+                      spacing.sm
                     ),
                 },
               ]}
             >
+
               <TouchableOpacity
-                style={styles.backButton}
-                activeOpacity={0.7}
+                style={[
+                  styles.backButton,
+                  {
+                    backgroundColor:
+                      colors.surface,
+
+                    borderColor:
+                      colors.border,
+                  },
+                ]}
+                activeOpacity={0.72}
                 onPress={() =>
                   navigation.goBack()
                 }
               >
                 <Ionicons
-                  name="chevron-back"
-                  size={21}
-                  color={colors.ink}
+                  name="arrow-back"
+                  size={20}
+                  color={
+                    colors.ink
+                  }
                 />
               </TouchableOpacity>
 
+
               <View
-                style={styles.headerText}
+                style={
+                  styles.headerText
+                }
               >
                 <Text
-                  style={styles.headerTitle}
+                  style={[
+                    styles.headerTitle,
+                    {
+                      color:
+                        colors.ink,
+                    },
+                  ]}
                   numberOfLines={1}
                 >
                   Practice
                 </Text>
 
                 <Text
-                  style={styles.headerSubtitle}
+                  style={[
+                    styles.headerSubtitle,
+                    {
+                      color:
+                        colors.slateSoft,
+                    },
+                  ]}
                   numberOfLines={1}
                 >
                   {subject}
                 </Text>
               </View>
+
+
+              <View
+                style={[
+                  styles.headerBadge,
+                  {
+                    backgroundColor:
+                      colors.brandTint,
+
+                    borderColor:
+                      colors.brandLight,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.headerBadgeNumber,
+                    {
+                      color:
+                        colors.brand,
+                    },
+                  ]}
+                >
+                  {tests.length}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.headerBadgeLabel,
+                    {
+                      color:
+                        colors.slate,
+                    },
+                  ]}
+                >
+                  TESTS
+                </Text>
+              </View>
+
             </View>
+
 
             {/* =================================================
                 HERO
             ================================================= */}
 
             <PracticeHero
-              chapter={chapter}
-              subject={subject}
-              activeLevel={activeLevel}
-              isCompleted={isCompleted}
-              progress={progress}
+              chapter={
+                chapter
+              }
+              subject={
+                subject
+              }
+              activeLevel={
+                activeLevel
+              }
+              isCompleted={
+                isCompleted
+              }
+              progress={
+                progress
+              }
               completedTests={
                 completedTests
               }
-              totalTests={tests.length}
+              totalTests={
+                tests.length
+              }
               inProgressTests={
                 inProgressTests
               }
-              featuredTest={featuredTest}
-              activeLocked={activeLocked}
-              starting={starting}
+              featuredTest={
+                featuredTest
+              }
+              activeLocked={
+                activeLocked
+              }
+              starting={
+                starting
+              }
+              colors={
+                colors
+              }
               onStart={() => {
-                if (featuredTest) {
+                if (
+                  featuredTest
+                ) {
                   startTest(
                     featuredTest
                   );
                 }
               }}
             />
+
 
             {/* =================================================
                 LEVEL HEADER
@@ -451,19 +690,31 @@ export default function ChapterPracticeScreen({
                 styles.sectionHeader
               }
             >
-              <View style={{ flex: 1 }}>
+              <View
+                style={
+                  styles.sectionCopy
+                }
+              >
                 <Text
-                  style={
-                    styles.sectionTitle
-                  }
+                  style={[
+                    styles.sectionTitle,
+                    {
+                      color:
+                        colors.ink,
+                    },
+                  ]}
                 >
                   Practice Levels
                 </Text>
 
                 <Text
-                  style={
-                    styles.sectionSubtitle
-                  }
+                  style={[
+                    styles.sectionSubtitle,
+                    {
+                      color:
+                        colors.slate,
+                    },
+                  ]}
                 >
                   Clear each level to move
                   ahead
@@ -471,14 +722,24 @@ export default function ChapterPracticeScreen({
               </View>
 
               <View
-                style={
-                  styles.levelProgress
-                }
+                style={[
+                  styles.levelProgress,
+                  {
+                    backgroundColor:
+                      colors.brandTint,
+                    borderColor:
+                      colors.brandLight,
+                  },
+                ]}
               >
                 <Text
-                  style={
-                    styles.levelProgressText
-                  }
+                  style={[
+                    styles.levelProgressText,
+                    {
+                      color:
+                        colors.brand,
+                    },
+                  ]}
                 >
                   {isCompleted
                     ? "4/4"
@@ -491,15 +752,21 @@ export default function ChapterPracticeScreen({
               </View>
             </View>
 
+
             {/* =================================================
                 LEVEL SELECTOR
             ================================================= */}
 
             <View
-              style={styles.levelRow}
+              style={
+                styles.levelRow
+              }
             >
               {LEVELS.map(
-                (level, index) => {
+                (
+                  level,
+                  index
+                ) => {
                   const locked =
                     !isCompleted &&
                     index >
@@ -511,7 +778,8 @@ export default function ChapterPracticeScreen({
                       currentLevelIdx;
 
                   const active =
-                    activeIdx === index;
+                    activeIdx ===
+                    index;
 
                   const count =
                     counts[
@@ -525,12 +793,32 @@ export default function ChapterPracticeScreen({
                       }
                       style={[
                         styles.levelItem,
-                        active &&
-                          styles.levelItemActive,
-                        locked &&
-                          styles.levelItemLocked,
+                        {
+                          backgroundColor:
+                            colors.surface,
+
+                          borderColor:
+                            colors.border,
+                        },
+
+                        active && {
+                          backgroundColor:
+                            colors.brand,
+
+                          borderColor:
+                            colors.brand,
+                        },
+
+                        locked && {
+                          backgroundColor:
+                            colors.slateLight,
+
+                          opacity: 0.72,
+                        },
                       ]}
-                      activeOpacity={0.78}
+                      activeOpacity={
+                        0.78
+                      }
                       onPress={() =>
                         setActiveIdx(
                           index
@@ -540,8 +828,12 @@ export default function ChapterPracticeScreen({
                       <View
                         style={[
                           styles.levelDot,
-                          active &&
-                            styles.levelDotActive,
+                          {
+                            backgroundColor:
+                              active
+                                ? "rgba(255,255,255,0.18)"
+                                : colors.brandTint,
+                          },
                         ]}
                       >
                         <Ionicons
@@ -560,7 +852,7 @@ export default function ChapterPracticeScreen({
                           }
                           color={
                             active
-                              ? "#fff"
+                              ? "#FFFFFF"
                               : locked
                               ? colors.slateSoft
                               : level.tint
@@ -571,10 +863,18 @@ export default function ChapterPracticeScreen({
                       <Text
                         style={[
                           styles.levelName,
-                          active &&
-                            styles.levelNameActive,
-                          locked &&
-                            styles.levelNameLocked,
+                          {
+                            color:
+                              colors.ink,
+                          },
+                          active && {
+                            color:
+                              "#FFFFFF",
+                          },
+                          locked && {
+                            color:
+                              colors.slateSoft,
+                          },
                         ]}
                       >
                         {
@@ -585,8 +885,14 @@ export default function ChapterPracticeScreen({
                       <Text
                         style={[
                           styles.levelCount,
-                          active &&
-                            styles.levelCountActive,
+                          {
+                            color:
+                              colors.slateSoft,
+                          },
+                          active && {
+                            color:
+                              "rgba(255,255,255,0.78)",
+                          },
                         ]}
                       >
                         {count}{" "}
@@ -600,20 +906,32 @@ export default function ChapterPracticeScreen({
               )}
             </View>
 
+
             {/* =================================================
                 LOCK NOTICE
             ================================================= */}
 
             {activeLocked && (
               <View
-                style={
-                  styles.lockedNotice
-                }
+                style={[
+                  styles.lockedNotice,
+                  {
+                    backgroundColor:
+                      colors.slateLight,
+
+                    borderColor:
+                      colors.border,
+                  },
+                ]}
               >
                 <View
-                  style={
-                    styles.lockedIcon
-                  }
+                  style={[
+                    styles.lockedIcon,
+                    {
+                      backgroundColor:
+                        colors.surface,
+                    },
+                  ]}
                 >
                   <Ionicons
                     name="lock-closed"
@@ -624,25 +942,38 @@ export default function ChapterPracticeScreen({
                   />
                 </View>
 
-                <View style={{ flex: 1 }}>
+                <View
+                  style={
+                    styles.lockedCopy
+                  }
+                >
                   <Text
-                    style={
-                      styles.lockedTitle
-                    }
+                    style={[
+                      styles.lockedTitle,
+                      {
+                        color:
+                          colors.ink,
+                      },
+                    ]}
                   >
                     {activeLevel.label}{" "}
                     locked
                   </Text>
 
                   <Text
-                    style={
-                      styles.lockedText
-                    }
+                    style={[
+                      styles.lockedText,
+                      {
+                        color:
+                          colors.slate,
+                      },
+                    ]}
                   >
                     Complete a{" "}
                     {
                       LEVELS[
-                        activeIdx - 1
+                        activeIdx -
+                          1
                       ]?.label
                     }{" "}
                     test first to unlock
@@ -651,6 +982,7 @@ export default function ChapterPracticeScreen({
                 </View>
               </View>
             )}
+
 
             {/* =================================================
                 TEST HEADER
@@ -661,19 +993,31 @@ export default function ChapterPracticeScreen({
                 styles.testsHeader
               }
             >
-              <View style={{ flex: 1 }}>
+              <View
+                style={
+                  styles.testsCopy
+                }
+              >
                 <Text
-                  style={
-                    styles.testsTitle
-                  }
+                  style={[
+                    styles.testsTitle,
+                    {
+                      color:
+                        colors.ink,
+                    },
+                  ]}
                 >
                   {activeLevel.label} Tests
                 </Text>
 
                 <Text
-                  style={
-                    styles.testsSubtitle
-                  }
+                  style={[
+                    styles.testsSubtitle,
+                    {
+                      color:
+                        colors.slateSoft,
+                    },
+                  ]}
                 >
                   {activeLocked
                     ? "Previous level needs to be cleared"
@@ -688,24 +1032,37 @@ export default function ChapterPracticeScreen({
                 </Text>
               </View>
 
+
               {!activeLocked &&
                 activeTests.length >
                   0 && (
                   <View
-                    style={
-                      styles.readyBadge
-                    }
+                    style={[
+                      styles.readyBadge,
+                      {
+                        backgroundColor:
+                          colors.successLight,
+                      },
+                    ]}
                   >
                     <View
-                      style={
-                        styles.readyDot
-                      }
+                      style={[
+                        styles.readyDot,
+                        {
+                          backgroundColor:
+                            colors.success,
+                        },
+                      ]}
                     />
 
                     <Text
-                      style={
-                        styles.readyText
-                      }
+                      style={[
+                        styles.readyText,
+                        {
+                          color:
+                            colors.success,
+                        },
+                      ]}
                     >
                       READY
                     </Text>
@@ -714,22 +1071,45 @@ export default function ChapterPracticeScreen({
             </View>
           </>
         }
+
+
+        /* =================================================
+           EMPTY
+        ================================================= */
+
         ListEmptyComponent={
           <EmptyState
             level={
               activeLevel.label
             }
-            locked={activeLocked}
+            locked={
+              activeLocked
+            }
+            colors={
+              colors
+            }
           />
         }
+
+
+        /* =================================================
+           TESTS
+        ================================================= */
+
         renderItem={({
           item,
           index,
         }) => (
           <PracticeTestCard
-            item={item}
-            index={index}
-            level={activeLevel}
+            item={
+              item
+            }
+            index={
+              index
+            }
+            level={
+              activeLevel
+            }
             subscribed={
               subscribed
             }
@@ -739,13 +1119,22 @@ export default function ChapterPracticeScreen({
             activeLocked={
               activeLocked
             }
+            colors={
+              colors
+            }
+            testCard={
+              testCard
+            }
             onPress={() => {
-              if (activeLocked) {
+              if (
+                activeLocked
+              ) {
                 AppAlert.alert(
                   "Level locked",
                   `Complete a ${
                     LEVELS[
-                      activeIdx - 1
+                      activeIdx -
+                        1
                     ]?.label ||
                     "previous"
                   } test first.`
@@ -754,7 +1143,9 @@ export default function ChapterPracticeScreen({
                 return;
               }
 
-              startTest(item);
+              startTest(
+                item
+              );
             }}
           />
         )}
@@ -762,6 +1153,7 @@ export default function ChapterPracticeScreen({
     </View>
   );
 }
+
 
 /* =========================================================
    HERO
@@ -779,6 +1171,7 @@ function PracticeHero({
   featuredTest,
   activeLocked,
   starting,
+  colors,
   onStart,
 }) {
   const hasResume =
@@ -786,28 +1179,65 @@ function PracticeHero({
     "in_progress";
 
   return (
-    <View style={styles.hero}>
+    <View
+      style={[
+        styles.hero,
+        {
+          backgroundColor:
+            colors.surface,
+
+          borderColor:
+            colors.border,
+
+          shadowColor:
+            colors.brand,
+        },
+      ]}
+    >
+
+      {/* =================================================
+          TOP
+      ================================================= */}
+
       <View
-        style={styles.heroTop}
+        style={
+          styles.heroTop
+        }
       >
+
         <View
-          style={styles.heroCopy}
+          style={
+            styles.heroCopy
+          }
         >
+
           <View
             style={
               styles.heroEyebrow
             }
           >
             <View
-              style={
-                styles.heroEyebrowDot
-              }
+              style={[
+                styles.heroEyebrowDot,
+                {
+                  backgroundColor:
+                    isCompleted
+                      ? colors.success
+                      : colors.brand,
+                },
+              ]}
             />
 
             <Text
-              style={
-                styles.heroEyebrowText
-              }
+              style={[
+                styles.heroEyebrowText,
+                {
+                  color:
+                    isCompleted
+                      ? colors.success
+                      : colors.brand,
+                },
+              ]}
             >
               {isCompleted
                 ? "CHAPTER COMPLETE"
@@ -815,126 +1245,222 @@ function PracticeHero({
             </Text>
           </View>
 
+
           <Text
-            style={styles.heroTitle}
+            style={[
+              styles.heroTitle,
+              {
+                color:
+                  colors.ink,
+              },
+            ]}
             numberOfLines={2}
           >
             {chapter}
           </Text>
 
+
           <Text
-            style={
-              styles.heroSubtitle
-            }
+            style={[
+              styles.heroSubtitle,
+              {
+                color:
+                  colors.slate,
+              },
+            ]}
             numberOfLines={1}
           >
             {subject} · Practice Series
           </Text>
+
         </View>
 
+
+        {/* PROGRESS */}
+
         <View
-          style={
-            styles.heroProgress
-          }
+          style={[
+            styles.heroProgress,
+            {
+              backgroundColor:
+                colors.brandTint,
+
+              borderColor:
+                colors.brandLight,
+            },
+          ]}
         >
           <Text
-            style={
-              styles.heroProgressValue
-            }
+            style={[
+              styles.heroProgressValue,
+              {
+                color:
+                  colors.brand,
+              },
+            ]}
           >
             {progress}%
           </Text>
 
           <Text
-            style={
-              styles.heroProgressLabel
-            }
+            style={[
+              styles.heroProgressLabel,
+              {
+                color:
+                  colors.slate,
+              },
+            ]}
           >
             done
           </Text>
         </View>
+
       </View>
 
-      {/* STATS */}
+
+      {/* =================================================
+          STATS
+      ================================================= */}
 
       <View
-        style={styles.heroStats}
+        style={[
+          styles.heroStats,
+          {
+            backgroundColor:
+              colors.bg,
+          },
+        ]}
       >
+
         <View
-          style={styles.heroStat}
+          style={
+            styles.heroStat
+          }
         >
           <Text
-            style={
-              styles.heroStatValue
-            }
+            style={[
+              styles.heroStatValue,
+              {
+                color:
+                  colors.ink,
+              },
+            ]}
           >
             {completedTests}
           </Text>
 
           <Text
-            style={
-              styles.heroStatLabel
-            }
+            style={[
+              styles.heroStatLabel,
+              {
+                color:
+                  colors.slateSoft,
+              },
+            ]}
           >
             Completed
           </Text>
         </View>
 
-        <View
-          style={styles.heroDivider}
-        />
 
         <View
-          style={styles.heroStat}
+          style={[
+            styles.heroDivider,
+            {
+              backgroundColor:
+                colors.border,
+            },
+          ]}
+        />
+
+
+        <View
+          style={
+            styles.heroStat
+          }
         >
           <Text
-            style={
-              styles.heroStatValue
-            }
+            style={[
+              styles.heroStatValue,
+              {
+                color:
+                  colors.ink,
+              },
+            ]}
           >
             {totalTests}
           </Text>
 
           <Text
-            style={
-              styles.heroStatLabel
-            }
+            style={[
+              styles.heroStatLabel,
+              {
+                color:
+                  colors.slateSoft,
+              },
+            ]}
           >
             Total
           </Text>
         </View>
 
-        <View
-          style={styles.heroDivider}
-        />
 
         <View
-          style={styles.heroStat}
+          style={[
+            styles.heroDivider,
+            {
+              backgroundColor:
+                colors.border,
+            },
+          ]}
+        />
+
+
+        <View
+          style={
+            styles.heroStat
+          }
         >
           <Text
-            style={
-              styles.heroStatValue
-            }
+            style={[
+              styles.heroStatValue,
+              {
+                color:
+                  colors.ink,
+              },
+            ]}
           >
             {inProgressTests}
           </Text>
 
           <Text
-            style={
-              styles.heroStatLabel
-            }
+            style={[
+              styles.heroStatLabel,
+              {
+                color:
+                  colors.slateSoft,
+              },
+            ]}
           >
             In progress
           </Text>
         </View>
+
       </View>
 
-      {/* PROGRESS */}
+
+      {/* =================================================
+          PROGRESS BAR
+      ================================================= */}
 
       <View
-        style={
-          styles.heroProgressTrack
-        }
+        style={[
+          styles.heroProgressTrack,
+          {
+            backgroundColor:
+              colors.slateLight,
+          },
+        ]}
       >
         <View
           style={[
@@ -946,24 +1472,44 @@ function PracticeHero({
                   ? 2
                   : 0
               )}%`,
+
+              backgroundColor:
+                isCompleted
+                  ? colors.success
+                  : colors.brand,
             },
           ]}
         />
       </View>
 
-      {/* FEATURED TEST */}
+
+      {/* =================================================
+          FEATURED TEST
+      ================================================= */}
 
       {featuredTest &&
         !activeLocked && (
           <View
-            style={
-              styles.featuredBox
-            }
+            style={[
+              styles.featuredBox,
+              {
+                backgroundColor:
+                  colors.brandTint,
+
+                borderColor:
+                  colors.brandLight,
+              },
+            ]}
           >
+
             <View
-              style={
-                styles.featuredIcon
-              }
+              style={[
+                styles.featuredIcon,
+                {
+                  backgroundColor:
+                    colors.surface,
+                },
+              ]}
             >
               <Ionicons
                 name={
@@ -978,15 +1524,20 @@ function PracticeHero({
               />
             </View>
 
+
             <View
               style={
                 styles.featuredCopy
               }
             >
               <Text
-                style={
-                  styles.featuredLabel
-                }
+                style={[
+                  styles.featuredLabel,
+                  {
+                    color:
+                      colors.brand,
+                  },
+                ]}
               >
                 {hasResume
                   ? "CONTINUE"
@@ -994,18 +1545,26 @@ function PracticeHero({
               </Text>
 
               <Text
-                style={
-                  styles.featuredTitle
-                }
+                style={[
+                  styles.featuredTitle,
+                  {
+                    color:
+                      colors.ink,
+                  },
+                ]}
                 numberOfLines={1}
               >
                 {featuredTest.title}
               </Text>
 
               <Text
-                style={
-                  styles.featuredMeta
-                }
+                style={[
+                  styles.featuredMeta,
+                  {
+                    color:
+                      colors.slateSoft,
+                  },
+                ]}
               >
                 {activeLevel.label} ·{" "}
                 {featuredTest.durationMinutes ||
@@ -1014,26 +1573,32 @@ function PracticeHero({
               </Text>
             </View>
 
-            {/* FIX: was `disabled={starting}` - the raw `starting` state
-                holds the STRING _id of whichever test is loading (or
-                null), not a boolean. Passing a string straight into
-                `disabled` crashes Android's native bridge with "Value for
-                disabled cannot be cast from String to boolean". This now
-                compares it to THIS card's test id, same as the line right
-                below already correctly does - giving a real boolean. */}
+
+            {/* IMPORTANT:
+                starting contains an ID string.
+                disabled MUST receive boolean.
+            */}
+
             <TouchableOpacity
-              style={
-                styles.featuredAction
-              }
+              style={[
+                styles.featuredAction,
+                {
+                  backgroundColor:
+                    colors.brand,
+                },
+              ]}
               activeOpacity={0.8}
               onPress={onStart}
-              disabled={starting === featuredTest._id}
+              disabled={
+                starting ===
+                featuredTest._id
+              }
             >
               {starting ===
               featuredTest._id ? (
                 <ActivityIndicator
                   size="small"
-                  color="#fff"
+                  color="#FFFFFF"
                 />
               ) : (
                 <Ionicons
@@ -1043,40 +1608,56 @@ function PracticeHero({
                       : "arrow-forward"
                   }
                   size={15}
-                  color="#fff"
+                  color="#FFFFFF"
                 />
               )}
             </TouchableOpacity>
+
           </View>
         )}
 
-      {/* LOCKED */}
+
+      {/* =================================================
+          LOCKED
+      ================================================= */}
 
       {activeLocked && (
         <View
-          style={
-            styles.heroLocked
-          }
+          style={[
+            styles.heroLocked,
+            {
+              backgroundColor:
+                colors.slateLight,
+            },
+          ]}
         >
           <Ionicons
             name="lock-closed"
             size={14}
-            color={colors.slate}
+            color={
+              colors.slate
+            }
           />
 
           <Text
-            style={
-              styles.heroLockedText
-            }
+            style={[
+              styles.heroLockedText,
+              {
+                color:
+                  colors.slate,
+              },
+            ]}
           >
             Complete the previous
             level to continue
           </Text>
         </View>
       )}
+
     </View>
   );
 }
+
 
 /* =========================================================
    TEST CARD
@@ -1089,6 +1670,8 @@ function PracticeTestCard({
   subscribed,
   starting,
   activeLocked,
+  colors,
+  testCard,
   onPress,
 }) {
   const isPremiumItem =
@@ -1109,17 +1692,32 @@ function PracticeTestCard({
     item.attemptStatus ===
     "in_progress";
 
+
   return (
     <TouchableOpacity
       style={[
+        testCard,
         styles.testCard,
-        activeLocked &&
-          styles.testCardLocked,
+        {
+          borderColor:
+            colors.border,
+        },
+
+        activeLocked && {
+          opacity: 0.62,
+        },
       ]}
       activeOpacity={0.78}
-      disabled={isStarting}
-      onPress={onPress}
+      disabled={
+        isStarting
+      }
+      onPress={
+        onPress
+      }
     >
+
+      {/* ACCENT */}
+
       <View
         style={[
           styles.testAccent,
@@ -1130,15 +1728,26 @@ function PracticeTestCard({
         ]}
       />
 
+
+      {/* NUMBER */}
+
       <View
-        style={
-          styles.testNumber
-        }
+        style={[
+          styles.testNumber,
+          {
+            backgroundColor:
+              colors.brandTint,
+          },
+        ]}
       >
         <Text
-          style={
-            styles.testNumberText
-          }
+          style={[
+            styles.testNumberText,
+            {
+              color:
+                colors.brand,
+            },
+          ]}
         >
           {String(
             index + 1
@@ -1146,21 +1755,31 @@ function PracticeTestCard({
         </Text>
       </View>
 
+
+      {/* CONTENT */}
+
       <View
         style={
           styles.testContent
         }
       >
+
         <View
           style={
             styles.testBadgeRow
           }
         >
+
           {isPremiumItem ? (
             <View
               style={[
                 styles.badge,
-                styles.premiumBadge,
+                {
+                  backgroundColor:
+                    premiumLocked
+                      ? colors.warnLight
+                      : colors.successLight,
+                },
               ]}
             >
               <Ionicons
@@ -1195,7 +1814,10 @@ function PracticeTestCard({
             <View
               style={[
                 styles.badge,
-                styles.freeBadge,
+                {
+                  backgroundColor:
+                    colors.successLight,
+                },
               ]}
             >
               <Ionicons
@@ -1220,11 +1842,15 @@ function PracticeTestCard({
             </View>
           )}
 
+
           {completed && (
             <View
               style={[
                 styles.badge,
-                styles.scoreBadge,
+                {
+                  backgroundColor:
+                    colors.brandTint,
+                },
               ]}
             >
               <Ionicons
@@ -1236,9 +1862,13 @@ function PracticeTestCard({
               />
 
               <Text
-                style={
-                  styles.scoreText
-                }
+                style={[
+                  styles.scoreText,
+                  {
+                    color:
+                      colors.brand,
+                  },
+                ]}
               >
                 {item.bestAccuracy ??
                   0}
@@ -1247,11 +1877,15 @@ function PracticeTestCard({
             </View>
           )}
 
+
           {inProgress && (
             <View
               style={[
                 styles.badge,
-                styles.resumeBadge,
+                {
+                  backgroundColor:
+                    colors.warnLight,
+                },
               ]}
             >
               <Ionicons
@@ -1263,24 +1897,35 @@ function PracticeTestCard({
               />
 
               <Text
-                style={
-                  styles.resumeText
-                }
+                style={[
+                  styles.resumeText,
+                  {
+                    color:
+                      colors.warn,
+                  },
+                ]}
               >
                 Continue
               </Text>
             </View>
           )}
+
         </View>
 
+
         <Text
-          style={
-            styles.testTitle
-          }
+          style={[
+            styles.testTitle,
+            {
+              color:
+                colors.ink,
+            },
+          ]}
           numberOfLines={1}
         >
           {item.title}
         </Text>
+
 
         <View
           style={
@@ -1296,22 +1941,31 @@ function PracticeTestCard({
           />
 
           <Text
-            style={
-              styles.metaText
-            }
+            style={[
+              styles.metaText,
+              {
+                color:
+                  colors.slateSoft,
+              },
+            ]}
           >
             {item.durationMinutes ||
               0}{" "}
             min
           </Text>
 
+
           {item.questions?.length >
             0 && (
             <>
               <View
-                style={
-                  styles.metaDot
-                }
+                style={[
+                  styles.metaDot,
+                  {
+                    backgroundColor:
+                      colors.border,
+                  },
+                ]}
               />
 
               <Ionicons
@@ -1323,9 +1977,13 @@ function PracticeTestCard({
               />
 
               <Text
-                style={
-                  styles.metaText
-                }
+                style={[
+                  styles.metaText,
+                  {
+                    color:
+                      colors.slateSoft,
+                  },
+                ]}
               >
                 {
                   item.questions
@@ -1335,8 +1993,13 @@ function PracticeTestCard({
               </Text>
             </>
           )}
+
         </View>
+
       </View>
+
+
+      {/* ACTION */}
 
       {isStarting ? (
         <View
@@ -1346,17 +2009,23 @@ function PracticeTestCard({
         >
           <ActivityIndicator
             size="small"
-            color={colors.brand}
+            color={
+              colors.brand
+            }
           />
         </View>
       ) : (
         <View
           style={[
             styles.cardAction,
-            premiumLocked &&
-              styles.cardActionPremium,
-            activeLocked &&
-              styles.cardActionLocked,
+            {
+              backgroundColor:
+                activeLocked
+                  ? colors.slateLight
+                  : premiumLocked
+                  ? colors.warnLight
+                  : colors.brandTint,
+            },
           ]}
         >
           <Ionicons
@@ -1381,9 +2050,11 @@ function PracticeTestCard({
           />
         </View>
       )}
+
     </TouchableOpacity>
   );
 }
+
 
 /* =========================================================
    EMPTY
@@ -1392,17 +2063,27 @@ function PracticeTestCard({
 function EmptyState({
   level,
   locked,
+  colors,
 }) {
-  if (locked) return null;
+  if (locked) {
+    return null;
+  }
 
   return (
     <View
-      style={styles.empty}
+      style={
+        styles.empty
+      }
     >
+
       <View
-        style={
-          styles.emptyIcon
-        }
+        style={[
+          styles.emptyIcon,
+          {
+            backgroundColor:
+              colors.slateLight,
+          },
+        ]}
       >
         <Ionicons
           name="document-text-outline"
@@ -1413,695 +2094,1048 @@ function EmptyState({
         />
       </View>
 
+
       <Text
-        style={
-          styles.emptyTitle
-        }
+        style={[
+          styles.emptyTitle,
+          {
+            color:
+              colors.ink,
+          },
+        ]}
       >
         No {level} tests yet
       </Text>
 
+
       <Text
-        style={
-          styles.emptyText
-        }
+        style={[
+          styles.emptyText,
+          {
+            color:
+              colors.slate,
+          },
+        ]}
       >
         Practice tests for this
         level will appear here
         when added.
       </Text>
+
     </View>
   );
 }
+
 
 /* =========================================================
    STYLES
 ========================================================= */
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-
-  loadingScreen: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.bg,
-  },
-
-  loadingText: {
-    ...type.small,
-    color: colors.slate,
-    marginTop: 9,
-    fontSize: 13,
-  },
-
-  /* =======================================================
-     HEADER
-  ======================================================= */
-
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-
-  backButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  headerText: {
-    flex: 1,
-  },
-
-  headerTitle: {
-    ...type.h3,
-    color: colors.ink,
-    fontSize: 20,
-  },
-
-  headerSubtitle: {
-    ...type.small,
-    color: colors.slateSoft,
-    marginTop: 1,
-    fontSize: 12,
-  },
-
-  /* =======================================================
-     HERO
-  ======================================================= */
-
-  hero: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-    padding: 15,
-    borderRadius: radius.xl,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadow.brand,
-  },
-
-  heroTop: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  heroCopy: {
-    flex: 1,
-    paddingRight: 12,
-  },
-
-  heroEyebrow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    marginBottom: 5,
-  },
-
-  heroEyebrowDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: colors.brand,
-  },
-
-  heroEyebrowText: {
-    fontSize: 9.5,
-    fontWeight: "800",
-    color: colors.brand,
-    letterSpacing: 0.45,
-  },
-
-  heroTitle: {
-    ...type.h1,
-    color: colors.ink,
-    fontSize: 22,
-    lineHeight: 27,
-  },
-
-  heroSubtitle: {
-    ...type.small,
-    color: colors.slate,
-    marginTop: 3,
-    fontSize: 12,
-  },
-
-  heroProgress: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: colors.brandTint,
-    borderWidth: 4,
-    borderColor: colors.brandLight,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  heroProgressValue: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: colors.brand,
-  },
-
-  heroProgressLabel: {
-    fontSize: 9,
-    fontWeight: "600",
-    color: colors.slate,
-    marginTop: 0,
-  },
-
-  /* =======================================================
-     HERO STATS
-  ======================================================= */
-
-  heroStats: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-    paddingVertical: 9,
-    paddingHorizontal: 3,
-    backgroundColor: colors.bg,
-    borderRadius: radius.md,
-  },
-
-  heroStat: {
-    flex: 1,
-    alignItems: "center",
-  },
-
-  heroStatValue: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: colors.ink,
-  },
-
-  heroStatLabel: {
-    fontSize: 9.5,
-    color: colors.slateSoft,
-    fontWeight: "600",
-    marginTop: 2,
-  },
-
-  heroDivider: {
-    width: 1,
-    height: 25,
-    backgroundColor: colors.border,
-  },
-
-  heroProgressTrack: {
-    height: 5,
-    backgroundColor: colors.slateLight,
-    borderRadius: 3,
-    overflow: "hidden",
-    marginTop: 10,
-  },
-
-  heroProgressFill: {
-    height: 5,
-    backgroundColor: colors.brand,
-    borderRadius: 3,
-  },
-
-  /* =======================================================
-     FEATURED
-  ======================================================= */
-
-  featuredBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 11,
-    padding: 9,
-    borderRadius: radius.md,
-    backgroundColor: colors.brandTint,
-    borderWidth: 1,
-    borderColor: colors.brandLight,
-  },
-
-  featuredIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 8,
-  },
-
-  featuredCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  featuredLabel: {
-    fontSize: 8.5,
-    fontWeight: "800",
-    color: colors.brand,
-    letterSpacing: 0.3,
-  },
-
-  featuredTitle: {
-    fontSize: 12.5,
-    fontWeight: "800",
-    color: colors.ink,
-    marginTop: 1,
-  },
-
-  featuredMeta: {
-    fontSize: 9.5,
-    fontWeight: "600",
-    color: colors.slateSoft,
-    marginTop: 1,
-  },
-
-  featuredAction: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: colors.brand,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 7,
-  },
-
-  heroLocked: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    marginTop: 10,
-    paddingVertical: 8,
-    borderRadius: radius.md,
-    backgroundColor: colors.slateLight,
-  },
-
-  heroLockedText: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: colors.slate,
-  },
-
-  /* =======================================================
-     SECTION
-  ======================================================= */
-
-  sectionHeader: {
-    paddingHorizontal: spacing.lg,
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-
-  sectionTitle: {
-    ...type.h3,
-    color: colors.ink,
-    fontSize: 18,
-  },
-
-  sectionSubtitle: {
-    ...type.small,
-    color: colors.slateSoft,
-    marginTop: 2,
-    fontSize: 11.5,
-  },
-
-  levelProgress: {
-    minWidth: 40,
-    height: 27,
-    paddingHorizontal: 9,
-    borderRadius: radius.full,
-    backgroundColor: colors.brandLight,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  levelProgressText: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: colors.brand,
-  },
-
-  /* =======================================================
-     LEVELS
-  ======================================================= */
-
-  levelRow: {
-    paddingHorizontal: spacing.lg,
-    flexDirection: "row",
-    gap: 7,
-    marginBottom: spacing.md,
-  },
-
-  levelItem: {
-    flex: 1,
-    minHeight: 70,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 8,
-  },
-
-  levelItemActive: {
-    backgroundColor: colors.brand,
-    borderColor: colors.brand,
-    ...shadow.brand,
-  },
-
-  levelItemLocked: {
-    backgroundColor: colors.slateLight,
-    opacity: 0.72,
-  },
-
-  levelDot: {
-    width: 29,
-    height: 29,
-    borderRadius: 10,
-    backgroundColor: colors.brandTint,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 5,
-  },
-
-  levelDotActive: {
-    backgroundColor:
-      "rgba(255,255,255,0.20)",
-  },
-
-  levelName: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "800",
-    color: colors.ink,
-  },
-
-  levelNameActive: {
-    color: "#fff",
-  },
-
-  levelNameLocked: {
-    color: colors.slateSoft,
-  },
-
-  levelCount: {
-    fontSize: 10,
-    lineHeight: 14,
-    fontWeight: "600",
-    color: colors.slateSoft,
-    marginTop: 1,
-  },
-
-  levelCountActive: {
-    color: "rgba(255,255,255,0.78)",
-  },
-
-  /* =======================================================
-     LOCKED
-  ======================================================= */
-
-  lockedNotice: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    padding: 10,
-    borderRadius: radius.md,
-    backgroundColor: colors.slateLight,
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  lockedIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  lockedTitle: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: colors.ink,
-  },
-
-  lockedText: {
-    fontSize: 10.5,
-    color: colors.slate,
-    marginTop: 3,
-    lineHeight: 15,
-  },
-
-  /* =======================================================
-     TEST HEADER
-  ======================================================= */
-
-  testsHeader: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: 10,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  testsTitle: {
-    ...type.h3,
-    color: colors.ink,
-    fontSize: 18,
-  },
-
-  testsSubtitle: {
-    ...type.small,
-    color: colors.slateSoft,
-    marginTop: 2,
-    fontSize: 11.5,
-  },
-
-  readyBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-    borderRadius: radius.full,
-    backgroundColor: colors.successLight,
-  },
-
-  readyDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: colors.success,
-  },
-
-  readyText: {
-    fontSize: 9,
-    fontWeight: "800",
-    color: colors.success,
-    letterSpacing: 0.3,
-  },
-
-  /* =======================================================
-     TEST CARD
-  ======================================================= */
-
-  testCard: {
-    ...card,
-    minHeight: 82,
-    marginHorizontal: spacing.lg,
-    marginBottom: 9,
-    padding: 11,
-    flexDirection: "row",
-    alignItems: "center",
-    overflow: "hidden",
-  },
-
-  testCardLocked: {
-    opacity: 0.65,
-  },
-
-  testAccent: {
-    position: "absolute",
-    left: 0,
-    top: 12,
-    bottom: 12,
-    width: 3,
-    borderTopRightRadius: 3,
-    borderBottomRightRadius: 3,
-  },
-
-  testNumber: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.brandTint,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 3,
-    marginRight: 10,
-  },
-
-  testNumberText: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: colors.brand,
-  },
-
-  testContent: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  testBadgeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    marginBottom: 5,
-    flexWrap: "wrap",
-  },
-
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    paddingHorizontal: 7,
-    paddingVertical: 3.5,
-    borderRadius: radius.full,
-  },
-
-  freeBadge: {
-    backgroundColor: colors.successLight,
-  },
-
-  premiumBadge: {
-    backgroundColor: colors.warnLight,
-  },
-
-  scoreBadge: {
-    backgroundColor: colors.brandLight,
-  },
-
-  resumeBadge: {
-    backgroundColor: colors.warnLight,
-  },
-
-  badgeText: {
-    fontSize: 9.5,
-    fontWeight: "800",
-  },
-
-  scoreText: {
-    fontSize: 9.5,
-    fontWeight: "800",
-    color: colors.brand,
-  },
-
-  resumeText: {
-    fontSize: 9.5,
-    fontWeight: "800",
-    color: colors.warn,
-  },
-
-  testTitle: {
-    ...type.bodyStrong,
-    color: colors.ink,
-    fontSize: 14,
-    lineHeight: 19,
-  },
-
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 5,
-  },
-
-  metaText: {
-    fontSize: 10.5,
-    color: colors.slateSoft,
-    fontWeight: "600",
-  },
-
-  metaDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    marginHorizontal: 2,
-  },
-
-  cardAction: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: colors.brandLight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 8,
-  },
-
-  cardActionPremium: {
-    backgroundColor: colors.warnLight,
-  },
-
-  cardActionLocked: {
-    backgroundColor: colors.slateLight,
-  },
-
-  cardLoader: {
-    width: 34,
-    height: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 8,
-  },
-
-  /* =======================================================
-     EMPTY
-  ======================================================= */
-
-  empty: {
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: 48,
-  },
-
-  emptyIcon: {
-    width: 58,
-    height: 58,
-    borderRadius: 18,
-    backgroundColor: colors.slateLight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 11,
-  },
-
-  emptyTitle: {
-    ...type.h3,
-    color: colors.ink,
-    fontSize: 17,
-  },
-
-  emptyText: {
-    ...type.small,
-    color: colors.slate,
-    textAlign: "center",
-    fontSize: 13,
-    lineHeight: 20,
-    marginTop: 4,
-  },
-});
+const styles =
+  StyleSheet.create({
+
+    /* =====================================================
+       GENERAL
+    ===================================================== */
+
+    container: {
+      flex: 1,
+    },
+
+    loadingScreen: {
+      flex: 1,
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+    },
+
+    loadingIcon: {
+      width: 58,
+      height: 58,
+      borderRadius: 18,
+      borderWidth: 1,
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+      marginBottom: 15,
+    },
+
+    loadingText: {
+      ...type.small,
+      marginTop: 9,
+      fontSize: 12.5,
+    },
+
+
+    /* =====================================================
+       HEADER
+    ===================================================== */
+
+    header: {
+      paddingHorizontal:
+        spacing.lg,
+
+      paddingBottom:
+        spacing.md,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 10,
+    },
+
+    backButton: {
+      width: 40,
+      height: 40,
+
+      borderRadius: 14,
+
+      borderWidth: 1,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      ...shadow.soft,
+    },
+
+    headerText: {
+      flex: 1,
+      minWidth: 0,
+    },
+
+    headerTitle: {
+      ...type.h3,
+
+      fontSize: 20,
+
+      lineHeight: 24,
+    },
+
+    headerSubtitle: {
+      ...type.small,
+
+      fontSize: 11.5,
+
+      lineHeight: 16,
+
+      marginTop: 1,
+    },
+
+    headerBadge: {
+      minWidth: 52,
+
+      height: 40,
+
+      borderRadius: 13,
+
+      borderWidth: 1,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    headerBadgeNumber: {
+      fontSize: 13,
+
+      lineHeight: 15,
+
+      fontWeight:
+        "800",
+    },
+
+    headerBadgeLabel: {
+      fontSize: 6.5,
+
+      lineHeight: 9,
+
+      fontWeight:
+        "800",
+
+      letterSpacing:
+        0.25,
+
+      marginTop: 1,
+    },
+
+
+    /* =====================================================
+       HERO
+    ===================================================== */
+
+    hero: {
+      marginHorizontal:
+        spacing.lg,
+
+      marginBottom:
+        spacing.lg,
+
+      padding: 15,
+
+      borderRadius:
+        radius.xl,
+
+      borderWidth: 1,
+
+      ...shadow.brand,
+    },
+
+    heroTop: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+    },
+
+    heroCopy: {
+      flex: 1,
+
+      minWidth: 0,
+
+      paddingRight: 12,
+    },
+
+    heroEyebrow: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 5,
+
+      marginBottom: 5,
+    },
+
+    heroEyebrowDot: {
+      width: 7,
+
+      height: 7,
+
+      borderRadius: 4,
+    },
+
+    heroEyebrowText: {
+      fontSize: 9,
+
+      lineHeight: 12,
+
+      fontWeight:
+        "800",
+
+      letterSpacing:
+        0.45,
+    },
+
+    heroTitle: {
+      ...type.h1,
+
+      fontSize: 22,
+
+      lineHeight: 27,
+
+      letterSpacing:
+        -0.45,
+    },
+
+    heroSubtitle: {
+      ...type.small,
+
+      fontSize: 12,
+
+      lineHeight: 17,
+
+      marginTop: 3,
+    },
+
+    heroProgress: {
+      width: 68,
+
+      height: 68,
+
+      borderRadius: 34,
+
+      borderWidth: 4,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    heroProgressValue: {
+      fontSize: 16,
+
+      lineHeight: 19,
+
+      fontWeight:
+        "900",
+    },
+
+    heroProgressLabel: {
+      fontSize: 9,
+
+      lineHeight: 12,
+
+      fontWeight:
+        "600",
+
+      marginTop: 0,
+    },
+
+
+    /* =====================================================
+       HERO STATS
+    ===================================================== */
+
+    heroStats: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      marginTop: 12,
+
+      paddingVertical: 9,
+
+      paddingHorizontal: 3,
+
+      borderRadius:
+        radius.md,
+    },
+
+    heroStat: {
+      flex: 1,
+
+      alignItems:
+        "center",
+    },
+
+    heroStatValue: {
+      fontSize: 16,
+
+      lineHeight: 19,
+
+      fontWeight:
+        "800",
+    },
+
+    heroStatLabel: {
+      fontSize: 9.5,
+
+      lineHeight: 13,
+
+      fontWeight:
+        "600",
+
+      marginTop: 2,
+    },
+
+    heroDivider: {
+      width: 1,
+
+      height: 25,
+    },
+
+    heroProgressTrack: {
+      height: 5,
+
+      borderRadius: 3,
+
+      overflow:
+        "hidden",
+
+      marginTop: 10,
+    },
+
+    heroProgressFill: {
+      height: 5,
+
+      borderRadius: 3,
+    },
+
+
+    /* =====================================================
+       FEATURED
+    ===================================================== */
+
+    featuredBox: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      marginTop: 11,
+
+      padding: 9,
+
+      borderRadius:
+        radius.md,
+
+      borderWidth: 1,
+    },
+
+    featuredIcon: {
+      width: 34,
+
+      height: 34,
+
+      borderRadius: 10,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginRight: 8,
+    },
+
+    featuredCopy: {
+      flex: 1,
+
+      minWidth: 0,
+    },
+
+    featuredLabel: {
+      fontSize: 8.5,
+
+      lineHeight: 11,
+
+      fontWeight:
+        "800",
+
+      letterSpacing:
+        0.3,
+    },
+
+    featuredTitle: {
+      fontSize: 12.5,
+
+      lineHeight: 17,
+
+      fontWeight:
+        "800",
+
+      marginTop: 1,
+    },
+
+    featuredMeta: {
+      fontSize: 9.5,
+
+      lineHeight: 13,
+
+      fontWeight:
+        "600",
+
+      marginTop: 1,
+    },
+
+    featuredAction: {
+      width: 34,
+
+      height: 34,
+
+      borderRadius: 17,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginLeft: 7,
+    },
+
+    heroLocked: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      gap: 6,
+
+      marginTop: 10,
+
+      paddingVertical: 8,
+
+      borderRadius:
+        radius.md,
+    },
+
+    heroLockedText: {
+      fontSize: 10,
+
+      lineHeight: 14,
+
+      fontWeight:
+        "700",
+    },
+
+
+    /* =====================================================
+       SECTION
+    ===================================================== */
+
+    sectionHeader: {
+      paddingHorizontal:
+        spacing.lg,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      marginBottom: 10,
+    },
+
+    sectionCopy: {
+      flex: 1,
+
+      minWidth: 0,
+
+      paddingRight: 10,
+    },
+
+    sectionTitle: {
+      ...type.h3,
+
+      fontSize: 18,
+
+      lineHeight: 22,
+    },
+
+    sectionSubtitle: {
+      ...type.small,
+
+      fontSize: 11.5,
+
+      lineHeight: 16,
+
+      marginTop: 2,
+    },
+
+    levelProgress: {
+      minWidth: 42,
+
+      height: 29,
+
+      paddingHorizontal: 9,
+
+      borderRadius:
+        radius.full,
+
+      borderWidth: 1,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    levelProgressText: {
+      fontSize: 11,
+
+      lineHeight: 14,
+
+      fontWeight:
+        "800",
+    },
+
+
+    /* =====================================================
+       LEVEL SELECTOR
+    ===================================================== */
+
+    levelRow: {
+      paddingHorizontal:
+        spacing.lg,
+
+      flexDirection:
+        "row",
+
+      gap: 7,
+
+      marginBottom:
+        spacing.md,
+    },
+
+    levelItem: {
+      flex: 1,
+
+      minHeight: 72,
+
+      borderRadius:
+        radius.lg,
+
+      borderWidth: 1,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      paddingVertical: 8,
+    },
+
+    levelDot: {
+      width: 29,
+
+      height: 29,
+
+      borderRadius: 10,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginBottom: 5,
+    },
+
+    levelName: {
+      fontSize: 12.5,
+
+      lineHeight: 17,
+
+      fontWeight:
+        "800",
+    },
+
+    levelCount: {
+      fontSize: 9.5,
+
+      lineHeight: 13,
+
+      fontWeight:
+        "600",
+
+      marginTop: 1,
+    },
+
+
+    /* =====================================================
+       LOCK NOTICE
+    ===================================================== */
+
+    lockedNotice: {
+      marginHorizontal:
+        spacing.lg,
+
+      marginBottom:
+        spacing.md,
+
+      padding: 10,
+
+      borderRadius:
+        radius.md,
+
+      borderWidth: 1,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 8,
+    },
+
+    lockedIcon: {
+      width: 32,
+
+      height: 32,
+
+      borderRadius: 10,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    lockedCopy: {
+      flex: 1,
+
+      minWidth: 0,
+    },
+
+    lockedTitle: {
+      fontSize: 12,
+
+      lineHeight: 16,
+
+      fontWeight:
+        "800",
+    },
+
+    lockedText: {
+      fontSize: 10.5,
+
+      lineHeight: 15,
+
+      marginTop: 3,
+    },
+
+
+    /* =====================================================
+       TEST HEADER
+    ===================================================== */
+
+    testsHeader: {
+      paddingHorizontal:
+        spacing.lg,
+
+      marginBottom: 10,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+    },
+
+    testsCopy: {
+      flex: 1,
+
+      minWidth: 0,
+
+      paddingRight: 8,
+    },
+
+    testsTitle: {
+      ...type.h3,
+
+      fontSize: 18,
+
+      lineHeight: 22,
+    },
+
+    testsSubtitle: {
+      ...type.small,
+
+      fontSize: 11,
+
+      lineHeight: 15,
+
+      marginTop: 2,
+    },
+
+    readyBadge: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 4,
+
+      paddingHorizontal: 9,
+
+      paddingVertical: 6,
+
+      borderRadius:
+        radius.full,
+    },
+
+    readyDot: {
+      width: 5,
+
+      height: 5,
+
+      borderRadius: 3,
+    },
+
+    readyText: {
+      fontSize: 9,
+
+      lineHeight: 12,
+
+      fontWeight:
+        "800",
+
+      letterSpacing:
+        0.3,
+    },
+
+
+    /* =====================================================
+       TEST CARD
+    ===================================================== */
+
+    testCard: {
+      minHeight: 82,
+
+      marginHorizontal:
+        spacing.lg,
+
+      marginBottom: 9,
+
+      padding: 11,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      overflow:
+        "hidden",
+    },
+
+    testAccent: {
+      position:
+        "absolute",
+
+      left: 0,
+
+      top: 12,
+
+      bottom: 12,
+
+      width: 3,
+
+      borderTopRightRadius: 3,
+
+      borderBottomRightRadius: 3,
+    },
+
+    testNumber: {
+      width: 40,
+
+      height: 40,
+
+      borderRadius: 12,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginLeft: 3,
+
+      marginRight: 10,
+    },
+
+    testNumberText: {
+      fontSize: 12,
+
+      lineHeight: 15,
+
+      fontWeight:
+        "800",
+    },
+
+    testContent: {
+      flex: 1,
+
+      minWidth: 0,
+    },
+
+    testBadgeRow: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 5,
+
+      marginBottom: 5,
+
+      flexWrap:
+        "wrap",
+    },
+
+    badge: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 3,
+
+      paddingHorizontal: 7,
+
+      paddingVertical: 3.5,
+
+      borderRadius:
+        radius.full,
+    },
+
+    badgeText: {
+      fontSize: 9.5,
+
+      lineHeight: 12,
+
+      fontWeight:
+        "800",
+    },
+
+    scoreText: {
+      fontSize: 9.5,
+
+      lineHeight: 12,
+
+      fontWeight:
+        "800",
+    },
+
+    resumeText: {
+      fontSize: 9.5,
+
+      lineHeight: 12,
+
+      fontWeight:
+        "800",
+    },
+
+    testTitle: {
+      ...type.bodyStrong,
+
+      fontSize: 14,
+
+      lineHeight: 19,
+    },
+
+    metaRow: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 4,
+
+      marginTop: 5,
+    },
+
+    metaText: {
+      fontSize: 10.5,
+
+      lineHeight: 14,
+
+      fontWeight:
+        "600",
+    },
+
+    metaDot: {
+      width: 3,
+
+      height: 3,
+
+      borderRadius: 2,
+
+      marginHorizontal: 2,
+    },
+
+    cardAction: {
+      width: 34,
+
+      height: 34,
+
+      borderRadius: 17,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginLeft: 8,
+    },
+
+    cardLoader: {
+      width: 34,
+
+      height: 34,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginLeft: 8,
+    },
+
+
+    /* =====================================================
+       EMPTY
+    ===================================================== */
+
+    empty: {
+      alignItems:
+        "center",
+
+      paddingHorizontal:
+        spacing.xl,
+
+      paddingVertical: 48,
+    },
+
+    emptyIcon: {
+      width: 60,
+
+      height: 60,
+
+      borderRadius: 19,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginBottom: 12,
+    },
+
+    emptyTitle: {
+      ...type.h3,
+
+      fontSize: 17,
+
+      lineHeight: 22,
+    },
+
+    emptyText: {
+      ...type.small,
+
+      fontSize: 12,
+
+      lineHeight: 18,
+
+      textAlign:
+        "center",
+
+      marginTop: 5,
+
+      maxWidth: 285,
+    },
+
+  });

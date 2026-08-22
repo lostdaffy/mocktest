@@ -68,10 +68,6 @@ function MainTabs() {
         tabBarActiveTintColor: colors.brand,
         tabBarInactiveTintColor: colors.slate,
         tabBarStyle: {
-          // Real device safe-area bottom inset (0 on old/notch-free phones,
-          // ~20-34 on gesture-nav phones) instead of a fixed guess - the
-          // bar always sits above the home indicator, never under it or
-          // floating with a big dead gap on devices that don't need one.
           height: TAB_BAR_HEIGHT + insets.bottom,
           paddingBottom: insets.bottom + 8,
           paddingTop: 8,
@@ -133,7 +129,7 @@ function MainTabs() {
 
 function AppStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: colors.brand }, headerTintColor: "#fff" }}>
+    <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: colors.brand }, headerTintColor: "#fff", headerShown: false, }}>
       <Stack.Screen name="Home" component={MainTabs} options={{ headerShown: false }} />
       <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: "Profile" }} />
       <Stack.Screen name="HistoryTab" component={HistoryScreen} options={{ title: "Test History" }} />

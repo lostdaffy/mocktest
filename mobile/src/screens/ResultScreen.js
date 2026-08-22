@@ -14,12 +14,14 @@ import {
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import api from "../api/client";
 
 import {
   colors,
+  gradients,
   spacing,
   radius,
   shadow,
@@ -56,21 +58,7 @@ function normalizeLanguage(language) {
   return value;
 }
 
-/**
- * Detect language used for the test.
- *
- * Supported:
- * attempt.language
- * attempt.testLanguage
- * attempt.languageCode
- * attempt.test.language
- * attempt.test.languageCode
- * question.language
- */
-function getTestLanguage(
-  attempt,
-  question
-) {
+function getTestLanguage(attempt, question) {
   return normalizeLanguage(
     attempt?.language ||
       attempt?.testLanguage ||
@@ -83,42 +71,6 @@ function getTestLanguage(
   );
 }
 
-/**
- * Get solution in the language
- * used by the test.
- *
- * Supported API formats:
- *
- * question.solution
- * question.solutionText
- *
- * question.solutionTranslations
- * {
- *   en: "...",
- *   hi: "..."
- * }
- *
- * question.solutions
- * {
- *   en: "...",
- *   hi: "..."
- * }
- *
- * question.solutionHi
- * question.solutionEn
- *
- * question.hindiSolution
- * question.englishSolution
- *
- * NOTE: none of these translation-object formats are actually populated
- * by the backend today (Question documents only ever store a single
- * `solution` field, in whatever language the source paper/generation used
- * - there's no per-language solution storage yet). This function is
- * future-proofed for if/when that's added, but right now every path here
- * falls through to the plain `question.solution` fallback at the bottom -
- * which is why the "language" badge next to a solution should be read as
- * "the test's language", not "this solution was translated for you".
- */
 function getLocalizedSolution(
   question,
   language
@@ -134,9 +86,7 @@ function getLocalizedSolution(
     question.translation?.solution ||
     question.translations?.solution;
 
-  /* -------------------------------------------------------
-     OBJECT TRANSLATIONS
-  ------------------------------------------------------- */
+  /* OBJECT */
 
   if (
     translations &&
@@ -165,9 +115,7 @@ function getLocalizedSolution(
     }
   }
 
-  /* -------------------------------------------------------
-     ARRAY TRANSLATIONS
-  ------------------------------------------------------- */
+  /* ARRAY */
 
   if (Array.isArray(translations)) {
     const match =
@@ -191,9 +139,7 @@ function getLocalizedSolution(
     }
   }
 
-  /* -------------------------------------------------------
-     EXPLICIT LANGUAGE FIELDS
-  ------------------------------------------------------- */
+  /* EXPLICIT LANGUAGE FIELDS */
 
   if (lang === "hi") {
     if (
@@ -230,10 +176,6 @@ function getLocalizedSolution(
       return question.englishSolution;
     }
   }
-
-  /* -------------------------------------------------------
-     FALLBACK
-  ------------------------------------------------------- */
 
   return (
     question.solution ||
@@ -295,18 +237,26 @@ export default function ResultScreen({
 
   if (loading || !data) {
     return (
-      <View
-        style={styles.centered}
-      >
-        <ActivityIndicator
-          size="large"
-          color={colors.brand}
-        />
+      <View style={styles.centered}>
+        <View
+          style={styles.loaderCircle}
+        >
+          <ActivityIndicator
+            size="small"
+            color={colors.brand}
+          />
+        </View>
+
+        <Text
+          style={styles.loadingTitle}
+        >
+          Preparing your result
+        </Text>
 
         <Text
           style={styles.loadingText}
         >
-          Preparing your result...
+          Please wait a moment...
         </Text>
       </View>
     );
@@ -369,6 +319,24 @@ export default function ResultScreen({
       ? "Keep improving"
       : "More practice needed";
 
+  const performanceSub =
+    pct >= 80
+      ? "You're showing strong command of the test."
+      : pct >= 60
+      ? "You're on the right track. Keep practicing."
+      : pct >= 40
+      ? "A little more focused practice can lift your score."
+      : "Review your mistakes and practice consistently.";
+
+  const performanceIcon =
+    pct >= 80
+      ? "trophy"
+      : pct >= 60
+      ? "trending-up"
+      : pct >= 40
+      ? "fitness"
+      : "refresh";
+
   const correctCount =
     attempt.correctCount || 0;
 
@@ -378,12 +346,12 @@ export default function ResultScreen({
   const skippedCount =
     attempt.skippedCount || 0;
 
-  // "View Solutions" scrolls down to the mistakes review below instead of
-  // doing nothing - that section already IS the solutions review, no
-  // separate screen needed for it.
   function scrollToMistakes() {
     scrollRef.current?.scrollTo({
-      y: Math.max(mistakesY.current - 12, 0),
+      y: Math.max(
+        mistakesY.current - 14,
+        0
+      ),
       animated: true,
     });
   }
@@ -396,8 +364,8 @@ export default function ResultScreen({
         styles.contentContainer,
         {
           paddingTop: Math.max(
-            insets.top + 12,
-            spacing.lg
+            insets.top + 10,
+            18
           ),
           paddingBottom:
             spacing.xxl +
@@ -409,15 +377,59 @@ export default function ResultScreen({
       }
     >
       {/* =================================================
+          TOP BAR
+      ================================================= */}
+
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          style={styles.topButton}
+          activeOpacity={0.75}
+          onPress={() =>
+            navigation.goBack()
+          }
+        >
+          <Ionicons
+            name="arrow-back"
+            size={19}
+            color={colors.ink}
+          />
+        </TouchableOpacity>
+
+        <View
+          style={styles.topTitleWrap}
+        >
+          <Text
+            style={styles.topTitle}
+          >
+            Test Result
+          </Text>
+
+          <Text
+            style={styles.topSubtitle}
+          >
+            Performance summary
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.topButton}
+          activeOpacity={0.75}
+          onPress={load}
+        >
+          <Ionicons
+            name="refresh-outline"
+            size={18}
+            color={colors.slate}
+          />
+        </TouchableOpacity>
+      </View>
+
+      {/* =================================================
           TEST IDENTITY
       ================================================= */}
 
-      <View
-        style={styles.testCard}
-      >
-        <View
-          style={styles.testIcon}
-        >
+      <View style={styles.testCard}>
+        <View style={styles.testIcon}>
           <Ionicons
             name="document-text"
             size={19}
@@ -425,9 +437,7 @@ export default function ResultScreen({
           />
         </View>
 
-        <View
-          style={styles.testInfo}
-        >
+        <View style={styles.testInfo}>
           <Text
             style={styles.testTitle}
             numberOfLines={2}
@@ -439,10 +449,15 @@ export default function ResultScreen({
           <View
             style={styles.testMetaRow}
           >
+            <Ionicons
+              name="calendar-outline"
+              size={11}
+              color={colors.slateSoft}
+            />
+
             <Text
               style={styles.testDate}
             >
-              Completed on{" "}
               {completedDate
                 ? new Date(
                     completedDate
@@ -459,9 +474,21 @@ export default function ResultScreen({
 
             <View
               style={
+                styles.metaDot
+              }
+            />
+
+            <View
+              style={
                 styles.languageBadge
               }
             >
+              <Ionicons
+                name="language-outline"
+                size={10}
+                color={colors.brand}
+              />
+
               <Text
                 style={
                   styles.languageBadgeText
@@ -481,13 +508,44 @@ export default function ResultScreen({
       ================================================= */}
 
       <View
-        style={styles.scoreSection}
+        style={[
+          styles.scoreHero,
+          {
+            borderColor:
+              scoreColor + "22",
+          },
+        ]}
       >
-        <Text
-          style={styles.scoreEyebrow}
+        <View
+          style={[
+            styles.scoreGlow,
+            {
+              backgroundColor:
+                scoreColor + "0D",
+            },
+          ]}
+        />
+
+        <View
+          style={styles.resultBadge}
         >
-          TEST RESULT
-        </Text>
+          <Ionicons
+            name={performanceIcon}
+            size={12}
+            color={scoreColor}
+          />
+
+          <Text
+            style={[
+              styles.resultBadgeText,
+              {
+                color: scoreColor,
+              },
+            ]}
+          >
+            TEST RESULT
+          </Text>
+        </View>
 
         <Text
           style={styles.performanceText}
@@ -496,7 +554,14 @@ export default function ResultScreen({
           {performanceText}
         </Text>
 
-        {/* MAIN SCORE */}
+        <Text
+          style={styles.performanceSub}
+          numberOfLines={2}
+        >
+          {performanceSub}
+        </Text>
+
+        {/* SCORE */}
 
         <View
           style={styles.scoreBlock}
@@ -535,15 +600,33 @@ export default function ResultScreen({
           </Text>
         </View>
 
-    
-        {/* SCORE META */}
+        {/* PROGRESS */}
+
+        <View
+          style={styles.progressTrack}
+        >
+          <View
+            style={[
+              styles.progressFill,
+              {
+                width: `${safePct}%`,
+                backgroundColor:
+                  scoreColor,
+              },
+            ]}
+          />
+        </View>
+
+        {/* META */}
 
         <View
           style={styles.metaRow}
         >
           <ScoreMeta
+            icon="checkmark-circle"
             value={correctCount}
             label="Correct"
+            color={colors.success}
           />
 
           <View
@@ -551,8 +634,10 @@ export default function ResultScreen({
           />
 
           <ScoreMeta
+            icon="close-circle"
             value={wrongCount}
             label="Incorrect"
+            color={colors.danger}
           />
 
           <View
@@ -560,15 +645,74 @@ export default function ResultScreen({
           />
 
           <ScoreMeta
-            value={
-              attempt.rank ||
-              "—"
-            }
-            label={
-              attempt.totalParticipants
-                ? `Rank / ${attempt.totalParticipants}`
-                : "Rank"
-            }
+            icon="remove-circle"
+            value={skippedCount}
+            label="Skipped"
+            color={colors.slate}
+          />
+        </View>
+      </View>
+
+      {/* =================================================
+          RANK CARD
+      ================================================= */}
+
+      <View
+        style={styles.rankCard}
+      >
+        <View
+          style={styles.rankIcon}
+        >
+          <Ionicons
+            name="podium-outline"
+            size={18}
+            color={colors.brand}
+          />
+        </View>
+
+        <View
+          style={styles.rankContent}
+        >
+          <Text
+            style={styles.rankLabel}
+          >
+            YOUR RANK
+          </Text>
+
+          <Text
+            style={styles.rankValue}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+          >
+            {attempt.rank ||
+              "—"}
+          </Text>
+
+          {attempt.totalParticipants ? (
+            <Text
+              style={styles.rankSub}
+            >
+              Out of{" "}
+              {attempt.totalParticipants}{" "}
+              participants
+            </Text>
+          ) : (
+            <Text
+              style={styles.rankSub}
+            >
+              Rank will appear here
+            </Text>
+          )}
+        </View>
+
+        <View
+          style={styles.rankArrow}
+        >
+          <Ionicons
+            name="trending-up"
+            size={16}
+            color={colors.brand}
           />
         </View>
       </View>
@@ -581,34 +725,26 @@ export default function ResultScreen({
         style={styles.analysisCard}
       >
         <View
-          style={
-            styles.cardHeadingRow
-          }
+          style={styles.cardHeadingRow}
         >
           <View
             style={styles.headingContent}
           >
             <Text
-              style={
-                styles.analysisTitle
-              }
+              style={styles.analysisTitle}
             >
               Performance Analysis
             </Text>
 
             <Text
-              style={
-                styles.cardSubtitle
-              }
+              style={styles.cardSubtitle}
             >
               Your question-wise performance
             </Text>
           </View>
 
           <View
-            style={
-              styles.analysisIcon
-            }
+            style={styles.analysisIcon}
           >
             <Ionicons
               name="stats-chart"
@@ -622,25 +758,22 @@ export default function ResultScreen({
           style={styles.analysisRow}
         >
           <AnalysisStat
-            dotColor={
-              colors.success
-            }
+            icon="checkmark-circle"
+            color={colors.success}
             value={correctCount}
             label="Correct"
           />
 
           <AnalysisStat
-            dotColor={
-              colors.danger
-            }
+            icon="close-circle"
+            color={colors.danger}
             value={wrongCount}
             label="Incorrect"
           />
 
           <AnalysisStat
-            dotColor={
-              colors.slateSoft
-            }
+            icon="remove-circle"
+            color={colors.slateSoft}
             value={skippedCount}
             label="Unattempted"
           />
@@ -666,17 +799,33 @@ export default function ResultScreen({
           </View>
 
           <View
-            style={
-              styles.insightContent
-            }
+            style={styles.insightContent}
           >
-            <Text
+            <View
               style={
-                styles.insightTitle
+                styles.insightTitleRow
               }
             >
-              Speed vs accuracy
-            </Text>
+              <Text
+                style={styles.insightTitle}
+              >
+                Smart Insight
+              </Text>
+
+              <View
+                style={
+                  styles.insightTag
+                }
+              >
+                <Text
+                  style={
+                    styles.insightTagText
+                  }
+                >
+                  TIP
+                </Text>
+              </View>
+            </View>
 
             <Text
               style={styles.insightText}
@@ -688,55 +837,76 @@ export default function ResultScreen({
       ) : null}
 
       {/* =================================================
-          SOLUTIONS BUTTON
+          SOLUTIONS CTA
       ================================================= */}
 
       <TouchableOpacity
-        style={
-          styles.solutionsButton
-        }
+        style={styles.solutionsButton}
         activeOpacity={0.88}
         onPress={scrollToMistakes}
       >
-        <View
+        <LinearGradient
+          colors={
+            gradients.brand
+          }
+          start={{
+            x: 0,
+            y: 0,
+          }}
+          end={{
+            x: 1,
+            y: 1,
+          }}
           style={
-            styles.solutionButtonIcon
+            styles.solutionGradient
           }
         >
-          <Ionicons
-            name="document-text-outline"
-            size={18}
-            color="#fff"
-          />
-        </View>
-
-        <View
-          style={
-            styles.solutionButtonContent
-          }
-        >
-          <Text
+          <View
             style={
-              styles.solutionsButtonText
+              styles.solutionButtonIcon
             }
           >
-            View Solutions
-          </Text>
+            <Ionicons
+              name="document-text-outline"
+              size={18}
+              color="#FFFFFF"
+            />
+          </View>
 
-          <Text
+          <View
             style={
-              styles.solutionsButtonSub
+              styles.solutionButtonContent
             }
           >
-            Review questions and answers
-          </Text>
-        </View>
+            <Text
+              style={
+                styles.solutionsButtonText
+              }
+            >
+              Review Solutions
+            </Text>
 
-        <Ionicons
-          name="chevron-forward"
-          size={19}
-          color="rgba(255,255,255,0.7)"
-        />
+            <Text
+              style={
+                styles.solutionsButtonSub
+              }
+            >
+              See answers, mistakes and explanations
+            </Text>
+          </View>
+
+          <View
+            style={
+              styles.solutionArrow
+            }
+          >
+            <Ionicons
+              name="arrow-down"
+              size={16}
+              color="#FFFFFF"
+            />
+          </View>
+        </LinearGradient>
       </TouchableOpacity>
 
       {/* =================================================
@@ -746,24 +916,44 @@ export default function ResultScreen({
       <View
         style={styles.sectionHeader}
         onLayout={(e) => {
-          mistakesY.current = e.nativeEvent.layout.y;
+          mistakesY.current =
+            e.nativeEvent.layout.y;
         }}
       >
         <View
-          style={
-            styles.sectionHeaderText
-          }
+          style={styles.sectionHeaderText}
         >
-          <Text
-            style={styles.sectionTitle}
+          <View
+            style={
+              styles.sectionTitleRow
+            }
           >
-            Learn from mistakes
-          </Text>
+            <Text
+              style={styles.sectionTitle}
+            >
+              Learn from mistakes
+            </Text>
+
+            {wrongAnswers.length >
+              0 && (
+              <View
+                style={
+                  styles.mistakePill
+                }
+              >
+                <Text
+                  style={
+                    styles.mistakePillText
+                  }
+                >
+                  REVIEW
+                </Text>
+              </View>
+            )}
+          </View>
 
           <Text
-            style={
-              styles.sectionSubtitle
-            }
+            style={styles.sectionSubtitle}
           >
             Review questions you missed
           </Text>
@@ -792,51 +982,51 @@ export default function ResultScreen({
       {wrongAnswers.length ===
       0 ? (
         <View
-          style={
-            styles.allCorrectBox
-          }
+          style={styles.allCorrectBox}
         >
           <View
-            style={
-              styles.allCorrectIcon
-            }
+            style={styles.allCorrectIcon}
           >
             <Ionicons
               name="checkmark"
-              size={21}
+              size={22}
               color={colors.success}
             />
           </View>
 
           <View
-            style={
-              styles.allCorrectContent
-            }
+            style={styles.allCorrectContent}
           >
             <Text
-              style={
-                styles.allCorrectTitle
-              }
+              style={styles.allCorrectTitle}
             >
-              No mistakes
+              Perfect attempt
             </Text>
 
             <Text
-              style={
-                styles.allCorrectText
-              }
+              style={styles.allCorrectText}
             >
               Outstanding work — all
               attempted questions were
               correct.
             </Text>
           </View>
+
+          <Ionicons
+            name="sparkles"
+            size={18}
+            color={colors.success}
+          />
         </View>
       ) : (
         wrongAnswers.map(
           (answer, idx) => (
             <WrongAnswerCard
-              key={idx}
+              key={
+                answer._id ||
+                answer.question?._id ||
+                idx
+              }
               answer={answer}
               index={idx}
               language={getTestLanguage(
@@ -853,9 +1043,7 @@ export default function ResultScreen({
       ================================================= */}
 
       <TouchableOpacity
-        style={
-          styles.primaryButton
-        }
+        style={styles.primaryButton}
         activeOpacity={0.88}
         onPress={() =>
           navigation.navigate(
@@ -863,25 +1051,46 @@ export default function ResultScreen({
           )
         }
       >
-        <Ionicons
-          name="stats-chart"
-          size={18}
-          color="#fff"
-        />
-
-        <Text
+        <LinearGradient
+          colors={
+            gradients.brand
+          }
+          start={{
+            x: 0,
+            y: 0,
+          }}
+          end={{
+            x: 1,
+            y: 0,
+          }}
           style={
-            styles.primaryButtonText
+            styles.primaryGradient
           }
         >
-          View Full Analysis
-        </Text>
+          <Ionicons
+            name="stats-chart"
+            size={18}
+            color="#FFFFFF"
+          />
+
+          <Text
+            style={
+              styles.primaryButtonText
+            }
+          >
+            View Full Analysis
+          </Text>
+
+          <Ionicons
+            name="arrow-forward"
+            size={17}
+            color="#FFFFFF"
+          />
+        </LinearGradient>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={
-          styles.secondaryButton
-        }
+        style={styles.secondaryButton}
         activeOpacity={0.7}
         onPress={() =>
           navigation.navigate(
@@ -889,6 +1098,12 @@ export default function ResultScreen({
           )
         }
       >
+        <Ionicons
+          name="home-outline"
+          size={15}
+          color={colors.slate}
+        />
+
         <Text
           style={
             styles.secondaryButtonText
@@ -906,13 +1121,31 @@ export default function ResultScreen({
 ========================================================= */
 
 function ScoreMeta({
+  icon,
   value,
   label,
+  color,
 }) {
   return (
     <View
       style={styles.metaItem}
     >
+      <View
+        style={[
+          styles.metaIcon,
+          {
+            backgroundColor:
+              color + "12",
+          },
+        ]}
+      >
+        <Ionicons
+          name={icon}
+          size={13}
+          color={color}
+        />
+      </View>
+
       <Text
         style={styles.metaValue}
         numberOfLines={1}
@@ -937,7 +1170,8 @@ function ScoreMeta({
 ========================================================= */
 
 function AnalysisStat({
-  dotColor,
+  icon,
+  color,
   value,
   label,
 }) {
@@ -946,30 +1180,32 @@ function AnalysisStat({
       style={styles.analysisStat}
     >
       <View
-        style={styles.analysisTop}
+        style={[
+          styles.analysisIconSmall,
+          {
+            backgroundColor:
+              color + "12",
+          },
+        ]}
       >
-        <View
-          style={[
-            styles.dot,
-            {
-              backgroundColor:
-                dotColor,
-            },
-          ]}
+        <Ionicons
+          name={icon}
+          size={14}
+          color={color}
         />
-
-        <Text
-          style={styles.analysisLabel}
-          numberOfLines={1}
-        >
-          {label}
-        </Text>
       </View>
 
       <Text
         style={styles.analysisValue}
       >
         {value}
+      </Text>
+
+      <Text
+        style={styles.analysisLabel}
+        numberOfLines={1}
+      >
+        {label}
       </Text>
     </View>
   );
@@ -1009,10 +1245,10 @@ function WrongAnswerCard({
     <View
       style={styles.wrongCard}
     >
-      {/* QUESTION */}
+      {/* HEADER */}
 
       <View
-        style={styles.questionRow}
+        style={styles.wrongHeader}
       >
         <View
           style={
@@ -1028,12 +1264,42 @@ function WrongAnswerCard({
           </Text>
         </View>
 
-        <Text
-          style={styles.wrongQuestion}
+        <View
+          style={styles.wrongHeaderText}
         >
-          {question.text}
-        </Text>
+          <Text
+            style={styles.wrongHeaderLabel}
+          >
+            Incorrect answer
+          </Text>
+
+          <View
+            style={styles.questionStatus}
+          >
+            <Ionicons
+              name="close-circle"
+              size={11}
+              color={colors.danger}
+            />
+
+            <Text
+              style={
+                styles.questionStatusText
+              }
+            >
+              Needs review
+            </Text>
+          </View>
+        </View>
       </View>
+
+      {/* QUESTION */}
+
+      <Text
+        style={styles.wrongQuestion}
+      >
+        {question.text}
+      </Text>
 
       {/* ANSWERS */}
 
@@ -1043,23 +1309,29 @@ function WrongAnswerCard({
         <View
           style={styles.answerRow}
         >
-          <Ionicons
-            name="close-circle"
-            size={18}
-            color={colors.danger}
-          />
+          <View
+            style={[
+              styles.answerIcon,
+              {
+                backgroundColor:
+                  colors.dangerLight,
+              },
+            ]}
+          >
+            <Ionicons
+              name="close"
+              size={13}
+              color={colors.danger}
+            />
+          </View>
 
           <View
-            style={
-              styles.answerContent
-            }
+            style={styles.answerContent}
           >
             <Text
-              style={
-                styles.answerLabel
-              }
+              style={styles.answerLabel}
             >
-              You chose
+              YOUR ANSWER
             </Text>
 
             <Text
@@ -1080,23 +1352,29 @@ function WrongAnswerCard({
         <View
           style={styles.answerRow}
         >
-          <Ionicons
-            name="checkmark-circle"
-            size={18}
-            color={colors.success}
-          />
+          <View
+            style={[
+              styles.answerIcon,
+              {
+                backgroundColor:
+                  colors.successLight,
+              },
+            ]}
+          >
+            <Ionicons
+              name="checkmark"
+              size={13}
+              color={colors.success}
+            />
+          </View>
 
           <View
-            style={
-              styles.answerContent
-            }
+            style={styles.answerContent}
           >
             <Text
-              style={
-                styles.answerLabel
-              }
+              style={styles.answerLabel}
             >
-              Correct answer
+              CORRECT ANSWER
             </Text>
 
             <Text
@@ -1134,23 +1412,49 @@ function WrongAnswerCard({
               />
             </View>
 
-            <Text
+            <View
               style={
-                styles.solutionLabel
+                styles.solutionTitleWrap
               }
             >
-              SOLUTION
-            </Text>
+              <Text
+                style={
+                  styles.solutionLabel
+                }
+              >
+                SOLUTION
+              </Text>
 
-            <Text
+              <Text
+                style={
+                  styles.solutionSubLabel
+                }
+              >
+                Explanation
+              </Text>
+            </View>
+
+            <View
               style={
                 styles.solutionLanguage
               }
             >
-              {language === "hi"
-                ? "हिंदी"
-                : "English"}
-            </Text>
+              <Ionicons
+                name="language-outline"
+                size={10}
+                color={colors.brand}
+              />
+
+              <Text
+                style={
+                  styles.solutionLanguageText
+                }
+              >
+                {language === "hi"
+                  ? "हिंदी"
+                  : "English"}
+              </Text>
+            </View>
           </View>
 
           <Text
@@ -1168,707 +1472,1010 @@ function WrongAnswerCard({
    STYLES
 ========================================================= */
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor:
-      colors.bg,
-  },
-
-  contentContainer: {
-    paddingHorizontal:
-      spacing.lg,
-  },
-
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor:
-      colors.bg,
-  },
-
-  loadingText: {
-    fontSize: 13,
-    color: colors.slate,
-    fontWeight: "600",
-    marginTop: 12,
-  },
-
-  /* =====================================================
-     TEST CARD
-  ===================================================== */
-
-  testCard: {
-    ...card,
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 15,
-    marginBottom: 20,
-  },
-
-  testIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 13,
-    backgroundColor:
-      colors.brandTint,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-
-  testInfo: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  testTitle: {
-    fontSize: 16,
-    lineHeight: 21,
-    fontWeight: "800",
-    color: colors.ink,
-  },
-
-  testMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    marginTop: 5,
-  },
-
-  testDate: {
-    fontSize: 11,
-    lineHeight: 16,
-    color: colors.slate,
-    fontWeight: "500",
-  },
-
-  languageBadge: {
-    marginLeft: 8,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 7,
-    backgroundColor:
-      colors.brandTint,
-  },
-
-  languageBadgeText: {
-    fontSize: 9,
-    lineHeight: 12,
-    color: colors.brand,
-    fontWeight: "800",
-  },
-
-  /* =====================================================
-     SCORE HERO
-  ===================================================== */
-
-  scoreSection: {
-    alignItems: "center",
-    marginBottom: 23,
-    paddingHorizontal: 4,
-  },
-
-  scoreEyebrow: {
-    fontSize: 10,
-    lineHeight: 14,
-    fontWeight: "800",
-    color: colors.slateSoft,
-    letterSpacing: 1.4,
-  },
-
-  performanceText: {
-    fontSize: 21,
-    lineHeight: 28,
-    fontWeight: "800",
-    color: colors.ink,
-    textAlign: "center",
-    marginTop: 5,
-    marginBottom: 17,
-  },
-
-  /* =====================================================
-     MAIN SCORE
-  ===================================================== */
-
-  scoreBlock: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 1,
-    marginBottom: 2,
-  },
-
-  scorePercentage: {
-    fontSize: 50,
-    lineHeight: 57,
-    fontWeight: "900",
-    letterSpacing: -1.8,
-  },
-
-  scoreLine: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    justifyContent: "center",
-    marginTop: 1,
-  },
-
-  scoreNumber: {
-    fontSize: 21,
-    lineHeight: 27,
-    fontWeight: "800",
-    color: colors.ink,
-  },
-
-  scoreTotal: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "600",
-    color: colors.slateSoft,
-    marginLeft: 3,
-  },
-
-  scoreLabel: {
-    fontSize: 9,
-    lineHeight: 13,
-    fontWeight: "800",
-    color: colors.slateSoft,
-    letterSpacing: 1.2,
-    marginTop: 4,
-  },
-
-  /* =====================================================
-     ACCURACY (unused - kept only because the earlier design had a
-     standalone accuracy pill here; this version shows accuracy via the
-     big percentage in the score hero instead, so nothing in the JSX
-     references these anymore. Harmless, but flagging in case you want
-     them removed too.)
-  ===================================================== */
-
-  accuracyPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    marginTop: 15,
-  },
-
-  accuracyDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    marginRight: 6,
-  },
-
-  accuracyText: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "800",
-  },
-
-  /* =====================================================
-     SCORE META
-  ===================================================== */
-
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 19,
-    width: "100%",
-    minHeight: 48,
-  },
-
-  metaItem: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 0,
-  },
-
-  metaValue: {
-    fontSize: 19,
-    lineHeight: 24,
-    fontWeight: "800",
-    color: colors.ink,
-  },
-
-  metaLabel: {
-    fontSize: 9.5,
-    lineHeight: 14,
-    color: colors.slateSoft,
-    fontWeight: "600",
-    marginTop: 2,
-    textAlign: "center",
-  },
-
-  metaDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor:
-      colors.border,
-  },
-
-  /* =====================================================
-     ANALYSIS
-  ===================================================== */
-
-  analysisCard: {
-    ...card,
-    padding: 16,
-    marginBottom: 12,
-  },
-
-  cardHeadingRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: 17,
-  },
-
-  headingContent: {
-    flex: 1,
-    minWidth: 0,
-    paddingRight: 10,
-  },
-
-  analysisTitle: {
-    fontSize: 16,
-    lineHeight: 21,
-    fontWeight: "800",
-    color: colors.ink,
-  },
-
-  cardSubtitle: {
-    fontSize: 10.5,
-    lineHeight: 15,
-    color: colors.slateSoft,
-    marginTop: 3,
-  },
-
-  analysisIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor:
-      colors.brandTint,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  analysisRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-
-  analysisStat: {
-    flex: 1,
-    alignItems: "center",
-    minWidth: 0,
-  },
-
-  analysisTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 6,
-    minHeight: 17,
-  },
-
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 5,
-  },
-
-  analysisLabel: {
-    fontSize: 10,
-    lineHeight: 14,
-    color: colors.slate,
-    fontWeight: "600",
-  },
-
-  analysisValue: {
-    fontSize: 22,
-    lineHeight: 27,
-    fontWeight: "800",
-    color: colors.ink,
-  },
-
-  /* =====================================================
-     INSIGHT
-  ===================================================== */
-
-  insightCard: {
-    ...card,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    padding: 15,
-    marginBottom: 12,
-  },
-
-  insightIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
-    backgroundColor:
-      colors.brandLight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 11,
-  },
-
-  insightContent: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  insightTitle: {
-    fontSize: 14,
-    lineHeight: 19,
-    fontWeight: "800",
-    color: colors.ink,
-  },
-
-  insightText: {
-    fontSize: 12,
-    lineHeight: 18,
-    color: colors.slate,
-    marginTop: 3,
-  },
-
-  /* =====================================================
-     SOLUTIONS BUTTON
-  ===================================================== */
-
-  solutionsButton: {
-    minHeight: 62,
-    borderRadius: radius.lg,
-    backgroundColor:
-      colors.ink2,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    marginBottom: 24,
-    ...shadow.sm,
-  },
-
-  solutionButtonIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
-    backgroundColor:
-      "rgba(255,255,255,0.13)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 11,
-  },
-
-  solutionButtonContent: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  solutionsButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    lineHeight: 19,
-    fontWeight: "800",
-  },
-
-  solutionsButtonSub: {
-    color:
-      "rgba(255,255,255,0.62)",
-    fontSize: 10.5,
-    lineHeight: 15,
-    marginTop: 2,
-  },
-
-  /* =====================================================
-     SECTION HEADER
-  ===================================================== */
-
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 13,
-  },
-
-  sectionHeaderText: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  sectionTitle: {
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: "800",
-    color: colors.ink,
-  },
-
-  sectionSubtitle: {
-    fontSize: 10.5,
-    lineHeight: 15,
-    color: colors.slateSoft,
-    marginTop: 2,
-  },
-
-  countBadge: {
-    minWidth: 31,
-    height: 31,
-    paddingHorizontal: 8,
-    borderRadius: radius.full,
-    backgroundColor:
-      colors.dangerLight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 10,
-  },
-
-  countBadgeText: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: colors.danger,
-  },
-
-  /* =====================================================
-     ALL CORRECT
-  ===================================================== */
-
-  allCorrectBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor:
-      colors.successLight,
-    borderRadius: radius.lg,
-    padding: 15,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor:
-      colors.successBorder,
-  },
-
-  allCorrectIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor:
-      colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 11,
-  },
-
-  allCorrectContent: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  allCorrectTitle: {
-    fontSize: 14,
-    lineHeight: 19,
-    fontWeight: "800",
-    color: colors.success,
-  },
-
-  allCorrectText: {
-    fontSize: 11,
-    lineHeight: 17,
-    color: colors.slate,
-    marginTop: 2,
-  },
-
-  /* =====================================================
-     WRONG CARD
-  ===================================================== */
-
-  wrongCard: {
-    ...card,
-    padding: 15,
-    marginBottom: 11,
-    borderLeftWidth: 3,
-    borderLeftColor:
-      colors.danger,
-  },
-
-  questionRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-
-  questionNumber: {
-    minWidth: 31,
-    height: 29,
-    paddingHorizontal: 7,
-    borderRadius: 9,
-    backgroundColor:
-      colors.dangerLight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 9,
-  },
-
-  questionNumberText: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: colors.danger,
-  },
-
-  wrongQuestion: {
-    flex: 1,
-    minWidth: 0,
-    fontSize: 14,
-    lineHeight: 21,
-    fontWeight: "700",
-    color: colors.ink,
-  },
-
-  /* =====================================================
-     ANSWERS
-  ===================================================== */
-
-  answerBox: {
-    backgroundColor:
-      colors.bg,
-    borderRadius: radius.md,
-    padding: 12,
-    marginTop: 13,
-  },
-
-  answerRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-
-  answerContent: {
-    flex: 1,
-    minWidth: 0,
-    marginLeft: 7,
-  },
-
-  answerLabel: {
-    fontSize: 9.5,
-    lineHeight: 14,
-    color: colors.slateSoft,
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-
-  wrongAnswerText: {
-    fontSize: 12.5,
-    lineHeight: 19,
-    fontWeight: "700",
-    color: colors.danger,
-  },
-
-  correctAnswerText: {
-    fontSize: 12.5,
-    lineHeight: 19,
-    fontWeight: "700",
-    color: colors.success,
-  },
-
-  answerDivider: {
-    height: 1,
-    backgroundColor:
-      colors.border,
-    marginVertical: 10,
-  },
-
-  /* =====================================================
-     SOLUTION
-  ===================================================== */
-
-  solutionBox: {
-    backgroundColor:
-      colors.brandTint,
-    borderRadius: radius.md,
-    padding: 13,
-    marginTop: 11,
-    borderWidth: 1,
-    borderColor:
-      colors.brandLight,
-  },
-
-  solutionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 7,
-  },
-
-  solutionIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 7,
-    backgroundColor:
-      colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  solutionLabel: {
-    fontSize: 8.5,
-    lineHeight: 12,
-    fontWeight: "800",
-    color: colors.brand,
-    letterSpacing: 0.7,
-    marginLeft: 6,
-  },
-
-  solutionLanguage: {
-    marginLeft: "auto",
-    fontSize: 9,
-    lineHeight: 13,
-    color: colors.brand,
-    fontWeight: "700",
-  },
-
-  solutionText: {
-    fontSize: 12.5,
-    lineHeight: 20,
-    color: colors.inkSoft,
-  },
-
-  /* =====================================================
-     ACTIONS
-  ===================================================== */
-
-  primaryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    height: 54,
-    borderRadius: radius.md,
-    backgroundColor:
-      colors.brand,
-    marginTop: spacing.md,
-    ...shadow.brand,
-  },
-
-  primaryButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    lineHeight: 19,
-    fontWeight: "800",
-  },
-
-  secondaryButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 50,
-    paddingVertical: spacing.sm,
-  },
-
-  secondaryButtonText: {
-    color: colors.slate,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "700",
-  },
-});
+const styles =
+  StyleSheet.create({
+    /* =====================================================
+       GENERAL
+    ===================================================== */
+
+    container: {
+      flex: 1,
+      backgroundColor:
+        colors.bg,
+    },
+
+    contentContainer: {
+      paddingHorizontal:
+        spacing.lg,
+    },
+
+    centered: {
+      flex: 1,
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+      backgroundColor:
+        colors.bg,
+    },
+
+    loaderCircle: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor:
+        colors.surface,
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+      ...shadow.soft,
+    },
+
+    loadingTitle: {
+      fontSize: 14,
+      lineHeight: 19,
+      fontWeight: "800",
+      color: colors.ink,
+      marginTop: 13,
+    },
+
+    loadingText: {
+      fontSize: 11,
+      lineHeight: 16,
+      color: colors.slateSoft,
+      fontWeight: "500",
+      marginTop: 3,
+    },
+
+    /* =====================================================
+       TOP BAR
+    ===================================================== */
+
+    topBar: {
+      minHeight: 50,
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+
+    topButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor:
+        colors.surface,
+      borderWidth: 1,
+      borderColor:
+        colors.border,
+      alignItems: "center",
+      justifyContent: "center",
+      ...shadow.soft,
+    },
+
+    topTitleWrap: {
+      flex: 1,
+      minWidth: 0,
+      alignItems: "center",
+      paddingHorizontal: 10,
+    },
+
+    topTitle: {
+      fontSize: 16,
+      lineHeight: 21,
+      fontWeight: "800",
+      color: colors.ink,
+    },
+
+    topSubtitle: {
+      fontSize: 9.5,
+      lineHeight: 14,
+      color: colors.slateSoft,
+      marginTop: 1,
+      fontWeight: "500",
+    },
+
+    /* =====================================================
+       TEST CARD
+    ===================================================== */
+
+    testCard: {
+      ...card,
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 13,
+      marginBottom: 12,
+    },
+
+    testIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      backgroundColor:
+        colors.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 11,
+    },
+
+    testInfo: {
+      flex: 1,
+      minWidth: 0,
+    },
+
+    testTitle: {
+      fontSize: 15,
+      lineHeight: 20,
+      fontWeight: "800",
+      color: colors.ink,
+    },
+
+    testMetaRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+      marginTop: 5,
+    },
+
+    testDate: {
+      fontSize: 10,
+      lineHeight: 14,
+      color: colors.slateSoft,
+      fontWeight: "600",
+      marginLeft: 4,
+    },
+
+    metaDot: {
+      width: 3,
+      height: 3,
+      borderRadius: 2,
+      backgroundColor:
+        colors.border,
+      marginHorizontal: 7,
+    },
+
+    languageBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+      borderRadius: 7,
+      backgroundColor:
+        colors.brandTint,
+    },
+
+    languageBadgeText: {
+      fontSize: 8.5,
+      lineHeight: 12,
+      color: colors.brand,
+      fontWeight: "800",
+    },
+
+    /* =====================================================
+       SCORE HERO
+    ===================================================== */
+
+    scoreHero: {
+      position: "relative",
+      overflow: "hidden",
+      backgroundColor:
+        colors.surface,
+      borderRadius: 24,
+      borderWidth: 1,
+      paddingHorizontal: 18,
+      paddingTop: 18,
+      paddingBottom: 15,
+      marginBottom: 12,
+      alignItems: "center",
+      ...shadow.soft,
+    },
+
+    scoreGlow: {
+      position: "absolute",
+      width: 190,
+      height: 190,
+      borderRadius: 95,
+      top: -120,
+      right: -55,
+    },
+
+    resultBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      borderRadius:
+        radius.full,
+      backgroundColor:
+        colors.brandTint,
+    },
+
+    resultBadgeText: {
+      fontSize: 8,
+      lineHeight: 12,
+      fontWeight: "900",
+      letterSpacing: 0.8,
+    },
+
+    performanceText: {
+      fontSize: 21,
+      lineHeight: 27,
+      fontWeight: "900",
+      color: colors.ink,
+      textAlign: "center",
+      marginTop: 9,
+    },
+
+    performanceSub: {
+      fontSize: 10.5,
+      lineHeight: 16,
+      fontWeight: "500",
+      color: colors.slate,
+      textAlign: "center",
+      maxWidth: 280,
+      marginTop: 3,
+    },
+
+    scoreBlock: {
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 12,
+    },
+
+    scorePercentage: {
+      fontSize: 54,
+      lineHeight: 61,
+      fontWeight: "900",
+      letterSpacing: -2.2,
+    },
+
+    scoreLine: {
+      flexDirection: "row",
+      alignItems: "baseline",
+      justifyContent: "center",
+      marginTop: -1,
+    },
+
+    scoreNumber: {
+      fontSize: 20,
+      lineHeight: 26,
+      fontWeight: "800",
+      color: colors.ink,
+    },
+
+    scoreTotal: {
+      fontSize: 13,
+      lineHeight: 19,
+      fontWeight: "600",
+      color: colors.slateSoft,
+      marginLeft: 3,
+    },
+
+    scoreLabel: {
+      fontSize: 8,
+      lineHeight: 12,
+      fontWeight: "900",
+      color: colors.slateSoft,
+      letterSpacing: 1.2,
+      marginTop: 3,
+    },
+
+    progressTrack: {
+      width: "100%",
+      height: 6,
+      borderRadius: 3,
+      backgroundColor:
+        colors.slateLight,
+      overflow: "hidden",
+      marginTop: 14,
+    },
+
+    progressFill: {
+      height: "100%",
+      borderRadius: 3,
+    },
+
+    metaRow: {
+      width: "100%",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 14,
+    },
+
+    metaItem: {
+      flex: 1,
+      minWidth: 0,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    metaIcon: {
+      width: 25,
+      height: 25,
+      borderRadius: 8,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 4,
+    },
+
+    metaValue: {
+      fontSize: 17,
+      lineHeight: 22,
+      fontWeight: "900",
+      color: colors.ink,
+    },
+
+    metaLabel: {
+      fontSize: 8.5,
+      lineHeight: 12,
+      color: colors.slateSoft,
+      fontWeight: "600",
+      marginTop: 1,
+      textAlign: "center",
+    },
+
+    metaDivider: {
+      width: 1,
+      height: 45,
+      backgroundColor:
+        colors.border,
+    },
+
+    /* =====================================================
+       RANK
+    ===================================================== */
+
+    rankCard: {
+      ...card,
+      minHeight: 72,
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 12,
+      marginBottom: 12,
+    },
+
+    rankIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 13,
+      backgroundColor:
+        colors.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 10,
+    },
+
+    rankContent: {
+      flex: 1,
+      minWidth: 0,
+    },
+
+    rankLabel: {
+      fontSize: 8,
+      lineHeight: 11,
+      color: colors.slateSoft,
+      fontWeight: "900",
+      letterSpacing: 0.8,
+    },
+
+    rankValue: {
+      fontSize: 19,
+      lineHeight: 24,
+      color: colors.ink,
+      fontWeight: "900",
+      marginTop: 1,
+    },
+
+    rankSub: {
+      fontSize: 9.5,
+      lineHeight: 14,
+      color: colors.slate,
+      fontWeight: "500",
+      marginTop: 1,
+    },
+
+    rankArrow: {
+      width: 34,
+      height: 34,
+      borderRadius: 12,
+      backgroundColor:
+        colors.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    /* =====================================================
+       ANALYSIS
+    ===================================================== */
+
+    analysisCard: {
+      ...card,
+      padding: 15,
+      marginBottom: 12,
+    },
+
+    cardHeadingRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      justifyContent:
+        "space-between",
+      marginBottom: 16,
+    },
+
+    headingContent: {
+      flex: 1,
+      minWidth: 0,
+      paddingRight: 10,
+    },
+
+    analysisTitle: {
+      fontSize: 16,
+      lineHeight: 21,
+      fontWeight: "800",
+      color: colors.ink,
+    },
+
+    cardSubtitle: {
+      fontSize: 10,
+      lineHeight: 15,
+      color: colors.slateSoft,
+      marginTop: 3,
+    },
+
+    analysisIcon: {
+      width: 35,
+      height: 35,
+      borderRadius: 11,
+      backgroundColor:
+        colors.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    analysisRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      justifyContent:
+        "space-between",
+    },
+
+    analysisStat: {
+      flex: 1,
+      alignItems: "center",
+      minWidth: 0,
+    },
+
+    analysisIconSmall: {
+      width: 29,
+      height: 29,
+      borderRadius: 9,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 5,
+    },
+
+    analysisValue: {
+      fontSize: 21,
+      lineHeight: 26,
+      fontWeight: "900",
+      color: colors.ink,
+    },
+
+    analysisLabel: {
+      fontSize: 9,
+      lineHeight: 13,
+      color: colors.slate,
+      fontWeight: "600",
+      marginTop: 1,
+      textAlign: "center",
+    },
+
+    /* =====================================================
+       INSIGHT
+    ===================================================== */
+
+    insightCard: {
+      ...card,
+      flexDirection: "row",
+      alignItems: "flex-start",
+      padding: 14,
+      marginBottom: 12,
+      backgroundColor:
+        colors.surface,
+    },
+
+    insightIcon: {
+      width: 37,
+      height: 37,
+      borderRadius: 12,
+      backgroundColor:
+        colors.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 10,
+    },
+
+    insightContent: {
+      flex: 1,
+      minWidth: 0,
+    },
+
+    insightTitleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+
+    insightTitle: {
+      fontSize: 13.5,
+      lineHeight: 18,
+      fontWeight: "800",
+      color: colors.ink,
+    },
+
+    insightTag: {
+      marginLeft: 7,
+      paddingHorizontal: 5,
+      paddingVertical: 2,
+      borderRadius: 5,
+      backgroundColor:
+        colors.brandTint,
+    },
+
+    insightTagText: {
+      fontSize: 6.5,
+      lineHeight: 9,
+      fontWeight: "900",
+      color: colors.brand,
+      letterSpacing: 0.4,
+    },
+
+    insightText: {
+      fontSize: 11,
+      lineHeight: 17,
+      color: colors.slate,
+      marginTop: 4,
+    },
+
+    /* =====================================================
+       SOLUTIONS CTA
+    ===================================================== */
+
+    solutionsButton: {
+      minHeight: 70,
+      borderRadius: 18,
+      overflow: "hidden",
+      marginBottom: 24,
+      ...shadow.brand,
+    },
+
+    solutionGradient: {
+      flex: 1,
+      minHeight: 70,
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 13,
+    },
+
+    solutionButtonIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 13,
+      backgroundColor:
+        "rgba(255,255,255,0.15)",
+      borderWidth: 1,
+      borderColor:
+        "rgba(255,255,255,0.13)",
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 11,
+    },
+
+    solutionButtonContent: {
+      flex: 1,
+      minWidth: 0,
+    },
+
+    solutionsButtonText: {
+      color: "#FFFFFF",
+      fontSize: 14,
+      lineHeight: 19,
+      fontWeight: "900",
+    },
+
+    solutionsButtonSub: {
+      color:
+        "rgba(255,255,255,0.72)",
+      fontSize: 9.5,
+      lineHeight: 14,
+      marginTop: 2,
+      fontWeight: "500",
+    },
+
+    solutionArrow: {
+      width: 31,
+      height: 31,
+      borderRadius: 11,
+      backgroundColor:
+        "rgba(255,255,255,0.14)",
+      alignItems: "center",
+      justifyContent: "center",
+      marginLeft: 8,
+    },
+
+    /* =====================================================
+       SECTION
+    ===================================================== */
+
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+
+    sectionHeaderText: {
+      flex: 1,
+      minWidth: 0,
+    },
+
+    sectionTitleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+    },
+
+    sectionTitle: {
+      fontSize: 18,
+      lineHeight: 23,
+      fontWeight: "900",
+      color: colors.ink,
+    },
+
+    sectionSubtitle: {
+      fontSize: 10,
+      lineHeight: 15,
+      color: colors.slateSoft,
+      marginTop: 2,
+    },
+
+    mistakePill: {
+      marginLeft: 7,
+      paddingHorizontal: 5,
+      paddingVertical: 2,
+      borderRadius: 5,
+      backgroundColor:
+        colors.dangerLight,
+    },
+
+    mistakePillText: {
+      fontSize: 6.5,
+      lineHeight: 9,
+      color: colors.danger,
+      fontWeight: "900",
+      letterSpacing: 0.4,
+    },
+
+    countBadge: {
+      minWidth: 32,
+      height: 32,
+      paddingHorizontal: 8,
+      borderRadius:
+        radius.full,
+      backgroundColor:
+        colors.dangerLight,
+      alignItems: "center",
+      justifyContent: "center",
+      marginLeft: 10,
+    },
+
+    countBadgeText: {
+      fontSize: 12,
+      fontWeight: "900",
+      color: colors.danger,
+    },
+
+    /* =====================================================
+       ALL CORRECT
+    ===================================================== */
+
+    allCorrectBox: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor:
+        colors.successLight,
+      borderRadius: 17,
+      padding: 14,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor:
+        colors.successBorder,
+    },
+
+    allCorrectIcon: {
+      width: 42,
+      height: 42,
+      borderRadius: 14,
+      backgroundColor:
+        colors.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 10,
+    },
+
+    allCorrectContent: {
+      flex: 1,
+      minWidth: 0,
+    },
+
+    allCorrectTitle: {
+      fontSize: 14,
+      lineHeight: 19,
+      fontWeight: "900",
+      color: colors.success,
+    },
+
+    allCorrectText: {
+      fontSize: 10.5,
+      lineHeight: 17,
+      color: colors.slate,
+      marginTop: 2,
+    },
+
+    /* =====================================================
+       WRONG CARD
+    ===================================================== */
+
+    wrongCard: {
+      ...card,
+      padding: 14,
+      marginBottom: 11,
+      borderLeftWidth: 3,
+      borderLeftColor:
+        colors.danger,
+    },
+
+    wrongHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 10,
+    },
+
+    questionNumber: {
+      minWidth: 38,
+      height: 29,
+      paddingHorizontal: 8,
+      borderRadius: 9,
+      backgroundColor:
+        colors.dangerLight,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 9,
+    },
+
+    questionNumberText: {
+      fontSize: 9.5,
+      fontWeight: "900",
+      color: colors.danger,
+    },
+
+    wrongHeaderText: {
+      flex: 1,
+      minWidth: 0,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+
+    wrongHeaderLabel: {
+      fontSize: 10,
+      lineHeight: 14,
+      color: colors.slateSoft,
+      fontWeight: "700",
+    },
+
+    questionStatus: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
+      marginLeft: 7,
+    },
+
+    questionStatusText: {
+      fontSize: 8,
+      lineHeight: 12,
+      color: colors.danger,
+      fontWeight: "700",
+    },
+
+    wrongQuestion: {
+      fontSize: 14,
+      lineHeight: 21,
+      fontWeight: "700",
+      color: colors.ink,
+    },
+
+    /* =====================================================
+       ANSWERS
+    ===================================================== */
+
+    answerBox: {
+      backgroundColor:
+        colors.bg,
+      borderRadius: 13,
+      padding: 11,
+      marginTop: 12,
+      borderWidth: 1,
+      borderColor:
+        colors.border,
+    },
+
+    answerRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+    },
+
+    answerIcon: {
+      width: 27,
+      height: 27,
+      borderRadius: 9,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    answerContent: {
+      flex: 1,
+      minWidth: 0,
+      marginLeft: 8,
+    },
+
+    answerLabel: {
+      fontSize: 8,
+      lineHeight: 12,
+      color: colors.slateSoft,
+      fontWeight: "900",
+      letterSpacing: 0.4,
+      marginBottom: 2,
+    },
+
+    wrongAnswerText: {
+      fontSize: 12,
+      lineHeight: 18,
+      fontWeight: "800",
+      color: colors.danger,
+    },
+
+    correctAnswerText: {
+      fontSize: 12,
+      lineHeight: 18,
+      fontWeight: "800",
+      color: colors.success,
+    },
+
+    answerDivider: {
+      height: 1,
+      backgroundColor:
+        colors.border,
+      marginVertical: 9,
+    },
+
+    /* =====================================================
+       SOLUTION
+    ===================================================== */
+
+    solutionBox: {
+      backgroundColor:
+        colors.brandTint,
+      borderRadius: 13,
+      padding: 12,
+      marginTop: 10,
+      borderWidth: 1,
+      borderColor:
+        colors.brandLight,
+    },
+
+    solutionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 7,
+    },
+
+    solutionIcon: {
+      width: 26,
+      height: 26,
+      borderRadius: 8,
+      backgroundColor:
+        colors.surface,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    solutionTitleWrap: {
+      marginLeft: 7,
+    },
+
+    solutionLabel: {
+      fontSize: 8,
+      lineHeight: 11,
+      fontWeight: "900",
+      color: colors.brand,
+      letterSpacing: 0.7,
+    },
+
+    solutionSubLabel: {
+      fontSize: 7.5,
+      lineHeight: 10,
+      color: colors.slateSoft,
+      marginTop: 1,
+    },
+
+    solutionLanguage: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
+      marginLeft: "auto",
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+      borderRadius: 7,
+      backgroundColor:
+        colors.surface,
+    },
+
+    solutionLanguageText: {
+      fontSize: 8,
+      lineHeight: 11,
+      color: colors.brand,
+      fontWeight: "800",
+    },
+
+    solutionText: {
+      fontSize: 12,
+      lineHeight: 20,
+      color: colors.inkSoft,
+      fontWeight: "500",
+    },
+
+    /* =====================================================
+       ACTIONS
+    ===================================================== */
+
+    primaryButton: {
+      height: 54,
+      borderRadius: 16,
+      overflow: "hidden",
+      marginTop: spacing.md,
+      ...shadow.brand,
+    },
+
+    primaryGradient: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+    },
+
+    primaryButtonText: {
+      color: "#FFFFFF",
+      fontSize: 13.5,
+      lineHeight: 19,
+      fontWeight: "900",
+    },
+
+    secondaryButton: {
+      minHeight: 50,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      paddingVertical: spacing.sm,
+    },
+
+    secondaryButtonText: {
+      color: colors.slate,
+      fontSize: 12.5,
+      lineHeight: 18,
+      fontWeight: "700",
+    },
+  });

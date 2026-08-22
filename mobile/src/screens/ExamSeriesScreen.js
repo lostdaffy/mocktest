@@ -95,7 +95,7 @@ const DEFAULT_META = {
 };
 
 /* =========================================================
-   MAIN SCREEN
+   SCREEN
 ========================================================= */
 
 export default function ExamSeriesScreen({
@@ -107,24 +107,18 @@ export default function ExamSeriesScreen({
   const {
     examStage,
     examName,
-  } = route.params;
+  } = route.params || {};
 
   const { user } = useAuth();
 
-  const subscribed =
-    isSubscribed(user);
+  const subscribed = isSubscribed(user);
 
-  const [tests, setTests] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [starting, setStarting] =
-    useState(null);
+  const [tests, setTests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [starting, setStarting] = useState(null);
 
   /* =======================================================
-     HIDE NATIVE NAVIGATION HEADER
+     HEADER
   ======================================================= */
 
   useLayoutEffect(() => {
@@ -134,41 +128,36 @@ export default function ExamSeriesScreen({
   }, [navigation]);
 
   /* =======================================================
-     EXAM META
+     META
   ======================================================= */
 
   const meta =
-    EXAM_META[examStage] ||
-    DEFAULT_META;
+    EXAM_META[examStage] || DEFAULT_META;
 
   /* =======================================================
-     LOAD TESTS
+     LOAD
   ======================================================= */
 
-  const load = useCallback(
-    async () => {
-      setLoading(true);
+  const load = useCallback(async () => {
+    setLoading(true);
 
-      try {
-        const res =
-          await api.get(
-            `/tests/exam-series/${examStage}`
-          );
+    try {
+      const res = await api.get(
+        `/tests/exam-series/${examStage}`
+      );
 
-        setTests(
-          res.data?.tests || []
-        );
-      } catch (err) {
-        console.log(
-          "Exam series loading error:",
-          err
-        );
-      } finally {
-        setLoading(false);
-      }
-    },
-    [examStage]
-  );
+      setTests(res.data?.tests || []);
+    } catch (err) {
+      console.log(
+        "Exam series loading error:",
+        err
+      );
+
+      setTests([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [examStage]);
 
   useFocusEffect(
     useCallback(() => {
@@ -181,19 +170,46 @@ export default function ExamSeriesScreen({
   ======================================================= */
 
   async function startTest(test) {
+    if (!test?._id) return;
+
+    const locked =
+      !test.isFree && !subscribed;
+
+    if (locked) {
+      AppAlert.alert(
+        "Premium test",
+        "Upgrade to unlock this mock test.",
+        [
+          {
+            text: "Later",
+            style: "cancel",
+          },
+          {
+            text: "Upgrade",
+            onPress: () =>
+              navigation.navigate(
+                "Subscription"
+              ),
+          },
+        ]
+      );
+
+      return;
+    }
+
     setStarting(test._id);
 
     try {
-      const res =
-        await api.get(
-          `/tests/${test._id}`
-        );
+      const res = await api.get(
+        `/tests/${test._id}`
+      );
 
       navigation.navigate(
         "TestTaking",
         {
           testId:
-            res.data.test._id,
+            res.data?.test?._id ||
+            test._id,
         }
       );
     } catch (err) {
@@ -203,7 +219,8 @@ export default function ExamSeriesScreen({
       ) {
         AppAlert.alert(
           "Premium test",
-          err.response.data.message,
+          err.response?.data?.message ||
+            "Upgrade to unlock this test.",
           [
             {
               text: "Later",
@@ -221,9 +238,8 @@ export default function ExamSeriesScreen({
       } else {
         AppAlert.alert(
           "Something went wrong",
-          err.response?.data
-            ?.message ||
-            "Couldn't load the test"
+          err.response?.data?.message ||
+            "Couldn't load the test."
         );
       }
     } finally {
@@ -235,57 +251,64 @@ export default function ExamSeriesScreen({
      FEATURED
   ======================================================= */
 
-  const featured =
-    useMemo(() => {
-      if (!tests.length) {
-        return null;
-      }
+  const featured = useMemo(() => {
+    if (!tests.length) return null;
 
-      return (
-        tests.find(
-          (test) =>
-            test.attemptStatus ===
-            "in_progress"
-        ) ||
-        tests.find(
-          (test) =>
-            !test.attemptStatus
-        ) ||
-        tests[0]
-      );
-    }, [tests]);
-
-  const rest =
-    useMemo(
-      () =>
-        tests.filter(
-          (test) =>
-            test._id !==
-            featured?._id
-        ),
-      [tests, featured]
+    return (
+      tests.find(
+        (test) =>
+          test.attemptStatus ===
+          "in_progress"
+      ) ||
+      tests.find(
+        (test) =>
+          test.attemptStatus !==
+          "completed"
+      ) ||
+      tests[0]
     );
+  }, [tests]);
 
-  const freeCount =
-    useMemo(
-      () =>
-        tests.filter(
-          (test) =>
-            test.isFree
-        ).length,
-      [tests]
-    );
+  const rest = useMemo(
+    () =>
+      tests.filter(
+        (test) =>
+          test._id !==
+          featured?._id
+      ),
+    [tests, featured]
+  );
 
-  const completedCount =
-    useMemo(
-      () =>
-        tests.filter(
-          (test) =>
-            test.attemptStatus ===
-            "completed"
-        ).length,
-      [tests]
-    );
+  /* =======================================================
+     STATS
+  ======================================================= */
+
+  const freeCount = useMemo(
+    () =>
+      tests.filter(
+        (test) => test.isFree
+      ).length,
+    [tests]
+  );
+
+  const completedCount = useMemo(
+    () =>
+      tests.filter(
+        (test) =>
+          test.attemptStatus ===
+          "completed"
+      ).length,
+    [tests]
+  );
+
+  const progress =
+    tests.length > 0
+      ? Math.round(
+          (completedCount /
+            tests.length) *
+            100
+        )
+      : 0;
 
   /* =======================================================
      LOADING
@@ -294,23 +317,24 @@ export default function ExamSeriesScreen({
   if (loading) {
     return (
       <View
-        style={styles.centered}
+        style={[
+          styles.loadingScreen,
+          {
+            paddingTop: insets.top,
+          },
+        ]}
       >
         <View
-          style={
-            styles.loaderCircle
-          }
+          style={styles.loaderBox}
         >
           <ActivityIndicator
             size="small"
-            color="#FF684A"
+            color={meta.accent}
           />
         </View>
 
         <Text
-          style={
-            styles.loadingText
-          }
+          style={styles.loadingText}
         >
           Loading mock tests...
         </Text>
@@ -331,18 +355,19 @@ export default function ExamSeriesScreen({
         keyExtractor={(item) =>
           item._id
         }
-        showsVerticalScrollIndicator={
-          false
-        }
-        contentContainerStyle={{
-          paddingBottom:
-            spacing.xxl +
-            insets.bottom,
-        }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.listContent,
+          {
+            paddingBottom:
+              spacing.xxl +
+              insets.bottom,
+          },
+        ]}
         ListHeaderComponent={
           <>
             {/* =================================================
-                CUSTOM HEADER
+                HEADER
             ================================================= */}
 
             <View
@@ -352,65 +377,52 @@ export default function ExamSeriesScreen({
                   paddingTop:
                     Math.max(
                       insets.top,
-                      12
+                      spacing.sm
                     ),
                 },
               ]}
             >
               <TouchableOpacity
-                style={
-                  styles.headerButton
-                }
-                activeOpacity={0.7}
+                style={styles.headerButton}
+                activeOpacity={0.75}
                 onPress={() =>
                   navigation.goBack()
                 }
               >
                 <Ionicons
-                  name="arrow-back"
-                  size={21}
-                  color={
-                    colors.ink
-                  }
+                  name="chevron-back"
+                  size={20}
+                  color={colors.ink}
                 />
               </TouchableOpacity>
 
               <View
-                style={
-                  styles.headerCenter
-                }
+                style={styles.headerCenter}
               >
                 <Text
-                  style={
-                    styles.headerTitle
-                  }
+                  style={styles.headerTitle}
                   numberOfLines={1}
                 >
-                  {examName}
+                  {examName ||
+                    "Mock Tests"}
                 </Text>
 
                 <Text
-                  style={
-                    styles.headerSubtitle
-                  }
+                  style={styles.headerSubtitle}
                 >
-                  Mock Test Series
+                  Mock test series
                 </Text>
               </View>
 
               <TouchableOpacity
-                style={
-                  styles.headerButton
-                }
-                activeOpacity={0.7}
+                style={styles.headerButton}
+                activeOpacity={0.75}
                 onPress={load}
               >
                 <Ionicons
                   name="refresh-outline"
-                  size={19}
-                  color={
-                    colors.slate
-                  }
+                  size={18}
+                  color={colors.slate}
                 />
               </TouchableOpacity>
             </View>
@@ -424,13 +436,12 @@ export default function ExamSeriesScreen({
               meta={meta}
               total={tests.length}
               free={freeCount}
-              completed={
-                completedCount
-              }
+              completed={completedCount}
+              progress={progress}
             />
 
             {/* =================================================
-                RECOMMENDED
+                FEATURED
             ================================================= */}
 
             {featured && (
@@ -440,30 +451,26 @@ export default function ExamSeriesScreen({
                     featured.attemptStatus ===
                     "in_progress"
                       ? "Continue Practice"
-                      : "Recommended For You"
+                      : "Recommended"
                   }
                   subtitle={
                     featured.attemptStatus ===
                     "in_progress"
-                      ? "Continue your unfinished test"
-                      : "Start with your next mock test"
+                      ? "Pick up where you left off"
+                      : "Your next recommended mock"
                   }
                 />
 
                 <FeaturedTestCard
                   test={featured}
-                  subscribed={
-                    subscribed
-                  }
+                  subscribed={subscribed}
                   meta={meta}
                   starting={
                     starting ===
                     featured._id
                   }
                   onPress={() =>
-                    startTest(
-                      featured
-                    )
+                    startTest(featured)
                   }
                 />
               </>
@@ -475,50 +482,35 @@ export default function ExamSeriesScreen({
 
             {rest.length > 0 && (
               <View
-                style={
-                  styles.listHeader
-                }
+                style={styles.listHeader}
               >
                 <View
-                  style={
-                    styles.listHeaderText
-                  }
+                  style={styles.listHeaderCopy}
                 >
                   <Text
-                    style={
-                      styles.listTitle
-                    }
+                    style={styles.listTitle}
                   >
                     All Mock Tests
                   </Text>
 
                   <Text
-                    style={
-                      styles.listSubtitle
-                    }
+                    style={styles.listSubtitle}
                   >
-                    Practice the complete
-                    test series
+                    Complete practice series
                   </Text>
                 </View>
 
                 <View
-                  style={
-                    styles.countBadge
-                  }
+                  style={styles.countBadge}
                 >
                   <Text
-                    style={
-                      styles.countNumber
-                    }
+                    style={styles.countNumber}
                   >
                     {tests.length}
                   </Text>
 
                   <Text
-                    style={
-                      styles.countLabel
-                    }
+                    style={styles.countLabel}
                   >
                     TESTS
                   </Text>
@@ -539,13 +531,10 @@ export default function ExamSeriesScreen({
           <MockTestRow
             item={item}
             index={index}
-            subscribed={
-              subscribed
-            }
+            subscribed={subscribed}
             meta={meta}
             starting={
-              starting ===
-              item._id
+              starting === item._id
             }
             onPress={() =>
               startTest(item)
@@ -567,6 +556,7 @@ function SeriesHero({
   total,
   free,
   completed,
+  progress,
 }) {
   return (
     <View
@@ -575,14 +565,16 @@ function SeriesHero({
         {
           backgroundColor:
             meta.light,
+          borderColor:
+            `${meta.accent}20`,
         },
       ]}
     >
-      {/* DECORATION */}
+      {/* DECORATIVE SHAPE */}
 
       <View
         style={[
-          styles.heroOrbOne,
+          styles.heroOrb,
           {
             backgroundColor:
               `${meta.accent}12`,
@@ -590,22 +582,10 @@ function SeriesHero({
         ]}
       />
 
-      <View
-        style={[
-          styles.heroOrbTwo,
-          {
-            backgroundColor:
-              `${meta.accent}18`,
-          },
-        ]}
-      />
-
-      {/* CONTENT */}
+      {/* LEFT */}
 
       <View
-        style={
-          styles.heroContent
-        }
+        style={styles.heroContent}
       >
         <View
           style={[
@@ -640,30 +620,64 @@ function SeriesHero({
         </View>
 
         <Text
-          style={
-            styles.heroTitle
-          }
+          style={styles.heroTitle}
+          numberOfLines={2}
         >
-          Practice like{"\n"}
-          the real exam.
+          {examName ||
+            "Mock Tests"}
         </Text>
 
         <Text
-          style={
-            styles.heroDescription
-          }
+          style={styles.heroDescription}
+          numberOfLines={2}
         >
-          Full-length tests to
-          improve your speed,
-          accuracy and confidence.
+          Full-length practice tests
+          to improve speed, accuracy
+          and exam confidence.
         </Text>
+
+        {/* PROGRESS */}
+
+        <View
+          style={styles.progressRow}
+        >
+          <View
+            style={styles.progressTrack}
+          >
+            <View
+              style={[
+                styles.progressFill,
+                {
+                  width: `${Math.max(
+                    progress,
+                    testsProgressMin(
+                      total
+                    )
+                  )}%`,
+                  backgroundColor:
+                    meta.accent,
+                },
+              ]}
+            />
+          </View>
+
+          <Text
+            style={[
+              styles.progressText,
+              {
+                color:
+                  meta.accent,
+              },
+            ]}
+          >
+            {progress}%
+          </Text>
+        </View>
 
         {/* STATS */}
 
         <View
-          style={
-            styles.heroStats
-          }
+          style={styles.heroStats}
         >
           <HeroStat
             value={total}
@@ -671,9 +685,7 @@ function SeriesHero({
           />
 
           <View
-            style={
-              styles.heroDivider
-            }
+            style={styles.heroDivider}
           />
 
           <HeroStat
@@ -682,39 +694,33 @@ function SeriesHero({
           />
 
           <View
-            style={
-              styles.heroDivider
-            }
+            style={styles.heroDivider}
           />
 
           <HeroStat
             value={completed}
-            label="Done"
+            label="Completed"
           />
         </View>
       </View>
 
-      {/* ART */}
+      {/* RIGHT ART */}
 
       <View
-        style={
-          styles.heroArt
-        }
+        style={styles.heroArt}
       >
         <View
           style={[
             styles.artCircle,
             {
               backgroundColor:
-                `${meta.accent}15`,
+                `${meta.accent}12`,
             },
           ]}
         />
 
         <View
-          style={
-            styles.paper
-          }
+          style={styles.paper}
         >
           <LinearGradient
             colors={meta.grad}
@@ -726,54 +732,46 @@ function SeriesHero({
               x: 1,
               y: 1,
             }}
-            style={
-              styles.paperTop
-            }
+            style={styles.paperTop}
           >
             <Ionicons
               name={meta.icon}
-              size={19}
+              size={18}
               color="#FFFFFF"
             />
           </LinearGradient>
 
-          <PaperLine
-            checked
-          />
-
-          <PaperLine
-            checked
-          />
-
+          <PaperLine checked />
+          <PaperLine checked />
           <PaperLine />
         </View>
 
         <View
-          style={
-            styles.timerBubble
-          }
+          style={styles.timerBubble}
         >
           <Ionicons
             name="timer-outline"
-            size={18}
+            size={16}
             color="#FF684A"
           />
         </View>
 
         <View
-          style={
-            styles.sparkleBubble
-          }
+          style={styles.sparkleBubble}
         >
           <Ionicons
             name="sparkles"
-            size={13}
+            size={12}
             color="#F59E0B"
           />
         </View>
       </View>
     </View>
   );
+}
+
+function testsProgressMin(total) {
+  return total > 0 ? 2 : 0;
 }
 
 /* =========================================================
@@ -824,22 +822,16 @@ function HeroStat({
 }) {
   return (
     <View
-      style={
-        styles.heroStat
-      }
+      style={styles.heroStat}
     >
       <Text
-        style={
-          styles.heroStatValue
-        }
+        style={styles.heroStatValue}
       >
         {value}
       </Text>
 
       <Text
-        style={
-          styles.heroStatLabel
-        }
+        style={styles.heroStatLabel}
       >
         {label}
       </Text>
@@ -857,22 +849,16 @@ function SectionHeader({
 }) {
   return (
     <View
-      style={
-        styles.sectionHeader
-      }
+      style={styles.sectionHeader}
     >
       <Text
-        style={
-          styles.sectionTitle
-        }
+        style={styles.sectionTitle}
       >
         {title}
       </Text>
 
       <Text
-        style={
-          styles.sectionSubtitle
-        }
+        style={styles.sectionSubtitle}
       >
         {subtitle}
       </Text>
@@ -904,15 +890,17 @@ function FeaturedTestCard({
 
   return (
     <TouchableOpacity
-      style={
-        styles.featuredCard
-      }
+      style={[
+        styles.featuredCard,
+        {
+          borderColor:
+            `${meta.accent}25`,
+        },
+      ]}
       activeOpacity={0.82}
       onPress={onPress}
       disabled={starting}
     >
-      {/* ACCENT */}
-
       <View
         style={[
           styles.featuredAccent,
@@ -922,8 +910,6 @@ function FeaturedTestCard({
           },
         ]}
       />
-
-      {/* ICON */}
 
       <View
         style={[
@@ -944,29 +930,21 @@ function FeaturedTestCard({
             x: 1,
             y: 1,
           }}
-          style={
-            styles.featuredIcon
-          }
+          style={styles.featuredIcon}
         >
           <Ionicons
             name={meta.icon}
-            size={21}
+            size={20}
             color="#FFFFFF"
           />
         </LinearGradient>
       </View>
 
-      {/* CONTENT */}
-
       <View
-        style={
-          styles.featuredContent
-        }
+        style={styles.featuredContent}
       >
         <View
-          style={
-            styles.featuredBadge
-          }
+          style={styles.featuredBadge}
         >
           <Ionicons
             name={
@@ -975,13 +953,22 @@ function FeaturedTestCard({
                 : "sparkles"
             }
             size={8}
-            color="#FF684A"
+            color={
+              isResume
+                ? "#FF684A"
+                : meta.accent
+            }
           />
 
           <Text
-            style={
-              styles.featuredBadgeText
-            }
+            style={[
+              styles.featuredBadgeText,
+              {
+                color: isResume
+                  ? "#FF684A"
+                  : meta.accent,
+              },
+            ]}
           >
             {isResume
               ? "CONTINUE"
@@ -990,22 +977,18 @@ function FeaturedTestCard({
         </View>
 
         <Text
-          style={
-            styles.featuredTitle
-          }
+          style={styles.featuredTitle}
           numberOfLines={1}
         >
           {test.title}
         </Text>
 
         <View
-          style={
-            styles.featuredMeta
-          }
+          style={styles.featuredMeta}
         >
           <Meta
             icon="time-outline"
-            text={`${test.durationMinutes} min`}
+            text={`${test.durationMinutes || 0} min`}
           />
 
           {questions > 0 && (
@@ -1022,12 +1005,8 @@ function FeaturedTestCard({
         </View>
       </View>
 
-      {/* ARROW */}
-
       <View
-        style={
-          styles.featuredArrow
-        }
+        style={styles.featuredArrow}
       >
         {starting ? (
           <ActivityIndicator
@@ -1039,13 +1018,15 @@ function FeaturedTestCard({
             name={
               locked
                 ? "lock-closed-outline"
+                : isResume
+                ? "play"
                 : "chevron-forward"
             }
-            size={17}
+            size={16}
             color={
               locked
                 ? "#D99700"
-                : "#687587"
+                : meta.accent
             }
           />
         )}
@@ -1112,9 +1093,7 @@ function MockTestRow({
 
         {isActive && (
           <View
-            style={
-              styles.activeDot
-            }
+            style={styles.activeDot}
           />
         )}
       </View>
@@ -1126,13 +1105,13 @@ function MockTestRow({
           styles.rowCard,
           isActive &&
             styles.rowCardActive,
+          locked &&
+            styles.rowCardLocked,
         ]}
         activeOpacity={0.8}
         onPress={onPress}
         disabled={starting}
       >
-        {/* ICON */}
-
         <View
           style={[
             styles.rowIcon,
@@ -1141,8 +1120,8 @@ function MockTestRow({
                 isActive
                   ? meta.light
                   : isCompleted
-                  ? "#ECFDF5"
-                  : "#F4F5F8",
+                  ? colors.successLight
+                  : colors.slateLight,
             },
           ]}
         >
@@ -1152,43 +1131,39 @@ function MockTestRow({
                 ? "play"
                 : isCompleted
                 ? "checkmark-done"
+                : locked
+                ? "lock-closed-outline"
                 : "document-text-outline"
             }
-            size={17}
+            size={16}
             color={
               isActive
                 ? meta.accent
                 : isCompleted
-                ? "#10B981"
-                : "#7A8697"
+                ? colors.success
+                : locked
+                ? colors.warn
+                : colors.slate
             }
           />
         </View>
 
-        {/* CONTENT */}
-
         <View
-          style={
-            styles.rowContent
-          }
+          style={styles.rowContent}
         >
           <Text
-            style={
-              styles.rowTitle
-            }
+            style={styles.rowTitle}
             numberOfLines={1}
           >
             {item.title}
           </Text>
 
           <View
-            style={
-              styles.rowMeta
-            }
+            style={styles.rowMeta}
           >
             <Meta
               icon="time-outline"
-              text={`${item.durationMinutes} min`}
+              text={`${item.durationMinutes || 0} min`}
             />
 
             {questions > 0 && (
@@ -1200,44 +1175,40 @@ function MockTestRow({
           </View>
 
           <View
-            style={
-              styles.rowTags
-            }
+            style={styles.rowTags}
           >
             <StatusTag
               locked={locked}
               isFree={item.isFree}
             />
 
-            {isCompleted && (
-              <View
-                style={
-                  styles.accuracyTag
-                }
-              >
-                <Ionicons
-                  name="analytics-outline"
-                  size={8}
-                  color={
-                    meta.accent
-                  }
-                />
-
-                <Text
-                  style={
-                    styles.accuracyText
-                  }
+            {isCompleted &&
+              item.bestAccuracy !=
+                null && (
+                <View
+                  style={styles.accuracyTag}
                 >
-                  {item.bestAccuracy}%
-                </Text>
-              </View>
-            )}
+                  <Ionicons
+                    name="analytics-outline"
+                    size={8}
+                    color={
+                      meta.accent
+                    }
+                  />
+
+                  <Text
+                    style={
+                      styles.accuracyText
+                    }
+                  >
+                    {item.bestAccuracy}%
+                  </Text>
+                </View>
+              )}
 
             {isActive && (
               <View
-                style={
-                  styles.resumeTag
-                }
+                style={styles.resumeTag}
               >
                 <Text
                   style={
@@ -1251,30 +1222,30 @@ function MockTestRow({
           </View>
         </View>
 
-        {/* ACTION */}
-
         <View
           style={styles.rowArrow}
         >
           {starting ? (
             <ActivityIndicator
               size="small"
-              color={
-                meta.accent
-              }
+              color={meta.accent}
             />
           ) : (
             <Ionicons
               name={
                 locked
                   ? "lock-closed-outline"
+                  : isActive
+                  ? "play"
                   : "chevron-forward"
               }
-              size={16}
+              size={15}
               color={
                 locked
-                  ? "#D99700"
-                  : "#98A2B3"
+                  ? colors.warn
+                  : isActive
+                  ? meta.accent
+                  : colors.slateSoft
               }
             />
           )}
@@ -1310,8 +1281,8 @@ function StatusTag({
         size={8}
         color={
           locked
-            ? "#D99700"
-            : "#10B981"
+            ? colors.warn
+            : colors.success
         }
       />
 
@@ -1320,8 +1291,8 @@ function StatusTag({
           styles.statusText,
           {
             color: locked
-              ? "#D99700"
-              : "#10B981",
+              ? colors.warn
+              : colors.success,
           },
         ]}
       >
@@ -1345,20 +1316,17 @@ function Meta({
 }) {
   return (
     <View
-      style={
-        styles.metaItem
-      }
+      style={styles.metaItem}
     >
       <Ionicons
         name={icon}
         size={11}
-        color="#98A2B3"
+        color={colors.slateSoft}
       />
 
       <Text
-        style={
-          styles.metaText
-        }
+        style={styles.metaText}
+        numberOfLines={1}
       >
         {text}
       </Text>
@@ -1376,44 +1344,37 @@ function EmptyState() {
       style={styles.empty}
     >
       <View
-        style={
-          styles.emptyIcon
-        }
+        style={styles.emptyIcon}
       >
         <Ionicons
           name="document-text-outline"
-          size={28}
-          color="#5B5FEF"
+          size={27}
+          color={colors.brand}
         />
 
         <View
-          style={
-            styles.emptySparkle
-          }
+          style={styles.emptySparkle}
         >
           <Ionicons
             name="sparkles"
-            size={10}
-            color="#F59E0B"
+            size={9}
+            color={colors.warn}
           />
         </View>
       </View>
 
       <Text
-        style={
-          styles.emptyTitle
-        }
+        style={styles.emptyTitle}
       >
         No mock tests yet
       </Text>
 
       <Text
-        style={
-          styles.emptyText
-        }
+        style={styles.emptyText}
       >
         New mock test series will
-        appear here shortly.
+        appear here when they are
+        available.
       </Text>
     </View>
   );
@@ -1423,845 +1384,734 @@ function EmptyState() {
    STYLES
 ========================================================= */
 
-const styles =
-  StyleSheet.create({
-    /* =====================================================
-       GENERAL
-    ===================================================== */
-
-    container: {
-      flex: 1,
-      backgroundColor:
-        colors.bg,
-    },
-
-    centered: {
-      flex: 1,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      backgroundColor:
-        colors.bg,
-    },
-
-    loaderCircle: {
-      width: 46,
-      height: 46,
-      borderRadius: 23,
-      backgroundColor:
-        "#FFFFFF",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginBottom: 10,
-      ...shadow.soft,
-    },
-
-    loadingText: {
-      fontSize: 12,
-      color: colors.slate,
-      fontWeight:
-        "600",
-    },
-
-    /* =====================================================
-       CUSTOM HEADER
-    ===================================================== */
-
-    header: {
-      minHeight: 76,
-      paddingHorizontal:
-        spacing.lg,
-      paddingBottom:
-        spacing.sm,
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      backgroundColor:
-        colors.bg,
-    },
-
-    headerButton: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
-      backgroundColor:
-        "#FFFFFF",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      borderWidth: 1,
-      borderColor:
-        colors.border,
-      ...shadow.soft,
-    },
-
-    headerCenter: {
-      flex: 1,
-      marginHorizontal: 12,
-      minWidth: 0,
-    },
-
-    headerTitle: {
-      fontSize: 18,
-      lineHeight: 22,
-      fontWeight:
-        "800",
-      color: colors.ink,
-      letterSpacing:
-        -0.3,
-    },
-
-    headerSubtitle: {
-      fontSize: 10,
-      color: colors.slate,
-      marginTop: 2,
-      fontWeight:
-        "500",
-    },
-
-    /* =====================================================
-       HERO
-    ===================================================== */
-
-    hero: {
-      marginHorizontal: 18,
-      minHeight: 164,
-      borderRadius: 24,
-      paddingHorizontal: 18,
-      paddingVertical: 17,
-      flexDirection:
-        "row",
-      overflow: "hidden",
-      marginBottom: 22,
-    },
-
-    heroContent: {
-      flex: 1,
-      justifyContent:
-        "center",
-      zIndex: 5,
-    },
-
-    heroBadge: {
-      alignSelf:
-        "flex-start",
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      gap: 5,
-      paddingHorizontal: 7,
-      paddingVertical: 4,
-      borderRadius:
-        radius.full,
-      marginBottom: 7,
-    },
-
-    heroBadgeDot: {
-      width: 5,
-      height: 5,
-      borderRadius: 3,
-    },
-
-    heroBadgeText: {
-      fontSize: 8,
-      fontWeight:
-        "800",
-      letterSpacing:
-        0.4,
-    },
-
-    heroTitle: {
-      fontSize: 21,
-      lineHeight: 25,
-      fontWeight:
-        "800",
-      color: colors.ink,
-      letterSpacing:
-        -0.4,
-      marginBottom: 5,
-    },
-
-    heroDescription: {
-      fontSize: 10.5,
-      lineHeight: 15,
-      color: colors.slate,
-      maxWidth: 205,
-    },
-
-    heroStats: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      marginTop: 10,
-    },
-
-    heroStat: {
-      minWidth: 34,
-    },
-
-    heroStatValue: {
-      fontSize: 13,
-      fontWeight:
-        "800",
-      color: colors.ink,
-    },
-
-    heroStatLabel: {
-      fontSize: 7.5,
-      color: colors.slate,
-      fontWeight:
-        "600",
-      marginTop: 1,
-    },
-
-    heroDivider: {
-      width: 1,
-      height: 21,
-      backgroundColor:
-        "rgba(23,32,46,0.10)",
-      marginHorizontal: 6,
-    },
-
-    /* =====================================================
-       HERO ART
-    ===================================================== */
-
-    heroArt: {
-      width: 108,
-      position:
-        "relative",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-    },
-
-    heroOrbOne: {
-      position:
-        "absolute",
-      width: 140,
-      height: 140,
-      borderRadius: 70,
-      right: -52,
-      top: 10,
-    },
-
-    heroOrbTwo: {
-      position:
-        "absolute",
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      right: 2,
-      top: 25,
-    },
-
-    artCircle: {
-      position:
-        "absolute",
-      width: 105,
-      height: 105,
-      borderRadius: 53,
-    },
-
-    paper: {
-      width: 63,
-      height: 82,
-      borderRadius: 12,
-      backgroundColor:
-        "#FFFFFF",
-      alignItems:
-        "center",
-      paddingTop: 8,
-      transform: [
-        {
-          rotate: "7deg",
-        },
-      ],
-      ...shadow.soft,
-    },
-
-    paperTop: {
-      width: 38,
-      height: 34,
-      borderRadius: 10,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginBottom: 7,
-    },
-
-    paperLineRow: {
-      width: 43,
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      gap: 4,
-      marginBottom: 5,
-    },
-
-    paperCheck: {
-      width: 9,
-      height: 9,
-      borderRadius: 5,
-      backgroundColor:
-        "#10B981",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-    },
-
-    paperEmpty: {
-      backgroundColor:
-        "#FFFFFF",
-      borderWidth: 1,
-      borderColor:
-        "#D9DDE6",
-    },
-
-    paperLine: {
-      flex: 1,
-      height: 3,
-      borderRadius: 3,
-      backgroundColor:
-        "#E4E7EE",
-    },
-
-    paperLineShort: {
-      width: 21,
-      height: 3,
-      borderRadius: 3,
-      backgroundColor:
-        "#EEF0F4",
-    },
-
-    timerBubble: {
-      position:
-        "absolute",
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor:
-        "#FFF4EF",
-      borderWidth: 2,
-      borderColor:
-        "#FFFFFF",
-      left: 0,
-      bottom: 13,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      ...shadow.soft,
-    },
-
-    sparkleBubble: {
-      position:
-        "absolute",
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      backgroundColor:
-        "#FFF8DF",
-      borderWidth: 2,
-      borderColor:
-        "#FFFFFF",
-      right: -2,
-      top: 19,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      ...shadow.soft,
-    },
-
-    /* =====================================================
-       SECTION HEADER
-    ===================================================== */
-
-    sectionHeader: {
-      marginHorizontal: 18,
-      marginBottom: 10,
-    },
-
-    sectionTitle: {
-      fontSize: 19,
-      fontWeight:
-        "800",
-      color: colors.ink,
-      letterSpacing:
-        -0.3,
-    },
-
-    sectionSubtitle: {
-      fontSize: 10.5,
-      color: colors.slate,
-      marginTop: 2,
-    },
-
-    /* =====================================================
-       FEATURED CARD
-    ===================================================== */
-
-    featuredCard: {
-      marginHorizontal: 18,
-      minHeight: 82,
-      backgroundColor:
-        "#FFFFFF",
-      borderRadius: 19,
-      padding: 11,
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      marginBottom: 22,
-      overflow: "hidden",
-      borderWidth: 1,
-      borderColor:
-        colors.border,
-      ...shadow.soft,
-    },
-
-    featuredAccent: {
-      position:
-        "absolute",
-      left: 0,
-      top: 0,
-      bottom: 0,
-      width: 4,
-    },
-
-    featuredIconBox: {
-      width: 52,
-      height: 52,
-      borderRadius: 16,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-    },
-
-    featuredIcon: {
-      width: 43,
-      height: 43,
-      borderRadius: 13,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-    },
-
-    featuredContent: {
-      flex: 1,
-      marginLeft: 11,
-      minWidth: 0,
-    },
-
-    featuredBadge: {
-      alignSelf:
-        "flex-start",
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      gap: 4,
-      backgroundColor:
-        "#FFF1EC",
-      paddingHorizontal: 7,
-      paddingVertical: 3,
-      borderRadius:
-        radius.full,
-      marginBottom: 4,
-    },
-
-    featuredBadgeText: {
-      fontSize: 7.5,
-      fontWeight:
-        "800",
-      color: "#FF684A",
-      letterSpacing:
-        0.3,
-    },
-
-    featuredTitle: {
-      fontSize: 14,
-      fontWeight:
-        "800",
-      color: colors.ink,
-      marginBottom: 5,
-    },
-
-    featuredMeta: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      flexWrap:
-        "wrap",
-      gap: 7,
-    },
-
-    featuredArrow: {
-      width: 31,
-      height: 31,
-      borderRadius: 16,
-      backgroundColor:
-        "#F5F6F8",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginLeft: 6,
-    },
-
-    /* =====================================================
-       ALL TESTS HEADER
-    ===================================================== */
-
-    listHeader: {
-      marginHorizontal: 18,
-      marginBottom: 11,
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      justifyContent:
-        "space-between",
-    },
-
-    listHeaderText: {
-      flex: 1,
-    },
-
-    listTitle: {
-      fontSize: 19,
-      fontWeight:
-        "800",
-      color: colors.ink,
-      letterSpacing:
-        -0.3,
-    },
-
-    listSubtitle: {
-      fontSize: 10.5,
-      color: colors.slate,
-      marginTop: 2,
-    },
-
-    countBadge: {
-      width: 42,
-      height: 42,
-      borderRadius: 13,
-      backgroundColor:
-        "#FFFFFF",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      borderWidth: 1,
-      borderColor:
-        colors.border,
-    },
-
-    countNumber: {
-      fontSize: 13,
-      fontWeight:
-        "800",
-      color:
-        colors.brand,
-    },
-
-    countLabel: {
-      fontSize: 6.5,
-      fontWeight:
-        "800",
-      color:
-        colors.slateSoft,
-      marginTop: 1,
-    },
-
-    /* =====================================================
-       MOCK ROW
-    ===================================================== */
-
-    row: {
-      flexDirection:
-        "row",
-      gap: 8,
-      marginHorizontal: 18,
-      marginBottom: 9,
-    },
-
-    numberColumn: {
-      width: 27,
-      alignItems:
-        "center",
-      paddingTop: 17,
-    },
-
-    numberColumnActive: {
-      paddingTop: 14,
-    },
-
-    numberText: {
-      fontSize: 11,
-      fontWeight:
-        "800",
-      color:
-        colors.slateSoft,
-    },
-
-    numberTextActive: {
-      color:
-        colors.brand,
-    },
-
-    activeDot: {
-      width: 5,
-      height: 5,
-      borderRadius: 3,
-      backgroundColor:
-        "#FF684A",
-      marginTop: 3,
-    },
-
-    rowCard: {
-      flex: 1,
-      minHeight: 70,
-      backgroundColor:
-        "#FFFFFF",
-      borderRadius: 18,
-      paddingHorizontal: 10,
-      paddingVertical: 8,
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      borderWidth: 1,
-      borderColor:
-        colors.border,
-      ...shadow.soft,
-    },
-
-    rowCardActive: {
-      backgroundColor:
-        colors.brandTint,
-      borderColor:
-        colors.brandLight,
-    },
-
-    rowIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginRight: 10,
-    },
-
-    rowContent: {
-      flex: 1,
-      minWidth: 0,
-    },
-
-    rowTitle: {
-      fontSize: 13,
-      fontWeight:
-        "800",
-      color:
-        colors.ink,
-      marginBottom: 4,
-    },
-
-    rowMeta: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      gap: 8,
-      marginBottom: 4,
-    },
-
-    rowTags: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      flexWrap:
-        "wrap",
-      gap: 4,
-    },
-
-    rowArrow: {
-      width: 29,
-      height: 29,
-      borderRadius: 15,
-      backgroundColor:
-        "#F5F6F8",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginLeft: 5,
-    },
-
-    /* =====================================================
-       META
-    ===================================================== */
-
-    metaItem: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      gap: 3,
-    },
-
-    metaText: {
-      fontSize: 9,
-      color:
-        colors.slateSoft,
-      fontWeight:
-        "600",
-    },
-
-    statusTag: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      gap: 3,
-      paddingHorizontal: 6,
-      paddingVertical: 3,
-      borderRadius:
-        radius.full,
-    },
-
-    premiumTag: {
-      backgroundColor:
-        colors.warnLight,
-    },
-
-    freeTag: {
-      backgroundColor:
-        colors.successLight,
-    },
-
-    statusText: {
-      fontSize: 8,
-      fontWeight:
-        "700",
-    },
-
-    accuracyTag: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      gap: 3,
-      paddingHorizontal: 6,
-      paddingVertical: 3,
-      borderRadius:
-        radius.full,
-      backgroundColor:
-        colors.brandLight,
-    },
-
-    accuracyText: {
-      fontSize: 8,
-      fontWeight:
-        "800",
-      color:
-        colors.brand,
-    },
-
-    resumeTag: {
-      paddingHorizontal: 6,
-      paddingVertical: 3,
-      borderRadius:
-        radius.full,
-      backgroundColor:
-        "#FFF1EC",
-    },
-
-    resumeText: {
-      fontSize: 8,
-      fontWeight:
-        "700",
-      color:
-        "#FF684A",
-    },
-
-    /* =====================================================
-       EMPTY
-    ===================================================== */
-
-    empty: {
-      alignItems:
-        "center",
-      paddingVertical: 65,
-      paddingHorizontal: 30,
-    },
-
-    emptyIcon: {
-      width: 70,
-      height: 70,
-      borderRadius: 35,
-      backgroundColor:
-        colors.brandLight,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginBottom: 14,
-      position:
-        "relative",
-    },
-
-    emptySparkle: {
-      position:
-        "absolute",
-      right: 3,
-      top: 4,
-      width: 23,
-      height: 23,
-      borderRadius: 12,
-      backgroundColor:
-        "#FFF8DF",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-    },
-
-    emptyTitle: {
-      fontSize: 17,
-      fontWeight:
-        "800",
-      color:
-        colors.ink,
-      marginBottom: 4,
-    },
-
-    emptyText: {
-      fontSize: 12,
-      lineHeight: 18,
-      color:
-        colors.slate,
-      textAlign:
-        "center",
-      maxWidth: 280,
-    },
-  });
+const styles = StyleSheet.create({
+  /* =======================================================
+     GENERAL
+  ======================================================= */
+
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+
+  listContent: {
+    paddingBottom: spacing.xxl,
+  },
+
+  loadingScreen: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.bg,
+  },
+
+  loaderBox: {
+    width: 46,
+    height: 46,
+    borderRadius: 15,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadow.soft,
+  },
+
+  loadingText: {
+    marginTop: 10,
+    fontSize: 12,
+    color: colors.slate,
+    fontWeight: "600",
+  },
+
+  /* =======================================================
+     HEADER
+  ======================================================= */
+
+  header: {
+    minHeight: 76,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  headerButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 13,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadow.soft,
+  },
+
+  headerCenter: {
+    flex: 1,
+    minWidth: 0,
+    marginHorizontal: 11,
+  },
+
+  headerTitle: {
+    fontSize: 19,
+    lineHeight: 23,
+    fontWeight: "800",
+    color: colors.ink,
+    letterSpacing: -0.35,
+  },
+
+  headerSubtitle: {
+    fontSize: 10.5,
+    lineHeight: 15,
+    color: colors.slateSoft,
+    fontWeight: "500",
+    marginTop: 1,
+  },
+
+  /* =======================================================
+     HERO
+  ======================================================= */
+
+  hero: {
+    minHeight: 170,
+    marginHorizontal: spacing.lg,
+    marginBottom: 22,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRadius: 23,
+    borderWidth: 1,
+    flexDirection: "row",
+    overflow: "hidden",
+  },
+
+  heroContent: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: "center",
+    paddingRight: 7,
+    zIndex: 3,
+  },
+
+  heroBadge: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    marginBottom: 7,
+  },
+
+  heroBadgeDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+  },
+
+  heroBadgeText: {
+    fontSize: 7.5,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+
+  heroTitle: {
+    fontSize: 20,
+    lineHeight: 25,
+    fontWeight: "800",
+    color: colors.ink,
+    letterSpacing: -0.4,
+  },
+
+  heroDescription: {
+    fontSize: 10,
+    lineHeight: 15,
+    color: colors.slate,
+    marginTop: 4,
+    maxWidth: 205,
+  },
+
+  progressRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+    maxWidth: 210,
+  },
+
+  progressTrack: {
+    flex: 1,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor:
+      "rgba(23,32,46,0.10)",
+    overflow: "hidden",
+  },
+
+  progressFill: {
+    height: 5,
+    borderRadius: 3,
+  },
+
+  progressText: {
+    width: 34,
+    textAlign: "right",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+
+  heroStats: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 9,
+  },
+
+  heroStat: {
+    minWidth: 37,
+  },
+
+  heroStatValue: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: "800",
+    color: colors.ink,
+  },
+
+  heroStatLabel: {
+    fontSize: 7.5,
+    lineHeight: 11,
+    fontWeight: "600",
+    color: colors.slateSoft,
+    marginTop: 1,
+  },
+
+  heroDivider: {
+    width: 1,
+    height: 21,
+    backgroundColor:
+      "rgba(23,32,46,0.10)",
+    marginHorizontal: 7,
+  },
+
+  heroOrb: {
+    position: "absolute",
+    width: 155,
+    height: 155,
+    borderRadius: 78,
+    right: -75,
+    top: -50,
+  },
+
+  /* =======================================================
+     HERO ART
+  ======================================================= */
+
+  heroArt: {
+    width: 91,
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  artCircle: {
+    position: "absolute",
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+  },
+
+  paper: {
+    width: 59,
+    height: 78,
+    borderRadius: 11,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    paddingTop: 7,
+    transform: [
+      {
+        rotate: "7deg",
+      },
+    ],
+    ...shadow.soft,
+  },
+
+  paperTop: {
+    width: 35,
+    height: 30,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 7,
+  },
+
+  paperLineRow: {
+    width: 40,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 5,
+  },
+
+  paperCheck: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.success,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  paperEmpty: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+
+  paperLine: {
+    flex: 1,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.slateLight,
+  },
+
+  paperLineShort: {
+    width: 19,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.slateLight,
+  },
+
+  timerBubble: {
+    position: "absolute",
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#FFF4EF",
+    borderWidth: 2,
+    borderColor: colors.surface,
+    left: -2,
+    bottom: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadow.soft,
+  },
+
+  sparkleBubble: {
+    position: "absolute",
+    width: 27,
+    height: 27,
+    borderRadius: 14,
+    backgroundColor: "#FFF8DF",
+    borderWidth: 2,
+    borderColor: colors.surface,
+    right: -3,
+    top: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadow.soft,
+  },
+
+  /* =======================================================
+     SECTION
+  ======================================================= */
+
+  sectionHeader: {
+    marginHorizontal: spacing.lg,
+    marginBottom: 10,
+  },
+
+  sectionTitle: {
+    fontSize: 19,
+    lineHeight: 23,
+    fontWeight: "800",
+    color: colors.ink,
+    letterSpacing: -0.3,
+  },
+
+  sectionSubtitle: {
+    fontSize: 10.5,
+    lineHeight: 15,
+    color: colors.slateSoft,
+    marginTop: 2,
+  },
+
+  /* =======================================================
+     FEATURED
+  ======================================================= */
+
+  featuredCard: {
+    minHeight: 82,
+    marginHorizontal: spacing.lg,
+    marginBottom: 22,
+    padding: 11,
+    backgroundColor: colors.surface,
+    borderRadius: 19,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    overflow: "hidden",
+    ...shadow.soft,
+  },
+
+  featuredAccent: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
+
+  featuredIconBox: {
+    width: 51,
+    height: 51,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  featuredIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  featuredContent: {
+    flex: 1,
+    minWidth: 0,
+    marginLeft: 10,
+  },
+
+  featuredBadge: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#FFF4F0",
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+    marginBottom: 4,
+  },
+
+  featuredBadgeText: {
+    fontSize: 7.5,
+    fontWeight: "800",
+    letterSpacing: 0.3,
+  },
+
+  featuredTitle: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "800",
+    color: colors.ink,
+    marginBottom: 5,
+  },
+
+  featuredMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 7,
+  },
+
+  featuredArrow: {
+    width: 31,
+    height: 31,
+    borderRadius: 16,
+    backgroundColor: colors.slateLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 6,
+  },
+
+  /* =======================================================
+     LIST HEADER
+  ======================================================= */
+
+  listHeader: {
+    marginHorizontal: spacing.lg,
+    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  listHeaderCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  listTitle: {
+    fontSize: 19,
+    lineHeight: 23,
+    fontWeight: "800",
+    color: colors.ink,
+    letterSpacing: -0.3,
+  },
+
+  listSubtitle: {
+    fontSize: 10.5,
+    color: colors.slateSoft,
+    marginTop: 2,
+  },
+
+  countBadge: {
+    width: 43,
+    height: 41,
+    borderRadius: 13,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 10,
+  },
+
+  countNumber: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: "800",
+    color: colors.brand,
+  },
+
+  countLabel: {
+    fontSize: 6.5,
+    fontWeight: "800",
+    color: colors.slateSoft,
+    marginTop: 1,
+  },
+
+  /* =======================================================
+     ROW
+  ======================================================= */
+
+  row: {
+    flexDirection: "row",
+    gap: 7,
+    marginHorizontal: spacing.lg,
+    marginBottom: 9,
+  },
+
+  numberColumn: {
+    width: 25,
+    alignItems: "center",
+    paddingTop: 18,
+  },
+
+  numberColumnActive: {
+    paddingTop: 15,
+  },
+
+  numberText: {
+    fontSize: 10.5,
+    lineHeight: 14,
+    fontWeight: "800",
+    color: colors.slateSoft,
+  },
+
+  numberTextActive: {
+    color: colors.brand,
+  },
+
+  activeDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#FF684A",
+    marginTop: 3,
+  },
+
+  rowCard: {
+    flex: 1,
+    minHeight: 72,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: "row",
+    alignItems: "center",
+    ...shadow.soft,
+  },
+
+  rowCardActive: {
+    backgroundColor: colors.brandTint,
+    borderColor: colors.brandLight,
+  },
+
+  rowCardLocked: {
+    opacity: 0.82,
+  },
+
+  rowIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 9,
+  },
+
+  rowContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  rowTitle: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "800",
+    color: colors.ink,
+    marginBottom: 4,
+  },
+
+  rowMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+
+  rowTags: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 4,
+  },
+
+  rowArrow: {
+    width: 29,
+    height: 29,
+    borderRadius: 15,
+    backgroundColor: colors.slateLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 5,
+  },
+
+  /* =======================================================
+     META
+  ======================================================= */
+
+  metaItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    maxWidth: 100,
+  },
+
+  metaText: {
+    fontSize: 9,
+    lineHeight: 12,
+    color: colors.slateSoft,
+    fontWeight: "600",
+    flexShrink: 1,
+  },
+
+  statusTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+  },
+
+  premiumTag: {
+    backgroundColor: colors.warnLight,
+  },
+
+  freeTag: {
+    backgroundColor: colors.successLight,
+  },
+
+  statusText: {
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: "700",
+  },
+
+  accuracyTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+    backgroundColor: colors.brandLight,
+  },
+
+  accuracyText: {
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: "800",
+    color: colors.brand,
+  },
+
+  resumeTag: {
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+    backgroundColor: "#FFF1EC",
+  },
+
+  resumeText: {
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: "700",
+    color: "#FF684A",
+  },
+
+  /* =======================================================
+     EMPTY
+  ======================================================= */
+
+  empty: {
+    alignItems: "center",
+    paddingVertical: 65,
+    paddingHorizontal: 30,
+  },
+
+  emptyIcon: {
+    width: 66,
+    height: 66,
+    borderRadius: 20,
+    backgroundColor: colors.brandLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 13,
+    position: "relative",
+  },
+
+  emptySparkle: {
+    position: "absolute",
+    right: 1,
+    top: 1,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "#FFF8DF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  emptyTitle: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "800",
+    color: colors.ink,
+  },
+
+  emptyText: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.slate,
+    textAlign: "center",
+    maxWidth: 280,
+    marginTop: 4,
+  },
+});

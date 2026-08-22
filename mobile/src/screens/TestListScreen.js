@@ -39,9 +39,7 @@ import {
 
 function startOfDay(date) {
   const d = new Date(date);
-
   d.setHours(0, 0, 0, 0);
-
   return d;
 }
 
@@ -56,8 +54,7 @@ function daysFromToday(date) {
 }
 
 function whenLabel(date) {
-  const days =
-    daysFromToday(date);
+  const days = daysFromToday(date);
 
   if (days < 0) return "PAST";
   if (days === 0) return "TODAY";
@@ -67,9 +64,7 @@ function whenLabel(date) {
 }
 
 function formatDate(date) {
-  return new Date(
-    date
-  ).toLocaleDateString(
+  return new Date(date).toLocaleDateString(
     "en-IN",
     {
       day: "numeric",
@@ -79,9 +74,7 @@ function formatDate(date) {
 }
 
 function formatTime(date) {
-  return new Date(
-    date
-  ).toLocaleTimeString(
+  return new Date(date).toLocaleTimeString(
     "en-IN",
     {
       hour: "numeric",
@@ -94,8 +87,7 @@ function timeRange(
   scheduledAt,
   durationMinutes
 ) {
-  const start =
-    new Date(scheduledAt);
+  const start = new Date(scheduledAt);
 
   if (!durationMinutes) {
     return formatTime(start);
@@ -106,19 +98,13 @@ function timeRange(
       durationMinutes * 60000
   );
 
-  return `${formatTime(
-    start
-  )} - ${formatTime(end)}`;
+  return `${formatTime(start)} - ${formatTime(
+    end
+  )}`;
 }
 
 /* =========================================================
-   LIVE WINDOW HELPERS
-
-   A live exam runs on ONE shared clock - it opens at its
-   scheduled moment and closes at the same wall-clock moment
-   for every student. These mirror server/utils/liveExam.js
-   so the UI never tells a student something the backend
-   would contradict.
+   LIVE WINDOW
 ========================================================= */
 
 function examWindow(exam) {
@@ -130,23 +116,27 @@ function examWindow(exam) {
   const endsAt = new Date(
     exam.endsAt ||
       startsAt.getTime() +
-        (exam.durationMinutes ||
-          60) *
+        (exam.durationMinutes || 60) *
           60000
   );
 
-  return { startsAt, endsAt };
+  return {
+    startsAt,
+    endsAt,
+  };
 }
 
 function examState(exam, now) {
   const { startsAt, endsAt } =
     examWindow(exam);
 
-  if (now < startsAt)
+  if (now < startsAt) {
     return "upcoming";
+  }
 
-  if (now <= endsAt)
+  if (now <= endsAt) {
     return "ongoing";
+  }
 
   return "ended";
 }
@@ -154,13 +144,10 @@ function examState(exam, now) {
 function hasSubmitted(exam) {
   return (
     !!exam.attemptStatus &&
-    exam.attemptStatus !==
-      "in_progress"
+    exam.attemptStatus !== "in_progress"
   );
 }
 
-// Countdown to the shared start moment - this is what makes
-// it feel like a real exam hall rather than just a date.
 function formatCountdown(ms) {
   if (ms <= 0) return "00:00";
 
@@ -207,8 +194,7 @@ function formatCountdown(ms) {
 export default function TestListScreen({
   navigation,
 }) {
-  const insets =
-    useSafeAreaInsets();
+  const insets = useSafeAreaInsets();
 
   const { user } = useAuth();
 
@@ -224,21 +210,20 @@ export default function TestListScreen({
   const [starting, setStarting] =
     useState(null);
 
-  // Ticks every second so a countdown actually counts down and
-  // an exam flips to "LIVE NOW" on its own - without this the
-  // student would have to pull-to-refresh at the exact minute.
   const [now, setNow] = useState(
     () => new Date()
   );
 
-  useEffect(() => {
-    const timer = setInterval(
-      () => setNow(new Date()),
-      1000
-    );
+  /* =======================================================
+     CLOCK
+  ======================================================= */
 
-    return () =>
-      clearInterval(timer);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
   }, []);
 
   /* =======================================================
@@ -297,8 +282,6 @@ export default function TestListScreen({
   async function startExam(exam) {
     if (!exam?._id) return;
 
-    // Already sat it - go straight to the result instead of
-    // bouncing off a server rejection.
     if (hasSubmitted(exam)) {
       if (exam.attemptId) {
         navigation.navigate(
@@ -383,12 +366,11 @@ export default function TestListScreen({
           testId:
             res.data?.test?._id ||
             exam._id,
-          // The shared window's remaining time - the exam screen
-          // must run on this, not the test's full duration, or a
-          // late joiner would get extra time.
+
           liveSecondsRemaining:
             res.data?.live
               ?.secondsRemaining,
+
           liveEndsAt:
             res.data?.live?.endsAt,
         }
@@ -398,8 +380,7 @@ export default function TestListScreen({
         err.response?.data?.code;
 
       const message =
-        err.response?.data
-          ?.message;
+        err.response?.data?.message;
 
       if (
         code === "LIVE_NOT_STARTED"
@@ -479,8 +460,6 @@ export default function TestListScreen({
         );
       }
 
-      // The window may have just opened or closed - refresh so
-      // the card's state matches what the server just told us.
       load();
     } finally {
       setStarting(null);
@@ -489,10 +468,6 @@ export default function TestListScreen({
 
   /* =======================================================
      SORT
-
-     A live exam that's happening RIGHT NOW always comes
-     first, however it's dated - that's the one the student
-     needs this second.
   ======================================================= */
 
   const sorted = useMemo(() => {
@@ -514,9 +489,11 @@ export default function TestListScreen({
         "ongoing"
     );
 
-    return [...ongoing, ...others];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exams, Math.floor(now / 1000)]);
+    return [
+      ...ongoing,
+      ...others,
+    ];
+  }, [exams, now]);
 
   const nextExam =
     sorted[0] || null;
@@ -625,7 +602,7 @@ export default function TestListScreen({
           paddingBottom:
             spacing.xxl +
             insets.bottom +
-            10,
+            16,
         }}
         ListHeaderComponent={
           <>
@@ -639,8 +616,7 @@ export default function TestListScreen({
                 {
                   paddingTop:
                     Math.max(
-                      insets.top +
-                        10,
+                      insets.top + 8,
                       spacing.md
                     ),
                 },
@@ -673,7 +649,6 @@ export default function TestListScreen({
                   style={
                     styles.headerTitle
                   }
-                  numberOfLines={1}
                 >
                   Live Exams
                 </Text>
@@ -682,28 +657,65 @@ export default function TestListScreen({
                   style={
                     styles.headerSubtitle
                   }
-                  numberOfLines={2}
                 >
                   Same paper, same clock,
                   real all-India rank
                 </Text>
               </View>
 
-              <View
-                style={styles.liveChip}
+              <TouchableOpacity
+                style={
+                  styles.refreshButton
+                }
+                activeOpacity={0.75}
+                onPress={load}
               >
-                <View
-                  style={styles.liveDot}
+                <Ionicons
+                  name="refresh-outline"
+                  size={18}
+                  color={colors.slate}
                 />
+              </TouchableOpacity>
+            </View>
 
-                <Text
-                  style={
-                    styles.liveChipText
-                  }
-                >
-                  LIVE
-                </Text>
-              </View>
+            {/* =================================================
+                QUICK STATS
+            ================================================= */}
+
+            <View
+              style={
+                styles.quickStats
+              }
+            >
+              <QuickStat
+                icon="calendar-outline"
+                value={totalUpcoming}
+                label="Exams"
+              />
+
+              <View
+                style={
+                  styles.quickDivider
+                }
+              />
+
+              <QuickStat
+                icon="flash-outline"
+                value={thisWeekCount}
+                label="This week"
+              />
+
+              <View
+                style={
+                  styles.quickDivider
+                }
+              />
+
+              <QuickStat
+                icon="gift-outline"
+                value={freeCount}
+                label="Free"
+              />
             </View>
 
             {/* =================================================
@@ -714,25 +726,10 @@ export default function TestListScreen({
               <LiveHero
                 exam={nextExam}
                 now={now}
-                subscribed={
-                  subscribed
-                }
-                totalUpcoming={
-                  totalUpcoming
-                }
-                freeCount={
-                  freeCount
-                }
-                thisWeekCount={
-                  thisWeekCount
-                }
-                starting={
-                  starting
-                }
+                subscribed={subscribed}
+                starting={starting}
                 onStart={() =>
-                  startExam(
-                    nextExam
-                  )
+                  startExam(nextExam)
                 }
               />
             )}
@@ -762,7 +759,7 @@ export default function TestListScreen({
                         styles.sectionTitle
                       }
                     >
-                      Upcoming
+                      More exams
                     </Text>
 
                     <View
@@ -785,8 +782,8 @@ export default function TestListScreen({
                       styles.sectionSubtitle
                     }
                   >
-                    More exams scheduled
-                    for you
+                    Keep an eye on your
+                    upcoming schedule
                   </Text>
                 </View>
               </View>
@@ -795,25 +792,67 @@ export default function TestListScreen({
         }
         ListEmptyComponent={
           !nextExam ? (
-            <EmptyState />
+            <EmptyState
+              onRefresh={load}
+            />
           ) : null
         }
         renderItem={({ item }) => (
           <LiveExamCard
             exam={item}
             now={now}
-            subscribed={
-              subscribed
-            }
-            starting={
-              starting
-            }
+            subscribed={subscribed}
+            starting={starting}
             onPress={() =>
               startExam(item)
             }
           />
         )}
       />
+    </View>
+  );
+}
+
+/* =========================================================
+   QUICK STAT
+========================================================= */
+
+function QuickStat({
+  icon,
+  value,
+  label,
+}) {
+  return (
+    <View
+      style={styles.quickStat}
+    >
+      <View
+        style={styles.quickIcon}
+      >
+        <Ionicons
+          name={icon}
+          size={14}
+          color={colors.brand}
+        />
+      </View>
+
+      <View>
+        <Text
+          style={
+            styles.quickValue
+          }
+        >
+          {value}
+        </Text>
+
+        <Text
+          style={
+            styles.quickLabel
+          }
+        >
+          {label}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -826,9 +865,6 @@ function LiveHero({
   exam,
   now,
   subscribed,
-  totalUpcoming,
-  freeCount,
-  thisWeekCount,
   starting,
   onStart,
 }) {
@@ -839,8 +875,10 @@ function LiveHero({
   const isStarting =
     starting === exam._id;
 
-  const { startsAt } =
-    examWindow(exam);
+  const {
+    startsAt,
+    endsAt,
+  } = examWindow(exam);
 
   const state = examState(
     exam,
@@ -856,19 +894,21 @@ function LiveHero({
   const msToStart =
     startsAt - now;
 
-  // Under a day out, a live countdown is far more useful than
-  // "TOMORROW" - it's the same signal a real exam gives you.
-  const eyebrowText = isLive
-    ? "LIVE NOW"
-    : state === "ended"
-    ? "FINISHED"
-    : msToStart < 86400000
-    ? `STARTS IN ${formatCountdown(
-        msToStart
-      )}`
-    : whenLabel(
-        exam.scheduledAt
-      );
+  const msToEnd =
+    endsAt - now;
+
+  const eyebrowText =
+    isLive
+      ? "LIVE NOW"
+      : state === "ended"
+      ? "FINISHED"
+      : msToStart < 86400000
+      ? `STARTS IN ${formatCountdown(
+          msToStart
+        )}`
+      : whenLabel(
+          exam.scheduledAt
+        );
 
   const accent = isLive
     ? colors.danger
@@ -881,7 +921,7 @@ function LiveHero({
     : isLive
     ? premiumLocked
       ? "Unlock to Join"
-      : "Enter Exam"
+      : "Enter Live Exam"
     : state === "ended"
     ? "Exam Closed"
     : "Starts Soon";
@@ -895,7 +935,7 @@ function LiveHero({
       style={[
         styles.hero,
         isLive &&
-          styles.heroToday,
+          styles.heroLive,
       ]}
     >
       {/* TOP ACCENT */}
@@ -910,155 +950,261 @@ function LiveHero({
         ]}
       />
 
-      {/* HERO HEADER */}
+      {/* LIVE STATUS */}
 
       <View
-        style={styles.heroTop}
+        style={
+          styles.heroStatusRow
+        }
       >
         <View
-          style={styles.heroCopy}
+          style={[
+            styles.heroStatus,
+            isLive &&
+              styles.heroStatusLive,
+          ]}
         >
           <View
-            style={styles.heroEyebrow}
+            style={[
+              styles.statusDot,
+              {
+                backgroundColor:
+                  accent,
+              },
+            ]}
+          />
+
+          <Text
+            style={[
+              styles.heroStatusText,
+              {
+                color: accent,
+              },
+            ]}
           >
-            <View
-              style={[
-                styles.heroEyebrowDot,
-                {
-                  backgroundColor:
-                    accent,
-                },
-              ]}
+            {eyebrowText}
+          </Text>
+        </View>
+
+        {!exam.isFree && (
+          <View
+            style={
+              styles.premiumTag
+            }
+          >
+            <Ionicons
+              name="diamond"
+              size={10}
+              color={colors.warn}
             />
 
             <Text
-              style={[
-                styles.heroEyebrowText,
-                { color: accent },
-              ]}
+              style={
+                styles.premiumTagText
+              }
             >
-              {eyebrowText}
+              PREMIUM
+            </Text>
+          </View>
+        )}
+
+        {exam.isFree && (
+          <View
+            style={styles.freeTag}
+          >
+            <Ionicons
+              name="checkmark-circle"
+              size={10}
+              color={colors.success}
+            />
+
+            <Text
+              style={
+                styles.freeTagText
+              }
+            >
+              FREE
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* TITLE */}
+
+      <Text
+        style={styles.heroTitle}
+        numberOfLines={2}
+      >
+        {exam.title}
+      </Text>
+
+      {/* SCHEDULE */}
+
+      <View
+        style={styles.heroSchedule}
+      >
+        <ScheduleItem
+          icon="calendar-outline"
+          text={formatDate(
+            exam.scheduledAt
+          )}
+        />
+
+        <View
+          style={
+            styles.scheduleDot
+          }
+        />
+
+        <ScheduleItem
+          icon="time-outline"
+          text={timeRange(
+            exam.scheduledAt,
+            exam.durationMinutes
+          )}
+        />
+      </View>
+
+      {/* LIVE COUNTDOWN */}
+
+      {isLive && (
+        <View
+          style={
+            styles.liveCountdown
+          }
+        >
+          <View
+            style={
+              styles.countdownIcon
+            }
+          >
+            <Ionicons
+              name="timer-outline"
+              size={16}
+              color={colors.danger}
+            />
+          </View>
+
+          <View
+            style={
+              styles.countdownContent
+            }
+          >
+            <Text
+              style={
+                styles.countdownLabel
+              }
+            >
+              TIME REMAINING
+            </Text>
+
+            <Text
+              style={
+                styles.countdownValue
+              }
+            >
+              {formatCountdown(
+                msToEnd
+              )}
             </Text>
           </View>
 
-          <Text
-            style={styles.heroTitle}
-            numberOfLines={2}
-          >
-            {exam.title}
-          </Text>
-
           <View
-            style={styles.heroSchedule}
+            style={
+              styles.liveNowPill
+            }
           >
             <View
               style={
-                styles.scheduleItem
-              }
-            >
-              <Ionicons
-                name="calendar-outline"
-                size={13}
-                color={
-                  colors.slate
-                }
-              />
-
-              <Text
-                style={
-                  styles.scheduleText
-                }
-              >
-                {formatDate(
-                  exam.scheduledAt
-                )}
-              </Text>
-            </View>
-
-            <View
-              style={
-                styles.scheduleDot
+                styles.liveNowDot
               }
             />
 
-            <View
+            <Text
               style={
-                styles.scheduleItem
+                styles.liveNowText
               }
             >
-              <Ionicons
-                name="time-outline"
-                size={13}
-                color={
-                  colors.slate
-                }
-              />
-
-              <Text
-                style={
-                  styles.scheduleText
-                }
-              >
-                {timeRange(
-                  exam.scheduledAt,
-                  exam.durationMinutes
-                )}
-              </Text>
-            </View>
+              LIVE
+            </Text>
           </View>
         </View>
+      )}
 
-        <View
-          style={[
-            styles.heroBadge,
-            isLive &&
-              styles.heroBadgeToday,
-          ]}
-        >
-          <Ionicons
-            name="radio"
-            size={22}
-            color={
-              isLive
-                ? colors.danger
-                : colors.brand
+      {/* UPCOMING COUNTDOWN */}
+
+      {!isLive &&
+        state === "upcoming" &&
+        msToStart < 86400000 && (
+          <View
+            style={
+              styles.upcomingCountdown
             }
-          />
-
-          {isLive && (
-            <View
-              style={styles.heroBadgeDot}
+          >
+            <Ionicons
+              name="alarm-outline"
+              size={15}
+              color={colors.brand}
             />
-          )}
-        </View>
-      </View>
 
-      {/* HERO STATS */}
+            <Text
+              style={
+                styles.upcomingCountdownText
+              }
+            >
+              Starts in{" "}
+              <Text
+                style={
+                  styles.upcomingCountdownStrong
+                }
+              >
+                {formatCountdown(
+                  msToStart
+                )}
+              </Text>
+            </Text>
+          </View>
+        )}
+
+      {/* STATS */}
 
       <View
-        style={styles.heroStats}
+        style={
+          styles.heroStats
+        }
       >
         <HeroStat
-          value={totalUpcoming}
-          label="Upcoming"
+          icon="time-outline"
+          value={
+            exam.durationMinutes
+              ? `${exam.durationMinutes}m`
+              : "—"
+          }
+          label="Duration"
         />
 
         <View
-          style={styles.heroDivider}
+          style={
+            styles.heroDivider
+          }
         />
 
         <HeroStat
-          value={thisWeekCount}
-          label="This week"
+          icon="people-outline"
+          value="All India"
+          label="Competition"
         />
 
         <View
-          style={styles.heroDivider}
+          style={
+            styles.heroDivider
+          }
         />
 
         <HeroStat
-          value={freeCount}
-          label="Free"
+          icon="trophy-outline"
+          value="Rank"
+          label="Result"
         />
       </View>
 
@@ -1088,7 +1234,7 @@ function LiveHero({
         {isStarting ? (
           <ActivityIndicator
             size="small"
-            color="#fff"
+            color="#FFFFFF"
           />
         ) : (
           <>
@@ -1105,12 +1251,10 @@ function LiveHero({
                     ? premiumLocked
                       ? "lock-closed"
                       : "play"
-                    : state === "ended"
-                    ? "lock-closed"
                     : "time-outline"
                 }
-                size={13}
-                color="#fff"
+                size={14}
+                color="#FFFFFF"
               />
             </View>
 
@@ -1125,20 +1269,22 @@ function LiveHero({
             <Ionicons
               name="arrow-forward"
               size={16}
-              color="#fff"
+              color="#FFFFFF"
             />
           </>
         )}
       </TouchableOpacity>
 
       {premiumLocked &&
-        !submitted && (
+        !submitted &&
+        isLive && (
           <Text
             style={
               styles.premiumHint
             }
           >
-            Premium access required
+            Premium access required to
+            join this exam
           </Text>
         )}
 
@@ -1158,10 +1304,43 @@ function LiveHero({
 }
 
 /* =========================================================
+   SCHEDULE ITEM
+========================================================= */
+
+function ScheduleItem({
+  icon,
+  text,
+}) {
+  return (
+    <View
+      style={
+        styles.scheduleItem
+      }
+    >
+      <Ionicons
+        name={icon}
+        size={13}
+        color={colors.slate}
+      />
+
+      <Text
+        style={
+          styles.scheduleText
+        }
+        numberOfLines={1}
+      >
+        {text}
+      </Text>
+    </View>
+  );
+}
+
+/* =========================================================
    HERO STAT
 ========================================================= */
 
 function HeroStat({
+  icon,
   value,
   label,
 }) {
@@ -1169,14 +1348,32 @@ function HeroStat({
     <View
       style={styles.heroStat}
     >
+      <View
+        style={
+          styles.heroStatIcon
+        }
+      >
+        <Ionicons
+          name={icon}
+          size={13}
+          color={colors.brand}
+        />
+      </View>
+
       <Text
-        style={styles.heroStatValue}
+        style={
+          styles.heroStatValue
+        }
+        numberOfLines={1}
+        adjustsFontSizeToFit
       >
         {value}
       </Text>
 
       <Text
-        style={styles.heroStatLabel}
+        style={
+          styles.heroStatLabel
+        }
       >
         {label}
       </Text>
@@ -1202,8 +1399,9 @@ function LiveExamCard({
   const isStarting =
     starting === exam._id;
 
-  const { startsAt } =
-    examWindow(exam);
+  const {
+    startsAt,
+  } = examWindow(exam);
 
   const state = examState(
     exam,
@@ -1247,7 +1445,7 @@ function LiveExamCard({
       style={[
         styles.examCard,
         isLive &&
-          styles.examCardToday,
+          styles.examCardLive,
         state === "ended" &&
           styles.examCardEnded,
       ]}
@@ -1255,7 +1453,7 @@ function LiveExamCard({
       disabled={isStarting}
       onPress={onPress}
     >
-      {/* LEFT ACCENT */}
+      {/* ACCENT */}
 
       <View
         style={[
@@ -1273,14 +1471,15 @@ function LiveExamCard({
         style={[
           styles.dateBlock,
           isLive &&
-            styles.dateBlockToday,
+            styles.dateBlockLive,
         ]}
       >
         <Text
           style={[
             styles.dateDay,
             {
-              color: accentColor,
+              color:
+                accentColor,
             },
           ]}
         >
@@ -1290,10 +1489,8 @@ function LiveExamCard({
         <Text
           style={[
             styles.dateMonth,
-            isLive && {
-              color:
-                colors.danger,
-            },
+            isLive &&
+              styles.dateMonthLive,
           ]}
         >
           {month}
@@ -1312,7 +1509,7 @@ function LiveExamCard({
             <View
               style={[
                 styles.badge,
-                styles.todayBadge,
+                styles.liveBadge,
               ]}
             >
               <View
@@ -1330,7 +1527,7 @@ function LiveExamCard({
                   },
                 ]}
               >
-                Live now
+                LIVE
               </Text>
             </View>
           )}
@@ -1343,16 +1540,21 @@ function LiveExamCard({
                   styles.todayBadge,
                 ]}
               >
+                <Ionicons
+                  name="alarm-outline"
+                  size={10}
+                  color={colors.brand}
+                />
+
                 <Text
                   style={[
                     styles.badgeText,
                     {
                       color:
-                        colors.danger,
+                        colors.brand,
                     },
                   ]}
                 >
-                  In{" "}
                   {formatCountdown(
                     startsAt - now
                   )}
@@ -1370,9 +1572,7 @@ function LiveExamCard({
               <Ionicons
                 name="checkmark-done"
                 size={10}
-                color={
-                  colors.brand
-                }
+                color={colors.brand}
               />
 
               <Text
@@ -1396,14 +1596,6 @@ function LiveExamCard({
                 styles.freeBadge,
               ]}
             >
-              <Ionicons
-                name="checkmark-circle"
-                size={10}
-                color={
-                  colors.success
-                }
-              />
-
               <Text
                 style={[
                   styles.badgeText,
@@ -1413,7 +1605,7 @@ function LiveExamCard({
                   },
                 ]}
               >
-                Free
+                FREE
               </Text>
             </View>
           ) : (
@@ -1495,8 +1687,7 @@ function LiveExamCard({
                   styles.metaText
                 }
               >
-                {exam.durationMinutes}{" "}
-                min
+                {exam.durationMinutes}m
               </Text>
             </>
           ) : null}
@@ -1511,9 +1702,7 @@ function LiveExamCard({
         >
           <ActivityIndicator
             size="small"
-            color={
-              colors.brand
-            }
+            color={colors.brand}
           />
         </View>
       ) : (
@@ -1526,6 +1715,9 @@ function LiveExamCard({
             state === "upcoming" &&
               !submitted &&
               styles.cardActionWaiting,
+            isLive &&
+              !premiumLocked &&
+              styles.cardActionLive,
           ]}
         >
           <Ionicons
@@ -1540,12 +1732,7 @@ function LiveExamCard({
                 ? "lock-closed"
                 : "play"
             }
-            size={
-              premiumLocked &&
-              !submitted
-                ? 13
-                : 15
-            }
+            size={15}
             color={
               premiumLocked &&
               !submitted
@@ -1553,6 +1740,8 @@ function LiveExamCard({
                 : state === "upcoming" &&
                   !submitted
                 ? colors.slateSoft
+                : isLive
+                ? colors.danger
                 : colors.brand
             }
           />
@@ -1566,7 +1755,9 @@ function LiveExamCard({
    EMPTY
 ========================================================= */
 
-function EmptyState() {
+function EmptyState({
+  onRefresh,
+}) {
   return (
     <View
       style={styles.empty}
@@ -1577,9 +1768,19 @@ function EmptyState() {
         <Ionicons
           name="calendar-outline"
           size={27}
-          color={
-            colors.slateSoft
-          }
+          color={colors.brand}
+        />
+      </View>
+
+      <View
+        style={
+          styles.emptySpark
+        }
+      >
+        <Ionicons
+          name="sparkles"
+          size={10}
+          color="#F59E0B"
         />
       </View>
 
@@ -1596,6 +1797,28 @@ function EmptyState() {
         regularly. Check back soon to
         compete for an all-India rank.
       </Text>
+
+      <TouchableOpacity
+        style={
+          styles.emptyButton
+        }
+        activeOpacity={0.8}
+        onPress={onRefresh}
+      >
+        <Ionicons
+          name="refresh-outline"
+          size={15}
+          color="#FFFFFF"
+        />
+
+        <Text
+          style={
+            styles.emptyButtonText
+          }
+        >
+          Check Again
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -1605,10 +1828,13 @@ function EmptyState() {
 ========================================================= */
 
 const styles = StyleSheet.create({
+  /* =======================================================
+     GENERAL
+  ======================================================= */
+
   container: {
     flex: 1,
-    backgroundColor:
-      colors.bg,
+    backgroundColor: colors.bg,
   },
 
   /* =======================================================
@@ -1619,19 +1845,18 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor:
-      colors.bg,
+    backgroundColor: colors.bg,
   },
 
   loadingIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 15,
-    backgroundColor:
-      colors.brandTint,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: colors.brandTint,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
+    ...shadow.soft,
   },
 
   loadingTitle: {
@@ -1653,9 +1878,8 @@ const styles = StyleSheet.create({
   ======================================================= */
 
   header: {
-    paddingHorizontal:
-      spacing.lg,
-    paddingBottom: 17,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: 15,
     flexDirection: "row",
     alignItems: "flex-end",
   },
@@ -1675,26 +1899,24 @@ const styles = StyleSheet.create({
     width: 18,
     height: 2,
     borderRadius: 1,
-    backgroundColor:
-      colors.brand,
+    backgroundColor: colors.brand,
     marginRight: 6,
   },
 
   headerEyebrowText: {
     fontSize: 8.5,
     lineHeight: 12,
-    fontWeight: "800",
+    fontWeight: "900",
     color: colors.brand,
     letterSpacing: 1,
   },
 
   headerTitle: {
-    ...type.h3,
-    color: colors.ink,
-    fontSize: 24,
-    lineHeight: 29,
+    fontSize: 25,
+    lineHeight: 30,
     fontWeight: "900",
-    letterSpacing: -0.4,
+    color: colors.ink,
+    letterSpacing: -0.7,
   },
 
   headerSubtitle: {
@@ -1704,33 +1926,74 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  liveChip: {
-    flexDirection: "row",
+  refreshButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: "center",
-    paddingHorizontal: 10,
-    height: 29,
-    borderRadius:
-      radius.full,
-    backgroundColor:
-      colors.dangerLight,
+    justifyContent: "center",
     marginLeft: 10,
     marginBottom: 2,
+    ...shadow.soft,
   },
 
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor:
-      colors.danger,
-    marginRight: 5,
+  /* =======================================================
+     QUICK STATS
+  ======================================================= */
+
+  quickStats: {
+    marginHorizontal: spacing.lg,
+    marginBottom: 13,
+    minHeight: 58,
+    paddingHorizontal: 8,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: "row",
+    alignItems: "center",
+    ...shadow.soft,
   },
 
-  liveChipText: {
-    fontSize: 9,
+  quickStat: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+  },
+
+  quickIcon: {
+    width: 29,
+    height: 29,
+    borderRadius: 10,
+    backgroundColor: colors.brandTint,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  quickValue: {
+    fontSize: 14,
+    lineHeight: 17,
     fontWeight: "900",
-    color: colors.danger,
-    letterSpacing: 0.6,
+    color: colors.ink,
+  },
+
+  quickLabel: {
+    fontSize: 7.5,
+    lineHeight: 11,
+    color: colors.slateSoft,
+    fontWeight: "600",
+    marginTop: 1,
+  },
+
+  quickDivider: {
+    width: 1,
+    height: 27,
+    backgroundColor: colors.border,
   },
 
   /* =======================================================
@@ -1739,74 +2002,105 @@ const styles = StyleSheet.create({
 
   hero: {
     position: "relative",
-    marginHorizontal:
-      spacing.lg,
+    marginHorizontal: spacing.lg,
     marginBottom: 22,
     padding: 16,
-    borderRadius:
-      radius.xl,
-    backgroundColor:
-      colors.surface,
+    borderRadius: 23,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
     overflow: "hidden",
     ...shadow.brand,
   },
 
-  heroToday: {
-    borderColor:
-      colors.dangerBorder,
+  heroLive: {
+    borderColor: colors.dangerBorder,
   },
 
   heroAccent: {
     position: "absolute",
-    top: 0,
     left: 0,
     right: 0,
+    top: 0,
     height: 3,
   },
 
-  heroTop: {
+  heroStatusRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    minHeight: 25,
+    marginBottom: 8,
   },
 
-  heroCopy: {
-    flex: 1,
-    minWidth: 0,
-    paddingRight: 12,
-  },
-
-  heroEyebrow: {
+  heroStatus: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 6,
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    height: 25,
+    borderRadius: radius.full,
+    backgroundColor: colors.brandTint,
   },
 
-  heroEyebrowDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor:
-      colors.brand,
+  heroStatusLive: {
+    backgroundColor: colors.dangerLight,
+  },
+
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     marginRight: 5,
   },
 
-  heroEyebrowText: {
-    fontSize: 9,
+  heroStatusText: {
+    fontSize: 8.5,
+    lineHeight: 12,
     fontWeight: "900",
-    color: colors.brand,
-    letterSpacing: 0.7,
+    letterSpacing: 0.5,
+  },
+
+  premiumTag: {
+    height: 25,
+    paddingHorizontal: 8,
+    borderRadius: radius.full,
+    backgroundColor: colors.warnLight,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+
+  premiumTagText: {
+    fontSize: 7.5,
+    fontWeight: "900",
+    color: colors.warn,
+    letterSpacing: 0.4,
+  },
+
+  freeTag: {
+    height: 25,
+    paddingHorizontal: 8,
+    borderRadius: radius.full,
+    backgroundColor: colors.successLight,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+
+  freeTagText: {
+    fontSize: 7.5,
+    fontWeight: "900",
+    color: colors.success,
+    letterSpacing: 0.4,
   },
 
   heroTitle: {
-    ...type.h1,
-    color: colors.ink,
     fontSize: 21,
     lineHeight: 27,
     fontWeight: "900",
-    letterSpacing: -0.3,
+    color: colors.ink,
+    letterSpacing: -0.45,
   },
 
   heroSchedule: {
@@ -1819,54 +2113,117 @@ const styles = StyleSheet.create({
   scheduleItem: {
     flexDirection: "row",
     alignItems: "center",
+    maxWidth: "47%",
   },
 
   scheduleText: {
-    fontSize: 10.5,
+    fontSize: 10,
     lineHeight: 15,
     color: colors.slate,
     fontWeight: "600",
     marginLeft: 4,
+    flexShrink: 1,
   },
 
   scheduleDot: {
     width: 3,
     height: 3,
     borderRadius: 2,
-    backgroundColor:
-      colors.slateSoft,
+    backgroundColor: colors.slateSoft,
     marginHorizontal: 7,
   },
 
-  heroBadge: {
-    width: 57,
-    height: 57,
-    borderRadius: 19,
-    backgroundColor:
-      colors.brandTint,
+  /* =======================================================
+     COUNTDOWN
+  ======================================================= */
+
+  liveCountdown: {
+    marginTop: 13,
+    padding: 10,
+    borderRadius: 14,
+    backgroundColor: colors.dangerLight,
     borderWidth: 1,
-    borderColor:
-      colors.brandLight,
+    borderColor: colors.dangerBorder,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  countdownIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
+    marginRight: 9,
   },
 
-  heroBadgeToday: {
-    backgroundColor:
-      colors.dangerLight,
-    borderColor:
-      colors.dangerBorder,
+  countdownContent: {
+    flex: 1,
   },
 
-  heroBadgeDot: {
-    position: "absolute",
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    right: 10,
-    top: 9,
-    backgroundColor:
-      colors.danger,
+  countdownLabel: {
+    fontSize: 7.5,
+    lineHeight: 11,
+    fontWeight: "800",
+    color: colors.danger,
+    letterSpacing: 0.7,
+  },
+
+  countdownValue: {
+    fontSize: 17,
+    lineHeight: 21,
+    fontWeight: "900",
+    color: colors.ink,
+    marginTop: 1,
+  },
+
+  liveNowPill: {
+    height: 25,
+    paddingHorizontal: 8,
+    borderRadius: radius.full,
+    backgroundColor: colors.danger,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  liveNowDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#FFFFFF",
+    marginRight: 4,
+  },
+
+  liveNowText: {
+    fontSize: 7.5,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    letterSpacing: 0.5,
+  },
+
+  upcomingCountdown: {
+    marginTop: 12,
+    height: 38,
+    paddingHorizontal: 11,
+    borderRadius: 11,
+    backgroundColor: colors.brandTint,
+    borderWidth: 1,
+    borderColor: colors.brandLight,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  upcomingCountdownText: {
+    fontSize: 10,
+    color: colors.slate,
+    fontWeight: "600",
+    marginLeft: 7,
+  },
+
+  upcomingCountdownStrong: {
+    color: colors.brand,
+    fontWeight: "900",
   },
 
   /* =======================================================
@@ -1876,43 +2233,50 @@ const styles = StyleSheet.create({
   heroStats: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 15,
-    paddingVertical: 11,
-    paddingHorizontal: 2,
-    backgroundColor:
-      colors.bg,
-    borderRadius:
-      radius.md,
+    marginTop: 13,
+    paddingVertical: 10,
+    paddingHorizontal: 3,
+    backgroundColor: colors.bg,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor:
-      colors.border,
+    borderColor: colors.border,
   },
 
   heroStat: {
     flex: 1,
     alignItems: "center",
+    minWidth: 0,
+  },
+
+  heroStatIcon: {
+    width: 25,
+    height: 25,
+    borderRadius: 8,
+    backgroundColor: colors.brandTint,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 3,
   },
 
   heroStatValue: {
-    fontSize: 18,
-    lineHeight: 22,
+    fontSize: 11.5,
+    lineHeight: 15,
     fontWeight: "900",
     color: colors.ink,
   },
 
   heroStatLabel: {
-    fontSize: 9,
-    lineHeight: 13,
+    fontSize: 7.5,
+    lineHeight: 11,
     color: colors.slateSoft,
     fontWeight: "600",
-    marginTop: 2,
+    marginTop: 1,
   },
 
   heroDivider: {
     width: 1,
-    height: 27,
-    backgroundColor:
-      colors.border,
+    height: 31,
+    backgroundColor: colors.border,
   },
 
   /* =======================================================
@@ -1923,52 +2287,44 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    height: 48,
-    borderRadius:
-      radius.md,
-    backgroundColor:
-      colors.brand,
+    height: 49,
+    borderRadius: 14,
+    backgroundColor: colors.brand,
     marginTop: 12,
     ...shadow.brand,
   },
 
   heroButtonLive: {
-    backgroundColor:
-      colors.danger,
+    backgroundColor: colors.danger,
   },
 
   heroButtonLocked: {
-    backgroundColor:
-      colors.warn,
+    backgroundColor: colors.warn,
   },
 
   heroButtonDisabled: {
-    backgroundColor:
-      colors.slateSoft,
+    backgroundColor: colors.slateSoft,
   },
 
   heroButtonIcon: {
-    width: 25,
-    height: 25,
+    width: 26,
+    height: 26,
     borderRadius: 8,
-    backgroundColor:
-      "rgba(255,255,255,0.16)",
+    backgroundColor: "rgba(255,255,255,0.16)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 7,
   },
 
   heroButtonText: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontSize: 13.5,
-    lineHeight: 18,
-    fontWeight: "800",
-    flex: 0,
+    fontWeight: "900",
     marginRight: 7,
   },
 
   premiumHint: {
-    fontSize: 9.5,
+    fontSize: 9,
     lineHeight: 14,
     textAlign: "center",
     color: colors.slateSoft,
@@ -1981,8 +2337,7 @@ const styles = StyleSheet.create({
   ======================================================= */
 
   sectionHeader: {
-    paddingHorizontal:
-      spacing.lg,
+    paddingHorizontal: spacing.lg,
     marginBottom: 11,
   },
 
@@ -1997,15 +2352,15 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    ...type.h3,
-    color: colors.ink,
     fontSize: 18,
     lineHeight: 23,
     fontWeight: "900",
+    color: colors.ink,
+    letterSpacing: -0.3,
   },
 
   sectionSubtitle: {
-    fontSize: 10.5,
+    fontSize: 10,
     lineHeight: 15,
     color: colors.slateSoft,
     marginTop: 2,
@@ -2015,10 +2370,8 @@ const styles = StyleSheet.create({
     minWidth: 27,
     height: 24,
     paddingHorizontal: 7,
-    borderRadius:
-      radius.full,
-    backgroundColor:
-      colors.brandTint,
+    borderRadius: radius.full,
+    backgroundColor: colors.brandTint,
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 8,
@@ -2037,31 +2390,30 @@ const styles = StyleSheet.create({
   examCard: {
     ...card,
     minHeight: 88,
-    marginHorizontal:
-      spacing.lg,
+    marginHorizontal: spacing.lg,
     marginBottom: 9,
     paddingVertical: 11,
     paddingLeft: 10,
-    paddingRight: 11,
+    paddingRight: 10,
     flexDirection: "row",
     alignItems: "center",
     overflow: "hidden",
   },
 
-  examCardToday: {
-    borderColor:
-      colors.dangerBorder,
+  examCardLive: {
+    borderColor: colors.dangerBorder,
+    backgroundColor: "#FFFCFC",
   },
 
   examCardEnded: {
-    opacity: 0.72,
+    opacity: 0.65,
   },
 
   cardAccent: {
     position: "absolute",
     left: 0,
-    top: 12,
-    bottom: 12,
+    top: 11,
+    bottom: 11,
     width: 3,
     borderTopRightRadius: 3,
     borderBottomRightRadius: 3,
@@ -2075,24 +2427,21 @@ const styles = StyleSheet.create({
     width: 48,
     height: 50,
     borderRadius: 14,
-    backgroundColor:
-      colors.brandTint,
+    backgroundColor: colors.brandTint,
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 3,
-    marginRight: 11,
+    marginRight: 10,
   },
 
-  dateBlockToday: {
-    backgroundColor:
-      colors.dangerLight,
+  dateBlockLive: {
+    backgroundColor: colors.dangerLight,
   },
 
   dateDay: {
     fontSize: 18,
     lineHeight: 21,
     fontWeight: "900",
-    color: colors.brand,
   },
 
   dateMonth: {
@@ -2104,8 +2453,12 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
+  dateMonthLive: {
+    color: colors.danger,
+  },
+
   /* =======================================================
-     CARD CONTENT
+     CONTENT
   ======================================================= */
 
   cardContent: {
@@ -2127,49 +2480,46 @@ const styles = StyleSheet.create({
     gap: 3,
     paddingHorizontal: 7,
     paddingVertical: 3,
-    borderRadius:
-      radius.full,
+    borderRadius: radius.full,
+  },
+
+  liveBadge: {
+    backgroundColor: colors.dangerLight,
   },
 
   todayBadge: {
-    backgroundColor:
-      colors.dangerLight,
+    backgroundColor: colors.brandTint,
+  },
+
+  freeBadge: {
+    backgroundColor: colors.successLight,
+  },
+
+  premiumBadge: {
+    backgroundColor: colors.warnLight,
+  },
+
+  doneBadge: {
+    backgroundColor: colors.brandLight,
   },
 
   todayDot: {
     width: 5,
     height: 5,
     borderRadius: 3,
-    backgroundColor:
-      colors.danger,
-  },
-
-  freeBadge: {
-    backgroundColor:
-      colors.successLight,
-  },
-
-  premiumBadge: {
-    backgroundColor:
-      colors.warnLight,
-  },
-
-  doneBadge: {
-    backgroundColor:
-      colors.brandLight,
+    backgroundColor: colors.danger,
   },
 
   badgeText: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontWeight: "900",
   },
 
   cardTitle: {
-    ...type.bodyStrong,
-    color: colors.ink,
-    fontSize: 14,
+    fontSize: 13.5,
     lineHeight: 19,
     fontWeight: "800",
+    color: colors.ink,
   },
 
   metaRow: {
@@ -2180,7 +2530,7 @@ const styles = StyleSheet.create({
   },
 
   metaText: {
-    fontSize: 10,
+    fontSize: 9.5,
     lineHeight: 14,
     color: colors.slateSoft,
     fontWeight: "600",
@@ -2192,8 +2542,7 @@ const styles = StyleSheet.create({
     width: 3,
     height: 3,
     borderRadius: 2,
-    backgroundColor:
-      colors.slateSoft,
+    backgroundColor: colors.slateSoft,
     marginHorizontal: 6,
   },
 
@@ -2205,21 +2554,22 @@ const styles = StyleSheet.create({
     width: 35,
     height: 35,
     borderRadius: 18,
-    backgroundColor:
-      colors.brandLight,
+    backgroundColor: colors.brandLight,
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 8,
   },
 
+  cardActionLive: {
+    backgroundColor: colors.dangerLight,
+  },
+
   cardActionPremium: {
-    backgroundColor:
-      colors.warnLight,
+    backgroundColor: colors.warnLight,
   },
 
   cardActionWaiting: {
-    backgroundColor:
-      colors.slateLight,
+    backgroundColor: colors.slateLight,
   },
 
   cardLoader: {
@@ -2235,38 +2585,71 @@ const styles = StyleSheet.create({
   ======================================================= */
 
   empty: {
+    position: "relative",
     alignItems: "center",
-    paddingHorizontal:
-      spacing.xl,
+    paddingHorizontal: 28,
     paddingTop: 55,
     paddingBottom: 35,
   },
 
   emptyIcon: {
-    width: 62,
-    height: 62,
-    borderRadius: 20,
-    backgroundColor:
-      colors.slateLight,
+    width: 68,
+    height: 68,
+    borderRadius: 22,
+    backgroundColor: colors.brandTint,
+    borderWidth: 1,
+    borderColor: colors.brandLight,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 13,
   },
 
+  emptySpark: {
+    position: "absolute",
+    top: 47,
+    right: "31%",
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#FFF8DF",
+    borderWidth: 2,
+    borderColor: colors.bg,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   emptyTitle: {
-    ...type.h3,
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "900",
     color: colors.ink,
-    fontSize: 17,
-    lineHeight: 22,
-    fontWeight: "800",
   },
 
   emptyText: {
-    fontSize: 12,
-    lineHeight: 19,
+    fontSize: 11.5,
+    lineHeight: 18,
     color: colors.slate,
     textAlign: "center",
     marginTop: 5,
     maxWidth: 300,
+  },
+
+  emptyButton: {
+    height: 42,
+    paddingHorizontal: 16,
+    borderRadius: 13,
+    backgroundColor: colors.brand,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 15,
+    ...shadow.brand,
+  },
+
+  emptyButtonText: {
+    color: "#FFFFFF",
+    fontSize: 11.5,
+    fontWeight: "900",
   },
 });

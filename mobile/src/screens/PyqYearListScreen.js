@@ -14,9 +14,17 @@ import {
   ActivityIndicator,
 } from "react-native";
 
-import { useFocusEffect } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import {
+  useFocusEffect,
+} from "@react-navigation/native";
+
+import {
+  Ionicons,
+} from "@expo/vector-icons";
+
+import {
+  LinearGradient,
+} from "expo-linear-gradient";
 
 import api from "../api/client";
 
@@ -41,7 +49,8 @@ export default function PyqYearListScreen({
   route,
   navigation,
 }) {
-  const insets = useSafeAreaInsets();
+  const insets =
+    useSafeAreaInsets();
 
   const {
     examStage,
@@ -81,7 +90,11 @@ export default function PyqYearListScreen({
           );
 
         setYears(
-          res.data?.years || []
+          Array.isArray(
+            res.data?.years
+          )
+            ? res.data.years
+            : []
         );
       } catch (err) {
         console.log(
@@ -110,24 +123,35 @@ export default function PyqYearListScreen({
   const stats = useMemo(() => {
     const totalPapers =
       years.reduce(
-        (sum, year) =>
+        (sum, item) =>
           sum +
-          Number(year.count || 0),
+          Number(
+            item?.count || 0
+          ),
         0
       );
 
+    const numericYears =
+      years
+        .map((item) =>
+          Number(item?.year)
+        )
+        .filter(
+          (value) =>
+            Number.isFinite(value)
+        );
+
     const latestYear =
-      years.length > 0
+      numericYears.length
         ? Math.max(
-            ...years.map((item) =>
-              Number(item.year)
-            )
+            ...numericYears
           )
         : null;
 
     return {
+      totalYears:
+        years.length,
       totalPapers,
-      totalYears: years.length,
       latestYear,
     };
   }, [years]);
@@ -140,7 +164,7 @@ export default function PyqYearListScreen({
     return (
       <View
         style={[
-          styles.centered,
+          styles.loadingContainer,
           {
             paddingTop:
               insets.top,
@@ -154,16 +178,26 @@ export default function PyqYearListScreen({
         >
           <ActivityIndicator
             size="small"
-            color={colors.brand}
+            color={
+              colors.brand
+            }
           />
         </View>
 
         <Text
           style={
-            styles.loadingText
+            styles.loadingTitle
           }
         >
-          Loading previous papers...
+          Loading years
+        </Text>
+
+        <Text
+          style={
+            styles.loadingSubtitle
+          }
+        >
+          Preparing previous year papers...
         </Text>
       </View>
     );
@@ -179,8 +213,11 @@ export default function PyqYearListScreen({
     >
       <FlatList
         data={years}
-        keyExtractor={(item) =>
-          String(item.year)
+        keyExtractor={(item, index) =>
+          String(
+            item?.year ??
+              index
+          )
         }
         numColumns={2}
         columnWrapperStyle={
@@ -197,13 +234,14 @@ export default function PyqYearListScreen({
             ),
           paddingBottom:
             spacing.xxl +
-            insets.bottom,
+            insets.bottom +
+            12,
         }}
         ListHeaderComponent={
           <>
-            {/* =============================================
+            {/* =================================================
                 HEADER
-            ============================================= */}
+            ================================================= */}
 
             <View
               style={
@@ -212,9 +250,11 @@ export default function PyqYearListScreen({
             >
               <TouchableOpacity
                 style={
-                  styles.backButton
+                  styles.headerButton
                 }
-                activeOpacity={0.75}
+                activeOpacity={
+                  0.75
+                }
                 onPress={() =>
                   navigation.goBack()
                 }
@@ -246,6 +286,7 @@ export default function PyqYearListScreen({
                   style={
                     styles.headerSubtitle
                   }
+                  numberOfLines={1}
                 >
                   Previous Year Questions
                 </Text>
@@ -253,9 +294,11 @@ export default function PyqYearListScreen({
 
               <TouchableOpacity
                 style={
-                  styles.refreshButton
+                  styles.headerButton
                 }
-                activeOpacity={0.75}
+                activeOpacity={
+                  0.75
+                }
                 onPress={load}
               >
                 <Ionicons
@@ -268,9 +311,9 @@ export default function PyqYearListScreen({
               </TouchableOpacity>
             </View>
 
-            {/* =============================================
+            {/* =================================================
                 HERO
-            ============================================= */}
+            ================================================= */}
 
             <View
               style={
@@ -278,9 +321,11 @@ export default function PyqYearListScreen({
               }
             >
               <LinearGradient
-                colors={
-                  gradients.brand
-                }
+                colors={[
+                  "#0D1263",
+                  "#2818C9",
+                  "#5926E8",
+                ]}
                 start={{
                   x: 0,
                   y: 0,
@@ -293,17 +338,27 @@ export default function PyqYearListScreen({
                   styles.hero
                 }
               >
+                {/* Decorative elements */}
+
                 <View
                   style={
-                    styles.heroCircleOne
+                    styles.heroOrbOne
                   }
                 />
 
                 <View
                   style={
-                    styles.heroCircleTwo
+                    styles.heroOrbTwo
                   }
                 />
+
+                <View
+                  style={
+                    styles.heroRing
+                  }
+                />
+
+                {/* Hero content */}
 
                 <View
                   style={
@@ -335,7 +390,9 @@ export default function PyqYearListScreen({
                       styles.heroTitle
                     }
                   >
-                    Master past papers
+                    Master Previous
+                    {"\n"}
+                    Year Papers
                   </Text>
 
                   <Text
@@ -344,27 +401,64 @@ export default function PyqYearListScreen({
                     }
                   >
                     Practice real exam papers
-                    year by year.
+                    year by year and build
+                    confidence.
                   </Text>
                 </View>
 
+                {/* Hero artwork */}
+
                 <View
                   style={
-                    styles.heroIcon
+                    styles.heroArtwork
                   }
                 >
-                  <Ionicons
-                    name="documents-outline"
-                    size={29}
-                    color="#FFFFFF"
-                  />
+                  <View
+                    style={
+                      styles.heroYearCard
+                    }
+                  >
+                    <Ionicons
+                      name="calendar-outline"
+                      size={18}
+                      color="#FFFFFF"
+                    />
+
+                    <Text
+                      style={
+                        styles.heroArtworkNumber
+                      }
+                    >
+                      {stats.totalYears}
+                    </Text>
+
+                    <Text
+                      style={
+                        styles.heroArtworkLabel
+                      }
+                    >
+                      YEARS
+                    </Text>
+                  </View>
+
+                  <View
+                    style={
+                      styles.heroFloatingIcon
+                    }
+                  >
+                    <Ionicons
+                      name="trophy"
+                      size={15}
+                      color="#FFD84D"
+                    />
+                  </View>
                 </View>
               </LinearGradient>
             </View>
 
-            {/* =============================================
+            {/* =================================================
                 STATS
-            ============================================= */}
+            ================================================= */}
 
             {years.length > 0 && (
               <View
@@ -387,7 +481,7 @@ export default function PyqYearListScreen({
                 />
 
                 <StatItem
-                  icon="document-text-outline"
+                  icon="documents-outline"
                   value={
                     stats.totalPapers
                   }
@@ -411,9 +505,9 @@ export default function PyqYearListScreen({
               </View>
             )}
 
-            {/* =============================================
+            {/* =================================================
                 SECTION HEADER
-            ============================================= */}
+            ================================================= */}
 
             <View
               style={
@@ -438,7 +532,7 @@ export default function PyqYearListScreen({
                     styles.sectionSubtitle
                   }
                 >
-                  Select a year to view
+                  Select a year to browse
                   available papers
                 </Text>
               </View>
@@ -446,12 +540,12 @@ export default function PyqYearListScreen({
               {years.length > 0 && (
                 <View
                   style={
-                    styles.yearCountBadge
+                    styles.countBadge
                   }
                 >
                   <Text
                     style={
-                      styles.yearCountNumber
+                      styles.countNumber
                     }
                   >
                     {years.length}
@@ -459,7 +553,7 @@ export default function PyqYearListScreen({
 
                   <Text
                     style={
-                      styles.yearCountLabel
+                      styles.countLabel
                     }
                   >
                     YEARS
@@ -487,7 +581,8 @@ export default function PyqYearListScreen({
                 {
                   examStage,
                   examName,
-                  year: item.year,
+                  year:
+                    item.year,
                 }
               )
             }
@@ -521,11 +616,17 @@ function StatItem({
         <Ionicons
           name={icon}
           size={15}
-          color={colors.brand}
+          color={
+            colors.brand
+          }
         />
       </View>
 
-      <View>
+      <View
+        style={
+          styles.statText
+        }
+      >
         <Text
           style={
             styles.statValue
@@ -556,7 +657,9 @@ function YearCard({
   onPress,
 }) {
   const count =
-    Number(item.count || 0);
+    Number(
+      item?.count || 0
+    );
 
   return (
     <TouchableOpacity
@@ -574,9 +677,10 @@ function YearCard({
         }
       >
         <LinearGradient
-          colors={
-            gradients.brand
-          }
+          colors={[
+            "#4F46E5",
+            "#7C3AED",
+          ]}
           start={{
             x: 0,
             y: 0,
@@ -613,7 +717,7 @@ function YearCard({
         </View>
       </View>
 
-      {/* CONTENT */}
+      {/* PAPER COUNT */}
 
       <View
         style={
@@ -633,10 +737,9 @@ function YearCard({
             styles.paperLabel
           }
         >
-          Paper
-          {count !== 1
-            ? "s"
-            : ""}
+          {count === 1
+            ? "Paper"
+            : "Papers"}
         </Text>
       </View>
 
@@ -660,6 +763,20 @@ function YearCard({
         >
           Available
         </Text>
+
+        <View
+          style={
+            styles.footerArrow
+          }
+        >
+          <Ionicons
+            name="arrow-forward"
+            size={10}
+            color={
+              colors.brand
+            }
+          />
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -680,7 +797,7 @@ function EmptyState({
     >
       <View
         style={
-          styles.emptyIconWrap
+          styles.emptyArtwork
         }
       >
         <View
@@ -690,7 +807,7 @@ function EmptyState({
         >
           <Ionicons
             name="documents-outline"
-            size={28}
+            size={29}
             color={
               colors.brand
             }
@@ -769,34 +886,48 @@ const styles =
         colors.bg,
     },
 
-    centered: {
+    /* =====================================================
+       LOADING
+    ===================================================== */
+
+    loadingContainer: {
       flex: 1,
+      backgroundColor:
+        colors.bg,
       alignItems:
         "center",
       justifyContent:
         "center",
-      backgroundColor:
-        colors.bg,
     },
 
     loaderCircle: {
-      width: 46,
-      height: 46,
-      borderRadius: 23,
+      width: 48,
+      height: 48,
+      borderRadius: 24,
       backgroundColor:
         "#FFFFFF",
       alignItems:
         "center",
       justifyContent:
         "center",
-      marginBottom: 10,
+      marginBottom: 12,
       ...shadow.soft,
     },
 
-    loadingText: {
-      fontSize: 12,
-      color: colors.slate,
-      fontWeight: "600",
+    loadingTitle: {
+      fontSize: 13,
+      lineHeight: 18,
+      fontWeight: "800",
+      color:
+        colors.ink,
+    },
+
+    loadingSubtitle: {
+      fontSize: 10.5,
+      lineHeight: 15,
+      color:
+        colors.slate,
+      marginTop: 2,
     },
 
     /* =====================================================
@@ -804,7 +935,7 @@ const styles =
     ===================================================== */
 
     header: {
-      minHeight: 56,
+      minHeight: 57,
       paddingHorizontal: 18,
       paddingBottom: 13,
       flexDirection:
@@ -813,58 +944,45 @@ const styles =
         "center",
     },
 
-    backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+    headerButton: {
+      width: 41,
+      height: 41,
+      borderRadius: 14,
       backgroundColor:
         "#FFFFFF",
+      borderWidth: 1,
+      borderColor:
+        colors.border,
       alignItems:
         "center",
       justifyContent:
         "center",
-      borderWidth: 1,
-      borderColor:
-        colors.border,
       ...shadow.soft,
     },
 
     headerContent: {
       flex: 1,
       minWidth: 0,
-      marginHorizontal: 12,
+      marginHorizontal: 11,
     },
 
     headerTitle: {
       fontSize: 18,
       lineHeight: 22,
-      fontWeight: "800",
-      color: colors.ink,
-      letterSpacing: -0.3,
+      fontWeight: "900",
+      color:
+        colors.ink,
+      letterSpacing:
+        -0.35,
     },
 
     headerSubtitle: {
       fontSize: 10.5,
       lineHeight: 15,
-      color: colors.slate,
+      color:
+        colors.slate,
       marginTop: 2,
       fontWeight: "500",
-    },
-
-    refreshButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor:
-        "#FFFFFF",
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      borderWidth: 1,
-      borderColor:
-        colors.border,
-      ...shadow.soft,
     },
 
     /* =====================================================
@@ -873,14 +991,14 @@ const styles =
 
     heroWrap: {
       marginHorizontal: 18,
-      marginBottom: 14,
+      marginBottom: 15,
     },
 
     hero: {
-      minHeight: 126,
-      borderRadius: 21,
-      paddingHorizontal: 17,
-      paddingVertical: 15,
+      minHeight: 164,
+      borderRadius: 23,
+      paddingHorizontal: 18,
+      paddingVertical: 17,
       flexDirection:
         "row",
       alignItems:
@@ -891,89 +1009,172 @@ const styles =
 
     heroContent: {
       flex: 1,
-      zIndex: 2,
+      minWidth: 0,
+      zIndex: 5,
     },
 
     heroBadge: {
       alignSelf:
         "flex-start",
+      height: 25,
+      paddingHorizontal: 8,
+      borderRadius:
+        radius.full,
+      backgroundColor:
+        "rgba(255,255,255,0.14)",
+      borderWidth: 1,
+      borderColor:
+        "rgba(255,255,255,0.12)",
       flexDirection:
         "row",
       alignItems:
         "center",
       gap: 4,
-      paddingHorizontal: 7,
-      paddingVertical: 4,
-      borderRadius:
-        radius.full,
-      backgroundColor:
-        "rgba(255,255,255,0.15)",
-      marginBottom: 7,
+      marginBottom: 8,
     },
 
     heroBadgeText: {
       fontSize: 7.5,
-      fontWeight: "800",
+      fontWeight: "900",
       color: "#FFFFFF",
-      letterSpacing: 0.4,
+      letterSpacing: 0.6,
     },
 
     heroTitle: {
-      fontSize: 19,
-      lineHeight: 24,
+      fontSize: 21,
+      lineHeight: 26,
       fontWeight: "900",
       color: "#FFFFFF",
-      letterSpacing: -0.4,
+      letterSpacing: -0.5,
     },
 
     heroSubtitle: {
+      maxWidth: 225,
       fontSize: 10.5,
-      lineHeight: 15,
+      lineHeight: 16,
       color:
-        "rgba(255,255,255,0.78)",
-      marginTop: 3,
-      maxWidth: 220,
+        "rgba(255,255,255,0.76)",
+      marginTop: 5,
     },
 
-    heroIcon: {
-      width: 61,
-      height: 61,
-      borderRadius: 20,
-      backgroundColor:
-        "rgba(255,255,255,0.13)",
-      borderWidth: 1,
-      borderColor:
-        "rgba(255,255,255,0.12)",
+    /* =====================================================
+       HERO ARTWORK
+    ===================================================== */
+
+    heroArtwork: {
+      width: 82,
+      height: 105,
       alignItems:
         "center",
       justifyContent:
         "center",
-      marginLeft: 10,
-      zIndex: 2,
+      position:
+        "relative",
+      marginLeft: 8,
     },
 
-    heroCircleOne: {
+    heroYearCard: {
+      width: 67,
+      height: 79,
+      borderRadius: 18,
+      backgroundColor:
+        "rgba(255,255,255,0.13)",
+      borderWidth: 1,
+      borderColor:
+        "rgba(255,255,255,0.23)",
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+      transform: [
+        {
+          rotate: "6deg",
+        },
+      ],
+    },
+
+    heroArtworkNumber: {
+      fontSize: 18,
+      lineHeight: 22,
+      fontWeight: "900",
+      color: "#FFFFFF",
+      marginTop: 4,
+    },
+
+    heroArtworkLabel: {
+      fontSize: 6.5,
+      lineHeight: 9,
+      fontWeight: "900",
+      color:
+        "rgba(255,255,255,0.62)",
+      letterSpacing: 0.7,
+      marginTop: 1,
+    },
+
+    heroFloatingIcon: {
       position:
         "absolute",
-      width: 150,
-      height: 150,
-      borderRadius: 75,
-      right: -72,
-      top: -82,
+      right: -2,
+      bottom: 2,
+      width: 35,
+      height: 35,
+      borderRadius: 12,
+      backgroundColor:
+        "rgba(255,255,255,0.14)",
+      borderWidth: 1,
+      borderColor:
+        "rgba(255,255,255,0.17)",
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+      transform: [
+        {
+          rotate: "-8deg",
+        },
+      ],
+    },
+
+    heroOrbOne: {
+      position:
+        "absolute",
+      width: 205,
+      height: 205,
+      borderRadius: 103,
+      right: -92,
+      top: -110,
       backgroundColor:
         "rgba(255,255,255,0.08)",
     },
 
-    heroCircleTwo: {
+    heroOrbTwo: {
       position:
         "absolute",
-      width: 95,
-      height: 95,
-      borderRadius: 48,
-      left: -50,
-      bottom: -64,
+      width: 110,
+      height: 110,
+      borderRadius: 55,
+      left: -54,
+      bottom: -72,
       backgroundColor:
         "rgba(255,255,255,0.06)",
+    },
+
+    heroRing: {
+      position:
+        "absolute",
+      width: 165,
+      height: 165,
+      borderRadius: 83,
+      borderWidth: 19,
+      borderColor:
+        "rgba(255,255,255,0.035)",
+      right: -75,
+      bottom: -82,
+      transform: [
+        {
+          rotate: "18deg",
+        },
+      ],
     },
 
     /* =====================================================
@@ -983,11 +1184,12 @@ const styles =
     statsCard: {
       marginHorizontal: 18,
       marginBottom: 21,
-      padding: 11,
-      minHeight: 67,
+      minHeight: 68,
+      paddingVertical: 11,
+      paddingHorizontal: 8,
       backgroundColor:
         "#FFFFFF",
-      borderRadius: 17,
+      borderRadius: 18,
       borderWidth: 1,
       borderColor:
         colors.border,
@@ -1007,6 +1209,7 @@ const styles =
       justifyContent:
         "center",
       gap: 7,
+      minWidth: 0,
     },
 
     statIcon: {
@@ -1019,13 +1222,19 @@ const styles =
         "center",
       justifyContent:
         "center",
+      flexShrink: 0,
+    },
+
+    statText: {
+      minWidth: 0,
     },
 
     statValue: {
       fontSize: 14,
       lineHeight: 17,
       fontWeight: "900",
-      color: colors.ink,
+      color:
+        colors.ink,
     },
 
     statLabel: {
@@ -1039,7 +1248,7 @@ const styles =
 
     statDivider: {
       width: 1,
-      height: 29,
+      height: 30,
       backgroundColor:
         colors.border,
     },
@@ -1061,27 +1270,32 @@ const styles =
 
     sectionText: {
       flex: 1,
+      minWidth: 0,
+      paddingRight: 10,
     },
 
     sectionTitle: {
       fontSize: 19,
-      lineHeight: 23,
-      fontWeight: "800",
-      color: colors.ink,
-      letterSpacing: -0.35,
+      lineHeight: 24,
+      fontWeight: "900",
+      color:
+        colors.ink,
+      letterSpacing:
+        -0.35,
     },
 
     sectionSubtitle: {
       fontSize: 10.5,
       lineHeight: 15,
-      color: colors.slate,
+      color:
+        colors.slate,
       marginTop: 2,
     },
 
-    yearCountBadge: {
-      minWidth: 43,
-      height: 42,
-      borderRadius: 13,
+    countBadge: {
+      width: 48,
+      height: 44,
+      borderRadius: 14,
       backgroundColor:
         "#FFFFFF",
       borderWidth: 1,
@@ -1091,25 +1305,29 @@ const styles =
         "center",
       justifyContent:
         "center",
+      ...shadow.soft,
     },
 
-    yearCountNumber: {
-      fontSize: 13,
+    countNumber: {
+      fontSize: 14,
+      lineHeight: 17,
       fontWeight: "900",
-      color: colors.brand,
+      color:
+        colors.brand,
     },
 
-    yearCountLabel: {
+    countLabel: {
       fontSize: 6.5,
-      fontWeight: "800",
+      lineHeight: 9,
+      fontWeight: "900",
       color:
         colors.slateSoft,
+      letterSpacing: 0.5,
       marginTop: 1,
-      letterSpacing: 0.3,
     },
 
     /* =====================================================
-       COLUMN
+       GRID
     ===================================================== */
 
     columnWrapper: {
@@ -1125,7 +1343,7 @@ const styles =
     yearCard: {
       ...card,
       flex: 1,
-      minHeight: 145,
+      minHeight: 151,
       padding: 12,
       borderRadius: 19,
       borderWidth: 1,
@@ -1146,9 +1364,9 @@ const styles =
     },
 
     yearIcon: {
-      width: 58,
-      height: 58,
-      borderRadius: 17,
+      width: 61,
+      height: 61,
+      borderRadius: 18,
       alignItems:
         "center",
       justifyContent:
@@ -1161,13 +1379,14 @@ const styles =
       lineHeight: 20,
       fontWeight: "900",
       color: "#FFFFFF",
-      letterSpacing: -0.3,
+      letterSpacing:
+        -0.3,
     },
 
     arrowCircle: {
-      width: 27,
-      height: 27,
-      borderRadius: 14,
+      width: 29,
+      height: 29,
+      borderRadius: 15,
       backgroundColor:
         colors.slateLight,
       alignItems:
@@ -1185,14 +1404,16 @@ const styles =
     },
 
     paperCount: {
-      fontSize: 19,
-      lineHeight: 23,
+      fontSize: 20,
+      lineHeight: 24,
       fontWeight: "900",
-      color: colors.ink,
+      color:
+        colors.ink,
     },
 
     paperLabel: {
       fontSize: 10,
+      lineHeight: 13,
       fontWeight: "600",
       color:
         colors.slateSoft,
@@ -1204,7 +1425,7 @@ const styles =
         "row",
       alignItems:
         "center",
-      marginTop: 8,
+      marginTop: 9,
     },
 
     availableDot: {
@@ -1218,9 +1439,23 @@ const styles =
 
     availableText: {
       fontSize: 8.5,
+      lineHeight: 11,
       fontWeight: "700",
       color:
         colors.success,
+    },
+
+    footerArrow: {
+      marginLeft: "auto",
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      backgroundColor:
+        colors.brandLight,
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
     },
 
     /* =====================================================
@@ -1234,16 +1469,16 @@ const styles =
       paddingVertical: 55,
     },
 
-    emptyIconWrap: {
+    emptyArtwork: {
       position:
         "relative",
-      marginBottom: 14,
+      marginBottom: 15,
     },
 
     emptyIcon: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+      width: 76,
+      height: 76,
+      borderRadius: 38,
       backgroundColor:
         colors.brandLight,
       alignItems:
@@ -1256,9 +1491,9 @@ const styles =
       position:
         "absolute",
       right: -3,
-      top: -2,
-      width: 25,
-      height: 25,
+      top: -3,
+      width: 26,
+      height: 26,
       borderRadius: 13,
       backgroundColor:
         "#FFF8DF",
@@ -1273,18 +1508,20 @@ const styles =
 
     emptyTitle: {
       fontSize: 18,
-      lineHeight: 22,
-      fontWeight: "800",
-      color: colors.ink,
+      lineHeight: 23,
+      fontWeight: "900",
+      color:
+        colors.ink,
       marginBottom: 5,
     },
 
     emptyText: {
-      fontSize: 12,
+      maxWidth: 285,
+      fontSize: 11.5,
       lineHeight: 18,
-      color: colors.slate,
+      color:
+        colors.slate,
       textAlign: "center",
-      maxWidth: 290,
     },
 
     emptyButton: {
@@ -1300,7 +1537,7 @@ const styles =
       justifyContent:
         "center",
       gap: 6,
-      marginTop: 16,
+      marginTop: 17,
       ...shadow.brand,
     },
 

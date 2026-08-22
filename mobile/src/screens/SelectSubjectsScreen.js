@@ -1,7 +1,7 @@
 import {
   useCallback,
-  useLayoutEffect,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from "react";
@@ -15,14 +15,11 @@ import {
   ActivityIndicator,
 } from "react-native";
 
-import AppAlert from "../components/AppAlert";
-
 import { Ionicons } from "@expo/vector-icons";
-
 import { LinearGradient } from "expo-linear-gradient";
-
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import AppAlert from "../components/AppAlert";
 import api from "../api/client";
 
 import {
@@ -40,26 +37,32 @@ import {
 
 const SUBJECT_META = [
   {
-    bg: "#EEF0FF",
-    accent: "#5B5FEF",
+    icon: "calculator-outline",
+    bg: "#EEF3FF",
+    accent: "#3B7BFF",
   },
   {
+    icon: "language-outline",
     bg: "#ECFDF5",
     accent: "#10B981",
   },
   {
+    icon: "flask-outline",
     bg: "#FFF7ED",
     accent: "#F59E0B",
   },
   {
+    icon: "book-outline",
     bg: "#FDF2F8",
     accent: "#EC4899",
   },
   {
+    icon: "globe-outline",
     bg: "#F0F9FF",
     accent: "#0EA5E9",
   },
   {
+    icon: "bulb-outline",
     bg: "#F5F3FF",
     accent: "#8B5CF6",
   },
@@ -81,7 +84,7 @@ export default function SelectSubjectsScreen({
   const [saving, setSaving] = useState(false);
 
   /* =======================================================
-     HIDE NATIVE HEADER
+     HIDE HEADER
   ======================================================= */
 
   useLayoutEffect(() => {
@@ -103,10 +106,16 @@ export default function SelectSubjectsScreen({
         api.get("/subjects/my"),
       ]);
 
-      setAll(allRes.data?.subjects || []);
+      const subjects =
+        allRes.data?.subjects || [];
+
+      const mySubjects =
+        myRes.data?.subjects || [];
+
+      setAll(subjects);
 
       setSelected(
-        (myRes.data?.subjects || []).map(
+        mySubjects.map(
           (subject) => subject.name
         )
       );
@@ -166,11 +175,6 @@ export default function SelectSubjectsScreen({
 
   /* =======================================================
      SAVE
-     
-     IMPORTANT:
-     Empty selection IS VALID.
-     
-     This allows user to remove every subject.
   ======================================================= */
 
   async function save() {
@@ -196,12 +200,12 @@ export default function SelectSubjectsScreen({
   }
 
   /* =======================================================
-     HEADER TEXT
+     SUMMARY
   ======================================================= */
 
   const selectionText = useMemo(() => {
     if (selected.length === 0) {
-      return "No subjects selected";
+      return "Choose subjects for your practice";
     }
 
     if (selected.length === 1) {
@@ -211,20 +215,21 @@ export default function SelectSubjectsScreen({
     return `${selected.length} subjects selected`;
   }, [selected.length]);
 
+  const selectionProgress =
+    all.length > 0
+      ? Math.min(
+          selected.length / all.length,
+          1
+        )
+      : 0;
+
   /* =======================================================
      LOADING
   ======================================================= */
 
   if (loading) {
     return (
-      <View
-        style={[
-          styles.centered,
-          {
-            paddingTop: insets.top,
-          },
-        ]}
-      >
+      <View style={styles.centered}>
         <View style={styles.loaderCircle}>
           <ActivityIndicator
             size="small"
@@ -247,11 +252,13 @@ export default function SelectSubjectsScreen({
     <View style={styles.container}>
       <FlatList
         data={all}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item) =>
+          item._id
+        }
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingBottom:
-            120 + insets.bottom,
+            116 + insets.bottom,
         }}
         ListHeaderComponent={
           <>
@@ -264,14 +271,14 @@ export default function SelectSubjectsScreen({
                 styles.header,
                 {
                   paddingTop: Math.max(
-                    insets.top + 4,
-                    16
+                    insets.top + 8,
+                    18
                   ),
                 },
               ]}
             >
               <TouchableOpacity
-                style={styles.backButton}
+                style={styles.headerButton}
                 activeOpacity={0.75}
                 onPress={() =>
                   navigation.goBack()
@@ -279,237 +286,334 @@ export default function SelectSubjectsScreen({
               >
                 <Ionicons
                   name="arrow-back"
-                  size={21}
+                  size={20}
                   color={colors.ink}
                 />
               </TouchableOpacity>
 
               <View style={styles.headerContent}>
-                <Text style={styles.headerTitle}>
+                <Text
+                  style={styles.headerTitle}
+                  numberOfLines={1}
+                >
                   Manage Subjects
                 </Text>
 
                 <Text style={styles.headerSubtitle}>
-                  Customize your practice
+                  Personalize your practice
                 </Text>
               </View>
 
               <TouchableOpacity
-                style={styles.refreshButton}
+                style={styles.headerButton}
                 activeOpacity={0.75}
                 onPress={load}
               >
                 <Ionicons
                   name="refresh-outline"
-                  size={19}
+                  size={18}
                   color={colors.slate}
                 />
               </TouchableOpacity>
             </View>
 
             {/* =================================================
-                INTRO HERO
+                HERO
             ================================================= */}
 
-            <LinearGradient
-              colors={gradients.brand}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.introCard}
-            >
-              <View style={styles.introOrbOne} />
-              <View style={styles.introOrbTwo} />
-
-              <View style={styles.introIcon}>
-                <Ionicons
-                  name="library-outline"
-                  size={22}
-                  color="#FFFFFF"
+            <View style={styles.heroWrap}>
+              <LinearGradient
+                colors={gradients.brand}
+                start={{
+                  x: 0,
+                  y: 0,
+                }}
+                end={{
+                  x: 1,
+                  y: 1,
+                }}
+                style={styles.hero}
+              >
+                <View
+                  style={styles.heroOrbOne}
                 />
-              </View>
 
-              <View style={styles.introContent}>
-                <Text style={styles.introTitle}>
-                  Choose what you want to practise
-                </Text>
+                <View
+                  style={styles.heroOrbTwo}
+                />
 
-                <Text style={styles.introText}>
-                  Add or remove subjects anytime.
-                  You can also keep your practice
-                  empty if you don't want to practise
-                  right now.
-                </Text>
-              </View>
-            </LinearGradient>
+                <View
+                  style={styles.heroIcon}
+                >
+                  <Ionicons
+                    name="options-outline"
+                    size={23}
+                    color="#FFFFFF"
+                  />
+                </View>
+
+                <View
+                  style={styles.heroContent}
+                >
+                  <View
+                    style={styles.heroBadge}
+                  >
+                    <Ionicons
+                      name="sparkles"
+                      size={10}
+                      color="#FFFFFF"
+                    />
+
+                    <Text
+                      style={
+                        styles.heroBadgeText
+                      }
+                    >
+                      PERSONALIZE
+                    </Text>
+                  </View>
+
+                  <Text
+                    style={styles.heroTitle}
+                  >
+                    Build your practice
+                  </Text>
+
+                  <Text
+                    style={styles.heroSubtitle}
+                  >
+                    Select the subjects you
+                    want to focus on.
+                  </Text>
+                </View>
+              </LinearGradient>
+            </View>
 
             {/* =================================================
                 SELECTION SUMMARY
             ================================================= */}
 
-            <View style={styles.selectionHeader}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.sectionTitle}>
-                  Available Subjects
-                </Text>
+            <View
+              style={
+                styles.selectionSummary
+              }
+            >
+              <View
+                style={
+                  styles.summaryTop
+                }
+              >
+                <View
+                  style={
+                    styles.summaryText
+                  }
+                >
+                  <Text
+                    style={
+                      styles.sectionTitle
+                    }
+                  >
+                    Your Subjects
+                  </Text>
 
-                <Text style={styles.sectionSubtitle}>
-                  {selectionText}
-                </Text>
+                  <Text
+                    style={
+                      styles.sectionSubtitle
+                    }
+                  >
+                    {selectionText}
+                  </Text>
+                </View>
+
+                <View
+                  style={
+                    styles.selectionBadge
+                  }
+                >
+                  <Text
+                    style={
+                      styles.selectionNumber
+                    }
+                  >
+                    {selected.length}
+                  </Text>
+
+                  <Text
+                    style={
+                      styles.selectionLabel
+                    }
+                  >
+                    SELECTED
+                  </Text>
+                </View>
               </View>
+
+              {/* PROGRESS */}
+
+              {all.length > 0 && (
+                <View
+                  style={
+                    styles.progressArea
+                  }
+                >
+                  <View
+                    style={
+                      styles.progressTrack
+                    }
+                  >
+                    <View
+                      style={[
+                        styles.progressFill,
+                        {
+                          width: `${
+                            selectionProgress *
+                            100
+                          }%`,
+                        },
+                      ]}
+                    />
+                  </View>
+
+                  <Text
+                    style={
+                      styles.progressText
+                    }
+                  >
+                    {selected.length} of{" "}
+                    {all.length}
+                  </Text>
+                </View>
+              )}
+
+              {/* SELECT ALL */}
 
               {all.length > 0 && (
                 <TouchableOpacity
-                  style={styles.selectAllButton}
+                  style={
+                    styles.selectAllButton
+                  }
                   activeOpacity={0.75}
                   onPress={toggleAll}
                 >
-                  <Ionicons
-                    name={
-                      allSelected
-                        ? "close-circle-outline"
-                        : "checkmark-done-outline"
+                  <View
+                    style={
+                      styles.selectAllIcon
                     }
-                    size={14}
-                    color={colors.brand}
-                  />
+                  >
+                    <Ionicons
+                      name={
+                        allSelected
+                          ? "remove-outline"
+                          : "checkmark-done"
+                      }
+                      size={14}
+                      color={
+                        colors.brand
+                      }
+                    />
+                  </View>
 
-                  <Text style={styles.selectAllText}>
+                  <Text
+                    style={
+                      styles.selectAllText
+                    }
+                  >
                     {allSelected
-                      ? "Clear all"
-                      : "Select all"}
+                      ? "Clear all subjects"
+                      : "Select all subjects"}
                   </Text>
+
+                  <Ionicons
+                    name="chevron-forward"
+                    size={14}
+                    color={
+                      colors.slateSoft
+                    }
+                  />
                 </TouchableOpacity>
               )}
+            </View>
+
+            {/* =================================================
+                SECTION
+            ================================================= */}
+
+            <View
+              style={
+                styles.listHeader
+              }
+            >
+              <View
+                style={
+                  styles.listHeaderText
+                }
+              >
+                <Text
+                  style={
+                    styles.listTitle
+                  }
+                >
+                  Available Subjects
+                </Text>
+
+                <Text
+                  style={
+                    styles.listSubtitle
+                  }
+                >
+                  Tap any subject to add or remove
+                </Text>
+              </View>
+
+              <View
+                style={
+                  styles.totalBadge
+                }
+              >
+                <Text
+                  style={
+                    styles.totalBadgeText
+                  }
+                >
+                  {all.length}
+                </Text>
+              </View>
             </View>
           </>
         }
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <Ionicons
-                name="book-outline"
-                size={28}
-                color={colors.slateSoft}
-              />
-            </View>
-
-            <Text style={styles.emptyTitle}>
-              No subjects available
-            </Text>
-
-            <Text style={styles.emptyText}>
-              Subjects will appear here when they
-              are available.
-            </Text>
-          </View>
+          <EmptyState />
         }
-        renderItem={({ item, index }) => {
-          const active = selected.includes(
-            item.name
-          );
+        renderItem={({
+          item,
+          index,
+        }) => {
+          const active =
+            selected.includes(
+              item.name
+            );
 
           const meta =
             SUBJECT_META[
-              index % SUBJECT_META.length
+              index %
+                SUBJECT_META.length
             ];
 
+          const chapterCount =
+            item.chapters?.length || 0;
+
           return (
-            <TouchableOpacity
-              style={[
-                styles.subjectCard,
-                active &&
-                  styles.subjectCardActive,
-              ]}
-              activeOpacity={0.78}
+            <SubjectCard
+              item={item}
+              meta={meta}
+              active={active}
+              chapterCount={
+                chapterCount
+              }
               onPress={() =>
                 toggle(item.name)
               }
-            >
-              {/* ICON */}
-
-              <View
-                style={[
-                  styles.iconWrap,
-                  {
-                    backgroundColor: active
-                      ? colors.brandLight
-                      : meta.bg,
-                  },
-                ]}
-              >
-                {item.icon ? (
-                  <Text style={styles.icon}>
-                    {item.icon}
-                  </Text>
-                ) : (
-                  <Ionicons
-                    name="book-outline"
-                    size={21}
-                    color={meta.accent}
-                  />
-                )}
-              </View>
-
-              {/* CONTENT */}
-
-              <View style={styles.subjectContent}>
-                <View style={styles.nameRow}>
-                  <Text
-                    style={[
-                      styles.name,
-                      active &&
-                        styles.nameActive,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {item.name}
-                  </Text>
-
-                  {active && (
-                    <View style={styles.selectedPill}>
-                      <Text
-                        style={
-                          styles.selectedPillText
-                        }
-                      >
-                        SELECTED
-                      </Text>
-                    </View>
-                  )}
-                </View>
-
-                <View style={styles.metaRow}>
-                  <Ionicons
-                    name="layers-outline"
-                    size={11}
-                    color={colors.slateSoft}
-                  />
-
-                  <Text style={styles.meta}>
-                    {item.chapters?.length || 0}{" "}
-                    chapters
-                  </Text>
-                </View>
-              </View>
-
-              {/* CHECK */}
-
-              <View
-                style={[
-                  styles.checkbox,
-                  active &&
-                    styles.checkboxActive,
-                ]}
-              >
-                {active && (
-                  <Ionicons
-                    name="checkmark"
-                    size={15}
-                    color="#FFFFFF"
-                  />
-                )}
-              </View>
-            </TouchableOpacity>
+            />
           );
         }}
       />
@@ -523,38 +627,88 @@ export default function SelectSubjectsScreen({
           styles.footer,
           {
             paddingBottom:
-              spacing.md + insets.bottom,
+              Math.max(
+                spacing.md +
+                  insets.bottom,
+                12
+              ),
           },
         ]}
       >
-        <View style={styles.footerCount}>
-          <Text style={styles.footerCountValue}>
-            {selected.length}
-          </Text>
+        <View
+          style={styles.footerInfo}
+        >
+          <View
+            style={
+              styles.footerCountCircle
+            }
+          >
+            <Text
+              style={
+                styles.footerCountValue
+              }
+            >
+              {selected.length}
+            </Text>
+          </View>
 
-          <Text style={styles.footerCountLabel}>
-            selected
-          </Text>
+          <View
+            style={
+              styles.footerText
+            }
+          >
+            <Text
+              style={
+                styles.footerTitle
+              }
+            >
+              {selected.length === 0
+                ? "No subjects selected"
+                : `${selected.length} ${
+                    selected.length === 1
+                      ? "subject"
+                      : "subjects"
+                  } selected`}
+            </Text>
+
+            <Text
+              style={
+                styles.footerSubtitle
+              }
+            >
+              Your changes will apply to practice
+            </Text>
+          </View>
         </View>
 
         <TouchableOpacity
-          style={styles.saveWrapper}
+          style={
+            styles.saveWrapper
+          }
           onPress={save}
           disabled={saving}
-          activeOpacity={0.85}
+          activeOpacity={0.86}
         >
           <LinearGradient
             colors={
               selected.length === 0
                 ? [
-                    colors.slate,
-                    colors.slateSoft,
+                    "#64748B",
+                    "#475569",
                   ]
                 : gradients.brand
             }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.saveButton}
+            start={{
+              x: 0,
+              y: 0,
+            }}
+            end={{
+              x: 1,
+              y: 0,
+            }}
+            style={
+              styles.saveButton
+            }
           >
             {saving ? (
               <ActivityIndicator
@@ -566,7 +720,7 @@ export default function SelectSubjectsScreen({
                 <Ionicons
                   name={
                     selected.length === 0
-                      ? "close-circle-outline"
+                      ? "remove-circle-outline"
                       : "checkmark-circle-outline"
                   }
                   size={17}
@@ -592,10 +746,210 @@ export default function SelectSubjectsScreen({
 }
 
 /* =========================================================
+   SUBJECT CARD
+========================================================= */
+
+function SubjectCard({
+  item,
+  meta,
+  active,
+  chapterCount,
+  onPress,
+}) {
+  return (
+    <TouchableOpacity
+      style={[
+        styles.subjectCard,
+        active &&
+          styles.subjectCardActive,
+      ]}
+      activeOpacity={0.78}
+      onPress={onPress}
+    >
+      {/* ACTIVE ACCENT */}
+
+      {active && (
+        <View
+          style={[
+            styles.activeAccent,
+            {
+              backgroundColor:
+                meta.accent,
+            },
+          ]}
+        />
+      )}
+
+      {/* ICON */}
+
+      <View
+        style={[
+          styles.iconWrap,
+          {
+            backgroundColor: active
+              ? colors.brandLight
+              : meta.bg,
+          },
+        ]}
+      >
+        {item.icon ? (
+          <Text
+            style={styles.emojiIcon}
+          >
+            {item.icon}
+          </Text>
+        ) : (
+          <Ionicons
+            name={meta.icon}
+            size={21}
+            color={
+              active
+                ? colors.brand
+                : meta.accent
+            }
+          />
+        )}
+      </View>
+
+      {/* CONTENT */}
+
+      <View
+        style={styles.subjectContent}
+      >
+        <View
+          style={styles.nameRow}
+        >
+          <Text
+            style={[
+              styles.name,
+              active &&
+                styles.nameActive,
+            ]}
+            numberOfLines={2}
+          >
+            {item.name}
+          </Text>
+        </View>
+
+        <View
+          style={styles.metaRow}
+        >
+          <View
+            style={styles.metaItem}
+          >
+            <Ionicons
+              name="layers-outline"
+              size={12}
+              color={
+                colors.slateSoft
+              }
+            />
+
+            <Text
+              style={styles.meta}
+            >
+              {chapterCount}{" "}
+              {chapterCount === 1
+                ? "chapter"
+                : "chapters"}
+            </Text>
+          </View>
+
+          {active && (
+            <View
+              style={
+                styles.selectedMini
+              }
+            >
+              <View
+                style={
+                  styles.selectedDot
+                }
+              />
+
+              <Text
+                style={
+                  styles.selectedMiniText
+                }
+              >
+                Selected
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* CHECK */}
+
+      <View
+        style={[
+          styles.checkbox,
+          active &&
+            styles.checkboxActive,
+        ]}
+      >
+        {active ? (
+          <Ionicons
+            name="checkmark"
+            size={15}
+            color="#FFFFFF"
+          />
+        ) : (
+          <View
+            style={
+              styles.checkboxInner
+            }
+          />
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+/* =========================================================
+   EMPTY
+========================================================= */
+
+function EmptyState() {
+  return (
+    <View
+      style={styles.empty}
+    >
+      <View
+        style={styles.emptyIcon}
+      >
+        <Ionicons
+          name="library-outline"
+          size={28}
+          color={colors.brand}
+        />
+      </View>
+
+      <Text
+        style={styles.emptyTitle}
+      >
+        No subjects available
+      </Text>
+
+      <Text
+        style={styles.emptyText}
+      >
+        Subjects will appear here when
+        they become available.
+      </Text>
+    </View>
+  );
+}
+
+/* =========================================================
    STYLES
 ========================================================= */
 
 const styles = StyleSheet.create({
+  /* =====================================================
+     GENERAL
+  ===================================================== */
+
   container: {
     flex: 1,
     backgroundColor: colors.bg,
@@ -609,39 +963,39 @@ const styles = StyleSheet.create({
   },
 
   loaderCircle: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10,
+    marginBottom: 11,
     ...shadow.soft,
   },
 
   loadingText: {
     fontSize: 12,
+    lineHeight: 17,
     fontWeight: "600",
     color: colors.slate,
   },
 
-  /* =======================================================
+  /* =====================================================
      HEADER
-  ======================================================= */
+  ===================================================== */
 
   header: {
-    minHeight: 72,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
+    minHeight: 67,
+    paddingHorizontal: 18,
+    paddingBottom: 11,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.bg,
   },
 
-  backButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
@@ -652,6 +1006,7 @@ const styles = StyleSheet.create({
 
   headerContent: {
     flex: 1,
+    minWidth: 0,
     marginHorizontal: 12,
   },
 
@@ -660,173 +1015,333 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontWeight: "800",
     color: colors.ink,
-    letterSpacing: -0.3,
+    letterSpacing: -0.35,
   },
 
   headerSubtitle: {
-    fontSize: 10,
+    fontSize: 10.5,
+    lineHeight: 15,
     color: colors.slate,
     marginTop: 2,
     fontWeight: "500",
   },
 
-  refreshButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadow.soft,
+  /* =====================================================
+     HERO
+  ===================================================== */
+
+  heroWrap: {
+    marginHorizontal: 18,
+    marginBottom: 17,
   },
 
-  /* =======================================================
-     INTRO
-  ======================================================= */
-
-  introCard: {
-    marginHorizontal: 18,
-    marginTop: 4,
-    marginBottom: 20,
-    minHeight: 116,
+  hero: {
+    minHeight: 124,
     borderRadius: 21,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 15,
     flexDirection: "row",
     alignItems: "center",
     overflow: "hidden",
     ...shadow.brand,
   },
 
-  introOrbOne: {
+  heroOrbOne: {
     position: "absolute",
-    width: 125,
-    height: 125,
-    borderRadius: 63,
-    right: -60,
-    top: -70,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    right: -74,
+    top: -86,
     backgroundColor:
       "rgba(255,255,255,0.08)",
   },
 
-  introOrbTwo: {
+  heroOrbTwo: {
     position: "absolute",
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    right: 55,
-    bottom: -55,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    left: -48,
+    bottom: -58,
     backgroundColor:
       "rgba(255,255,255,0.06)",
   },
 
-  introIcon: {
-    width: 45,
-    height: 45,
+  heroIcon: {
+    width: 48,
+    height: 48,
     borderRadius: 15,
     backgroundColor:
-      "rgba(255,255,255,0.16)",
+      "rgba(255,255,255,0.14)",
+    borderWidth: 1,
+    borderColor:
+      "rgba(255,255,255,0.13)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
   },
 
-  introContent: {
+  heroContent: {
     flex: 1,
+    minWidth: 0,
     zIndex: 2,
   },
 
-  introTitle: {
-    fontSize: 16,
-    lineHeight: 20,
-    fontWeight: "800",
+  heroBadge: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    backgroundColor:
+      "rgba(255,255,255,0.14)",
+    marginBottom: 7,
+  },
+
+  heroBadgeText: {
+    fontSize: 7.5,
+    fontWeight: "900",
     color: "#FFFFFF",
+    letterSpacing: 0.5,
   },
 
-  introText: {
+  heroTitle: {
+    fontSize: 19,
+    lineHeight: 24,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    letterSpacing: -0.4,
+  },
+
+  heroSubtitle: {
     fontSize: 10.5,
-    lineHeight: 16,
-    color: "rgba(255,255,255,0.78)",
-    marginTop: 4,
+    lineHeight: 15,
+    color:
+      "rgba(255,255,255,0.78)",
+    marginTop: 3,
+    maxWidth: 230,
   },
 
-  /* =======================================================
-     SELECTION HEADER
-  ======================================================= */
+  /* =====================================================
+     SUMMARY
+  ===================================================== */
 
-  selectionHeader: {
+  selectionSummary: {
     marginHorizontal: 18,
-    marginBottom: 11,
+    marginBottom: 21,
+    padding: 14,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.soft,
+  },
+
+  summaryTop: {
     flexDirection: "row",
     alignItems: "center",
   },
 
+  summaryText: {
+    flex: 1,
+    minWidth: 0,
+  },
+
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
+    lineHeight: 21,
     fontWeight: "800",
     color: colors.ink,
     letterSpacing: -0.25,
   },
 
   sectionSubtitle: {
-    fontSize: 10,
+    fontSize: 10.5,
+    lineHeight: 15,
     color: colors.slate,
     marginTop: 2,
   },
 
-  selectAllButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: radius.full,
+  selectionBadge: {
+    minWidth: 51,
+    height: 43,
+    paddingHorizontal: 7,
+    borderRadius: 13,
     backgroundColor: colors.brandTint,
-    borderWidth: 1,
-    borderColor: colors.brandLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 10,
   },
 
-  selectAllText: {
-    fontSize: 9.5,
-    fontWeight: "800",
+  selectionNumber: {
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: "900",
     color: colors.brand,
   },
 
-  /* =======================================================
+  selectionLabel: {
+    fontSize: 6.5,
+    lineHeight: 9,
+    fontWeight: "900",
+    color: colors.slateSoft,
+    letterSpacing: 0.35,
+    marginTop: 1,
+  },
+
+  progressArea: {
+    marginTop: 13,
+  },
+
+  progressTrack: {
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.slateLight,
+    overflow: "hidden",
+  },
+
+  progressFill: {
+    height: "100%",
+    borderRadius: 3,
+    backgroundColor: colors.brand,
+  },
+
+  progressText: {
+    fontSize: 8.5,
+    lineHeight: 12,
+    color: colors.slateSoft,
+    fontWeight: "600",
+    marginTop: 4,
+  },
+
+  selectAllButton: {
+    minHeight: 40,
+    marginTop: 12,
+    paddingHorizontal: 9,
+    borderRadius: 11,
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  selectAllIcon: {
+    width: 27,
+    height: 27,
+    borderRadius: 9,
+    backgroundColor: colors.brandTint,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+
+  selectAllText: {
+    flex: 1,
+    fontSize: 10.5,
+    lineHeight: 14,
+    fontWeight: "800",
+    color: colors.ink,
+  },
+
+  /* =====================================================
+     LIST HEADER
+  ===================================================== */
+
+  listHeader: {
+    marginHorizontal: 18,
+    marginBottom: 11,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  listHeaderText: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  listTitle: {
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "800",
+    color: colors.ink,
+    letterSpacing: -0.3,
+  },
+
+  listSubtitle: {
+    fontSize: 10.5,
+    lineHeight: 15,
+    color: colors.slate,
+    marginTop: 2,
+  },
+
+  totalBadge: {
+    width: 39,
+    height: 39,
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 10,
+  },
+
+  totalBadgeText: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: colors.brand,
+  },
+
+  /* =====================================================
      SUBJECT CARD
-  ======================================================= */
+  ===================================================== */
 
   subjectCard: {
+    position: "relative",
     marginHorizontal: 18,
-    marginBottom: 10,
-    padding: 12,
+    marginBottom: 9,
+    padding: 11,
     minHeight: 72,
-    borderRadius: 18,
+    borderRadius: 17,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: colors.border,
     flexDirection: "row",
     alignItems: "center",
+    overflow: "hidden",
     ...shadow.soft,
   },
 
   subjectCardActive: {
-    borderColor: colors.brand,
     backgroundColor: colors.brandTint,
-    borderWidth: 1.5,
+    borderColor: colors.brandLight,
+  },
+
+  activeAccent: {
+    position: "absolute",
+    left: 0,
+    top: 12,
+    bottom: 12,
+    width: 3,
+    borderRadius: 2,
   },
 
   iconWrap: {
     width: 46,
     height: 46,
-    borderRadius: 15,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
+    marginLeft: 2,
     marginRight: 11,
   },
 
-  icon: {
+  emojiIcon: {
     fontSize: 21,
   },
 
@@ -842,8 +1357,9 @@ const styles = StyleSheet.create({
   },
 
   name: {
-    flexShrink: 1,
+    flex: 1,
     fontSize: 14.5,
+    lineHeight: 19,
     fontWeight: "800",
     color: colors.ink,
   },
@@ -852,44 +1368,61 @@ const styles = StyleSheet.create({
     color: colors.brand,
   },
 
-  selectedPill: {
-    marginLeft: 7,
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    marginTop: 5,
+  },
+
+  metaItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  meta: {
+    fontSize: 9.5,
+    lineHeight: 13,
+    color: colors.slateSoft,
+    fontWeight: "600",
+    marginLeft: 4,
+  },
+
+  selectedMini: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 9,
     paddingHorizontal: 6,
     paddingVertical: 3,
     borderRadius: radius.full,
     backgroundColor: colors.brandLight,
   },
 
-  selectedPillText: {
-    fontSize: 6.5,
-    fontWeight: "900",
+  selectedDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.brand,
+    marginRight: 4,
+  },
+
+  selectedMiniText: {
+    fontSize: 7.5,
+    lineHeight: 10,
+    fontWeight: "800",
     color: colors.brand,
-    letterSpacing: 0.3,
-  },
-
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 4,
-  },
-
-  meta: {
-    fontSize: 9.5,
-    color: colors.slateSoft,
-    fontWeight: "600",
   },
 
   checkbox: {
-    width: 25,
-    height: 25,
-    borderRadius: 8,
-    borderWidth: 1.7,
+    width: 27,
+    height: 27,
+    borderRadius: 9,
+    borderWidth: 1.6,
     borderColor: colors.border,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 10,
-    backgroundColor: "#FFFFFF",
   },
 
   checkboxActive: {
@@ -897,9 +1430,16 @@ const styles = StyleSheet.create({
     borderColor: colors.brand,
   },
 
-  /* =======================================================
+  checkboxInner: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: colors.border,
+  },
+
+  /* =====================================================
      EMPTY
-  ======================================================= */
+  ===================================================== */
 
   empty: {
     alignItems: "center",
@@ -908,86 +1448,113 @@ const styles = StyleSheet.create({
   },
 
   emptyIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.slateLight,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: colors.brandTint,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
+    marginBottom: 13,
   },
 
   emptyTitle: {
-    fontSize: 17,
+    fontSize: 18,
+    lineHeight: 23,
     fontWeight: "800",
     color: colors.ink,
   },
 
   emptyText: {
-    fontSize: 11,
-    lineHeight: 17,
+    fontSize: 11.5,
+    lineHeight: 18,
     color: colors.slate,
     textAlign: "center",
     marginTop: 4,
-    maxWidth: 280,
+    maxWidth: 285,
   },
 
-  /* =======================================================
+  /* =====================================================
      FOOTER
-  ======================================================= */
+  ===================================================== */
 
   footer: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
+    minHeight: 75,
+    paddingHorizontal: 18,
+    paddingTop: 10,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
     backgroundColor: colors.surface,
-    paddingHorizontal: spacing.lg,
-    paddingTop: 11,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     ...shadow.lg,
   },
 
-  footerCount: {
-    minWidth: 56,
+  footerInfo: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  footerCountCircle: {
+    width: 39,
+    height: 39,
+    borderRadius: 20,
+    backgroundColor: colors.brandTint,
     alignItems: "center",
     justifyContent: "center",
+    marginRight: 8,
   },
 
   footerCountValue: {
-    fontSize: 21,
-    lineHeight: 23,
-    fontWeight: "800",
+    fontSize: 15,
+    lineHeight: 19,
+    fontWeight: "900",
     color: colors.brand,
   },
 
-  footerCountLabel: {
-    fontSize: 8.5,
+  footerText: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  footerTitle: {
+    fontSize: 10.5,
+    lineHeight: 15,
+    fontWeight: "800",
+    color: colors.ink,
+  },
+
+  footerSubtitle: {
+    fontSize: 8,
+    lineHeight: 12,
     color: colors.slateSoft,
-    fontWeight: "600",
     marginTop: 1,
   },
 
   saveWrapper: {
-    flex: 1,
+    width: 145,
   },
 
   saveButton: {
-    height: 50,
-    borderRadius: radius.md,
+    height: 47,
+    borderRadius: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 7,
+    gap: 6,
+    ...shadow.brand,
   },
 
   saveButtonText: {
     color: "#FFFFFF",
-    fontSize: 14,
+    fontSize: 12,
+    lineHeight: 17,
     fontWeight: "800",
   },
 });
