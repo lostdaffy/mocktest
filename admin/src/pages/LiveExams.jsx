@@ -3,6 +3,19 @@ import { RiRadioButtonLine, RiCalendarEventLine, RiCheckboxCircleFill } from "@r
 import api from "../api/axios";
 import { useToast } from "../components/Toast";
 
+// <input type="datetime-local"> hands back a bare string like
+// "2026-08-24T14:30" with NO timezone attached. Sending that as-is is what
+// caused the scheduling bug: the server parses it as whatever timezone IT
+// happens to run in (UTC on Render), not the IST the admin actually picked
+// - a 5.5 hour shift every single time, silent and consistent, which is
+// why it looked like "the time sets itself". Attaching the real IST
+// offset here makes the string unambiguous no matter where the server
+// runs, so nothing downstream needs to guess.
+function toIstIso(localDateTimeValue) {
+  if (!localDateTimeValue) return localDateTimeValue;
+  return `${localDateTimeValue}:00+05:30`;
+}
+
 export default function LiveExams() {
   const toast = useToast();
   const [exams, setExams] = useState([]);
@@ -52,7 +65,7 @@ export default function LiveExams() {
     }
     setSaving(true);
     try {
-      await api.post("/exams/live/schedule", { mockTestId, scheduledAt });
+      await api.post("/exams/live/schedule", { mockTestId, scheduledAt: toIstIso(scheduledAt) });
       toast.success("Live exam scheduled");
       setScheduledAt("");
       setMockTestId("");

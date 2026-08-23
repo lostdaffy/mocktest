@@ -45,6 +45,20 @@ async function scheduleLiveExam(req, res) {
       return res.status(400).json({ message: "Pick a mock and a date/time" });
     }
 
+    // A datetime string with no timezone marker (no "Z", no "+05:30") is
+    // ambiguous - `new Date()` would parse it in whatever timezone THIS
+    // server happens to run in, not the IST the admin actually meant. That
+    // silent 5.5-hour shift is exactly what made scheduled times look like
+    // they were "changing themselves". Reject it here rather than let a
+    // future caller (a new admin form, a script, a direct API call)
+    // reintroduce the same bug silently.
+    const hasExplicitOffset = /(Z|[+-]\d{2}:?\d{2})$/.test(scheduledAt);
+    if (!hasExplicitOffset) {
+      return res.status(400).json({
+        message: "scheduledAt must include an explicit timezone offset (e.g. +05:30 or Z) - a bare local time is ambiguous and will schedule the wrong time.",
+      });
+    }
+
     const source = await Test.findById(mockTestId);
     if (!source) return res.status(404).json({ message: "Mock test not found" });
     if (source.type !== "full_mock") {
