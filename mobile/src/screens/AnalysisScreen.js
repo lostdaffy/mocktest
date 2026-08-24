@@ -211,23 +211,7 @@ export default function AnalysisScreen({ navigation }) {
               />
             </TouchableOpacity>
 
-            <View
-              style={[
-                styles.headerIcon,
-                {
-                  backgroundColor:
-                    colors.brandTint,
-                  borderColor:
-                    colors.brandLight,
-                },
-              ]}
-            >
-              <Ionicons
-                name="analytics-outline"
-                size={21}
-                color={colors.brand}
-              />
-            </View>
+            
 
             <View style={styles.headerCopy}>
               <Text
@@ -964,8 +948,8 @@ const styles = StyleSheet.create({
 
   title: {
     ...type.h1,
-    fontSize: 23,
-    lineHeight: 29,
+    fontSize: 18,
+    lineHeight: 23,
     letterSpacing: -0.5,
   },
 

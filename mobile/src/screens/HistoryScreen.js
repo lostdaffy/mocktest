@@ -247,13 +247,7 @@ export default function HistoryScreen({
                   styles.headerTextWrap
                 }
               >
-                <Text
-                  style={
-                    styles.eyebrow
-                  }
-                >
-                  YOUR PROGRESS
-                </Text>
+                
 
                 <Text
                   style={

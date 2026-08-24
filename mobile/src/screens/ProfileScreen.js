@@ -30,7 +30,6 @@ import {
 
 import {
   colors,
-  gradients,
   spacing,
   radius,
   shadow,
@@ -47,8 +46,7 @@ import {
 export default function ProfileScreen({
   navigation,
 }) {
-  const insets =
-    useSafeAreaInsets();
+  const insets = useSafeAreaInsets();
 
   const {
     user,
@@ -65,7 +63,9 @@ export default function ProfileScreen({
   const [savingEmail, setSavingEmail] =
     useState(false);
 
-  /* Name edit (the pencil on the profile card) */
+  /* =======================================================
+     NAME EDIT
+  ======================================================= */
 
   const [nameModalOpen, setNameModalOpen] =
     useState(false);
@@ -108,7 +108,8 @@ export default function ProfileScreen({
     }
 
     if (
-      cleanName === (user?.name || "").trim()
+      cleanName ===
+      (user?.name || "").trim()
     ) {
       setNameModalOpen(false);
       return;
@@ -135,8 +136,7 @@ export default function ProfileScreen({
     } catch (err) {
       AppAlert.alert(
         "Couldn't save",
-        err.response?.data
-          ?.message ||
+        err.response?.data?.message ||
           "Please try again."
       );
     } finally {
@@ -183,8 +183,7 @@ export default function ProfileScreen({
     } catch (err) {
       AppAlert.alert(
         "Couldn't save",
-        err.response?.data
-          ?.message ||
+        err.response?.data?.message ||
           "Please try again."
       );
     } finally {
@@ -196,9 +195,7 @@ export default function ProfileScreen({
      CHANGE LANGUAGE
   ======================================================= */
 
-  async function changeLanguage(
-    lang
-  ) {
+  async function changeLanguage(lang) {
     if (
       user?.preferredLanguage ===
       lang
@@ -220,8 +217,7 @@ export default function ProfileScreen({
     } catch (err) {
       AppAlert.alert(
         "Couldn't update",
-        err.response?.data
-          ?.message ||
+        err.response?.data?.message ||
           "Please try again."
       );
     } finally {
@@ -259,8 +255,7 @@ export default function ProfileScreen({
     isSubscribed(user);
 
   const language =
-    user?.preferredLanguage ||
-    "en";
+    user?.preferredLanguage || "en";
 
   const firstLetter =
     user?.name
@@ -303,9 +298,17 @@ export default function ProfileScreen({
       style={styles.container}
     >
       <ScrollView
-        showsVerticalScrollIndicator={
-          false
-        }
+        showsVerticalScrollIndicator={false}
+
+        /* Prevent the white bounce area */
+        bounces={false}
+
+        /* Android overscroll */
+        overScrollMode="never"
+
+        /* Safe area is handled manually */
+        contentInsetAdjustmentBehavior="never"
+
         contentContainerStyle={{
           paddingBottom:
             spacing.xxl +
@@ -333,12 +336,12 @@ export default function ProfileScreen({
           }}
           style={[
             styles.topArea,
+
+            /* IMPORTANT:
+               Safe-area / notch spacing */
             {
               paddingTop:
-                Math.max(
-                  insets.top,
-                  10
-                ) + 8,
+                insets.top + 12,
             },
           ]}
         >
@@ -356,7 +359,9 @@ export default function ProfileScreen({
             }
           />
 
-          {/* HEADER */}
+          {/* =================================================
+              HEADER
+          ================================================= */}
 
           <View
             style={styles.header}
@@ -409,9 +414,7 @@ export default function ProfileScreen({
                 style={
                   styles.headerCircle
                 }
-                activeOpacity={
-                  0.75
-                }
+                activeOpacity={0.75}
                 onPress={() =>
                   navigation.navigate(
                     "Notifications"
@@ -541,9 +544,7 @@ export default function ProfileScreen({
                       style={
                         styles.contactText
                       }
-                      numberOfLines={
-                        1
-                      }
+                      numberOfLines={1}
                     >
                       {user?.phone ||
                         user?.email ||
@@ -586,9 +587,7 @@ export default function ProfileScreen({
                   style={
                     styles.editButton
                   }
-                  activeOpacity={
-                    0.75
-                  }
+                  activeOpacity={0.75}
                   hitSlop={8}
                   onPress={
                     openNameEditor
@@ -610,9 +609,7 @@ export default function ProfileScreen({
                 style={
                   styles.accessCard
                 }
-                activeOpacity={
-                  0.82
-                }
+                activeOpacity={0.82}
                 onPress={() =>
                   navigation.navigate(
                     "Subscription"
@@ -644,9 +641,7 @@ export default function ProfileScreen({
                     style={
                       styles.accessTitle
                     }
-                    numberOfLines={
-                      1
-                    }
+                    numberOfLines={1}
                   >
                     {activeSubscription
                       ? "Premium access active"
@@ -657,9 +652,7 @@ export default function ProfileScreen({
                     style={
                       styles.accessSubtitle
                     }
-                    numberOfLines={
-                      1
-                    }
+                    numberOfLines={1}
                   >
                     {activeSubscription
                       ? expiryDate
@@ -680,7 +673,7 @@ export default function ProfileScreen({
         </LinearGradient>
 
         {/* =================================================
-            WHITE CONTENT AREA
+            CONTENT AREA
         ================================================= */}
 
         <View
@@ -956,9 +949,7 @@ export default function ProfileScreen({
                 }
                 keyboardType="email-address"
                 autoCapitalize="none"
-                autoCorrect={
-                  false
-                }
+                autoCorrect={false}
               />
 
               <TouchableOpacity
@@ -974,9 +965,7 @@ export default function ProfileScreen({
                   savingEmail ||
                   !emailChanged
                 }
-                activeOpacity={
-                  0.85
-                }
+                activeOpacity={0.85}
               >
                 {savingEmail ? (
                   <ActivityIndicator
@@ -1007,9 +996,7 @@ export default function ProfileScreen({
             onPress={
               confirmLogout
             }
-            activeOpacity={
-              0.78
-          }
+            activeOpacity={0.78}
           >
             <View
               style={
@@ -1099,7 +1086,7 @@ export default function ProfileScreen({
       </ScrollView>
 
       {/* =====================================================
-          EDIT NAME
+          EDIT NAME MODAL
       ===================================================== */}
 
       <Modal
@@ -1111,27 +1098,39 @@ export default function ProfileScreen({
         }
       >
         <View
-          style={styles.modalBackdrop}
+          style={
+            styles.modalBackdrop
+          }
         >
           <View
-            style={styles.modalCard}
+            style={
+              styles.modalCard
+            }
           >
             <Text
-              style={styles.modalTitle}
+              style={
+                styles.modalTitle
+              }
             >
               Edit name
             </Text>
 
             <Text
-              style={styles.modalSubtitle}
+              style={
+                styles.modalSubtitle
+              }
             >
               This is the name shown on leaderboards and your result cards.
             </Text>
 
             <TextInput
-              style={styles.modalInput}
+              style={
+                styles.modalInput
+              }
               value={nameDraft}
-              onChangeText={setNameDraft}
+              onChangeText={
+                setNameDraft
+              }
               placeholder="Your full name"
               placeholderTextColor={
                 colors.slateSoft
@@ -1141,7 +1140,9 @@ export default function ProfileScreen({
             />
 
             <View
-              style={styles.modalActions}
+              style={
+                styles.modalActions
+              }
             >
               <TouchableOpacity
                 style={
@@ -1149,7 +1150,9 @@ export default function ProfileScreen({
                 }
                 activeOpacity={0.8}
                 onPress={() =>
-                  setNameModalOpen(false)
+                  setNameModalOpen(
+                    false
+                  )
                 }
               >
                 <Text
@@ -1168,7 +1171,9 @@ export default function ProfileScreen({
                     styles.modalSaveDisabled,
                 ]}
                 activeOpacity={0.85}
-                disabled={savingName}
+                disabled={
+                  savingName
+                }
                 onPress={saveName}
               >
                 {savingName ? (
@@ -1405,8 +1410,7 @@ const styles =
     },
 
     topGlowOne: {
-      position:
-        "absolute",
+      position: "absolute",
       width: 230,
       height: 230,
       borderRadius: 115,
@@ -1417,8 +1421,7 @@ const styles =
     },
 
     topGlowTwo: {
-      position:
-        "absolute",
+      position: "absolute",
       width: 170,
       height: 170,
       borderRadius: 85,
@@ -1434,10 +1437,8 @@ const styles =
 
     header: {
       paddingHorizontal: 18,
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
+      flexDirection: "row",
+      alignItems: "center",
       justifyContent:
         "space-between",
     },
@@ -1451,8 +1452,7 @@ const styles =
       borderWidth: 1,
       borderColor:
         "rgba(255,255,255,0.20)",
-      alignItems:
-        "center",
+      alignItems: "center",
       justifyContent:
         "center",
       marginRight: 12,
@@ -1481,10 +1481,8 @@ const styles =
     },
 
     headerActions: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
+      flexDirection: "row",
+      alignItems: "center",
       gap: 8,
     },
 
@@ -1497,22 +1495,20 @@ const styles =
       borderWidth: 1,
       borderColor:
         "rgba(255,255,255,0.18)",
-      alignItems:
-        "center",
+      alignItems: "center",
       justifyContent:
         "center",
     },
 
     /* =====================================================
-       EDIT NAME MODAL
+       MODAL
     ===================================================== */
 
     modalBackdrop: {
       flex: 1,
       backgroundColor:
         "rgba(15,23,42,0.55)",
-      alignItems:
-        "center",
+      alignItems: "center",
       justifyContent:
         "center",
       paddingHorizontal: 24,
@@ -1558,8 +1554,7 @@ const styles =
     },
 
     modalActions: {
-      flexDirection:
-        "row",
+      flexDirection: "row",
       gap: 10,
       marginTop: 16,
     },
@@ -1571,8 +1566,7 @@ const styles =
         radius.md,
       backgroundColor:
         colors.slateLight,
-      alignItems:
-        "center",
+      alignItems: "center",
       justifyContent:
         "center",
     },
@@ -1590,8 +1584,7 @@ const styles =
         radius.md,
       backgroundColor:
         colors.brand,
-      alignItems:
-        "center",
+      alignItems: "center",
       justifyContent:
         "center",
     },
@@ -1626,8 +1619,7 @@ const styles =
     },
 
     profileGlowOne: {
-      position:
-        "absolute",
+      position: "absolute",
       width: 220,
       height: 220,
       borderRadius: 110,
@@ -1638,8 +1630,7 @@ const styles =
     },
 
     profileGlowTwo: {
-      position:
-        "absolute",
+      position: "absolute",
       width: 100,
       height: 100,
       borderRadius: 50,
@@ -1650,8 +1641,7 @@ const styles =
     },
 
     profileWave: {
-      position:
-        "absolute",
+      position: "absolute",
       width: 280,
       height: 180,
       borderRadius: 140,
@@ -1668,30 +1658,22 @@ const styles =
     },
 
     profileMain: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
+      flexDirection: "row",
+      alignItems: "center",
       minWidth: 0,
     },
-
-    /* =====================================================
-       AVATAR
-    ===================================================== */
 
     avatarOuter: {
       width: 72,
       height: 72,
       borderRadius: 36,
-      alignItems:
-        "center",
+      alignItems: "center",
       justifyContent:
         "center",
       borderWidth: 2,
       borderColor:
         "rgba(255,255,255,0.42)",
-      position:
-        "relative",
+      position: "relative",
       backgroundColor:
         "rgba(255,255,255,0.08)",
     },
@@ -1700,8 +1682,7 @@ const styles =
       width: 63,
       height: 63,
       borderRadius: 32,
-      alignItems:
-        "center",
+      alignItems: "center",
       justifyContent:
         "center",
       backgroundColor:
@@ -1716,8 +1697,7 @@ const styles =
     },
 
     onlineDot: {
-      position:
-        "absolute",
+      position: "absolute",
       width: 14,
       height: 14,
       borderRadius: 7,
@@ -1729,10 +1709,6 @@ const styles =
       borderColor:
         "#FFFFFF",
     },
-
-    /* =====================================================
-       PROFILE INFO
-    ===================================================== */
 
     profileInfo: {
       flex: 1,
@@ -1750,10 +1726,8 @@ const styles =
     },
 
     contactRow: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
+      flexDirection: "row",
+      alignItems: "center",
       gap: 6,
       marginTop: 4,
     },
@@ -1768,12 +1742,9 @@ const styles =
     },
 
     premiumBadge: {
-      alignSelf:
-        "flex-start",
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
+      alignSelf: "flex-start",
+      flexDirection: "row",
+      alignItems: "center",
       gap: 5,
       marginTop: 8,
       paddingHorizontal: 10,
@@ -1802,8 +1773,7 @@ const styles =
       borderWidth: 1,
       borderColor:
         "rgba(255,255,255,0.14)",
-      alignItems:
-        "center",
+      alignItems: "center",
       justifyContent:
         "center",
       alignSelf:
@@ -1825,10 +1795,8 @@ const styles =
       borderWidth: 1,
       borderColor:
         "rgba(255,255,255,0.13)",
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
+      flexDirection: "row",
+      alignItems: "center",
     },
 
     accessIcon: {
@@ -1837,8 +1805,7 @@ const styles =
       borderRadius: 13,
       backgroundColor:
         "rgba(117,77,255,0.72)",
-      alignItems:
-        "center",
+      alignItems: "center",
       justifyContent:
         "center",
       marginRight: 10,
@@ -1875,10 +1842,6 @@ const styles =
       paddingTop: 24,
     },
 
-    /* =====================================================
-       SECTION HEADER
-    ===================================================== */
-
     sectionHeader: {
       marginHorizontal: 18,
       marginBottom: 10,
@@ -1901,10 +1864,6 @@ const styles =
       fontWeight: "500",
     },
 
-    /* =====================================================
-       GROUP CARD
-    ===================================================== */
-
     groupCard: {
       marginHorizontal: 18,
       marginBottom: 23,
@@ -1925,26 +1884,19 @@ const styles =
       marginLeft: 72,
     },
 
-    /* =====================================================
-       PROFILE ROW
-    ===================================================== */
-
     profileRow: {
       minHeight: 72,
       paddingHorizontal: 12,
       paddingVertical: 10,
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
+      flexDirection: "row",
+      alignItems: "center",
     },
 
     rowIcon: {
       width: 45,
       height: 45,
       borderRadius: 14,
-      alignItems:
-        "center",
+      alignItems: "center",
       justifyContent:
         "center",
       marginRight: 11,
@@ -1956,10 +1908,8 @@ const styles =
     },
 
     rowTitleLine: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
+      flexDirection: "row",
+      alignItems: "center",
       minWidth: 0,
     },
 
@@ -2016,18 +1966,15 @@ const styles =
     },
 
     settingHeader: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
+      flexDirection: "row",
+      alignItems: "center",
     },
 
     settingIcon: {
       width: 43,
       height: 43,
       borderRadius: 14,
-      alignItems:
-        "center",
+      alignItems: "center",
       justifyContent:
         "center",
       marginRight: 11,
@@ -2058,8 +2005,7 @@ const styles =
     ===================================================== */
 
     languageRow: {
-      flexDirection:
-        "row",
+      flexDirection: "row",
       gap: 8,
       marginTop: 13,
     },
@@ -2073,12 +2019,10 @@ const styles =
       borderWidth: 1.5,
       borderColor:
         colors.border,
-      alignItems:
-        "center",
+      alignItems: "center",
       justifyContent:
         "center",
-      flexDirection:
-        "row",
+      flexDirection: "row",
       gap: 5,
     },
 
@@ -2106,10 +2050,8 @@ const styles =
     ===================================================== */
 
     emailRow: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
+      flexDirection: "row",
+      alignItems: "center",
       gap: 8,
       marginTop: 13,
     },
@@ -2137,8 +2079,7 @@ const styles =
       borderRadius: 13,
       backgroundColor:
         colors.brand,
-      alignItems:
-        "center",
+      alignItems: "center",
       justifyContent:
         "center",
     },
@@ -2170,10 +2111,8 @@ const styles =
       borderWidth: 1,
       borderColor:
         "#FFD9DE",
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
+      flexDirection: "row",
+      alignItems: "center",
     },
 
     logoutIcon: {
@@ -2182,8 +2121,7 @@ const styles =
       borderRadius: 14,
       backgroundColor:
         "#FFE7EA",
-      alignItems:
-        "center",
+      alignItems: "center",
       justifyContent:
         "center",
       marginRight: 11,
@@ -2215,10 +2153,8 @@ const styles =
     ===================================================== */
 
     securityFooter: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
+      flexDirection: "row",
+      alignItems: "center",
       justifyContent:
         "center",
       gap: 5,

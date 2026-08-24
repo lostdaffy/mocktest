@@ -69,8 +69,14 @@ async function createOrder(req, res) {
       receipt: `rcpt_${req.user._id}_${Date.now()}`.slice(0, 40),
     });
 
-    const startDate = new Date();
-    const endDate = new Date();
+    // Provisional term, mirroring the renewal-stacking rule in
+    // activateSubscription (an early renewal extends from the current
+    // expiry, not from today) so the app can preview the right dates.
+    // These are recomputed for real when the payment actually lands.
+    const now = new Date();
+    const currentExpiry = user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt) : null;
+    const startDate = currentExpiry && currentExpiry > now ? currentExpiry : now;
+    const endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + PLAN_DURATION_MONTHS[plan]);
 
     const subscription = await Subscription.create({
@@ -109,19 +115,38 @@ async function activateSubscription({ razorpayOrderId, razorpayPaymentId, razorp
   if (!subscription) return { ok: false, reason: "Subscription record not found" };
   if (subscription.status === "paid") return { ok: true, subscription, alreadyDone: true };
 
+  const buyer = await User.findById(subscription.user);
+
+  // Renewal stacking. A student who renews EARLY must not lose the days
+  // still left on their current plan - the new term starts the moment the
+  // old one ends, not today. (Renewing a yearly plan 4 months early used to
+  // silently move the expiry to today+12 months, quietly eating those 4
+  // paid-for months.)
+  //
+  // This is computed here, at payment time, rather than at order-creation
+  // time: an order can sit unpaid for a while, and a student can create two
+  // orders before paying either. Deriving the term from the buyer's actual
+  // expiry at the moment money lands keeps both cases correct, and makes
+  // each renewal stack on top of the previous one.
+  const now = new Date();
+  const previousExpiry = buyer.subscriptionExpiresAt ? new Date(buyer.subscriptionExpiresAt) : null;
+  const termStart = previousExpiry && previousExpiry > now ? previousExpiry : now;
+  const termEnd = new Date(termStart);
+  termEnd.setMonth(termEnd.getMonth() + PLAN_DURATION_MONTHS[subscription.plan]);
+
   subscription.razorpayPaymentId = razorpayPaymentId;
   if (razorpaySignature) subscription.razorpaySignature = razorpaySignature;
   subscription.status = "paid";
+  subscription.startDate = termStart;
+  subscription.endDate = termEnd;
   await subscription.save();
-
-  const buyer = await User.findById(subscription.user);
 
   if (subscription.creditsUsed > 0) {
     buyer.referralCredits = Math.max(0, buyer.referralCredits - subscription.creditsUsed);
   }
 
   buyer.subscriptionStatus = "active";
-  buyer.subscriptionExpiresAt = subscription.endDate;
+  buyer.subscriptionExpiresAt = termEnd;
   buyer.subscriptionPlan = subscription.plan;
   await buyer.save();
 

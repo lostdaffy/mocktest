@@ -98,7 +98,7 @@ function timeRange(
 
   const end = new Date(
     start.getTime() +
-      durationMinutes * 60000
+    durationMinutes * 60000
   );
 
   return `${formatTime(start)} - ${formatTime(
@@ -113,14 +113,14 @@ function timeRange(
 function examWindow(exam) {
   const startsAt = new Date(
     exam.startsAt ||
-      exam.scheduledAt
+    exam.scheduledAt
   );
 
   const endsAt = new Date(
     exam.endsAt ||
-      startsAt.getTime() +
-        (exam.durationMinutes || 60) *
-          60000
+    startsAt.getTime() +
+    (exam.durationMinutes || 60) *
+    60000
   );
 
   return {
@@ -270,8 +270,8 @@ export default function TestListScreen({
 
         setExams(
           res.data?.tests ||
-            res.data?.exams ||
-            []
+          res.data?.exams ||
+          []
         );
       } catch (err) {
         console.log(
@@ -406,7 +406,7 @@ export default function TestListScreen({
         AppAlert.alert(
           "Not started yet",
           message ||
-            "This live exam hasn't started yet."
+          "This live exam hasn't started yet."
         );
       } else if (
         code === "LIVE_ENDED"
@@ -414,7 +414,7 @@ export default function TestListScreen({
         AppAlert.alert(
           "Exam finished",
           message ||
-            "This live exam has ended."
+          "This live exam has ended."
         );
       } else if (
         code ===
@@ -434,17 +434,17 @@ export default function TestListScreen({
             },
             ...(attemptId
               ? [
-                  {
-                    text: "View Result",
-                    onPress: () =>
-                      navigation.navigate(
-                        "Result",
-                        {
-                          attemptId,
-                        }
-                      ),
-                  },
-                ]
+                {
+                  text: "View Result",
+                  onPress: () =>
+                    navigation.navigate(
+                      "Result",
+                      {
+                        attemptId,
+                      }
+                    ),
+                },
+              ]
               : []),
           ]
         );
@@ -455,7 +455,7 @@ export default function TestListScreen({
         AppAlert.alert(
           "Premium exam",
           message ||
-            "Upgrade to join this live exam.",
+          "Upgrade to join this live exam.",
           [
             {
               text: "Later",
@@ -474,7 +474,7 @@ export default function TestListScreen({
         AppAlert.alert(
           "Something went wrong",
           message ||
-            "Couldn't load the exam"
+          "Couldn't load the exam"
         );
       }
 
@@ -650,8 +650,8 @@ export default function TestListScreen({
                   navigation.canGoBack()
                     ? navigation.goBack()
                     : navigation.navigate(
-                        "HomeTab"
-                      )
+                      "HomeTab"
+                    )
                 }
               >
                 <Ionicons
@@ -669,19 +669,8 @@ export default function TestListScreen({
                     styles.headerEyebrow
                   }
                 >
-                  <View
-                    style={
-                      styles.headerEyebrowLine
-                    }
-                  />
 
-                  <Text
-                    style={
-                      styles.headerEyebrowText
-                    }
-                  >
-                    COMPETITIVE TESTING
-                  </Text>
+
                 </View>
 
                 <Text
@@ -943,30 +932,30 @@ function LiveHero({
     isLive
       ? "LIVE NOW"
       : state === "ended"
-      ? "FINISHED"
-      : msToStart < 86400000
-      ? `STARTS IN ${formatCountdown(
-          msToStart
-        )}`
-      : whenLabel(
-          exam.scheduledAt
-        );
+        ? "FINISHED"
+        : msToStart < 86400000
+          ? `STARTS IN ${formatCountdown(
+            msToStart
+          )}`
+          : whenLabel(
+            exam.scheduledAt
+          );
 
   const accent = isLive
     ? colors.danger
     : state === "ended"
-    ? colors.slateSoft
-    : colors.brand;
+      ? colors.slateSoft
+      : colors.brand;
 
   const buttonLabel = submitted
     ? "View Result"
     : isLive
-    ? premiumLocked
-      ? "Unlock to Join"
-      : "Enter Live Exam"
-    : state === "ended"
-    ? "Exam Closed"
-    : "Starts Soon";
+      ? premiumLocked
+        ? "Unlock to Join"
+        : "Enter Live Exam"
+      : state === "ended"
+        ? "Exam Closed"
+        : "Starts Soon";
 
   const buttonDisabled =
     !submitted &&
@@ -977,7 +966,7 @@ function LiveHero({
       style={[
         styles.hero,
         isLive &&
-          styles.heroLive,
+        styles.heroLive,
       ]}
     >
       {/* TOP ACCENT */}
@@ -1012,7 +1001,7 @@ function LiveHero({
           style={[
             styles.heroStatus,
             isLive &&
-              styles.heroStatusLive,
+            styles.heroStatusLive,
           ]}
         >
           <View
@@ -1275,15 +1264,15 @@ function LiveHero({
         style={[
           styles.heroButton,
           isLive &&
-            !submitted &&
-            !premiumLocked &&
-            styles.heroButtonLive,
+          !submitted &&
+          !premiumLocked &&
+          styles.heroButtonLive,
           premiumLocked &&
-            isLive &&
-            !submitted &&
-            styles.heroButtonLocked,
+          isLive &&
+          !submitted &&
+          styles.heroButtonLocked,
           buttonDisabled &&
-            styles.heroButtonDisabled,
+          styles.heroButtonDisabled,
         ]}
         activeOpacity={0.86}
         disabled={
@@ -1309,10 +1298,10 @@ function LiveHero({
                   submitted
                     ? "document-text"
                     : isLive
-                    ? premiumLocked
-                      ? "lock-closed"
-                      : "play"
-                    : "time-outline"
+                      ? premiumLocked
+                        ? "lock-closed"
+                        : "play"
+                      : "time-outline"
                 }
                 size={14}
                 color="#FFFFFF"
@@ -1489,8 +1478,8 @@ function LiveExamCard({
   const accentColor = isLive
     ? colors.danger
     : state === "ended"
-    ? colors.slateSoft
-    : colors.brand;
+      ? colors.slateSoft
+      : colors.brand;
 
   const date = new Date(
     exam.scheduledAt
@@ -1512,9 +1501,9 @@ function LiveExamCard({
       style={[
         styles.examCard,
         isLive &&
-          styles.examCardLive,
+        styles.examCardLive,
         state === "ended" &&
-          styles.examCardEnded,
+        styles.examCardEnded,
       ]}
       activeOpacity={0.78}
       disabled={isStarting}
@@ -1538,7 +1527,7 @@ function LiveExamCard({
         style={[
           styles.dateBlock,
           isLive &&
-            styles.dateBlockLive,
+          styles.dateBlockLive,
         ]}
       >
         <Text
@@ -1557,7 +1546,7 @@ function LiveExamCard({
           style={[
             styles.dateMonth,
             isLive &&
-              styles.dateMonthLive,
+            styles.dateMonthLive,
           ]}
         >
           {month}
@@ -1777,14 +1766,14 @@ function LiveExamCard({
           style={[
             styles.cardAction,
             premiumLocked &&
-              !submitted &&
-              styles.cardActionPremium,
+            !submitted &&
+            styles.cardActionPremium,
             state === "upcoming" &&
-              !submitted &&
-              styles.cardActionWaiting,
+            !submitted &&
+            styles.cardActionWaiting,
             isLive &&
-              !premiumLocked &&
-              styles.cardActionLive,
+            !premiumLocked &&
+            styles.cardActionLive,
           ]}
         >
           <Ionicons
@@ -1792,24 +1781,24 @@ function LiveExamCard({
               submitted
                 ? "document-text"
                 : state === "upcoming"
-                ? "time-outline"
-                : state === "ended"
-                ? "lock-closed"
-                : premiumLocked
-                ? "lock-closed"
-                : "play"
+                  ? "time-outline"
+                  : state === "ended"
+                    ? "lock-closed"
+                    : premiumLocked
+                      ? "lock-closed"
+                      : "play"
             }
             size={15}
             color={
               premiumLocked &&
-              !submitted
+                !submitted
                 ? colors.warn
                 : state === "upcoming" &&
                   !submitted
-                ? colors.slateSoft
-                : isLive
-                ? colors.danger
-                : colors.brand
+                  ? colors.slateSoft
+                  : isLive
+                    ? colors.danger
+                    : colors.brand
             }
           />
         </View>
@@ -1902,825 +1891,827 @@ function EmptyState({
 // once at import time.
 function getStyles(colors, cardStyle) {
   return StyleSheet.create({
-  /* =======================================================
-     GENERAL
-  ======================================================= */
-
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-
-  /* =======================================================
-     LOADING
-  ======================================================= */
-
-  loadingScreen: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.bg,
-  },
-
-  loadingIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: colors.brandTint,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-    ...shadow.soft,
-  },
-
-  loadingTitle: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "800",
-    color: colors.ink,
-  },
-
-  loadingText: {
-    fontSize: 11,
-    lineHeight: 16,
-    color: colors.slateSoft,
-    marginTop: 3,
-  },
-
-  /* =======================================================
-     HEADER
-  ======================================================= */
-
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: 15,
-    flexDirection: "row",
-    alignItems: "flex-end",
-  },
-
-  headerText: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  headerEyebrow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 5,
-  },
-
-  headerEyebrowLine: {
-    width: 18,
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: colors.brand,
-    marginRight: 6,
-  },
-
-  headerEyebrowText: {
-    fontSize: 8.5,
-    lineHeight: 12,
-    fontWeight: "900",
-    color: colors.brand,
-    letterSpacing: 1,
-  },
-
-  headerTitle: {
-    fontSize: 25,
-    lineHeight: 30,
-    fontWeight: "900",
-    color: colors.ink,
-    letterSpacing: -0.7,
-  },
-
-  headerSubtitle: {
-    fontSize: 11.5,
-    lineHeight: 17,
-    color: colors.slate,
-    marginTop: 2,
-  },
-
-  backButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 14,
-    backgroundColor: colors.slateLight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-
-  /* =======================================================
-     QUICK STATS
-  ======================================================= */
-
-  quickStats: {
-    marginHorizontal: spacing.lg,
-    marginBottom: 13,
-    minHeight: 58,
-    paddingHorizontal: 8,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: "row",
-    alignItems: "center",
-    ...shadow.soft,
-  },
-
-  quickStat: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 7,
-  },
-
-  quickIcon: {
-    width: 29,
-    height: 29,
-    borderRadius: 10,
-    backgroundColor: colors.brandTint,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  quickValue: {
-    fontSize: 14,
-    lineHeight: 17,
-    fontWeight: "900",
-    color: colors.ink,
-  },
-
-  quickLabel: {
-    fontSize: 7.5,
-    lineHeight: 11,
-    color: colors.slateSoft,
-    fontWeight: "600",
-    marginTop: 1,
-  },
-
-  quickDivider: {
-    width: 1,
-    height: 27,
-    backgroundColor: colors.border,
-  },
-
-  /* =======================================================
-     HERO
-  ======================================================= */
-
-  hero: {
-    position: "relative",
-    marginHorizontal: spacing.lg,
-    marginBottom: 22,
-    padding: 16,
-    borderRadius: 23,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: "hidden",
-    ...shadow.brand,
-  },
-
-  heroLive: {
-    borderColor: colors.dangerBorder,
-  },
-
-  heroAccent: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    height: 3,
-  },
-
-  heroStatusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    minHeight: 25,
-    marginBottom: 8,
-  },
-
-  heroStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    paddingHorizontal: 8,
-    height: 25,
-    borderRadius: radius.full,
-    backgroundColor: colors.brandTint,
-  },
-
-  heroStatusLive: {
-    backgroundColor: colors.dangerLight,
-  },
-
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 5,
-  },
-
-  heroStatusText: {
-    fontSize: 8.5,
-    lineHeight: 12,
-    fontWeight: "900",
-    letterSpacing: 0.5,
-  },
-
-  premiumTag: {
-    height: 25,
-    paddingHorizontal: 8,
-    borderRadius: radius.full,
-    backgroundColor: colors.warnLight,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-
-  premiumTagText: {
-    fontSize: 7.5,
-    fontWeight: "900",
-    color: colors.warn,
-    letterSpacing: 0.4,
-  },
-
-  freeTag: {
-    height: 25,
-    paddingHorizontal: 8,
-    borderRadius: radius.full,
-    backgroundColor: colors.successLight,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-
-  freeTagText: {
-    fontSize: 7.5,
-    fontWeight: "900",
-    color: colors.success,
-    letterSpacing: 0.4,
-  },
-
-  heroTitle: {
-    fontSize: 21,
-    lineHeight: 27,
-    fontWeight: "900",
-    color: colors.ink,
-    letterSpacing: -0.45,
-  },
-
-  heroSchedule: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    marginTop: 7,
-  },
-
-  scheduleItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    maxWidth: "47%",
-  },
-
-  scheduleText: {
-    fontSize: 10,
-    lineHeight: 15,
-    color: colors.slate,
-    fontWeight: "600",
-    marginLeft: 4,
-    flexShrink: 1,
-  },
-
-  scheduleDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: colors.slateSoft,
-    marginHorizontal: 7,
-  },
-
-  /* =======================================================
-     COUNTDOWN
-  ======================================================= */
-
-  liveCountdown: {
-    marginTop: 13,
-    padding: 10,
-    borderRadius: 14,
-    backgroundColor: colors.dangerLight,
-    borderWidth: 1,
-    borderColor: colors.dangerBorder,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  countdownIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 11,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 9,
-  },
-
-  countdownContent: {
-    flex: 1,
-  },
-
-  countdownLabel: {
-    fontSize: 7.5,
-    lineHeight: 11,
-    fontWeight: "800",
-    color: colors.danger,
-    letterSpacing: 0.7,
-  },
-
-  countdownValue: {
-    fontSize: 17,
-    lineHeight: 21,
-    fontWeight: "900",
-    color: colors.ink,
-    marginTop: 1,
-  },
-
-  liveNowPill: {
-    height: 25,
-    paddingHorizontal: 8,
-    borderRadius: radius.full,
-    backgroundColor: colors.danger,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  liveNowDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: "#FFFFFF",
-    marginRight: 4,
-  },
-
-  liveNowText: {
-    fontSize: 7.5,
-    fontWeight: "900",
-    color: "#FFFFFF",
-    letterSpacing: 0.5,
-  },
-
-  upcomingCountdown: {
-    marginTop: 12,
-    height: 38,
-    paddingHorizontal: 11,
-    borderRadius: 11,
-    backgroundColor: colors.brandTint,
-    borderWidth: 1,
-    borderColor: colors.brandLight,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  upcomingCountdownText: {
-    fontSize: 10,
-    color: colors.slate,
-    fontWeight: "600",
-    marginLeft: 7,
-  },
-
-  upcomingCountdownStrong: {
-    color: colors.brand,
-    fontWeight: "900",
-  },
-
-  /* =======================================================
-     HERO STATS
-  ======================================================= */
-
-  heroStats: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 13,
-    paddingVertical: 10,
-    paddingHorizontal: 3,
-    backgroundColor: colors.bg,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-
-  heroStat: {
-    flex: 1,
-    alignItems: "center",
-    minWidth: 0,
-  },
-
-  heroStatIcon: {
-    width: 25,
-    height: 25,
-    borderRadius: 8,
-    backgroundColor: colors.brandTint,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 3,
-  },
-
-  heroStatValue: {
-    fontSize: 11.5,
-    lineHeight: 15,
-    fontWeight: "900",
-    color: colors.ink,
-  },
-
-  heroStatLabel: {
-    fontSize: 7.5,
-    lineHeight: 11,
-    color: colors.slateSoft,
-    fontWeight: "600",
-    marginTop: 1,
-  },
-
-  heroDivider: {
-    width: 1,
-    height: 31,
-    backgroundColor: colors.border,
-  },
-
-  /* =======================================================
-     HERO BUTTON
-  ======================================================= */
-
-  heroButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 49,
-    borderRadius: 14,
-    backgroundColor: colors.brand,
-    marginTop: 12,
-    ...shadow.brand,
-  },
-
-  heroButtonLive: {
-    backgroundColor: colors.danger,
-  },
-
-  heroButtonLocked: {
-    backgroundColor: colors.warn,
-  },
-
-  heroButtonDisabled: {
-    backgroundColor: colors.slateSoft,
-  },
-
-  heroButtonIcon: {
-    width: 26,
-    height: 26,
-    borderRadius: 8,
-    backgroundColor: "rgba(255,255,255,0.16)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 7,
-  },
-
-  heroButtonText: {
-    color: "#FFFFFF",
-    fontSize: 13.5,
-    fontWeight: "900",
-    marginRight: 7,
-  },
-
-  premiumHint: {
-    fontSize: 9,
-    lineHeight: 14,
-    textAlign: "center",
-    color: colors.slateSoft,
-    fontWeight: "600",
-    marginTop: 6,
-  },
-
-  /* =======================================================
-     SECTION
-  ======================================================= */
-
-  sectionHeader: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: 11,
-  },
-
-  sectionHeaderText: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  sectionTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  sectionTitle: {
-    fontSize: 18,
-    lineHeight: 23,
-    fontWeight: "900",
-    color: colors.ink,
-    letterSpacing: -0.3,
-  },
-
-  sectionSubtitle: {
-    fontSize: 10,
-    lineHeight: 15,
-    color: colors.slateSoft,
-    marginTop: 2,
-  },
-
-  countPill: {
-    minWidth: 27,
-    height: 24,
-    paddingHorizontal: 7,
-    borderRadius: radius.full,
-    backgroundColor: colors.brandTint,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 8,
-  },
-
-  countPillText: {
-    fontSize: 10.5,
-    fontWeight: "900",
-    color: colors.brand,
-  },
-
-  /* =======================================================
-     EXAM CARD
-  ======================================================= */
-
-  examCard: {
-    ...cardStyle,
-    minHeight: 88,
-    marginHorizontal: spacing.lg,
-    marginBottom: 9,
-    paddingVertical: 11,
-    paddingLeft: 10,
-    paddingRight: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    overflow: "hidden",
-  },
-
-  examCardLive: {
-    borderColor: colors.dangerBorder,
-    backgroundColor: "#FFFCFC",
-  },
-
-  examCardEnded: {
-    opacity: 0.65,
-  },
-
-  cardAccent: {
-    position: "absolute",
-    left: 0,
-    top: 11,
-    bottom: 11,
-    width: 3,
-    borderTopRightRadius: 3,
-    borderBottomRightRadius: 3,
-  },
-
-  /* =======================================================
-     DATE
-  ======================================================= */
-
-  dateBlock: {
-    width: 48,
-    height: 50,
-    borderRadius: 14,
-    backgroundColor: colors.brandTint,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 3,
-    marginRight: 10,
-  },
-
-  dateBlockLive: {
-    backgroundColor: colors.dangerLight,
-  },
-
-  dateDay: {
-    fontSize: 18,
-    lineHeight: 21,
-    fontWeight: "900",
-  },
-
-  dateMonth: {
-    fontSize: 8.5,
-    lineHeight: 12,
-    fontWeight: "900",
-    color: colors.slateSoft,
-    letterSpacing: 0.6,
-    marginTop: 1,
-  },
-
-  dateMonthLive: {
-    color: colors.danger,
-  },
-
-  /* =======================================================
-     CONTENT
-  ======================================================= */
-
-  cardContent: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  badgeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    marginBottom: 5,
-    flexWrap: "wrap",
-  },
-
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: radius.full,
-  },
-
-  liveBadge: {
-    backgroundColor: colors.dangerLight,
-  },
-
-  todayBadge: {
-    backgroundColor: colors.brandTint,
-  },
-
-  freeBadge: {
-    backgroundColor: colors.successLight,
-  },
-
-  premiumBadge: {
-    backgroundColor: colors.warnLight,
-  },
-
-  doneBadge: {
-    backgroundColor: colors.brandLight,
-  },
-
-  todayDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: colors.danger,
-  },
-
-  badgeText: {
-    fontSize: 8.5,
-    fontWeight: "900",
-  },
-
-  cardTitle: {
-    fontSize: 13.5,
-    lineHeight: 19,
-    fontWeight: "800",
-    color: colors.ink,
-  },
-
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 5,
-    minWidth: 0,
-  },
-
-  metaText: {
-    fontSize: 9.5,
-    lineHeight: 14,
-    color: colors.slateSoft,
-    fontWeight: "600",
-    marginLeft: 4,
-    flexShrink: 1,
-  },
-
-  metaSeparator: {
-    width: 3,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: colors.slateSoft,
-    marginHorizontal: 6,
-  },
-
-  /* =======================================================
-     CARD ACTION
-  ======================================================= */
-
-  cardAction: {
-    width: 35,
-    height: 35,
-    borderRadius: 18,
-    backgroundColor: colors.brandLight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 8,
-  },
-
-  cardActionLive: {
-    backgroundColor: colors.dangerLight,
-  },
-
-  cardActionPremium: {
-    backgroundColor: colors.warnLight,
-  },
-
-  cardActionWaiting: {
-    backgroundColor: colors.slateLight,
-  },
-
-  cardLoader: {
-    width: 35,
-    height: 35,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 8,
-  },
-
-  /* =======================================================
-     EMPTY
-  ======================================================= */
-
-  empty: {
-    position: "relative",
-    alignItems: "center",
-    paddingHorizontal: 28,
-    paddingTop: 55,
-    paddingBottom: 35,
-  },
-
-  emptyIcon: {
-    width: 68,
-    height: 68,
-    borderRadius: 22,
-    backgroundColor: colors.brandTint,
-    borderWidth: 1,
-    borderColor: colors.brandLight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 13,
-  },
-
-  emptySpark: {
-    position: "absolute",
-    top: 47,
-    right: "31%",
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#FFF8DF",
-    borderWidth: 2,
-    borderColor: colors.bg,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  emptyTitle: {
-    fontSize: 18,
-    lineHeight: 23,
-    fontWeight: "900",
-    color: colors.ink,
-  },
-
-  emptyText: {
-    fontSize: 11.5,
-    lineHeight: 18,
-    color: colors.slate,
-    textAlign: "center",
-    marginTop: 5,
-    maxWidth: 300,
-  },
-
-  emptyButton: {
-    height: 42,
-    paddingHorizontal: 16,
-    borderRadius: 13,
-    backgroundColor: colors.brand,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    marginTop: 15,
-    ...shadow.brand,
-  },
-
-  emptyButtonText: {
-    color: "#FFFFFF",
-    fontSize: 11.5,
-    fontWeight: "900",
-  },
+    /* =======================================================
+       GENERAL
+    ======================================================= */
+
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+
+    /* =======================================================
+       LOADING
+    ======================================================= */
+
+    loadingScreen: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.bg,
+    },
+
+    loadingIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 16,
+      backgroundColor: colors.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 12,
+      ...shadow.soft,
+    },
+
+    loadingTitle: {
+      fontSize: 15,
+      lineHeight: 20,
+      fontWeight: "800",
+      color: colors.ink,
+    },
+
+    loadingText: {
+      fontSize: 11,
+      lineHeight: 16,
+      color: colors.slateSoft,
+      marginTop: 3,
+    },
+
+    /* =======================================================
+       HEADER
+    ======================================================= */
+
+    header: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: 15,
+      flexDirection: "row",
+      alignItems: "flex-end",
+    },
+
+    headerText: {
+      flex: 1,
+      minWidth: 0,
+    },
+
+    headerEyebrow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 5,
+    },
+
+    headerEyebrowLine: {
+      width: 18,
+      height: 2,
+      borderRadius: 1,
+      backgroundColor: colors.brand,
+      marginRight: 6,
+    },
+
+    headerEyebrowText: {
+      fontSize: 8.5,
+      lineHeight: 12,
+      fontWeight: "900",
+      color: colors.brand,
+      letterSpacing: 1,
+    },
+
+    headerTitle: {
+      fontSize: 18,
+      lineHeight: 23,
+      fontWeight: "900",
+      color:
+        colors.ink,
+      letterSpacing:
+        -0.35,
+    },
+
+    headerSubtitle: {
+      fontSize: 11.5,
+      lineHeight: 17,
+      color: colors.slate,
+      marginTop: 2,
+    },
+
+    backButton: {
+      width: 38,
+      height: 38,
+      borderRadius: 14,
+      backgroundColor: colors.slateLight,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 12,
+    },
+
+    /* =======================================================
+       QUICK STATS
+    ======================================================= */
+
+    quickStats: {
+      marginHorizontal: spacing.lg,
+      marginBottom: 13,
+      minHeight: 58,
+      paddingHorizontal: 8,
+      backgroundColor: "#FFFFFF",
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      flexDirection: "row",
+      alignItems: "center",
+      ...shadow.soft,
+    },
+
+    quickStat: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 7,
+    },
+
+    quickIcon: {
+      width: 29,
+      height: 29,
+      borderRadius: 10,
+      backgroundColor: colors.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    quickValue: {
+      fontSize: 14,
+      lineHeight: 17,
+      fontWeight: "900",
+      color: colors.ink,
+    },
+
+    quickLabel: {
+      fontSize: 7.5,
+      lineHeight: 11,
+      color: colors.slateSoft,
+      fontWeight: "600",
+      marginTop: 1,
+    },
+
+    quickDivider: {
+      width: 1,
+      height: 27,
+      backgroundColor: colors.border,
+    },
+
+    /* =======================================================
+       HERO
+    ======================================================= */
+
+    hero: {
+      position: "relative",
+      marginHorizontal: spacing.lg,
+      marginBottom: 22,
+      padding: 16,
+      borderRadius: 23,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      overflow: "hidden",
+      ...shadow.brand,
+    },
+
+    heroLive: {
+      borderColor: colors.dangerBorder,
+    },
+
+    heroAccent: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      top: 0,
+      height: 3,
+    },
+
+    heroStatusRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      minHeight: 25,
+      marginBottom: 8,
+    },
+
+    heroStatus: {
+      flexDirection: "row",
+      alignItems: "center",
+      alignSelf: "flex-start",
+      paddingHorizontal: 8,
+      height: 25,
+      borderRadius: radius.full,
+      backgroundColor: colors.brandTint,
+    },
+
+    heroStatusLive: {
+      backgroundColor: colors.dangerLight,
+    },
+
+    statusDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      marginRight: 5,
+    },
+
+    heroStatusText: {
+      fontSize: 8.5,
+      lineHeight: 12,
+      fontWeight: "900",
+      letterSpacing: 0.5,
+    },
+
+    premiumTag: {
+      height: 25,
+      paddingHorizontal: 8,
+      borderRadius: radius.full,
+      backgroundColor: colors.warnLight,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+
+    premiumTagText: {
+      fontSize: 7.5,
+      fontWeight: "900",
+      color: colors.warn,
+      letterSpacing: 0.4,
+    },
+
+    freeTag: {
+      height: 25,
+      paddingHorizontal: 8,
+      borderRadius: radius.full,
+      backgroundColor: colors.successLight,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+
+    freeTagText: {
+      fontSize: 7.5,
+      fontWeight: "900",
+      color: colors.success,
+      letterSpacing: 0.4,
+    },
+
+    heroTitle: {
+      fontSize: 21,
+      lineHeight: 27,
+      fontWeight: "900",
+      color: colors.ink,
+      letterSpacing: -0.45,
+    },
+
+    heroSchedule: {
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+      marginTop: 7,
+    },
+
+    scheduleItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      maxWidth: "47%",
+    },
+
+    scheduleText: {
+      fontSize: 10,
+      lineHeight: 15,
+      color: colors.slate,
+      fontWeight: "600",
+      marginLeft: 4,
+      flexShrink: 1,
+    },
+
+    scheduleDot: {
+      width: 3,
+      height: 3,
+      borderRadius: 2,
+      backgroundColor: colors.slateSoft,
+      marginHorizontal: 7,
+    },
+
+    /* =======================================================
+       COUNTDOWN
+    ======================================================= */
+
+    liveCountdown: {
+      marginTop: 13,
+      padding: 10,
+      borderRadius: 14,
+      backgroundColor: colors.dangerLight,
+      borderWidth: 1,
+      borderColor: colors.dangerBorder,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+
+    countdownIcon: {
+      width: 34,
+      height: 34,
+      borderRadius: 11,
+      backgroundColor: "#FFFFFF",
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 9,
+    },
+
+    countdownContent: {
+      flex: 1,
+    },
+
+    countdownLabel: {
+      fontSize: 7.5,
+      lineHeight: 11,
+      fontWeight: "800",
+      color: colors.danger,
+      letterSpacing: 0.7,
+    },
+
+    countdownValue: {
+      fontSize: 17,
+      lineHeight: 21,
+      fontWeight: "900",
+      color: colors.ink,
+      marginTop: 1,
+    },
+
+    liveNowPill: {
+      height: 25,
+      paddingHorizontal: 8,
+      borderRadius: radius.full,
+      backgroundColor: colors.danger,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+
+    liveNowDot: {
+      width: 5,
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: "#FFFFFF",
+      marginRight: 4,
+    },
+
+    liveNowText: {
+      fontSize: 7.5,
+      fontWeight: "900",
+      color: "#FFFFFF",
+      letterSpacing: 0.5,
+    },
+
+    upcomingCountdown: {
+      marginTop: 12,
+      height: 38,
+      paddingHorizontal: 11,
+      borderRadius: 11,
+      backgroundColor: colors.brandTint,
+      borderWidth: 1,
+      borderColor: colors.brandLight,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+
+    upcomingCountdownText: {
+      fontSize: 10,
+      color: colors.slate,
+      fontWeight: "600",
+      marginLeft: 7,
+    },
+
+    upcomingCountdownStrong: {
+      color: colors.brand,
+      fontWeight: "900",
+    },
+
+    /* =======================================================
+       HERO STATS
+    ======================================================= */
+
+    heroStats: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 13,
+      paddingVertical: 10,
+      paddingHorizontal: 3,
+      backgroundColor: colors.bg,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+
+    heroStat: {
+      flex: 1,
+      alignItems: "center",
+      minWidth: 0,
+    },
+
+    heroStatIcon: {
+      width: 25,
+      height: 25,
+      borderRadius: 8,
+      backgroundColor: colors.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 3,
+    },
+
+    heroStatValue: {
+      fontSize: 11.5,
+      lineHeight: 15,
+      fontWeight: "900",
+      color: colors.ink,
+    },
+
+    heroStatLabel: {
+      fontSize: 7.5,
+      lineHeight: 11,
+      color: colors.slateSoft,
+      fontWeight: "600",
+      marginTop: 1,
+    },
+
+    heroDivider: {
+      width: 1,
+      height: 31,
+      backgroundColor: colors.border,
+    },
+
+    /* =======================================================
+       HERO BUTTON
+    ======================================================= */
+
+    heroButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      height: 49,
+      borderRadius: 14,
+      backgroundColor: colors.brand,
+      marginTop: 12,
+      ...shadow.brand,
+    },
+
+    heroButtonLive: {
+      backgroundColor: colors.danger,
+    },
+
+    heroButtonLocked: {
+      backgroundColor: colors.warn,
+    },
+
+    heroButtonDisabled: {
+      backgroundColor: colors.slateSoft,
+    },
+
+    heroButtonIcon: {
+      width: 26,
+      height: 26,
+      borderRadius: 8,
+      backgroundColor: "rgba(255,255,255,0.16)",
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 7,
+    },
+
+    heroButtonText: {
+      color: "#FFFFFF",
+      fontSize: 13.5,
+      fontWeight: "900",
+      marginRight: 7,
+    },
+
+    premiumHint: {
+      fontSize: 9,
+      lineHeight: 14,
+      textAlign: "center",
+      color: colors.slateSoft,
+      fontWeight: "600",
+      marginTop: 6,
+    },
+
+    /* =======================================================
+       SECTION
+    ======================================================= */
+
+    sectionHeader: {
+      paddingHorizontal: spacing.lg,
+      marginBottom: 11,
+    },
+
+    sectionHeaderText: {
+      flex: 1,
+      minWidth: 0,
+    },
+
+    sectionTitleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+
+    sectionTitle: {
+      fontSize: 18,
+      lineHeight: 23,
+      fontWeight: "900",
+      color: colors.ink,
+      letterSpacing: -0.3,
+    },
+
+    sectionSubtitle: {
+      fontSize: 10,
+      lineHeight: 15,
+      color: colors.slateSoft,
+      marginTop: 2,
+    },
+
+    countPill: {
+      minWidth: 27,
+      height: 24,
+      paddingHorizontal: 7,
+      borderRadius: radius.full,
+      backgroundColor: colors.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+      marginLeft: 8,
+    },
+
+    countPillText: {
+      fontSize: 10.5,
+      fontWeight: "900",
+      color: colors.brand,
+    },
+
+    /* =======================================================
+       EXAM CARD
+    ======================================================= */
+
+    examCard: {
+      ...cardStyle,
+      minHeight: 88,
+      marginHorizontal: spacing.lg,
+      marginBottom: 9,
+      paddingVertical: 11,
+      paddingLeft: 10,
+      paddingRight: 10,
+      flexDirection: "row",
+      alignItems: "center",
+      overflow: "hidden",
+    },
+
+    examCardLive: {
+      borderColor: colors.dangerBorder,
+      backgroundColor: "#FFFCFC",
+    },
+
+    examCardEnded: {
+      opacity: 0.65,
+    },
+
+    cardAccent: {
+      position: "absolute",
+      left: 0,
+      top: 11,
+      bottom: 11,
+      width: 3,
+      borderTopRightRadius: 3,
+      borderBottomRightRadius: 3,
+    },
+
+    /* =======================================================
+       DATE
+    ======================================================= */
+
+    dateBlock: {
+      width: 48,
+      height: 50,
+      borderRadius: 14,
+      backgroundColor: colors.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+      marginLeft: 3,
+      marginRight: 10,
+    },
+
+    dateBlockLive: {
+      backgroundColor: colors.dangerLight,
+    },
+
+    dateDay: {
+      fontSize: 18,
+      lineHeight: 21,
+      fontWeight: "900",
+    },
+
+    dateMonth: {
+      fontSize: 8.5,
+      lineHeight: 12,
+      fontWeight: "900",
+      color: colors.slateSoft,
+      letterSpacing: 0.6,
+      marginTop: 1,
+    },
+
+    dateMonthLive: {
+      color: colors.danger,
+    },
+
+    /* =======================================================
+       CONTENT
+    ======================================================= */
+
+    cardContent: {
+      flex: 1,
+      minWidth: 0,
+    },
+
+    badgeRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      marginBottom: 5,
+      flexWrap: "wrap",
+    },
+
+    badge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      borderRadius: radius.full,
+    },
+
+    liveBadge: {
+      backgroundColor: colors.dangerLight,
+    },
+
+    todayBadge: {
+      backgroundColor: colors.brandTint,
+    },
+
+    freeBadge: {
+      backgroundColor: colors.successLight,
+    },
+
+    premiumBadge: {
+      backgroundColor: colors.warnLight,
+    },
+
+    doneBadge: {
+      backgroundColor: colors.brandLight,
+    },
+
+    todayDot: {
+      width: 5,
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: colors.danger,
+    },
+
+    badgeText: {
+      fontSize: 8.5,
+      fontWeight: "900",
+    },
+
+    cardTitle: {
+      fontSize: 13.5,
+      lineHeight: 19,
+      fontWeight: "800",
+      color: colors.ink,
+    },
+
+    metaRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 5,
+      minWidth: 0,
+    },
+
+    metaText: {
+      fontSize: 9.5,
+      lineHeight: 14,
+      color: colors.slateSoft,
+      fontWeight: "600",
+      marginLeft: 4,
+      flexShrink: 1,
+    },
+
+    metaSeparator: {
+      width: 3,
+      height: 3,
+      borderRadius: 2,
+      backgroundColor: colors.slateSoft,
+      marginHorizontal: 6,
+    },
+
+    /* =======================================================
+       CARD ACTION
+    ======================================================= */
+
+    cardAction: {
+      width: 35,
+      height: 35,
+      borderRadius: 18,
+      backgroundColor: colors.brandLight,
+      alignItems: "center",
+      justifyContent: "center",
+      marginLeft: 8,
+    },
+
+    cardActionLive: {
+      backgroundColor: colors.dangerLight,
+    },
+
+    cardActionPremium: {
+      backgroundColor: colors.warnLight,
+    },
+
+    cardActionWaiting: {
+      backgroundColor: colors.slateLight,
+    },
+
+    cardLoader: {
+      width: 35,
+      height: 35,
+      alignItems: "center",
+      justifyContent: "center",
+      marginLeft: 8,
+    },
+
+    /* =======================================================
+       EMPTY
+    ======================================================= */
+
+    empty: {
+      position: "relative",
+      alignItems: "center",
+      paddingHorizontal: 28,
+      paddingTop: 55,
+      paddingBottom: 35,
+    },
+
+    emptyIcon: {
+      width: 68,
+      height: 68,
+      borderRadius: 22,
+      backgroundColor: colors.brandTint,
+      borderWidth: 1,
+      borderColor: colors.brandLight,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 13,
+    },
+
+    emptySpark: {
+      position: "absolute",
+      top: 47,
+      right: "31%",
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: "#FFF8DF",
+      borderWidth: 2,
+      borderColor: colors.bg,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    emptyTitle: {
+      fontSize: 18,
+      lineHeight: 23,
+      fontWeight: "900",
+      color: colors.ink,
+    },
+
+    emptyText: {
+      fontSize: 11.5,
+      lineHeight: 18,
+      color: colors.slate,
+      textAlign: "center",
+      marginTop: 5,
+      maxWidth: 300,
+    },
+
+    emptyButton: {
+      height: 42,
+      paddingHorizontal: 16,
+      borderRadius: 13,
+      backgroundColor: colors.brand,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      marginTop: 15,
+      ...shadow.brand,
+    },
+
+    emptyButtonText: {
+      color: "#FFFFFF",
+      fontSize: 11.5,
+      fontWeight: "900",
+    },
   });
 }
