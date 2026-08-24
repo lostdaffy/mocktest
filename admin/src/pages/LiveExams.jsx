@@ -11,6 +11,7 @@ import {
   RiAlarmWarningLine,
 } from "@remixicon/react";
 import api from "../api/axios";
+import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 
 // <input type="datetime-local"> hands back a bare string like
@@ -285,29 +286,29 @@ export default function LiveExams() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
-        <h1 className="font-display text-2xl font-bold text-ink">Live Exams</h1>
-        <button
-          onClick={() => setShowCreate((v) => !v)}
-          className="px-4 py-2 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium transition-colors flex items-center gap-1.5"
-        >
-          <RiAddLine size={16} /> New Live Exam
-        </button>
-      </div>
-      <p className="text-slate-500 mb-6">
+      <PageHeader
+        eyebrow="Exams"
+        title="Live Exams"
+        actions={
+          <button onClick={() => setShowCreate((v) => !v)} className="rv-btn-primary">
+            <RiAddLine size={16} /> New Live Exam
+          </button>
+        }
+      />
+      <p className="text-slate -mt-4 mb-6">
         Har live exam ka apna question set hota hai, seedha isi ke liye generate kiya gaya — koi purana Mock Tests
         series test assign nahi karna padta. Draft banao, questions add/edit/delete karo, phir schedule karo.
       </p>
 
       {showCreate && (
-        <form onSubmit={handleCreate} className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 mb-8 space-y-4">
+        <form onSubmit={handleCreate} className="rv-card p-6 mb-8 space-y-4">
           <div className="flex flex-wrap items-end gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Exam</label>
+              <label className="block text-sm font-medium text-ink-soft mb-1.5">Exam</label>
               <select
                 value={examType}
                 onChange={(e) => setExamType(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none min-w-[220px]"
+                className="rv-input min-w-[220px]"
               >
                 {patterns.map((p) => (
                   <option key={p._id} value={p.examType}>
@@ -317,28 +318,28 @@ export default function LiveExams() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Date & Time</label>
+              <label className="block text-sm font-medium text-ink-soft mb-1.5">Date & Time</label>
               <input
                 type="datetime-local"
                 required
                 value={scheduledAt}
                 onChange={(e) => setScheduledAt(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none"
+                className="rv-input"
               />
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Title (optional)</label>
+              <label className="block text-sm font-medium text-ink-soft mb-1.5">Title (optional)</label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Auto-generated agar khali chhoda"
-                className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none w-full"
+                className="rv-input w-full"
               />
             </div>
             <button
               type="submit"
               disabled={creating}
-              className="px-5 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium transition-colors disabled:opacity-60"
+              className="rv-btn-primary"
             >
               {creating ? "Creating..." : "Create Draft"}
             </button>
@@ -347,27 +348,27 @@ export default function LiveExams() {
       )}
 
       {addBusy && (
-        <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3 flex items-center gap-3">
-          <span className="inline-block w-4 h-4 border-2 border-amber-300 border-t-amber-700 rounded-full animate-spin"></span>
+        <div className="mb-6 bg-warn-light border border-warn-border text-warn text-sm rounded-lg px-4 py-3 flex items-center gap-3">
+          <span className="inline-block w-4 h-4 border-2 border-warn-border border-t-warn rounded-full animate-spin"></span>
           Generating questions... this can take 30-60 seconds. Please don't close this page.
         </div>
       )}
       {genMessage && (
-        <div className="mb-6 bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg px-4 py-3">{genMessage}</div>
+        <div className="mb-6 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3">{genMessage}</div>
       )}
 
       {loading ? (
-        <p className="text-slate-400">Loading...</p>
+        <p className="text-slate-soft">Loading...</p>
       ) : (
         <>
           <Section title={`📝 Building (${drafts.length})`} hint="Add questions, then schedule once ready">
             {drafts.map((exam) => (
               <div key={exam._id} className="mb-3">
-                <div className="bg-white border border-slate-100 rounded-xl p-4">
+                <div className="rv-card p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-ink">{exam.title}</p>
-                      <p className={`text-xs mt-0.5 ${exam.questionCount >= 100 ? "text-emerald-600" : "text-amber-600"}`}>
+                      <p className={`text-xs mt-0.5 ${exam.questionCount >= 100 ? "text-success" : "text-warn"}`}>
                         {exam.questionCount} questions · {new Date(exam.scheduledAt).toLocaleString("en-IN")}
                       </p>
                     </div>
@@ -378,19 +379,19 @@ export default function LiveExams() {
                       >
                         + Add Questions
                       </button>
-                      <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200">
+                      <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
                         Review
                       </button>
-                      <button onClick={() => startReschedule(exam)} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200">
+                      <button onClick={() => startReschedule(exam)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
                         Edit
                       </button>
                       <button
                         onClick={() => publishExam(exam._id)}
-                        className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-sm font-medium hover:bg-emerald-100"
+                        className="px-3 py-1.5 rounded-lg bg-success-light text-success text-sm font-medium hover:bg-success-light"
                       >
                         Schedule
                       </button>
-                      <button onClick={() => deleteExam(exam._id)} className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100">
+                      <button onClick={() => deleteExam(exam._id)} className="px-3 py-1.5 rounded-lg bg-danger-light text-danger text-sm font-medium hover:bg-danger-light">
                         Delete
                       </button>
                     </div>
@@ -408,19 +409,19 @@ export default function LiveExams() {
                 </div>
 
                 {addingTo === exam._id && (
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-2">
-                    <p className="text-xs text-slate-500 mb-3">
+                  <div className="bg-slate-light border border-border rounded-xl p-4 mt-2">
+                    <p className="text-xs text-slate mb-3">
                       Questions generated fresh for this live exam only — real exam pattern (PYQ style) follow karte
                       hue.
                     </p>
                     <div className="flex gap-2 items-end flex-wrap">
                       <div>
-                        <label className="block text-xs text-slate-500 mb-1">Section</label>
+                        <label className="block text-xs text-slate mb-1">Section</label>
                         {sections.length > 0 ? (
                           <select
                             value={addForm.subject}
                             onChange={(e) => setAddForm({ ...addForm, subject: e.target.value })}
-                            className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm w-44"
+                            className="rv-input !py-1.5 text-sm w-44"
                           >
                             {sections.map((s) => (
                               <option key={s.subject} value={s.subject}>
@@ -433,19 +434,19 @@ export default function LiveExams() {
                             value={addForm.subject}
                             onChange={(e) => setAddForm({ ...addForm, subject: e.target.value })}
                             placeholder="Maths"
-                            className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm w-44"
+                            className="rv-input !py-1.5 text-sm w-44"
                           />
                         )}
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-500 mb-1">Count (max 12)</label>
+                        <label className="block text-xs text-slate mb-1">Count (max 12)</label>
                         <input
                           type="number"
                           min="1"
                           max="12"
                           value={addForm.count}
                           onChange={(e) => setAddForm({ ...addForm, count: Number(e.target.value) })}
-                          className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm w-20"
+                          className="rv-input !py-1.5 text-sm w-20"
                         />
                       </div>
                       <button
@@ -464,28 +465,28 @@ export default function LiveExams() {
                       </button>
                     </div>
                     {sectionStatus?.sections?.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-slate-200">
-                        <p className="text-xs font-medium text-slate-600 mb-2">
+                      <div className="mt-4 pt-3 border-t border-border">
+                        <p className="text-xs font-medium text-slate mb-2">
                           Section progress ({sectionStatus.totalHave}/{sectionStatus.totalRequired} total):
                         </p>
                         <div className="space-y-1.5">
                           {sectionStatus.sections.map((s) => (
                             <div key={s.subject} className="flex items-center gap-2">
-                              <span className="text-xs text-slate-600 w-28">{s.subject}</span>
-                              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <span className="text-xs text-slate w-28">{s.subject}</span>
+                              <div className="flex-1 h-2 bg-slate-light rounded-full overflow-hidden">
                                 <div
-                                  className={`h-2 rounded-full ${s.isFull ? "bg-emerald-500" : "bg-brand"}`}
+                                  className={`h-2 rounded-full ${s.isFull ? "bg-success-light0" : "bg-brand"}`}
                                   style={{ width: `${Math.min(100, (s.have / s.required) * 100)}%` }}
                                 ></div>
                               </div>
-                              <span className={`text-xs w-12 text-right ${s.isFull ? "text-emerald-600 font-medium" : "text-slate-500"}`}>
+                              <span className={`text-xs w-12 text-right ${s.isFull ? "text-success font-medium" : "text-slate"}`}>
                                 {s.have}/{s.required} {s.isFull && "✓"}
                               </span>
                             </div>
                           ))}
                         </div>
                         {sectionStatus.isComplete && (
-                          <p className="text-xs text-emerald-600 font-medium mt-2">
+                          <p className="text-xs text-success font-medium mt-2">
                             ✓ Ready to schedule — hit "Schedule" above.
                           </p>
                         )}
@@ -501,14 +502,14 @@ export default function LiveExams() {
           <Section title={`🔴 Scheduled (${scheduled.length})`} hint="Visible to students, waiting to start or currently live">
             {scheduled.map((exam) => (
               <div key={exam._id} className="mb-2">
-                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-5 flex items-center justify-between">
+                <div className="rv-card p-5 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${exam.liveState === "ongoing" ? "bg-emerald-50 text-emerald-500" : "bg-red-50 text-red-500"}`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${exam.liveState === "ongoing" ? "bg-success-light text-success" : "bg-danger-light text-danger"}`}>
                       <RiCalendarEventLine size={18} />
                     </div>
                     <div>
                       <p className="font-semibold text-ink">{exam.title}</p>
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-slate">
                         {new Date(exam.scheduledAt).toLocaleString("en-IN")} · {exam.questionCount} questions
                       </p>
                     </div>
@@ -516,20 +517,20 @@ export default function LiveExams() {
                   <div className="flex items-center gap-2">
                     <span
                       className={`text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5 ${
-                        exam.liveState === "ongoing" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                        exam.liveState === "ongoing" ? "bg-success-light text-success" : "bg-danger-light text-danger"
                       }`}
                     >
                       <RiRadioButtonLine size={12} /> {exam.liveState === "ongoing" ? "Live now" : "Upcoming"}
                     </span>
-                    <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200">
+                    <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
                       Review
                     </button>
                     {exam.liveState === "upcoming" && (
                       <>
-                        <button onClick={() => startReschedule(exam)} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200">
+                        <button onClick={() => startReschedule(exam)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
                           Reschedule
                         </button>
-                        <button onClick={() => cancelExam(exam._id)} className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100">
+                        <button onClick={() => cancelExam(exam._id)} className="px-3 py-1.5 rounded-lg bg-danger-light text-danger text-sm font-medium hover:bg-danger-light">
                           Cancel
                         </button>
                       </>
@@ -537,7 +538,7 @@ export default function LiveExams() {
                   </div>
                 </div>
                 {reschedulingId === exam._id && (
-                  <div className="bg-white border border-slate-100 rounded-xl p-4 mt-1">
+                  <div className="rv-card p-4 mt-1">
                     <RescheduleForm
                       form={rescheduleForm}
                       setForm={setRescheduleForm}
@@ -555,16 +556,16 @@ export default function LiveExams() {
           {ended.length > 0 && (
             <Section title={`✅ Ended (${ended.length})`} hint="Results released to students">
               {ended.map((exam) => (
-                <div key={exam._id} className="bg-white border border-slate-100 rounded-xl p-4 flex items-center justify-between">
+                <div key={exam._id} className="rv-card p-4 flex items-center justify-between">
                   <div>
                     <p className="font-semibold text-ink">{exam.title}</p>
-                    <p className="text-xs text-slate-400">{new Date(exam.scheduledAt).toLocaleString("en-IN")}</p>
+                    <p className="text-xs text-slate-soft">{new Date(exam.scheduledAt).toLocaleString("en-IN")}</p>
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => openResults(exam)} className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20 flex items-center gap-1.5">
                       <RiTrophyLine size={14} /> Results
                     </button>
-                    <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200">
+                    <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
                       Review
                     </button>
                   </div>
@@ -576,16 +577,16 @@ export default function LiveExams() {
           {cancelled.length > 0 && (
             <Section title={`🗑️ Cancelled (${cancelled.length})`} hint="Hidden from students">
               {cancelled.map((exam) => (
-                <div key={exam._id} className="bg-white border border-slate-100 rounded-xl p-4 flex items-center justify-between">
+                <div key={exam._id} className="rv-card p-4 flex items-center justify-between">
                   <div>
                     <p className="font-semibold text-ink">{exam.title}</p>
-                    <p className="text-xs text-slate-400">{new Date(exam.scheduledAt).toLocaleString("en-IN")}</p>
+                    <p className="text-xs text-slate-soft">{new Date(exam.scheduledAt).toLocaleString("en-IN")}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200">
+                    <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
                       Review
                     </button>
-                    <button onClick={() => deleteExam(exam._id)} className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100">
+                    <button onClick={() => deleteExam(exam._id)} className="px-3 py-1.5 rounded-lg bg-danger-light text-danger text-sm font-medium hover:bg-danger-light">
                       Delete
                     </button>
                   </div>
@@ -596,7 +597,7 @@ export default function LiveExams() {
         </>
       )}
 
-      {reviewLoading && <p className="text-slate-400 mt-4">Loading review...</p>}
+      {reviewLoading && <p className="text-slate-soft mt-4">Loading review...</p>}
 
       {reviewExam && (
         <ReviewModal
@@ -622,22 +623,22 @@ export default function LiveExams() {
 
 function RescheduleForm({ form, setForm, onCancel, onSave, busy }) {
   return (
-    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-2 flex flex-wrap items-end gap-3">
+    <div className="bg-slate-light border border-border rounded-xl p-4 mt-2 flex flex-wrap items-end gap-3">
       <div className="flex-1 min-w-[180px]">
-        <label className="block text-xs text-slate-500 mb-1">Title</label>
+        <label className="block text-xs text-slate mb-1">Title</label>
         <input
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm w-full"
+          className="rv-input !py-1.5 text-sm w-full"
         />
       </div>
       <div>
-        <label className="block text-xs text-slate-500 mb-1">Date & Time</label>
+        <label className="block text-xs text-slate mb-1">Date & Time</label>
         <input
           type="datetime-local"
           value={form.scheduledAt}
           onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm"
+          className="rv-input !py-1.5 text-sm"
         />
       </div>
       <button
@@ -647,7 +648,7 @@ function RescheduleForm({ form, setForm, onCancel, onSave, busy }) {
       >
         {busy ? "Saving..." : "Save"}
       </button>
-      <button onClick={onCancel} className="px-4 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-sm font-medium">
+      <button onClick={onCancel} className="px-4 py-1.5 rounded-lg bg-slate-light text-slate text-sm font-medium">
         Cancel
       </button>
     </div>
@@ -659,7 +660,7 @@ function Section({ title, hint, children }) {
     <div className="mb-8">
       <div className="flex items-baseline gap-3 mb-3">
         <h2 className="font-display text-lg font-bold text-ink">{title}</h2>
-        <span className="text-xs text-slate-400">{hint}</span>
+        <span className="text-xs text-slate-soft">{hint}</span>
       </div>
       <div className="space-y-2">{children}</div>
     </div>
@@ -667,24 +668,24 @@ function Section({ title, hint, children }) {
 }
 
 function Empty({ text }) {
-  return <p className="text-sm text-slate-400 bg-slate-50 rounded-lg px-4 py-3">{text}</p>;
+  return <p className="text-sm text-slate-soft bg-slate-light rounded-lg px-4 py-3">{text}</p>;
 }
 
 function ReviewModal({ exam, onClose, onRemoveQuestion, onUpdateQuestion, editable }) {
   const [editingId, setEditingId] = useState(null);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
-        <div className="flex items-center justify-between p-5 border-b border-slate-100">
+    <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-surface rounded-lg w-full max-w-2xl max-h-[85vh] flex flex-col">
+        <div className="flex items-center justify-between p-5 border-b border-border-soft">
           <div>
             <h3 className="font-display text-lg font-bold text-ink">{exam.title}</h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-soft">
               {exam.questions.length} questions · Status: {STATUS_LABEL[exam.publishStatus] || exam.publishStatus}
               {!editable && " · read-only (schedule inactive to edit)"}
             </p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-xl">
+          <button onClick={onClose} className="text-slate-soft hover:text-ink-soft text-xl">
             ✕
           </button>
         </div>
@@ -702,17 +703,17 @@ function ReviewModal({ exam, onClose, onRemoveQuestion, onUpdateQuestion, editab
                 }}
               />
             ) : (
-              <div key={q._id} className="border border-slate-100 rounded-xl p-4">
+              <div key={q._id} className="border border-border-soft rounded-xl p-4">
                 <div className="flex justify-between items-start gap-2">
                   <p className="font-medium text-ink text-sm">
                     {idx + 1}. {q.text}
                   </p>
                   {editable && (
                     <div className="flex gap-2 shrink-0">
-                      <button onClick={() => setEditingId(q._id)} className="text-slate-400 hover:text-brand" title="Edit">
+                      <button onClick={() => setEditingId(q._id)} className="text-slate-soft hover:text-brand" title="Edit">
                         <RiPencilLine size={16} />
                       </button>
-                      <button onClick={() => onRemoveQuestion(exam._id, q._id)} className="text-slate-400 hover:text-red-500" title="Delete">
+                      <button onClick={() => onRemoveQuestion(exam._id, q._id)} className="text-slate-soft hover:text-danger" title="Delete">
                         <RiDeleteBinLine size={16} />
                       </button>
                     </div>
@@ -723,17 +724,17 @@ function ReviewModal({ exam, onClose, onRemoveQuestion, onUpdateQuestion, editab
                     <div
                       key={i}
                       className={`text-xs px-2 py-1 rounded ${
-                        i === q.correctIndex ? "bg-emerald-50 text-emerald-800 font-medium" : "text-slate-500"
+                        i === q.correctIndex ? "bg-success-light text-success font-medium" : "text-slate"
                       }`}
                     >
                       {String.fromCharCode(65 + i)}. {opt} {i === q.correctIndex && "✓"}
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-slate-500 mt-2">
+                <p className="text-xs text-slate mt-2">
                   <b>Solution:</b> {q.solution}
                 </p>
-                <p className="text-[10px] text-slate-300 mt-1">
+                <p className="text-[10px] text-slate-soft mt-1">
                   {q.subject} · {q.difficulty}
                 </p>
               </div>
@@ -748,49 +749,49 @@ function ReviewModal({ exam, onClose, onRemoveQuestion, onUpdateQuestion, editab
 
 function ResultsModal({ exam, attempts, loading, onClose }) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
-        <div className="flex items-center justify-between p-5 border-b border-slate-100">
+    <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-surface rounded-lg w-full max-w-2xl max-h-[85vh] flex flex-col">
+        <div className="flex items-center justify-between p-5 border-b border-border-soft">
           <div>
             <h3 className="font-display text-lg font-bold text-ink">{exam.title} — Results</h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-soft">
               {attempts.length} attempt{attempts.length === 1 ? "" : "s"} · sorted by rank
             </p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-xl">
+          <button onClick={onClose} className="text-slate-soft hover:text-ink-soft text-xl">
             ✕
           </button>
         </div>
 
         <div className="overflow-y-auto p-5 space-y-2 flex-1">
           {loading ? (
-            <p className="text-slate-400">Loading...</p>
+            <p className="text-slate-soft">Loading...</p>
           ) : attempts.length === 0 ? (
             <Empty text="Koi student ne ye live exam attempt nahi kiya." />
           ) : (
             attempts.map((a) => (
-              <div key={a.attemptId} className="flex items-center justify-between border border-slate-100 rounded-xl p-3">
+              <div key={a.attemptId} className="flex items-center justify-between border border-border-soft rounded-xl p-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-slate-light flex items-center justify-center text-xs font-bold text-slate shrink-0">
                     #{a.rank ?? "-"}
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-ink flex items-center gap-2">
                       {a.name}
                       {a.autoSubmitted && (
-                        <span className="text-[10px] font-bold bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-bold bg-warn-light text-warn px-2 py-0.5 rounded-full">
                           AUTO-SUBMITTED
                         </span>
                       )}
                     </p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-soft">
                       {a.phone || "—"} · Score {a.score} · {a.accuracy}% accuracy
                     </p>
                   </div>
                 </div>
                 {a.backgroundCount > 0 && (
                   <div
-                    className="flex items-center gap-1.5 text-xs font-medium bg-red-50 text-red-600 px-2.5 py-1 rounded-full shrink-0"
+                    className="flex items-center gap-1.5 text-xs font-medium bg-danger-light text-danger px-2.5 py-1 rounded-full shrink-0"
                     title={`Left the app ${a.backgroundCount} time(s), ~${a.backgroundSeconds}s total`}
                   >
                     <RiAlarmWarningLine size={13} /> left app {a.backgroundCount}x
@@ -823,7 +824,7 @@ function QuestionEditForm({ question, onCancel, onSave }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={2}
-        className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm"
+        className="w-full rv-input text-sm"
       />
       <div className="grid grid-cols-2 gap-2">
         {options.map((opt, i) => (
@@ -837,7 +838,7 @@ function QuestionEditForm({ question, onCancel, onSave }) {
             <input
               value={opt}
               onChange={(e) => setOption(i, e.target.value)}
-              className="flex-1 px-2 py-1.5 rounded-lg border border-slate-200 text-xs"
+              className="flex-1 rv-input !py-1.5 !px-2 text-xs"
             />
           </div>
         ))}
@@ -847,7 +848,7 @@ function QuestionEditForm({ question, onCancel, onSave }) {
         onChange={(e) => setSolution(e.target.value)}
         rows={2}
         placeholder="Solution"
-        className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs"
+        className="rv-input text-xs"
       />
       <div className="flex gap-2">
         <button
@@ -856,7 +857,7 @@ function QuestionEditForm({ question, onCancel, onSave }) {
         >
           <RiCheckLine size={14} /> Save
         </button>
-        <button onClick={onCancel} className="px-4 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-sm font-medium flex items-center gap-1.5">
+        <button onClick={onCancel} className="px-4 py-1.5 rounded-lg bg-slate-light text-slate text-sm font-medium flex items-center gap-1.5">
           <RiCloseLine size={14} /> Cancel
         </button>
       </div>

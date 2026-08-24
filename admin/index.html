@@ -2,9 +2,31 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Smart Test Engine - Admin Panel</title>
+    <meta name="theme-color" content="#4F46E5" />
+    <title>Rankveer - Admin Panel</title>
+
+    <!--
+      Runs before React mounts and before first paint, so a dark-theme user
+      never sees a white flash on load. ThemeContext takes over afterwards
+      and uses the exact same storage key and rules.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("rv-admin-theme") || "system";
+          var dark =
+            stored === "dark" ||
+            (stored === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          if (dark) {
+            document.documentElement.classList.add("dark");
+            document.documentElement.style.colorScheme = "dark";
+          }
+        } catch (e) {
+          /* private mode / storage blocked - fall back to light */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

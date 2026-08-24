@@ -27,7 +27,7 @@ export default function Login() {
   const [view, setView] = useState("login"); // "login" | "forgot"
 
   return (
-    <div className="min-h-screen flex bg-white">
+    <div className="min-h-screen flex bg-surface">
       {/* Brand panel - hidden on small screens, this is where the "premium" feel lives */}
       <div className="hidden lg:flex lg:w-[44%] relative overflow-hidden bg-gradient-to-br from-[#2563EB] via-brand to-[#0B3EC1]">
         <div className="absolute -top-24 -right-16 w-96 h-96 rounded-full border-[56px] border-white/[0.05]" />
@@ -67,10 +67,10 @@ export default function Login() {
       </div>
 
       {/* Form panel */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-slate-50 lg:bg-white">
+      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-slate-light lg:bg-surface">
         <div className="w-full max-w-sm">
           <div className="lg:hidden text-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-brand mx-auto flex items-center justify-center text-white text-2xl font-display font-bold shadow-lg shadow-brand/25">
+            <div className="w-14 h-14 rounded-lg bg-brand mx-auto flex items-center justify-center text-white text-2xl font-display font-bold shadow-lg shadow-brand/25">
               R
             </div>
             <h1 className="font-display text-2xl font-bold text-ink mt-4">Rankveer</h1>
@@ -78,7 +78,7 @@ export default function Login() {
 
           {view === "login" ? <LoginForm onForgot={() => setView("forgot")} /> : <ForgotPasswordFlow onBack={() => setView("login")} />}
 
-          <p className="flex items-center justify-center gap-1.5 text-xs text-slate-400 mt-8">
+          <p className="flex items-center justify-center gap-1.5 text-xs text-slate-soft mt-8">
             <RiShieldCheckLine size={13} />
             Restricted access — authorized administrators only
           </p>
@@ -171,16 +171,16 @@ function LoginForm({ onForgot }) {
     <>
       <div className="mb-7">
         <h1 className="font-display text-2xl font-bold text-ink">Welcome back</h1>
-        <p className="text-sm text-slate-500 mt-1">Sign in to the admin console</p>
+        <p className="text-sm text-slate mt-1">Sign in to the admin console</p>
       </div>
 
       {/* Segmented mode toggle */}
-      <div className="flex bg-slate-100 rounded-xl p-1 mb-6">
+      <div className="flex bg-slate-light rounded-xl p-1 mb-6">
         <button
           type="button"
           onClick={() => switchMode("password")}
           className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
-            mode === "password" ? "bg-white text-brand shadow-sm" : "text-slate-500 hover:text-slate-700"
+            mode === "password" ? "bg-surface text-brand shadow-soft" : "text-slate hover:text-ink-soft"
           }`}
         >
           Password
@@ -189,7 +189,7 @@ function LoginForm({ onForgot }) {
           type="button"
           onClick={() => switchMode("otp")}
           className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
-            mode === "otp" ? "bg-white text-brand shadow-sm" : "text-slate-500 hover:text-slate-700"
+            mode === "otp" ? "bg-surface text-brand shadow-soft" : "text-slate hover:text-ink-soft"
           }`}
         >
           OTP
@@ -210,9 +210,9 @@ function LoginForm({ onForgot }) {
         className="space-y-5"
       >
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Admin Phone Number</label>
+          <label className="block text-sm font-medium text-ink-soft mb-1.5">Admin Phone Number</label>
           <div className="relative">
-            <RiPhoneLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <RiPhoneLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-soft" />
             <input
               ref={phoneRef}
               type="tel"
@@ -221,7 +221,7 @@ function LoginForm({ onForgot }) {
               value={phone}
               disabled={mode === "otp" && otpSent}
               onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition disabled:bg-slate-50 disabled:text-slate-400"
+              className="rv-input !pl-10"
               placeholder="Admin Phone Number"
               maxLength={10}
               required
@@ -232,26 +232,26 @@ function LoginForm({ onForgot }) {
         {mode === "password" ? (
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-sm font-medium text-slate-700">AdminPassword</label>
+              <label className="block text-sm font-medium text-ink-soft">AdminPassword</label>
               <button type="button" onClick={onForgot} className="text-xs font-medium text-brand hover:underline">
                 Forgot password?
               </button>
             </div>
             <div className="relative">
-              <RiLockLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <RiLockLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-soft" />
               <input
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-11 py-2.5 rounded-lg border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition"
+                className="rv-input !pl-10 !pr-11"
                 placeholder="••••••••"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-soft hover:text-slate"
                 tabIndex={-1}
               >
                 {showPassword ? <RiEyeOffLine size={17} /> : <RiEyeLine size={17} />}
@@ -260,16 +260,16 @@ function LoginForm({ onForgot }) {
           </div>
         ) : otpSent ? (
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Verification Code</label>
+            <label className="block text-sm font-medium text-ink-soft mb-1.5">Verification Code</label>
             <div className="relative">
-              <RiKeyLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <RiKeyLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-soft" />
               <input
                 type="text"
                 inputMode="numeric"
                 autoFocus
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ""))}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition tracking-widest font-semibold"
+                className="rv-input !pl-10 tracking-widest font-semibold"
                 placeholder="000000"
                 maxLength={6}
                 required
@@ -281,13 +281,13 @@ function LoginForm({ onForgot }) {
           </div>
         ) : null}
 
-        {error && <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
+        {error && <p className="text-sm text-danger bg-danger-light border border-danger-border rounded-lg px-3 py-2">{error}</p>}
 
         {mode === "password" ? (
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-sm shadow-brand/20"
+            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-soft shadow-brand/20"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
@@ -295,7 +295,7 @@ function LoginForm({ onForgot }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-sm shadow-brand/20"
+            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-soft shadow-brand/20"
           >
             {loading ? "Verifying..." : "Verify & Sign In"}
           </button>
@@ -304,7 +304,7 @@ function LoginForm({ onForgot }) {
             type="button"
             onClick={handleSendOtp}
             disabled={sendingOtp}
-            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-sm shadow-brand/20"
+            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-soft shadow-brand/20"
           >
             {sendingOtp ? "Sending..." : "Send Code"}
           </button>
@@ -370,22 +370,22 @@ function ForgotPasswordFlow({ onBack }) {
     <>
       <div className="mb-7">
         <h1 className="font-display text-2xl font-bold text-ink">{step === 3 ? "Password reset" : "Reset your password"}</h1>
-        {step !== 3 && <p className="text-sm text-slate-500 mt-1">We'll text a code to verify it's you</p>}
+        {step !== 3 && <p className="text-sm text-slate mt-1">We'll text a code to verify it's you</p>}
       </div>
 
       {step === 1 && (
         <form onSubmit={requestOtp} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Admin Phone Number</label>
+            <label className="block text-sm font-medium text-ink-soft mb-1.5">Admin Phone Number</label>
             <div className="relative">
-              <RiPhoneLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <RiPhoneLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-soft" />
               <input
                 type="tel"
                 inputMode="numeric"
                 autoFocus
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition"
+                className="rv-input !pl-10"
                 placeholder="Admin Mobile Number"
                 maxLength={10}
                 required
@@ -393,12 +393,12 @@ function ForgotPasswordFlow({ onBack }) {
             </div>
           </div>
 
-          {error && <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
+          {error && <p className="text-sm text-danger bg-danger-light border border-danger-border rounded-lg px-3 py-2">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-sm shadow-brand/20"
+            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-soft shadow-brand/20"
           >
             {loading ? "Sending..." : "Send Code"}
           </button>
@@ -406,7 +406,7 @@ function ForgotPasswordFlow({ onBack }) {
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center justify-center gap-1.5 w-full text-sm text-slate-500 hover:text-ink font-medium"
+            className="flex items-center justify-center gap-1.5 w-full text-sm text-slate hover:text-ink font-medium"
           >
             <RiArrowLeftLine size={15} /> Back to sign in
           </button>
@@ -415,19 +415,19 @@ function ForgotPasswordFlow({ onBack }) {
 
       {step === 2 && (
         <form onSubmit={resetPassword} className="space-y-5">
-          <p className="text-sm text-slate-500 -mt-2">Code sent by SMS to {phone}.</p>
+          <p className="text-sm text-slate -mt-2">Code sent by SMS to {phone}.</p>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Verification Code</label>
+            <label className="block text-sm font-medium text-ink-soft mb-1.5">Verification Code</label>
             <div className="relative">
-              <RiKeyLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <RiKeyLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-soft" />
               <input
                 type="text"
                 inputMode="numeric"
                 autoFocus
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ""))}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition tracking-widest font-semibold"
+                className="rv-input !pl-10 tracking-widest font-semibold"
                 placeholder="000000"
                 maxLength={6}
                 required
@@ -436,22 +436,22 @@ function ForgotPasswordFlow({ onBack }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">New Password</label>
+            <label className="block text-sm font-medium text-ink-soft mb-1.5">New Password</label>
             <div className="relative">
-              <RiLockLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <RiLockLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-soft" />
               <input
                 type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full pl-10 pr-11 py-2.5 rounded-lg border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition"
+                className="rv-input !pl-10 !pr-11"
                 placeholder="At least 6 characters"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-soft hover:text-slate"
                 tabIndex={-1}
               >
                 {showPassword ? <RiEyeOffLine size={17} /> : <RiEyeLine size={17} />}
@@ -459,12 +459,12 @@ function ForgotPasswordFlow({ onBack }) {
             </div>
           </div>
 
-          {error && <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
+          {error && <p className="text-sm text-danger bg-danger-light border border-danger-border rounded-lg px-3 py-2">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-sm shadow-brand/20"
+            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-soft shadow-brand/20"
           >
             {loading ? "Resetting..." : "Reset Password"}
           </button>
@@ -472,7 +472,7 @@ function ForgotPasswordFlow({ onBack }) {
           <button
             type="button"
             onClick={() => setStep(1)}
-            className="flex items-center justify-center gap-1.5 w-full text-sm text-slate-500 hover:text-ink font-medium"
+            className="flex items-center justify-center gap-1.5 w-full text-sm text-slate hover:text-ink font-medium"
           >
             <RiArrowLeftLine size={15} /> Use a different number
           </button>
@@ -481,13 +481,13 @@ function ForgotPasswordFlow({ onBack }) {
 
       {step === 3 && (
         <div className="text-center space-y-5">
-          <div className="w-14 h-14 rounded-full bg-emerald-50 mx-auto flex items-center justify-center">
-            <RiShieldCheckLine size={26} className="text-emerald-600" />
+          <div className="w-14 h-14 rounded-full bg-success-light mx-auto flex items-center justify-center">
+            <RiShieldCheckLine size={26} className="text-success" />
           </div>
-          <p className="text-sm text-slate-600">Your password has been reset. Sign in with your new password.</p>
+          <p className="text-sm text-slate">Your password has been reset. Sign in with your new password.</p>
           <button
             onClick={onBack}
-            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors shadow-sm shadow-brand/20"
+            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors shadow-soft shadow-brand/20"
           >
             Back to Sign In
           </button>

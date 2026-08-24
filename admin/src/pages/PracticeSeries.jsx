@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 
 const LEVELS = ["easy", "medium", "hard", "advanced"];
+// Uses the same four difficulty colours the mobile app shows students, so
+// a chapter that reads "hard" here looks "hard" in the app too.
 const LEVEL_COLORS = {
-  easy: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100",
-  medium: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100",
-  hard: "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100",
-  advanced: "bg-red-50 text-red-700 border-red-200 hover:bg-red-100",
+  easy: "bg-easy-bg text-easy border-easy/30 hover:border-easy",
+  medium: "bg-medium-bg text-medium border-medium/30 hover:border-medium",
+  hard: "bg-hard-bg text-hard border-hard/30 hover:border-hard",
+  advanced: "bg-advanced-bg text-advanced border-advanced/30 hover:border-advanced",
 };
 
 export default function PracticeSeries() {
@@ -156,24 +159,25 @@ export default function PracticeSeries() {
   if (!selectedSubject) {
     return (
       <div>
-        <h1 className="font-display text-2xl font-bold text-ink mb-1">Subject Practice</h1>
-        <p className="text-slate-500 mb-8">
-          Pick a subject to see its chapters, then build Easy/Medium/Hard/Advanced tests for each one.
-        </p>
+        <PageHeader
+          eyebrow="Content"
+          title="Subject Practice"
+          subtitle="Pick a subject to see its chapters, then build Easy/Medium/Hard/Advanced tests for each one."
+        />
 
         {message && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg px-4 py-3">
+          <div className="mb-6 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3">
             {message}
           </div>
         )}
 
         {loading ? (
-          <p className="text-slate-400">Loading...</p>
+          <p className="text-slate-soft">Loading...</p>
         ) : subjects.length === 0 ? (
-          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl px-6 py-8 text-center">
+          <div className="bg-warn-light border border-warn-border text-warn rounded-lg px-6 py-8 text-center">
             <p className="font-medium mb-1">No subjects found</p>
             <p className="text-sm">
-              Run <code className="bg-white px-1.5 py-0.5 rounded">npm run seed:subjects</code> in the terminal
+              Run <code className="bg-surface px-1.5 py-0.5 rounded">npm run seed:subjects</code> in the terminal
             </p>
           </div>
         ) : (
@@ -185,7 +189,7 @@ export default function PracticeSeries() {
                 <button
                   key={subj._id}
                   onClick={() => setSelectedSubject(subj)}
-                  className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 text-left hover:border-brand hover:shadow-md transition-all group"
+                  className="rv-card p-6 text-left hover:border-brand hover:shadow-card transition-all group"
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <span className="text-3xl">{subj.icon || "📘"}</span>
@@ -193,12 +197,12 @@ export default function PracticeSeries() {
                       <p className="font-semibold text-ink text-lg group-hover:text-brand transition-colors">
                         {subj.name}
                       </p>
-                      <p className="text-xs text-slate-400">{subj.chapters.length} chapters</p>
+                      <p className="text-xs text-slate-soft">{subj.chapters.length} chapters</p>
                     </div>
                   </div>
                   <div className="flex gap-3 text-xs">
-                    <span className="text-emerald-600 font-medium">{totalPublished} published</span>
-                    {totalDrafts > 0 && <span className="text-amber-600 font-medium">{totalDrafts} draft</span>}
+                    <span className="text-success font-medium">{totalPublished} published</span>
+                    {totalDrafts > 0 && <span className="text-warn font-medium">{totalDrafts} draft</span>}
                   </div>
                 </button>
               );
@@ -227,17 +231,17 @@ export default function PracticeSeries() {
         <span className="text-3xl">{selectedSubject.icon || "📘"}</span>
         <h1 className="font-display text-2xl font-bold text-ink">{selectedSubject.name}</h1>
       </div>
-      <p className="text-slate-500 mb-6">
+      <p className="text-slate mb-6">
         Click a chapter to see its tests and build new ones. Each chapter has 4 levels: Easy → Advanced.
       </p>
 
       {message && (
-        <div className="mb-6 bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg px-4 py-3">{message}</div>
+        <div className="mb-6 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3">{message}</div>
       )}
 
       {genBusy && (
-        <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3 flex items-center gap-3">
-          <span className="inline-block w-4 h-4 border-2 border-amber-300 border-t-amber-700 rounded-full animate-spin"></span>
+        <div className="mb-6 bg-warn-light border border-warn-border text-warn text-sm rounded-lg px-4 py-3 flex items-center gap-3">
+          <span className="inline-block w-4 h-4 border-2 border-warn-border border-t-warn rounded-full animate-spin"></span>
           Building the test... this can take 10-30 seconds. Please don't close this page.
         </div>
       )}
@@ -246,25 +250,25 @@ export default function PracticeSeries() {
         {selectedSubject.chapters.map((ch) => {
           const isOpen = openChapter?.name === ch.name;
           return (
-            <div key={ch.name} className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+            <div key={ch.name} className="rv-card overflow-hidden">
               <button
                 onClick={() => openChapterPanel(ch)}
-                className="w-full p-5 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
+                className="w-full p-5 flex items-center justify-between hover:bg-slate-light transition-colors text-left"
               >
                 <div>
                   <p className="font-semibold text-ink">{ch.name}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-soft mt-0.5">
                     {ch.publishedTests || 0} published
                     {ch.draftTests > 0 && ` · ${ch.draftTests} draft`}
                     {(ch.topics?.length || 0) > 0 && ` · ${ch.topics.length} topics`}
                   </p>
                 </div>
-                <span className="text-slate-400">{isOpen ? "▲" : "▼"}</span>
+                <span className="text-slate-soft">{isOpen ? "▲" : "▼"}</span>
               </button>
 
               {isOpen && (
-                <div className="border-t border-slate-100 p-5 bg-slate-50">
-                  <p className="text-xs font-medium text-slate-600 mb-2">Build a new test — pick a level:</p>
+                <div className="border-t border-border-soft p-5 bg-slate-light">
+                  <p className="text-xs font-medium text-slate mb-2">Build a new test — pick a level:</p>
                   <div className="flex gap-2 flex-wrap mb-5">
                     {LEVELS.map((level) => {
                       const busy = genBusy === `${ch.name}-${level}`;
@@ -277,7 +281,7 @@ export default function PracticeSeries() {
                         >
                           {busy ? (
                             <>
-                              <span className="inline-block w-3.5 h-3.5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin"></span>
+                              <span className="inline-block w-3.5 h-3.5 border-2 border-border-strong border-t-slate rounded-full animate-spin"></span>
                               Building...
                             </>
                           ) : (
@@ -288,29 +292,29 @@ export default function PracticeSeries() {
                     })}
                   </div>
 
-                  <p className="text-xs font-medium text-slate-600 mb-2">Tests in this chapter:</p>
+                  <p className="text-xs font-medium text-slate mb-2">Tests in this chapter:</p>
                   {testsLoading ? (
-                    <p className="text-sm text-slate-400">Loading...</p>
+                    <p className="text-sm text-slate-soft">Loading...</p>
                   ) : chapterTests.length === 0 ? (
-                    <p className="text-sm text-slate-400">No tests yet — build one above.</p>
+                    <p className="text-sm text-slate-soft">No tests yet — build one above.</p>
                   ) : (
                     <div className="space-y-2">
                       {chapterTests.map((t) => (
                         <div
                           key={t._id}
-                          className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-3 flex-wrap"
+                          className="bg-surface border border-border rounded-xl p-3 flex items-center justify-between gap-3 flex-wrap"
                         >
                           <div>
                             <p className="font-medium text-ink text-sm">{t.title}</p>
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-slate-soft">
                               <span className="capitalize">{t.difficultyLevel}</span> ·{" "}
                               <span
-                                className={t.publishStatus === "published" ? "text-emerald-600" : "text-amber-600"}
+                                className={t.publishStatus === "published" ? "text-success" : "text-warn"}
                               >
                                 {t.publishStatus}
                               </span>
                               {t.publishStatus === "published" && (
-                                <span className={t.isFree ? "text-emerald-600" : "text-brand"}>
+                                <span className={t.isFree ? "text-success" : "text-brand"}>
                                   {" "}
                                   · {t.isFree ? "FREE" : "Premium"}
                                 </span>
@@ -320,7 +324,7 @@ export default function PracticeSeries() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => openReview(t._id)}
-                              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium"
+                              className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium"
                             >
                               👁 Review
                             </button>
@@ -328,7 +332,7 @@ export default function PracticeSeries() {
                               <>
                                 <button
                                   onClick={() => publishTest(t._id, true)}
-                                  className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium"
+                                  className="px-3 py-1.5 rounded-lg bg-success-light0 hover:bg-success text-white text-xs font-medium"
                                 >
                                   Publish FREE
                                 </button>
@@ -342,7 +346,7 @@ export default function PracticeSeries() {
                             )}
                             <button
                               onClick={() => deleteTest(t._id)}
-                              className="px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium"
+                              className="px-3 py-1.5 rounded-lg bg-danger-light hover:bg-danger-light text-danger text-xs font-medium"
                             >
                               Delete
                             </button>
@@ -352,7 +356,7 @@ export default function PracticeSeries() {
                     </div>
                   )}
 
-                  <p className="text-xs text-slate-400 mt-4">
+                  <p className="text-xs text-slate-soft mt-4">
                     💡 Keep the first 2 tests in each chapter <b>FREE</b>, the rest <b>Premium</b>.
                   </p>
                 </div>
@@ -364,46 +368,46 @@ export default function PracticeSeries() {
 
       {/* Review modal - check every question before publishing */}
       {(reviewTest || reviewLoading) && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b border-slate-100">
+        <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-surface rounded-lg w-full max-w-3xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-border-soft">
               <div>
                 <h3 className="font-semibold text-ink">{reviewTest?.title || "Loading..."}</h3>
                 {reviewTest && (
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-soft mt-0.5">
                     {reviewTest.questions?.length || 0} questions · <span className="capitalize">{reviewTest.difficultyLevel}</span> ·{" "}
                     {reviewTest.publishStatus}
                   </p>
                 )}
               </div>
-              <button onClick={() => setReviewTest(null)} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">
+              <button onClick={() => setReviewTest(null)} className="text-slate-soft hover:text-slate text-2xl leading-none">
                 ×
               </button>
             </div>
 
             <div className="p-5 overflow-y-auto flex-1">
               {reviewLoading ? (
-                <p className="text-slate-400 text-sm">Loading questions...</p>
+                <p className="text-slate-soft text-sm">Loading questions...</p>
               ) : reviewTest?.questions?.length === 0 ? (
-                <p className="text-slate-400 text-sm">This test has no questions.</p>
+                <p className="text-slate-soft text-sm">This test has no questions.</p>
               ) : (
                 <div className="space-y-4">
                   {reviewTest?.questions?.map((q, idx) => (
-                    <div key={q._id} className="border border-slate-100 rounded-xl p-4">
+                    <div key={q._id} className="border border-border-soft rounded-xl p-4">
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <p className="font-medium text-ink text-sm">
-                          <span className="text-slate-400 mr-1.5">Q{idx + 1}.</span>
+                          <span className="text-slate-soft mr-1.5">Q{idx + 1}.</span>
                           {q.text}
                         </p>
                         <button
                           onClick={() => removeQuestion(reviewTest._id, q._id)}
-                          className="shrink-0 px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium"
+                          className="shrink-0 px-2.5 py-1 rounded-lg bg-danger-light hover:bg-danger-light text-danger text-xs font-medium"
                         >
                           Remove
                         </button>
                       </div>
 
-                      {q.textHi && <p className="text-xs text-slate-500 mb-2 pl-6">{q.textHi}</p>}
+                      {q.textHi && <p className="text-xs text-slate mb-2 pl-6">{q.textHi}</p>}
 
                       <div className="grid grid-cols-2 gap-1.5 mb-2 pl-6">
                         {q.options?.map((opt, i) => (
@@ -411,8 +415,8 @@ export default function PracticeSeries() {
                             key={i}
                             className={`text-sm px-2 py-1 rounded ${
                               i === q.correctIndex
-                                ? "bg-emerald-50 text-emerald-800 font-medium"
-                                : "text-slate-500"
+                                ? "bg-success-light text-success font-medium"
+                                : "text-slate"
                             }`}
                           >
                             {String.fromCharCode(65 + i)}. {opt} {i === q.correctIndex && "✓"}
@@ -421,8 +425,8 @@ export default function PracticeSeries() {
                       </div>
 
                       {q.solution && (
-                        <p className="text-xs text-slate-500 pl-6">
-                          <b className="text-slate-700">Solution:</b> {q.solution}
+                        <p className="text-xs text-slate pl-6">
+                          <b className="text-ink-soft">Solution:</b> {q.solution}
                         </p>
                       )}
                     </div>
@@ -432,13 +436,13 @@ export default function PracticeSeries() {
             </div>
 
             {reviewTest && reviewTest.publishStatus === "draft" && (
-              <div className="p-5 border-t border-slate-100 flex gap-3">
+              <div className="p-5 border-t border-border-soft flex gap-3">
                 <button
                   onClick={() => {
                     publishTest(reviewTest._id, true);
                     setReviewTest(null);
                   }}
-                  className="flex-1 px-4 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium"
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-success-light0 hover:bg-success text-white text-sm font-medium"
                 >
                   Publish FREE
                 </button>
@@ -453,7 +457,7 @@ export default function PracticeSeries() {
                 </button>
                 <button
                   onClick={() => setReviewTest(null)}
-                  className="px-4 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-medium"
+                  className="px-4 py-2.5 rounded-lg bg-slate-light hover:bg-border-strong text-slate text-sm font-medium"
                 >
                   Close
                 </button>

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useRef, useState } from "react";
-import { RiCheckLine, RiErrorWarningLine, RiInformationLine, RiCloseLine } from "@remixicon/react";
+import { RiCheckLine, RiErrorWarningLine, RiInformationLine, RiCloseLine, RiAlertLine } from "@remixicon/react";
 
 // Replaces the browser's native alert()/confirm() everywhere in the admin
 // panel - those render as an OS-level popup that looks like nothing else
@@ -9,9 +9,24 @@ import { RiCheckLine, RiErrorWarningLine, RiInformationLine, RiCloseLine } from 
 const ToastContext = createContext(null);
 
 const VARIANTS = {
-  success: { icon: RiCheckLine, bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-800", iconColor: "text-emerald-600" },
-  error: { icon: RiErrorWarningLine, bg: "bg-red-50", border: "border-red-200", text: "text-red-800", iconColor: "text-red-600" },
-  info: { icon: RiInformationLine, bg: "bg-brand/5", border: "border-brand/20", text: "text-ink", iconColor: "text-brand" },
+  success: {
+    icon: RiCheckLine,
+    wrap: "bg-success-light border-success-border",
+    text: "text-success",
+    iconColor: "text-success",
+  },
+  error: {
+    icon: RiErrorWarningLine,
+    wrap: "bg-danger-light border-danger-border",
+    text: "text-danger",
+    iconColor: "text-danger",
+  },
+  info: {
+    icon: RiInformationLine,
+    wrap: "bg-surface border-border",
+    text: "text-ink",
+    iconColor: "text-brand",
+  },
 };
 
 export function ToastProvider({ children }) {
@@ -39,19 +54,33 @@ export function ToastProvider({ children }) {
   }
 
   return (
-    <ToastContext.Provider value={{ success: (m) => showToast(m, "success"), error: (m) => showToast(m, "error"), info: (m) => showToast(m, "info"), confirm: showConfirm }}>
+    <ToastContext.Provider
+      value={{
+        success: (m) => showToast(m, "success"),
+        error: (m) => showToast(m, "error"),
+        info: (m) => showToast(m, "info"),
+        confirm: showConfirm,
+      }}
+    >
       {children}
 
       {/* Toast stack */}
-      <div className="fixed top-5 right-5 z-[100] flex flex-col gap-2.5 max-w-sm">
+      <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2.5 w-[calc(100vw-2rem)] max-w-sm">
         {toasts.map((t) => {
           const v = VARIANTS[t.variant];
           const Icon = v.icon;
           return (
-            <div key={t.id} className={`flex items-start gap-3 ${v.bg} border ${v.border} rounded-xl shadow-lg px-4 py-3.5 animate-[slideIn_0.2s_ease-out]`}>
+            <div
+              key={t.id}
+              className={`flex items-start gap-3 ${v.wrap} border rounded-sm shadow-lift px-4 py-3.5 animate-[toastIn_0.2s_ease-out]`}
+            >
               <Icon size={18} className={`${v.iconColor} shrink-0 mt-0.5`} />
-              <p className={`text-sm font-medium ${v.text} leading-snug`}>{t.message}</p>
-              <button onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))} className="ml-auto shrink-0 text-slate-400 hover:text-slate-600">
+              <p className={`text-sm font-medium ${v.text} leading-snug flex-1`}>{t.message}</p>
+              <button
+                onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
+                className="shrink-0 text-slate-soft hover:text-ink transition-colors"
+                aria-label="Dismiss"
+              >
                 <RiCloseLine size={16} />
               </button>
             </div>
@@ -61,21 +90,27 @@ export function ToastProvider({ children }) {
 
       {/* Confirm dialog */}
       {confirmState && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[100]">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-            <h3 className="font-semibold text-ink mb-1.5">{confirmState.title}</h3>
-            <p className="text-sm text-slate-500 mb-5 leading-relaxed">{confirmState.message}</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => resolveConfirm(false)}
-                className="flex-1 px-4 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-medium text-slate-700 transition-colors"
-              >
+        <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100] animate-fade-in">
+          <div className="bg-surface rounded-lg p-6 w-full max-w-sm shadow-lift">
+            <div
+              className={`w-11 h-11 rounded-sm grid place-items-center mb-4 ${
+                confirmState.danger ? "bg-danger-light text-danger" : "bg-brand/10 text-brand"
+              }`}
+            >
+              <RiAlertLine size={21} />
+            </div>
+
+            <h3 className="font-display font-bold text-ink mb-1.5">{confirmState.title}</h3>
+            <p className="text-sm text-slate mb-6 leading-relaxed">{confirmState.message}</p>
+
+            <div className="flex gap-2.5">
+              <button onClick={() => resolveConfirm(false)} className="rv-btn-secondary flex-1">
                 Cancel
               </button>
               <button
                 onClick={() => resolveConfirm(true)}
-                className={`flex-1 px-4 py-2.5 rounded-lg text-white text-sm font-medium transition-colors ${
-                  confirmState.danger ? "bg-red-500 hover:bg-red-600" : "bg-brand hover:bg-brand-dark"
+                className={`flex-1 rv-btn text-white ${
+                  confirmState.danger ? "bg-danger hover:opacity-90" : "bg-brand hover:bg-brand-dark shadow-brand"
                 }`}
               >
                 {confirmState.confirmLabel}
@@ -86,7 +121,7 @@ export function ToastProvider({ children }) {
       )}
 
       <style>{`
-        @keyframes slideIn {
+        @keyframes toastIn {
           from { opacity: 0; transform: translateX(16px); }
           to { opacity: 1; transform: translateX(0); }
         }

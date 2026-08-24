@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 
 export default function ManageQuestions() {
@@ -60,26 +61,29 @@ export default function ManageQuestions() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold text-ink mb-1">Manage Questions</h1>
-      <p className="text-slate-500 mb-6">Browse the full question bank, edit or delete entries.</p>
+      <PageHeader
+        eyebrow="Content"
+        title="Manage Questions"
+        subtitle="Browse the full question bank, edit or delete entries."
+      />
 
       <div className="flex gap-3 mb-6 flex-wrap">
         <input
           placeholder="Subject (e.g. Maths)"
           value={filters.subject}
           onChange={(e) => setFilters({ ...filters, subject: e.target.value })}
-          className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none text-sm"
+          className="rv-input text-sm"
         />
         <input
           placeholder="Topic (e.g. Percentage)"
           value={filters.topic}
           onChange={(e) => setFilters({ ...filters, topic: e.target.value })}
-          className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none text-sm"
+          className="rv-input text-sm"
         />
         <select
           value={filters.status}
           onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-          className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none text-sm"
+          className="rv-input text-sm"
         >
           <option value="published">Published</option>
           <option value="under_review">Under Review</option>
@@ -88,28 +92,28 @@ export default function ManageQuestions() {
         </select>
         <button
           onClick={load}
-          className="px-5 py-2 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium"
+          className="rv-btn-primary"
         >
           Filter
         </button>
       </div>
 
       {loading ? (
-        <p className="text-slate-400">Loading...</p>
+        <p className="text-slate-soft">Loading...</p>
       ) : questions.length === 0 ? (
-        <p className="text-slate-400">No questions match this filter.</p>
+        <p className="text-slate-soft">No questions match this filter.</p>
       ) : (
         <div className="space-y-3">
           {questions.map((q) => (
-            <div key={q._id} className="bg-white border border-slate-100 rounded-2xl shadow-sm p-5">
+            <div key={q._id} className="rv-card p-5">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+                <span className="text-xs bg-slate-light text-slate px-2 py-0.5 rounded-full">
                   {q.subject} / {q.topic}
                 </span>
-                <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{q.difficulty}</span>
+                <span className="text-xs bg-slate-light text-slate px-2 py-0.5 rounded-full">{q.difficulty}</span>
                 <span
                   className={`text-xs px-2 py-0.5 rounded-full ${
-                    q.status === "published" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                    q.status === "published" ? "bg-success-light text-success" : "bg-warn-light text-warn"
                   }`}
                 >
                   {q.status}
@@ -121,7 +125,7 @@ export default function ManageQuestions() {
                   <div
                     key={idx}
                     className={`text-sm px-2 py-1 rounded ${
-                      idx === q.correctIndex ? "bg-emerald-50 text-emerald-800 font-medium" : "text-slate-500"
+                      idx === q.correctIndex ? "bg-success-light text-success font-medium" : "text-slate"
                     }`}
                   >
                     {String.fromCharCode(65 + idx)}. {opt} {idx === q.correctIndex && "✓"}
@@ -132,7 +136,7 @@ export default function ManageQuestions() {
                 <button onClick={() => setEditing({ ...q })} className="text-sm text-brand hover:underline">
                   Edit
                 </button>
-                <button onClick={() => handleDelete(q._id)} className="text-sm text-red-600 hover:underline">
+                <button onClick={() => handleDelete(q._id)} className="text-sm text-danger hover:underline">
                   Delete
                 </button>
               </div>
@@ -142,14 +146,14 @@ export default function ManageQuestions() {
       )}
 
       {editing && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-lg my-8">
+        <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-surface rounded-lg p-6 w-full max-w-lg my-8">
             <h3 className="font-semibold text-ink mb-4">Edit Question</h3>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Question Text</label>
+            <label className="block text-sm font-medium text-ink-soft mb-1">Question Text</label>
             <textarea
               value={editing.text}
               onChange={(e) => setEditing({ ...editing, text: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 mb-3 text-sm"
+              className="rv-input mb-3 text-sm"
               rows={2}
             />
             {editing.options.map((opt, idx) => (
@@ -166,22 +170,22 @@ export default function ManageQuestions() {
                     options[idx] = e.target.value;
                     setEditing({ ...editing, options });
                   }}
-                  className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 text-sm"
+                  className="rv-input flex-1 !py-1.5 text-sm"
                 />
               </div>
             ))}
-            <label className="block text-sm font-medium text-slate-700 mb-1 mt-3">Solution</label>
+            <label className="block text-sm font-medium text-ink-soft mb-1 mt-3">Solution</label>
             <textarea
               value={editing.solution}
               onChange={(e) => setEditing({ ...editing, solution: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 mb-4 text-sm"
+              className="rv-input mb-4 text-sm"
               rows={2}
             />
             <div className="flex gap-3">
               <button onClick={handleSaveEdit} className="flex-1 px-4 py-2.5 rounded-lg bg-brand text-white text-sm font-medium">
                 Save
               </button>
-              <button onClick={() => setEditing(null)} className="flex-1 px-4 py-2.5 rounded-lg bg-slate-100 text-slate-600 text-sm font-medium">
+              <button onClick={() => setEditing(null)} className="flex-1 px-4 py-2.5 rounded-lg bg-slate-light text-slate text-sm font-medium">
                 Cancel
               </button>
             </div>

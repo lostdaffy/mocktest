@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 
 export default function Subjects() {
@@ -62,74 +63,74 @@ export default function Subjects() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
-        <h1 className="font-display text-2xl font-bold text-ink">Subjects & Chapters</h1>
-        <button
-          onClick={startNew}
-          className="px-4 py-2 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium transition-colors"
-        >
-          + Add Subject
-        </button>
-      </div>
-      <p className="text-slate-500 mb-8">
+      <PageHeader
+        eyebrow="Exams"
+        title="Subjects & Chapters"
+        actions={
+          <button onClick={startNew} className="rv-btn-primary">
+            + Add Subject
+          </button>
+        }
+      />
+      <p className="text-slate -mt-4 mb-8">
         These subjects and chapters appear in students' "Chapter-wise Practice." Each chapter's topics should
         match exactly what's tagged on the questions themselves.
       </p>
 
       {editing && (
-        <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 mb-8">
+        <div className="rv-card p-6 mb-8">
           <div className="grid grid-cols-3 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Subject Name</label>
+              <label className="block text-sm font-medium text-ink-soft mb-1.5">Subject Name</label>
               <input
                 value={editing.name}
                 onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                 placeholder="Maths"
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none"
+                className="rv-input"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Hindi Name</label>
+              <label className="block text-sm font-medium text-ink-soft mb-1.5">Hindi Name</label>
               <input
                 value={editing.nameHi || ""}
                 onChange={(e) => setEditing({ ...editing, nameHi: e.target.value })}
                 placeholder="गणित"
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none"
+                className="rv-input"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Icon (emoji)</label>
+              <label className="block text-sm font-medium text-ink-soft mb-1.5">Icon (emoji)</label>
               <input
                 value={editing.icon || ""}
                 onChange={(e) => setEditing({ ...editing, icon: e.target.value })}
                 placeholder="🔢"
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none"
+                className="rv-input"
               />
             </div>
           </div>
 
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-slate-700">Chapters</label>
+            <label className="text-sm font-medium text-ink-soft">Chapters</label>
             <button type="button" onClick={addChapter} className="text-sm text-brand hover:underline">
               + Add Chapter
             </button>
           </div>
           <div className="space-y-2">
             {editing.chapters.map((ch, idx) => (
-              <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-slate-50 p-3 rounded-lg">
+              <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-slate-light p-3 rounded-lg">
                 <input
                   placeholder="Chapter name (e.g. Percentage)"
                   value={ch.name}
                   onChange={(e) => updateChapter(idx, "name", e.target.value)}
-                  className="col-span-5 px-3 py-1.5 rounded-lg border border-slate-200 text-sm"
+                  className="col-span-5 rv-input !py-1.5 text-sm"
                 />
                 <input
                   placeholder="Topics (comma-separated, must match question tags)"
                   value={(ch.topics || []).join(", ")}
                   onChange={(e) => updateChapter(idx, "topics", e.target.value)}
-                  className="col-span-6 px-3 py-1.5 rounded-lg border border-slate-200 text-sm"
+                  className="col-span-6 rv-input !py-1.5 text-sm"
                 />
-                <button type="button" onClick={() => removeChapter(idx)} className="col-span-1 text-red-500 text-sm">
+                <button type="button" onClick={() => removeChapter(idx)} className="col-span-1 text-danger text-sm">
                   ✕
                 </button>
               </div>
@@ -140,7 +141,7 @@ export default function Subjects() {
             <button onClick={save} className="px-5 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium">
               Save Subject
             </button>
-            <button onClick={() => setEditing(null)} className="px-5 py-2.5 rounded-lg bg-slate-100 text-slate-600 text-sm font-medium">
+            <button onClick={() => setEditing(null)} className="px-5 py-2.5 rounded-lg bg-slate-light text-slate text-sm font-medium">
               Cancel
             </button>
           </div>
@@ -148,11 +149,11 @@ export default function Subjects() {
       )}
 
       {loading ? (
-        <p className="text-slate-400">Loading...</p>
+        <p className="text-slate-soft">Loading...</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {subjects.map((s) => (
-            <div key={s._id} className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6">
+            <div key={s._id} className="rv-card p-6">
               <div className="flex items-center justify-between mb-2">
                 <p className="font-semibold text-ink text-lg">
                   {s.icon} {s.name}
@@ -161,10 +162,10 @@ export default function Subjects() {
                   Edit
                 </button>
               </div>
-              <p className="text-xs text-slate-400 mb-3">{s.chapters?.length || 0} chapters</p>
+              <p className="text-xs text-slate-soft mb-3">{s.chapters?.length || 0} chapters</p>
               <div className="flex flex-wrap gap-1.5">
                 {(s.chapters || []).map((ch, i) => (
-                  <span key={i} className="text-xs bg-brand-light text-brand-dark px-2 py-0.5 rounded-full">
+                  <span key={i} className="text-xs bg-brand/10 text-brand-dark px-2 py-0.5 rounded-full">
                     {ch.name}
                   </span>
                 ))}

@@ -1,24 +1,245 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: 'Inter', system-ui, sans-serif;
-  background-color: #F7F8FC;
-  color: #0F1729;
+/* =========================================================
+   RANKVEER DESIGN TOKENS
+   Values are copied verbatim from the mobile app's
+   src/theme/theme.js so admin and app render the same brand.
+   Stored as "R G B" triplets so Tailwind opacity modifiers
+   (bg-brand/10) keep working.
+========================================================= */
+
+@layer base {
+  :root {
+    /* BRAND */
+    --rv-brand: 79 70 229;            /* #4F46E5 */
+    --rv-brand-dark: 55 48 163;       /* #3730A3 */
+    --rv-brand-darker: 23 37 84;      /* #172554 */
+    --rv-brand-light: 237 235 255;    /* #EDEBFF */
+    --rv-brand-tint: 245 243 255;     /* #F5F3FF */
+    --rv-brand-blue: 37 99 235;       /* #2563EB */
+    --rv-brand-violet: 124 58 237;    /* #7C3AED */
+    --rv-brand-lavender: 167 139 250; /* #A78BFA */
+    --rv-brand-navy: 23 37 84;        /* #172554 */
+
+    /* TEXT */
+    --rv-ink: 16 25 54;               /* #101936 */
+    --rv-ink-soft: 52 64 95;          /* #34405F */
+    --rv-slate: 102 112 133;          /* #667085 */
+    --rv-slate-soft: 152 162 179;     /* #98A2B3 */
+    --rv-slate-light: 241 243 248;    /* #F1F3F8 */
+
+    /* SURFACES */
+    --rv-bg: 247 248 252;             /* #F7F8FC */
+    --rv-surface: 255 255 255;        /* #FFFFFF */
+    --rv-surface-soft: 251 252 255;   /* #FBFCFF */
+    --rv-surface-elevated: 255 255 255;
+
+    /* BORDERS */
+    --rv-border: 229 231 240;         /* #E5E7F0 */
+    --rv-border-soft: 240 241 246;    /* #F0F1F6 */
+    --rv-border-strong: 217 221 234;  /* #D9DDEA */
+
+    /* STATUS */
+    --rv-success: 22 163 74;          /* #16A34A */
+    --rv-success-light: 234 248 240;  /* #EAF8F0 */
+    --rv-success-border: 188 232 205; /* #BCE8CD */
+
+    --rv-danger: 220 53 69;           /* #DC3545 */
+    --rv-danger-light: 254 240 242;   /* #FEF0F2 */
+    --rv-danger-border: 246 201 207;  /* #F6C9CF */
+
+    --rv-warn: 217 119 6;             /* #D97706 */
+    --rv-warn-light: 255 247 232;     /* #FFF7E8 */
+    --rv-warn-border: 245 217 166;    /* #F5D9A6 */
+
+    --rv-info: 37 99 235;             /* #2563EB */
+    --rv-info-light: 234 241 255;     /* #EAF1FF */
+    --rv-info-border: 201 220 255;    /* #C9DCFF */
+
+    --rv-flag: 245 158 11;            /* #F59E0B */
+    --rv-flag-light: 255 247 232;     /* #FFF7E8 */
+
+    /* DIFFICULTY */
+    --rv-easy: 22 163 74;             /* #16A34A */
+    --rv-easy-bg: 234 248 240;        /* #EAF8F0 */
+    --rv-medium: 37 99 235;           /* #2563EB */
+    --rv-medium-bg: 234 241 255;      /* #EAF1FF */
+    --rv-hard: 234 88 12;             /* #EA580C */
+    --rv-hard-bg: 255 241 232;        /* #FFF1E8 */
+    --rv-advanced: 124 58 237;        /* #7C3AED */
+    --rv-advanced-bg: 243 237 255;    /* #F3EDFF */
+
+    --rv-scrollbar: 203 213 225;
+  }
+
+  .dark {
+    /* BRAND */
+    --rv-brand: 139 124 255;          /* #8B7CFF */
+    --rv-brand-dark: 113 99 232;      /* #7163E8 */
+    --rv-brand-darker: 76 67 165;     /* #4C43A5 */
+    --rv-brand-light: 41 38 83;       /* #292653 */
+    --rv-brand-tint: 33 31 63;        /* #211F3F */
+    --rv-brand-blue: 91 141 239;      /* #5B8DEF */
+    --rv-brand-violet: 155 123 255;   /* #9B7BFF */
+    --rv-brand-lavender: 184 173 255; /* #B8ADFF */
+    --rv-brand-navy: 23 37 84;        /* #172554 */
+
+    /* TEXT */
+    --rv-ink: 245 247 255;            /* #F5F7FF */
+    --rv-ink-soft: 212 217 232;       /* #D4D9E8 */
+    --rv-slate: 165 174 192;          /* #A5AEC0 */
+    --rv-slate-soft: 127 137 157;     /* #7F899D */
+    --rv-slate-light: 37 44 64;       /* #252C40 */
+
+    /* SURFACES */
+    --rv-bg: 11 16 32;                /* #0B1020 */
+    --rv-surface: 21 27 46;           /* #151B2E */
+    --rv-surface-soft: 26 33 53;      /* #1A2135 */
+    --rv-surface-elevated: 30 38 59;  /* #1E263B */
+
+    /* BORDERS */
+    --rv-border: 42 50 71;            /* #2A3247 */
+    --rv-border-soft: 32 39 58;       /* #20273A */
+    --rv-border-strong: 55 65 88;     /* #374158 */
+
+    /* STATUS */
+    --rv-success: 53 201 137;         /* #35C989 */
+    --rv-success-light: 23 54 41;     /* #173629 */
+    --rv-success-border: 36 91 67;    /* #245B43 */
+
+    --rv-danger: 240 100 112;         /* #F06470 */
+    --rv-danger-light: 58 32 38;      /* #3A2026 */
+    --rv-danger-border: 96 48 58;     /* #60303A */
+
+    --rv-warn: 230 163 58;            /* #E6A33A */
+    --rv-warn-light: 57 44 25;        /* #392C19 */
+    --rv-warn-border: 96 74 37;       /* #604A25 */
+
+    --rv-info: 101 161 245;           /* #65A1F5 */
+    --rv-info-light: 27 44 70;        /* #1B2C46 */
+    --rv-info-border: 41 74 114;      /* #294A72 */
+
+    --rv-flag: 245 180 62;            /* #F5B43E */
+    --rv-flag-light: 57 44 25;        /* #392C19 */
+
+    /* DIFFICULTY */
+    --rv-easy: 53 201 137;            /* #35C989 */
+    --rv-easy-bg: 23 54 41;           /* #173629 */
+    --rv-medium: 101 161 245;         /* #65A1F5 */
+    --rv-medium-bg: 27 44 70;         /* #1B2C46 */
+    --rv-hard: 242 138 76;            /* #F28A4C */
+    --rv-hard-bg: 58 38 27;           /* #3A261B */
+    --rv-advanced: 167 122 244;       /* #A77AF4 */
+    --rv-advanced-bg: 48 36 72;       /* #302448 */
+
+    --rv-scrollbar: 55 65 88;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    @apply bg-bg text-ink;
+    /* Theme switches shouldn't flash - but keep it short so it never
+       feels laggy when navigating between pages. */
+    transition: background-color 0.18s ease, color 0.18s ease;
+  }
+
+  ::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--rv-scrollbar));
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--rv-slate-soft));
+  }
+
+  /* Native controls (date pickers, dropdown arrows) follow the theme
+     instead of rendering as a bright white box on a dark page. */
+  .dark input[type="date"]::-webkit-calendar-picker-indicator,
+  .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) opacity(0.65);
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--rv-brand));
+    outline-offset: 2px;
+  }
 }
 
-.font-display {
-  font-family: 'Poppins', system-ui, sans-serif;
-}
+/* =========================================================
+   COMPONENT CLASSES
+   These exist so pages stop repeating 8-class card/button
+   strings. Anything used on 3+ pages lives here.
+========================================================= */
 
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 8px;
+@layer components {
+  .font-display {
+    font-family: 'Poppins', system-ui, sans-serif;
+  }
+
+  .rv-card {
+    @apply bg-surface border border-border rounded-xl shadow-soft;
+  }
+
+  .rv-card-hover {
+    @apply hover:border-brand/40 hover:shadow-card transition-all duration-200;
+  }
+
+  .rv-input {
+    @apply w-full px-3.5 py-2.5 rounded-sm bg-surface text-ink border border-border
+           placeholder:text-slate-soft outline-none transition-colors
+           focus:border-brand focus:ring-4 focus:ring-brand/10
+           disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  .rv-label {
+    @apply block text-sm font-semibold text-ink-soft mb-1.5;
+  }
+
+  .rv-btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-sm
+           text-sm font-semibold transition-all duration-150
+           disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none;
+  }
+
+  .rv-btn-primary {
+    @apply rv-btn bg-brand text-white hover:bg-brand-dark shadow-brand
+           active:scale-[0.98];
+  }
+
+  .rv-btn-secondary {
+    @apply rv-btn bg-surface text-ink border border-border hover:border-brand/50 hover:text-brand;
+  }
+
+  .rv-btn-ghost {
+    @apply rv-btn bg-brand/10 text-brand hover:bg-brand/20;
+  }
+
+  .rv-btn-danger {
+    @apply rv-btn bg-danger-light text-danger border border-danger-border hover:bg-danger hover:text-white;
+  }
+
+  .rv-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold;
+  }
+
+  /* One-line skeleton shimmer for loading states. */
+  .rv-skeleton {
+    @apply bg-slate-light rounded-sm animate-pulse;
+  }
 }

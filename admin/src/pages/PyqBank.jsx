@@ -9,6 +9,7 @@ import {
   RiEyeLine,
 } from "@remixicon/react";
 import api from "../api/axios";
+import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 
 export default function PyqBank() {
@@ -118,20 +119,19 @@ export default function PyqBank() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold text-ink mb-1">PYQ Bank</h1>
-      <p className="text-slate-500 mb-8">
-        Upload real previous-year papers as PDFs — Gemini extracts genuine questions straight from the PDF (it
-        doesn't invent anything). If an answer key is missing you'll fill it in during review; publishing is only
-        possible once every question's answer is confirmed.
-      </p>
+      <PageHeader
+        eyebrow="Content"
+        title="PYQ Bank"
+        subtitle="Upload real previous-year papers as PDFs — Gemini extracts genuine questions straight from the PDF (it doesn't invent anything). If an answer key is missing you'll fill it in during review; publishing is only possible once every question's answer is confirmed."
+      />
 
-      <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 mb-8">
+      <div className="rv-card p-6 mb-8">
         <div className="mb-4">
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Exam</label>
+          <label className="block text-sm font-medium text-ink-soft mb-1.5">Exam</label>
           <select
             value={examStage}
             onChange={(e) => setExamStage(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none min-w-[220px]"
+            className="rv-input min-w-[220px]"
           >
             {patterns.map((p) => (
               <option key={p._id} value={p.examType}>
@@ -143,56 +143,56 @@ export default function PyqBank() {
 
         <form onSubmit={handleUpload} className="flex flex-wrap items-end gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Subject <span className="text-slate-400">(optional — leave blank for a mixed-subject paper)</span>
+            <label className="block text-sm font-medium text-ink-soft mb-1.5">
+              Subject <span className="text-slate-soft">(optional — leave blank for a mixed-subject paper)</span>
             </label>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="e.g. Reasoning"
-              className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none w-48"
+              className="rv-input w-48"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Exam Date <span className="text-slate-400">(optional, sirf year se zyada exact)</span>
+            <label className="block text-sm font-medium text-ink-soft mb-1.5">
+              Exam Date <span className="text-slate-soft">(optional, sirf year se zyada exact)</span>
             </label>
             <input
               type="date"
               value={examDate}
               onChange={(e) => onDateChange(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none w-40"
+              className="rv-input w-40"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Year</label>
+            <label className="block text-sm font-medium text-ink-soft mb-1.5">Year</label>
             <input
               type="number"
               required
               value={year}
               onChange={(e) => setYear(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none w-24"
+              className="rv-input w-24"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Shift <span className="text-slate-400">(optional)</span>
+            <label className="block text-sm font-medium text-ink-soft mb-1.5">
+              Shift <span className="text-slate-soft">(optional)</span>
             </label>
             <input
               type="text"
               value={shift}
               onChange={(e) => setShift(e.target.value)}
               placeholder="e.g. Shift 1"
-              className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none w-32"
+              className="rv-input w-32"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">PDF Language</label>
+            <label className="block text-sm font-medium text-ink-soft mb-1.5">PDF Language</label>
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-slate-200 focus:border-brand outline-none w-36"
+              className="rv-input w-36"
             >
               <option value="bilingual">Bilingual (EN + HI)</option>
               <option value="english">English only</option>
@@ -200,8 +200,8 @@ export default function PyqBank() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">PDF</label>
-            <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-slate-300 hover:border-brand cursor-pointer text-sm text-slate-600">
+            <label className="block text-sm font-medium text-ink-soft mb-1.5">PDF</label>
+            <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-border-strong hover:border-brand cursor-pointer text-sm text-slate">
               <RiUploadCloud2Line size={16} />
               {file ? file.name : "Choose PDF"}
               <input type="file" accept="application/pdf" className="hidden" onChange={(e) => setFile(e.target.files[0])} />
@@ -210,15 +210,15 @@ export default function PyqBank() {
           <button
             type="submit"
             disabled={uploading}
-            className="px-5 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium transition-colors disabled:opacity-60"
+            className="rv-btn-primary"
           >
             {uploading ? "Extracting..." : "Upload & Extract"}
           </button>
         </form>
 
         {uploading && (
-          <div className="mt-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3 flex items-center gap-3">
-            <span className="inline-block w-4 h-4 border-2 border-amber-300 border-t-amber-700 rounded-full animate-spin" />
+          <div className="mt-4 bg-warn-light border border-warn-border text-warn text-sm rounded-lg px-4 py-3 flex items-center gap-3">
+            <span className="inline-block w-4 h-4 border-2 border-warn-border border-t-warn rounded-full animate-spin" />
             Reading the PDF and extracting questions — a large paper can take 1-2 minutes. Please don't close this
             page.
           </div>
@@ -228,8 +228,8 @@ export default function PyqBank() {
           <div
             className={`mt-4 text-sm rounded-lg px-4 py-3 border ${
               uploadMsg.type === "success"
-                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                : "bg-red-50 border-red-200 text-red-700"
+                ? "bg-success-light border-success-border text-success"
+                : "bg-danger-light border-danger-border text-danger"
             }`}
           >
             {uploadMsg.text}
@@ -238,7 +238,7 @@ export default function PyqBank() {
       </div>
 
       {loading ? (
-        <p className="text-slate-400">Loading...</p>
+        <p className="text-slate-soft">Loading...</p>
       ) : (
         <>
           <PaperSection title={`📝 Draft / Needs Review (${drafts.length})`}>
@@ -281,30 +281,30 @@ export default function PyqBank() {
 function PaperSection({ title, children }) {
   return (
     <div className="mb-8">
-      <h2 className="text-sm font-semibold text-slate-500 mb-3">{title}</h2>
+      <h2 className="text-sm font-semibold text-slate mb-3">{title}</h2>
       <div className="space-y-3">{children}</div>
     </div>
   );
 }
 
 function Empty({ text }) {
-  return <p className="text-slate-400 text-sm bg-white border border-slate-100 rounded-xl p-5">{text}</p>;
+  return <p className="text-slate-soft text-sm bg-surface border border-border-soft rounded-xl p-5">{text}</p>;
 }
 
 function PaperRow({ paper, onReview, onArchive, onDelete }) {
   return (
-    <div className="bg-white border border-slate-100 rounded-xl p-4 flex items-center justify-between">
+    <div className="rv-card p-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center shrink-0">
           <RiFileTextLine size={18} />
         </div>
         <div>
           <p className="font-semibold text-ink">{paper.title}</p>
-          <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+          <p className="text-xs text-slate flex items-center gap-1.5 mt-0.5">
             {paper.questions?.length || 0} questions
             {paper.subject ? ` · ${paper.subject}` : ""}
             {paper.pyqLanguage && (
-              <span className="text-[10px] font-semibold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-semibold bg-slate-light text-slate px-1.5 py-0.5 rounded">
                 {paper.pyqLanguage === "bilingual" ? "EN + HI" : paper.pyqLanguage === "hindi" ? "HI" : "EN"}
               </span>
             )}
@@ -314,17 +314,17 @@ function PaperRow({ paper, onReview, onArchive, onDelete }) {
       <div className="flex gap-2">
         <button
           onClick={onReview}
-          className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200 flex items-center gap-1.5"
+          className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong flex items-center gap-1.5"
         >
           <RiEyeLine size={14} /> Review
         </button>
         {onArchive && (
-          <button onClick={onArchive} className="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 text-sm font-medium hover:bg-amber-100">
+          <button onClick={onArchive} className="px-3 py-1.5 rounded-lg bg-warn-light text-warn text-sm font-medium hover:bg-warn-light">
             Hide
           </button>
         )}
         {onDelete && (
-          <button onClick={onDelete} className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100">
+          <button onClick={onDelete} className="px-3 py-1.5 rounded-lg bg-danger-light text-danger text-sm font-medium hover:bg-danger-light">
             Delete
           </button>
         )}
@@ -387,26 +387,26 @@ function ReviewModal({ testId, onClose, onChanged }) {
   const unanswered = test?.questions?.filter((q) => q.correctIndex === null || q.correctIndex === undefined).length || 0;
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+    <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-surface rounded-lg w-full max-w-3xl max-h-[85vh] flex flex-col">
+        <div className="p-5 border-b border-border-soft flex items-center justify-between">
           <div>
             <p className="font-display text-lg font-bold text-ink">{test?.title || "Review"}</p>
             {test && (
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate mt-0.5">
                 {test.questions?.length || 0} questions
-                {unanswered > 0 && <span className="text-red-500 font-medium"> · {unanswered} missing answer</span>}
+                {unanswered > 0 && <span className="text-danger font-medium"> · {unanswered} missing answer</span>}
               </p>
             )}
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-xl">
+          <button onClick={onClose} className="text-slate-soft hover:text-ink-soft text-xl">
             <RiCloseLine size={22} />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {loading ? (
-            <p className="text-slate-400">Loading...</p>
+            <p className="text-slate-soft">Loading...</p>
           ) : (
             test?.questions?.map((q, idx) => (
               <QuestionCard key={q._id} q={q} idx={idx} onSave={(patch) => saveQuestion(q._id, patch)} onRemove={() => removeQuestion(q._id)} />
@@ -414,10 +414,10 @@ function ReviewModal({ testId, onClose, onChanged }) {
           )}
         </div>
 
-        <div className="p-5 border-t border-slate-100 flex items-center justify-between gap-4">
-          {publishError && <p className="text-sm text-red-600 flex-1">{publishError}</p>}
+        <div className="p-5 border-t border-border-soft flex items-center justify-between gap-4">
+          {publishError && <p className="text-sm text-danger flex-1">{publishError}</p>}
           {test?.publishStatus === "published" ? (
-            <span className="text-sm text-emerald-600 font-medium flex items-center gap-1.5 ml-auto">
+            <span className="text-sm text-success font-medium flex items-center gap-1.5 ml-auto">
               <RiCheckLine size={16} /> Published
             </span>
           ) : (
@@ -450,16 +450,16 @@ function QuestionCard({ q, idx, onSave, onRemove }) {
   }
 
   return (
-    <div className={`border rounded-xl p-4 ${missing ? "border-red-200 bg-red-50/40" : "border-slate-100"}`}>
+    <div className={`border rounded-xl p-4 ${missing ? "border-danger-border bg-danger-light/40" : "border-border-soft"}`}>
       <div className="flex items-start justify-between gap-3 mb-2">
-        <p className="text-xs font-semibold text-slate-400">Q{idx + 1}</p>
+        <p className="text-xs font-semibold text-slate-soft">Q{idx + 1}</p>
         <div className="flex items-center gap-2">
           {missing && (
-            <span className="flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">
+            <span className="flex items-center gap-1 text-[10px] font-bold text-danger bg-danger-light px-2 py-0.5 rounded-full">
               <RiAlertLine size={11} /> NO ANSWER
             </span>
           )}
-          <button onClick={onRemove} className="text-slate-400 hover:text-red-500">
+          <button onClick={onRemove} className="text-slate-soft hover:text-danger">
             <RiDeleteBinLine size={15} />
           </button>
         </div>
@@ -471,7 +471,7 @@ function QuestionCard({ q, idx, onSave, onRemove }) {
           setText(e.target.value);
           setDirty(true);
         }}
-        className="w-full text-sm border border-slate-200 rounded-lg p-2.5 mb-2.5 focus:border-brand outline-none resize-none"
+        className="w-full text-sm border border-border rounded-lg p-2.5 mb-2.5 focus:border-brand outline-none resize-none"
         rows={2}
       />
 
@@ -480,7 +480,7 @@ function QuestionCard({ q, idx, onSave, onRemove }) {
           <label
             key={i}
             className={`flex items-center gap-2 text-sm border rounded-lg px-2.5 py-2 cursor-pointer ${
-              correctIndex === i ? "border-emerald-400 bg-emerald-50" : "border-slate-200"
+              correctIndex === i ? "border-success bg-success-light" : "border-border"
             }`}
           >
             <input
@@ -512,7 +512,7 @@ function QuestionCard({ q, idx, onSave, onRemove }) {
           setDirty(true);
         }}
         placeholder="Solution (optional)"
-        className="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:border-brand outline-none resize-none"
+        className="w-full text-sm border border-border rounded-lg p-2.5 focus:border-brand outline-none resize-none"
         rows={2}
       />
 

@@ -11,6 +11,7 @@ import {
   RiCloseLine,
 } from "@remixicon/react";
 import api from "../api/axios";
+import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 
 const PAGE_SIZE = 25;
@@ -174,32 +175,31 @@ export default function Users() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
-        <h1 className="font-display text-2xl font-bold text-ink">Users</h1>
-        <button
-          onClick={handleExport}
-          disabled={exporting}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm font-medium text-slate-600 transition-colors disabled:opacity-50"
-        >
-          <RiDownloadLine size={15} />
-          {exporting ? "Exporting..." : "Export CSV"}
-        </button>
-      </div>
-      <p className="text-slate-500 mb-6">
+      <PageHeader
+        eyebrow="Students"
+        title="Users"
+        actions={
+          <button onClick={handleExport} disabled={exporting} className="rv-btn-secondary">
+            <RiDownloadLine size={15} />
+            {exporting ? "Exporting..." : "Export CSV"}
+          </button>
+        }
+      />
+      <p className="text-slate -mt-4 mb-6">
         {total.toLocaleString("en-IN")} total students. Filter, search, or manage the full list here.
       </p>
 
       {/* Stats cards */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          <StatCard icon={RiUserLine} label="Total" value={stats.total} tint="text-slate-500" bg="bg-slate-50" />
-          <StatCard icon={RiStarLine} label="Premium" value={stats.premium} tint="text-emerald-600" bg="bg-emerald-50" />
+          <StatCard icon={RiUserLine} label="Total" value={stats.total} tint="text-slate" bg="bg-slate-light" />
+          <StatCard icon={RiStarLine} label="Premium" value={stats.premium} tint="text-success" bg="bg-success-light" />
           <StatCard
             icon={RiAlarmWarningLine}
             label="Expiring (7d)"
             value={stats.expiringSoon}
-            tint="text-amber-600"
-            bg="bg-amber-50"
+            tint="text-warn"
+            bg="bg-warn-light"
             onClick={() => setSubscription("expiring")}
           />
           <StatCard icon={RiTimeLine} label="New this week" value={stats.newThisWeek} tint="text-brand" bg="bg-brand/5" />
@@ -209,19 +209,19 @@ export default function Users() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2.5 mb-6">
         <div className="relative flex-1 min-w-[220px]">
-          <RiSearchLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <RiSearchLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-soft" />
           <input
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Phone, name, ya email se search..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 focus:border-brand outline-none"
+            className="rv-input !pl-10"
           />
         </div>
 
         <select
           value={subscription}
           onChange={(e) => setSubscription(e.target.value)}
-          className="px-3 py-2.5 rounded-lg border border-slate-200 focus:border-brand outline-none text-sm"
+          className="rv-input text-sm"
         >
           <option value="">All plans</option>
           <option value="premium">Premium</option>
@@ -233,7 +233,7 @@ export default function Users() {
         <select
           value={examGoal}
           onChange={(e) => setExamGoal(e.target.value)}
-          className="px-3 py-2.5 rounded-lg border border-slate-200 focus:border-brand outline-none text-sm"
+          className="rv-input text-sm"
         >
           <option value="">All exams</option>
           {Object.entries(EXAM_LABELS).map(([code, label]) => (
@@ -246,7 +246,7 @@ export default function Users() {
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="px-3 py-2.5 rounded-lg border border-slate-200 focus:border-brand outline-none text-sm"
+          className="rv-input text-sm"
         >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
@@ -260,7 +260,7 @@ export default function Users() {
               setSubscription("");
               setExamGoal("");
             }}
-            className="flex items-center gap-1 text-sm text-slate-500 hover:text-ink"
+            className="flex items-center gap-1 text-sm text-slate hover:text-ink"
           >
             <RiCloseLine size={15} /> Clear filters
           </button>
@@ -270,9 +270,9 @@ export default function Users() {
       {/* List */}
       <div className="space-y-3 min-h-[200px]">
         {loading ? (
-          <p className="text-slate-400 text-center py-10">Loading...</p>
+          <p className="text-slate-soft text-center py-10">Loading...</p>
         ) : users.length === 0 ? (
-          <p className="text-slate-400 text-center py-10">No users found.</p>
+          <p className="text-slate-soft text-center py-10">No users found.</p>
         ) : (
           users.map((u) => {
             const isExpiring =
@@ -281,28 +281,28 @@ export default function Users() {
               new Date(u.subscriptionExpiresAt) - new Date() < 7 * 24 * 60 * 60 * 1000;
 
             return (
-              <div key={u._id} className="bg-white border border-slate-100 rounded-2xl shadow-sm p-5">
+              <div key={u._id} className="rv-card p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-ink">{u.name}</p>
                       {u.authProvider === "google" && (
-                        <span className="text-[10px] font-semibold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-semibold bg-slate-light text-slate px-2 py-0.5 rounded-full">
                           Google
                         </span>
                       )}
                       {isExpiring && (
-                        <span className="text-[10px] font-semibold bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-semibold bg-warn-light text-warn px-2 py-0.5 rounded-full">
                           Expiring soon
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-slate">
                       {u.phone || "—"} {u.email && `· ${u.email}`}
                     </p>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-slate-soft mt-1">
                       {u.subscriptionStatus === "active" ? (
-                        <span className="text-emerald-600 font-medium">
+                        <span className="text-success font-medium">
                           ⭐ Premium ({u.subscriptionPlan === "yearly" ? "12mo" : u.subscriptionPlan === "half_yearly" ? "6mo" : "?"}) ·
                           expires {u.subscriptionExpiresAt ? new Date(u.subscriptionExpiresAt).toLocaleDateString("en-IN") : "—"}
                         </span>
@@ -333,7 +333,7 @@ export default function Users() {
                     </button>
                     <button
                       onClick={() => setResetTarget(u)}
-                      className="px-3.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-medium transition-colors whitespace-nowrap"
+                      className="px-3.5 py-1.5 rounded-lg bg-warn-light hover:bg-warn-light text-warn text-xs font-medium transition-colors whitespace-nowrap"
                     >
                       Reset Password
                     </button>
@@ -351,17 +351,17 @@ export default function Users() {
           <button
             onClick={() => load(page - 1)}
             disabled={page <= 1 || loading}
-            className="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center disabled:opacity-30 hover:bg-slate-50"
+            className="w-9 h-9 rounded-lg border border-border flex items-center justify-center disabled:opacity-30 hover:bg-slate-light"
           >
             <RiArrowLeftSLine size={18} />
           </button>
-          <span className="text-sm text-slate-500">
+          <span className="text-sm text-slate">
             Page {page} of {pages}
           </span>
           <button
             onClick={() => load(page + 1)}
             disabled={page >= pages || loading}
-            className="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center disabled:opacity-30 hover:bg-slate-50"
+            className="w-9 h-9 rounded-lg border border-border flex items-center justify-center disabled:opacity-30 hover:bg-slate-light"
           >
             <RiArrowRightSLine size={18} />
           </button>
@@ -370,10 +370,10 @@ export default function Users() {
 
       {/* Reset password modal */}
       {resetTarget && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+        <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-surface rounded-lg p-6 w-full max-w-sm">
             <h3 className="font-semibold text-ink mb-1">Password Reset</h3>
-            <p className="text-sm text-slate-500 mb-4">
+            <p className="text-sm text-slate mb-4">
               Set a new password for {resetTarget.name} ({resetTarget.phone})
             </p>
             <form onSubmit={handleReset} className="space-y-3">
@@ -382,7 +382,7 @@ export default function Users() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="New password (min 6 characters)"
-                className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:border-brand outline-none"
+                className="rv-input"
                 autoFocus
               />
               <div className="flex gap-2">
@@ -392,7 +392,7 @@ export default function Users() {
                     setResetTarget(null);
                     setNewPassword("");
                   }}
-                  className="flex-1 px-4 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-medium transition-colors"
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-slate-light hover:bg-border-strong text-sm font-medium transition-colors"
                 >
                   Cancel
                 </button>
@@ -411,10 +411,10 @@ export default function Users() {
 
       {/* Manage subscription modal */}
       {subTarget && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+        <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-surface rounded-lg p-6 w-full max-w-sm">
             <h3 className="font-semibold text-ink mb-1">Manage Subscription</h3>
-            <p className="text-sm text-slate-500 mb-4">
+            <p className="text-sm text-slate mb-4">
               {subTarget.name} ({subTarget.phone || subTarget.email}) — abhi{" "}
               {subTarget.subscriptionStatus === "active" ? "Premium" : "Free"}
             </p>
@@ -427,7 +427,7 @@ export default function Users() {
                     type="button"
                     onClick={() => setSubAction(a)}
                     className={`flex-1 py-2 rounded-lg text-xs font-semibold capitalize transition-colors ${
-                      subAction === a ? "bg-brand text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      subAction === a ? "bg-brand text-white" : "bg-slate-light text-slate hover:bg-border-strong"
                     }`}
                   >
                     {a}
@@ -439,7 +439,7 @@ export default function Users() {
                 <select
                   value={subPlan}
                   onChange={(e) => setSubPlan(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:border-brand outline-none text-sm"
+                  className="w-full rv-input text-sm"
                 >
                   <option value="half_yearly">6 Months</option>
                   <option value="yearly">12 Months</option>
@@ -453,14 +453,14 @@ export default function Users() {
                 placeholder={
                   subAction === "revoke" ? "Reason (e.g. refund, chargeback)" : "Reason (e.g. offline UPI payment)"
                 }
-                className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:border-brand outline-none text-sm"
+                className="w-full rv-input text-sm"
               />
 
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setSubTarget(null)}
-                  className="flex-1 px-4 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-medium transition-colors"
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-slate-light hover:bg-border-strong text-sm font-medium transition-colors"
                 >
                   Cancel
                 </button>
@@ -468,7 +468,7 @@ export default function Users() {
                   type="submit"
                   disabled={subSaving}
                   className={`flex-1 px-4 py-2.5 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-60 ${
-                    subAction === "revoke" ? "bg-red-500 hover:bg-red-600" : "bg-brand hover:bg-brand-dark"
+                    subAction === "revoke" ? "bg-danger-light0 hover:bg-danger" : "bg-brand hover:bg-brand-dark"
                   }`}
                 >
                   {subSaving ? "Saving..." : subAction === "revoke" ? "Revoke Access" : "Confirm"}
@@ -487,13 +487,13 @@ function StatCard({ icon: Icon, label, value, tint, bg, onClick }) {
     <button
       onClick={onClick}
       disabled={!onClick}
-      className={`text-left bg-white border border-slate-100 rounded-2xl shadow-sm p-4 ${onClick ? "hover:border-slate-200 cursor-pointer" : "cursor-default"}`}
+      className={`text-left rv-card p-4 ${onClick ? "hover:border-border cursor-pointer" : "cursor-default"}`}
     >
       <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center mb-2`}>
         <Icon size={16} className={tint} />
       </div>
       <p className="text-xl font-bold text-ink">{(value ?? 0).toLocaleString("en-IN")}</p>
-      <p className="text-xs text-slate-400">{label}</p>
+      <p className="text-xs text-slate-soft">{label}</p>
     </button>
   );
 }

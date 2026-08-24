@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
+import { PageHeader } from "../components/ui";
 
 export default function ExamSeries() {
   const [exams, setExams] = useState([]);
@@ -23,20 +24,20 @@ export default function ExamSeries() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold text-ink mb-1">Exam Mock Series</h1>
-      <p className="text-slate-500 mb-8">
-        Build a mock test series for each exam. Generate → Review → Publish. Only published mocks are visible to
-        students.
-      </p>
+      <PageHeader
+        eyebrow="Content"
+        title="Exam Mock Series"
+        subtitle="Build a mock test series for each exam. Generate → Review → Publish. Only published mocks are visible to students."
+      />
 
       {error && (
-        <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3">{error}</div>
+        <div className="mb-6 bg-warn-light border border-warn-border text-warn text-sm rounded-lg px-4 py-3">{error}</div>
       )}
 
       {loading ? (
-        <p className="text-slate-400">Loading...</p>
+        <p className="text-slate-soft">Loading...</p>
       ) : exams.length === 0 ? (
-        <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center text-slate-500">
+        <div className="bg-surface border border-border-soft rounded-lg p-8 text-center text-slate">
           No exam patterns found. Add an exam from the "Exam Patterns" page first, or run <code>npm run seed:patterns</code>.
         </div>
       ) : (
@@ -45,20 +46,20 @@ export default function ExamSeries() {
             <Link
               key={exam.examType}
               to={`/exam-series/${exam.examType}`}
-              className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 hover:border-brand hover:shadow-md transition-all group"
+              className="rv-card p-6 hover:border-brand hover:shadow-card transition-all group"
             >
               <p className="font-display text-lg font-bold text-ink group-hover:text-brand transition-colors mb-1">
                 {exam.displayName}
               </p>
-              <p className="text-xs text-slate-400 mb-4">{exam.examType}</p>
+              <p className="text-xs text-slate-soft mb-4">{exam.examType}</p>
               <div className="flex gap-4">
                 <div>
-                  <p className="text-2xl font-bold text-emerald-600">{exam.publishedMocks}</p>
-                  <p className="text-xs text-slate-500">Published</p>
+                  <p className="text-2xl font-bold text-success">{exam.publishedMocks}</p>
+                  <p className="text-xs text-slate">Published</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-amber-500">{exam.draftMocks}</p>
-                  <p className="text-xs text-slate-500">Draft</p>
+                  <p className="text-2xl font-bold text-warn">{exam.draftMocks}</p>
+                  <p className="text-xs text-slate">Draft</p>
                 </div>
               </div>
               <p className="text-sm text-brand mt-4 font-medium">Manage series →</p>
