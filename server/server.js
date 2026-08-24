@@ -12,6 +12,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const adminUserRoutes = require("./routes/adminUserRoutes");
 const subjectRoutes = require("./routes/subjectRoutes");
 const examSeriesRoutes = require("./routes/examSeriesRoutes");
+const liveExamRoutes = require("./routes/liveExamRoutes");
 const pyqRoutes = require("./routes/pyqRoutes");
 const couponRoutes = require("./routes/couponRoutes");
 
@@ -104,6 +105,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/admin/users", adminUserRoutes);
 app.use("/api/subjects", subjectRoutes);
 app.use("/api/exam-series", examSeriesRoutes);
+app.use("/api/live-exams", liveExamRoutes);
 app.use("/api/pyq", pyqRoutes);
 app.use("/api/admin/coupons", couponRoutes);
 

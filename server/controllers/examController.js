@@ -28,74 +28,12 @@ async function upsertExamPattern(req, res) {
   res.json({ message: "Exam pattern saved", pattern });
 }
 
-// POST /api/exams/live/schedule (admin only) { mockTestId, scheduledAt }
-//
-// A live exam is a COPY of an already-published, already-reviewed mock -
-// not a fresh Gemini/random-pool assembly. This matters for two reasons:
-// 1. Reliability - published mocks are guaranteed to meet the 100-question
-//    minimum and have passed the admin review workflow. A fresh random pull
-//    from the standalone question pool has no such guarantee and can come
-//    back thin or empty, which is why scheduling used to fail silently.
-// 2. Fairness - every student in a live exam must get the IDENTICAL paper
-//    for the leaderboard/ranking to mean anything.
-async function scheduleLiveExam(req, res) {
-  try {
-    const { mockTestId, scheduledAt } = req.body;
-    if (!mockTestId || !scheduledAt) {
-      return res.status(400).json({ message: "Pick a mock and a date/time" });
-    }
-
-    // A datetime string with no timezone marker (no "Z", no "+05:30") is
-    // ambiguous - `new Date()` would parse it in whatever timezone THIS
-    // server happens to run in, not the IST the admin actually meant. That
-    // silent 5.5-hour shift is exactly what made scheduled times look like
-    // they were "changing themselves". Reject it here rather than let a
-    // future caller (a new admin form, a script, a direct API call)
-    // reintroduce the same bug silently.
-    const hasExplicitOffset = /(Z|[+-]\d{2}:?\d{2})$/.test(scheduledAt);
-    if (!hasExplicitOffset) {
-      return res.status(400).json({
-        message: "scheduledAt must include an explicit timezone offset (e.g. +05:30 or Z) - a bare local time is ambiguous and will schedule the wrong time.",
-      });
-    }
-
-    const source = await Test.findById(mockTestId);
-    if (!source) return res.status(404).json({ message: "Mock test not found" });
-    if (source.type !== "full_mock") {
-      return res.status(400).json({ message: "Only a full mock can be scheduled as a live exam" });
-    }
-    if (source.publishStatus !== "published") {
-      return res.status(400).json({ message: "This mock isn't published yet - publish it first" });
-    }
-    if (!source.liveExclusive) {
-      return res.status(400).json({
-        message:
-          "This mock is part of the regular Mock Tests series and students may already have taken it. Build a Live Exam Exclusive mock instead.",
-      });
-    }
-
-    // Clone, don't mutate - the original stays in its exam series untouched.
-    const test = await Test.create({
-      title: `Live Exam - ${source.title}`,
-      type: "live",
-      examType: source.examType,
-      examStage: source.examStage,
-      questions: source.questions,
-      durationMinutes: source.durationMinutes,
-      marksPerQuestion: source.marksPerQuestion,
-      negativeMarking: source.negativeMarking,
-      scheduledAt: new Date(scheduledAt),
-      liveStatus: "upcoming",
-      publishStatus: "published",
-      isFree: source.isFree,
-      createdBy: "admin",
-    });
-
-    res.status(201).json({ message: "Live exam scheduled", test });
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-}
+// Live exam papers are built and scheduled through their own dedicated
+// pipeline now - see server/controllers/liveExamController.js and
+// server/routes/liveExamRoutes.js (mounted at /api/live-exams). That flow
+// generates a fresh question set directly for the live event instead of
+// cloning an existing Mock Tests series paper, so a live exam never
+// depends on a mock having been built/published first.
 
 // GET /api/exams/live/upcoming
 //
@@ -189,7 +127,6 @@ async function getLeaderboard(req, res) {
 module.exports = {
   listExamPatterns,
   upsertExamPattern,
-  scheduleLiveExam,
   listUpcomingLiveExams,
   getLeaderboard,
 };
