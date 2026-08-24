@@ -2,6 +2,8 @@ const Test = require("../models/Test");
 const Attempt = require("../models/Attempt");
 const Question = require("../models/Question");
 const User = require("../models/User");
+const Subject = require("../models/Subject");
+const ExamPattern = require("../models/ExamPattern");
 const {
   generateFullMock,
   generateTopicTest,
@@ -451,6 +453,7 @@ async function submitTest(req, res) {
       stat.attempted += upd.attempted;
       stat.correct += upd.correct;
       stat.accuracy = Math.round((stat.correct / stat.attempted) * 100);
+      stat.lastAttemptedAt = new Date();
     }
     // Streak update
     const today = new Date().toDateString();
@@ -560,27 +563,223 @@ async function getAttemptResult(req, res) {
   });
 }
 
-// GET /api/tests/my-attempts -> list logged-in user's past test attempts (history)
+// GET /api/tests/my-attempts?page=&limit=&types= -> paginated attempt history
+//
+// Two things this fixes vs. the old version:
+// 1. It was hard-capped at the 50 most recent attempts with no way to see
+//    older ones, and the "Average/Best" summary the app showed was silently
+//    computed over just that capped page - misleading for anyone who had
+//    taken more than 50 tests.
+// 2. It dropped skippedCount entirely even though Attempt already stores it,
+//    forcing the app to *guess* skipped questions from totalMarks (only
+//    correct when marksPerQuestion is exactly 1 - wrong for any test worth
+//    more/less per question).
 async function listMyAttempts(req, res) {
-  const attempts = await Attempt.find({ user: req.user._id, status: { $ne: "in_progress" } })
-    .sort({ createdAt: -1 })
-    .limit(50)
-    .populate("test", "title type examType");
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
+  const types = req.query.types ? String(req.query.types).split(",").filter(Boolean) : null;
 
-  const history = attempts.map((a) => ({
-    attemptId: a._id,
-    testTitle: a.test?.title || "Test",
-    testType: a.test?.type,
-    examType: a.test?.examType,
-    score: a.score,
-    totalMarks: a.totalMarks,
-    accuracy: a.accuracy,
-    correctCount: a.correctCount,
-    wrongCount: a.wrongCount,
-    date: a.submittedAt || a.createdAt,
-  }));
+  const pipeline = [
+    { $match: { user: req.user._id, status: { $ne: "in_progress" } } },
+    { $lookup: { from: "tests", localField: "test", foreignField: "_id", as: "testDoc" } },
+    { $unwind: { path: "$testDoc", preserveNullAndEmptyArrays: true } },
+  ];
+  if (types && types.length) {
+    pipeline.push({ $match: { "testDoc.type": { $in: types } } });
+  }
+  // Percentage clamped to 0-100 so a negative-marking-heavy bad attempt
+  // doesn't drag the displayed average into confusing negative numbers.
+  pipeline.push({
+    $addFields: {
+      pct: {
+        $max: [
+          0,
+          {
+            $min: [
+              100,
+              { $cond: [{ $gt: ["$totalMarks", 0] }, { $multiply: [{ $divide: ["$score", "$totalMarks"] }, 100] }, 0] },
+            ],
+          },
+        ],
+      },
+    },
+  });
+  pipeline.push({ $sort: { createdAt: -1 } });
+  pipeline.push({
+    $facet: {
+      page: [
+        { $skip: (page - 1) * limit },
+        { $limit: limit },
+        {
+          $project: {
+            attemptId: "$_id",
+            testTitle: { $ifNull: ["$testDoc.title", "Test"] },
+            testType: "$testDoc.type",
+            examType: "$testDoc.examType",
+            score: 1,
+            totalMarks: 1,
+            accuracy: 1,
+            correctCount: 1,
+            wrongCount: 1,
+            skippedCount: 1,
+            totalQuestions: { $add: ["$correctCount", "$wrongCount", "$skippedCount"] },
+            totalTimeTakenSeconds: 1,
+            rank: 1,
+            percentile: 1,
+            date: { $ifNull: ["$submittedAt", "$createdAt"] },
+          },
+        },
+      ],
+      summary: [
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            average: { $avg: "$pct" },
+            best: { $max: "$pct" },
+            recent: { $push: "$pct" }, // already sorted newest-first
+          },
+        },
+      ],
+    },
+  });
 
-  res.json({ history });
+  const [result] = await Attempt.aggregate(pipeline);
+  const summaryRow = result?.summary?.[0];
+
+  let summary = { total: 0, average: 0, best: 0, trend: "flat" };
+  if (summaryRow) {
+    const recentFive = summaryRow.recent.slice(0, 5);
+    const recentAverage = recentFive.reduce((s, v) => s + v, 0) / recentFive.length;
+    const overallAverage = summaryRow.average;
+    // Only call it a trend once there's enough history on both sides to mean
+    // something - otherwise a single great/bad recent test would swing an
+    // arrow that looks more confident than the data actually is.
+    let trend = "flat";
+    if (summaryRow.total >= 6) {
+      if (recentAverage - overallAverage >= 4) trend = "up";
+      else if (overallAverage - recentAverage >= 4) trend = "down";
+    }
+    summary = {
+      total: summaryRow.total,
+      average: Math.round(overallAverage),
+      best: Math.round(summaryRow.best),
+      recentAverage: Math.round(recentAverage),
+      trend,
+    };
+  }
+
+  res.json({
+    history: result?.page || [],
+    page,
+    limit,
+    hasMore: summary.total > page * limit,
+    summary,
+  });
+}
+
+// GET /api/tests/analysis -> topic + subject performance breakdown
+//
+// The mobile Analysis screen used to just read `user.topicStats` straight
+// out of the cached AuthContext user object - stale until the next login
+// or an explicit refreshUser() call, so a student could take 10 tests and
+// still see yesterday's numbers. This endpoint is fetched fresh on every
+// screen focus instead.
+async function getAnalysis(req, res) {
+  const user = await User.findById(req.user._id).select("topicStats examGoals");
+  const topicStats = user.topicStats || [];
+
+  if (topicStats.length === 0) {
+    return res.json({ overall: { accuracy: 0, topicsCount: 0, strongCount: 0, weakCount: 0 }, subjects: [], topics: [], focus: null });
+  }
+
+  // Pick the exam whose pattern should drive weighting: the exam type this
+  // student has practiced the most (ignoring the pseudo exam types used for
+  // subject-wise/chapter practice, which have no real section weights).
+  const examTypeCounts = {};
+  for (const t of topicStats) {
+    if (!t.examType || t.examType === "PRACTICE" || t.examType === "CHAPTER_PRACTICE") continue;
+    examTypeCounts[t.examType] = (examTypeCounts[t.examType] || 0) + 1;
+  }
+  const primaryExamType =
+    Object.keys(examTypeCounts).sort((a, b) => examTypeCounts[b] - examTypeCounts[a])[0] || user.examGoals?.[0] || null;
+
+  const pattern = primaryExamType ? await ExamPattern.findOne({ examType: primaryExamType }) : null;
+  const weightBySubject = {};
+  if (pattern) {
+    for (const s of pattern.sections) weightBySubject[s.subject] = s.questionCount;
+  }
+
+  // Resolve topic -> chapter using the Subject catalog, so a weak topic can
+  // deep-link straight into ChapterPracticeScreen. Question docs generated
+  // for mocks/live exams don't carry a chapter (only practice-generated
+  // ones do), so this is the only reliable way to recover it.
+  const subjectDocs = await Subject.find({ isActive: true }).select("name chapters");
+  const chapterByKey = {};
+  for (const s of subjectDocs) {
+    for (const ch of s.chapters || []) {
+      for (const topic of ch.topics || []) {
+        chapterByKey[`${s.name}|${topic}`] = ch.name;
+      }
+    }
+  }
+
+  const topics = topicStats
+    .map((t) => ({
+      subject: t.subject,
+      topic: t.topic,
+      chapter: chapterByKey[`${t.subject}|${t.topic}`] || null,
+      accuracy: t.accuracy,
+      attempted: t.attempted,
+      correct: t.correct,
+      lastAttemptedAt: t.lastAttemptedAt || null,
+      examWeight: weightBySubject[t.subject] || null,
+    }))
+    .sort((a, b) => a.accuracy - b.accuracy);
+
+  const weak = topics.filter((t) => t.accuracy < 60);
+  const strong = topics.filter((t) => t.accuracy >= 60);
+
+  // Subject-level rollup: attempt-weighted accuracy across that subject's topics.
+  // Uses the raw correct/attempted counts (not accuracy%) so the rollup
+  // doesn't compound each topic's independent rounding error.
+  const bySubject = {};
+  for (const t of topics) {
+    if (!bySubject[t.subject]) bySubject[t.subject] = { subject: t.subject, correctSum: 0, attempted: 0, topicsCount: 0, examWeight: t.examWeight };
+    const s = bySubject[t.subject];
+    s.correctSum += t.correct;
+    s.attempted += t.attempted;
+    s.topicsCount += 1;
+  }
+  const subjects = Object.values(bySubject)
+    .map((s) => ({
+      subject: s.subject,
+      accuracy: s.attempted > 0 ? Math.round((s.correctSum / s.attempted) * 100) : 0,
+      attempted: s.attempted,
+      topicsCount: s.topicsCount,
+      examWeight: s.examWeight,
+    }))
+    // Weakest-and-heaviest-in-the-real-exam first - that's the subject worth fixing first.
+    .sort((a, b) => (100 - b.accuracy) * (b.examWeight || 1) - (100 - a.accuracy) * (a.examWeight || 1));
+
+  // Single weakest topic to recommend, weighted by how much it's actually
+  // worth in the real exam (a weak topic in a 25-question section matters
+  // more than an equally-weak one in a 5-question section).
+  let focus = null;
+  if (weak.length > 0) {
+    focus = [...weak].sort(
+      (a, b) => (100 - b.accuracy) * (b.examWeight || 1) - (100 - a.accuracy) * (a.examWeight || 1)
+    )[0];
+  }
+
+  const overallAccuracy = Math.round(topics.reduce((sum, t) => sum + t.accuracy, 0) / topics.length);
+
+  res.json({
+    overall: { accuracy: overallAccuracy, topicsCount: topics.length, strongCount: strong.length, weakCount: weak.length },
+    subjects,
+    topics,
+    focus,
+  });
 }
 
 // GET /api/tests/free-limits -> usage + remaining counts for the logged-in user
@@ -615,6 +814,7 @@ module.exports = {
   getPyqYears,
   getPyqPapersByYear,
   listMyAttempts,
+  getAnalysis,
   getFreeLimits,
   getExamSeries,
   getPracticeSeries,

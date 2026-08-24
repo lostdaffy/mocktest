@@ -11,6 +11,7 @@ const {
   getAttemptResult,
   listMyAttempts,
   getFreeLimits,
+  getAnalysis,
   getExamSeries,
   getPracticeSeries,
   getPyqList,
@@ -22,6 +23,7 @@ const { protect, requireActiveSubscription } = require("../middleware/auth");
 
 router.get("/today", protect, getTodayTest);
 router.get("/my-attempts", protect, listMyAttempts);
+router.get("/analysis", protect, getAnalysis);
 router.get("/free-limits", protect, getFreeLimits);
 router.get("/exam-series/:examStage", protect, getExamSeries);
 router.get("/practice-series/:subject/:chapter", protect, getPracticeSeries);

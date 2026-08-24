@@ -1,6 +1,5 @@
 import {
   useCallback,
-  useMemo,
   useState,
 } from "react";
 
@@ -11,6 +10,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 
 import {
@@ -40,35 +40,80 @@ import {
    HISTORY SCREEN
 ========================================================= */
 
+const PAGE_SIZE = 20;
+
+const FILTERS = [
+  { key: "all", label: "All", types: null },
+  { key: "live", label: "Live", types: "live" },
+  { key: "full_mock", label: "Mock", types: "full_mock" },
+  { key: "pyq", label: "PYQ", types: "pyq" },
+  { key: "practice", label: "Practice", types: "practice,topic_wise,sectional,revision" },
+];
+
+const TYPE_META = {
+  live: { label: "Live", icon: "radio-button-on", color: colors.danger, bg: colors.dangerLight },
+  full_mock: { label: "Mock", icon: "document-text-outline", color: colors.brand, bg: colors.brandTint },
+  pyq: { label: "PYQ", icon: "time-outline", color: colors.warn, bg: colors.warnLight },
+  practice: { label: "Practice", icon: "school-outline", color: colors.info, bg: colors.infoLight },
+  topic_wise: { label: "Practice", icon: "school-outline", color: colors.info, bg: colors.infoLight },
+  sectional: { label: "Practice", icon: "school-outline", color: colors.info, bg: colors.infoLight },
+  revision: { label: "Practice", icon: "school-outline", color: colors.info, bg: colors.infoLight },
+};
+
+function getTypeMeta(t) {
+  return TYPE_META[t] || TYPE_META.practice;
+}
+
+function formatDuration(totalSeconds) {
+  if (!totalSeconds || totalSeconds <= 0) return null;
+  const mins = Math.floor(totalSeconds / 60);
+  if (mins < 1) return `${totalSeconds}s`;
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  return `${hrs}h ${mins % 60}m`;
+}
+
 export default function HistoryScreen({
   navigation,
 }) {
   const insets =
     useSafeAreaInsets();
 
-  const [history, setHistory] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(true);
+  const [history, setHistory] = useState([]);
+  const [summary, setSummary] = useState({ total: 0, average: 0, best: 0, trend: "flat" });
+  const [filter, setFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   /* =======================================================
      LOAD HISTORY
   ======================================================= */
 
   const load = useCallback(
-    async () => {
-      setLoading(true);
+    async (reset, filterOverride) => {
+      const activeFilter = filterOverride ?? filter;
+      const nextPage = reset ? 1 : page + 1;
+
+      if (reset) setLoading(true);
+      else setLoadingMore(true);
 
       try {
-        const res =
-          await api.get(
-            "/tests/my-attempts"
-          );
+        const filterDef = FILTERS.find((f) => f.key === activeFilter);
+        const res = await api.get("/tests/my-attempts", {
+          params: {
+            page: nextPage,
+            limit: PAGE_SIZE,
+            types: filterDef?.types || undefined,
+          },
+        });
 
-        setHistory(
-          res.data?.attempts || []
-        );
+        const rows = res.data?.history || [];
+        setHistory((prev) => (reset ? rows : [...prev, ...rows]));
+        setPage(res.data?.page || nextPage);
+        setHasMore(!!res.data?.hasMore);
+        if (res.data?.summary) setSummary(res.data.summary);
       } catch (err) {
         console.log(
           "History loading error:",
@@ -76,68 +121,29 @@ export default function HistoryScreen({
         );
       } finally {
         setLoading(false);
+        setLoadingMore(false);
       }
     },
-    []
+    [filter, page]
   );
 
   useFocusEffect(
     useCallback(() => {
-      load();
-    }, [load])
+      load(true, filter);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filter])
   );
 
-  /* =======================================================
-     SUMMARY
-  ======================================================= */
+  function selectFilter(key) {
+    if (key === filter) return;
+    setFilter(key);
+    load(true, key);
+  }
 
-  const summary =
-    useMemo(() => {
-      if (!history.length) {
-        return {
-          total: 0,
-          average: 0,
-          best: 0,
-        };
-      }
-
-      const percentages =
-        history.map((item) => {
-          if (
-            !item.totalMarks ||
-            item.totalMarks <= 0
-          ) {
-            return 0;
-          }
-
-          return Math.round(
-            (item.score /
-              item.totalMarks) *
-              100
-          );
-        });
-
-      const average =
-        Math.round(
-          percentages.reduce(
-            (sum, value) =>
-              sum + value,
-            0
-          ) /
-            percentages.length
-        );
-
-      const best =
-        Math.max(
-          ...percentages
-        );
-
-      return {
-        total: history.length,
-        average,
-        best,
-      };
-    }, [history]);
+  function loadMore() {
+    if (loading || loadingMore || !hasMore) return;
+    load(false);
+  }
 
   /* =======================================================
      LOADING
@@ -198,6 +204,8 @@ export default function HistoryScreen({
         showsVerticalScrollIndicator={
           false
         }
+        onEndReachedThreshold={0.4}
+        onEndReached={loadMore}
         contentContainerStyle={[
           styles.listContent,
           {
@@ -207,160 +215,197 @@ export default function HistoryScreen({
           },
         ]}
         ListHeaderComponent={
-          history.length > 0 ? (
-            <>
-              {/* ===========================================
-                  HEADER
-              =========================================== */}
+          <>
+            {/* ===========================================
+                HEADER
+            =========================================== */}
 
+            <View
+              style={
+                styles.header
+              }
+            >
               <View
                 style={
-                  styles.header
+                  styles.headerTextWrap
                 }
               >
+                <Text
+                  style={
+                    styles.eyebrow
+                  }
+                >
+                  YOUR PROGRESS
+                </Text>
+
+                <Text
+                  style={
+                    styles.headerTitle
+                  }
+                >
+                  Test History
+                </Text>
+
+                <Text
+                  style={
+                    styles.headerSub
+                  }
+                >
+                  Review your attempts and
+                  track your performance.
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={
+                  styles.refreshButton
+                }
+                activeOpacity={0.75}
+                onPress={() => load(true)}
+              >
+                <Ionicons
+                  name="refresh-outline"
+                  size={19}
+                  color={
+                    colors.slate
+                  }
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* ===========================================
+                FILTER CHIPS
+            =========================================== */}
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterRow}
+            >
+              {FILTERS.map((f) => {
+                const active = filter === f.key;
+                return (
+                  <TouchableOpacity
+                    key={f.key}
+                    activeOpacity={0.8}
+                    onPress={() => selectFilter(f.key)}
+                    style={[
+                      styles.filterChip,
+                      active && styles.filterChipActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.filterChipText,
+                        active && styles.filterChipTextActive,
+                      ]}
+                    >
+                      {f.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {summary.total > 0 && (
+              <>
+                {/* ===========================================
+                    SUMMARY
+                =========================================== */}
+
                 <View
                   style={
-                    styles.headerTextWrap
+                    styles.summaryCard
                   }
                 >
-                  <Text
-                    style={
-                      styles.eyebrow
+                  <SummaryItem
+                    icon="document-text-outline"
+                    value={
+                      summary.total
                     }
-                  >
-                    YOUR PROGRESS
-                  </Text>
-
-                  <Text
-                    style={
-                      styles.headerTitle
-                    }
-                  >
-                    Test History
-                  </Text>
-
-                  <Text
-                    style={
-                      styles.headerSub
-                    }
-                  >
-                    Review your attempts and
-                    track your performance.
-                  </Text>
-                </View>
-
-                <TouchableOpacity
-                  style={
-                    styles.refreshButton
-                  }
-                  activeOpacity={0.75}
-                  onPress={load}
-                >
-                  <Ionicons
-                    name="refresh-outline"
-                    size={19}
-                    color={
-                      colors.slate
+                    label="Attempts"
+                    tint={
+                      colors.brand
                     }
                   />
-                </TouchableOpacity>
-              </View>
 
-              {/* ===========================================
-                  SUMMARY
-              =========================================== */}
-
-              <View
-                style={
-                  styles.summaryCard
-                }
-              >
-                <SummaryItem
-                  icon="document-text-outline"
-                  value={
-                    summary.total
-                  }
-                  label="Attempts"
-                  tint={
-                    colors.brand
-                  }
-                />
-
-                <View
-                  style={
-                    styles.summaryDivider
-                  }
-                />
-
-                <SummaryItem
-                  icon="analytics-outline"
-                  value={`${summary.average}%`}
-                  label="Average"
-                  tint={
-                    "#0891B2"
-                  }
-                />
-
-                <View
-                  style={
-                    styles.summaryDivider
-                  }
-                />
-
-                <SummaryItem
-                  icon="trophy-outline"
-                  value={`${summary.best}%`}
-                  label="Best Score"
-                  tint={
-                    "#F59E0B"
-                  }
-                />
-              </View>
-
-              {/* ===========================================
-                  SECTION
-              =========================================== */}
-
-              <View
-                style={
-                  styles.sectionHeader
-                }
-              >
-                <View>
-                  <Text
+                  <View
                     style={
-                      styles.sectionTitle
+                      styles.summaryDivider
                     }
-                  >
-                    Recent Attempts
-                  </Text>
+                  />
 
-                  <Text
-                    style={
-                      styles.sectionSubtitle
+                  <SummaryItem
+                    icon="analytics-outline"
+                    value={`${summary.average}%`}
+                    label="Average"
+                    tint={
+                      "#0891B2"
                     }
-                  >
-                    Tap any test to review
-                    your result.
-                  </Text>
+                    trend={summary.trend}
+                  />
+
+                  <View
+                    style={
+                      styles.summaryDivider
+                    }
+                  />
+
+                  <SummaryItem
+                    icon="trophy-outline"
+                    value={`${summary.best}%`}
+                    label="Best Score"
+                    tint={
+                      "#F59E0B"
+                    }
+                  />
                 </View>
 
+                {/* ===========================================
+                    SECTION
+                =========================================== */}
+
                 <View
                   style={
-                    styles.attemptCount
+                    styles.sectionHeader
                   }
                 >
-                  <Text
+                  <View>
+                    <Text
+                      style={
+                        styles.sectionTitle
+                      }
+                    >
+                      Recent Attempts
+                    </Text>
+
+                    <Text
+                      style={
+                        styles.sectionSubtitle
+                      }
+                    >
+                      Tap any test to review
+                      your result.
+                    </Text>
+                  </View>
+
+                  <View
                     style={
-                      styles.attemptCountText
+                      styles.attemptCount
                     }
                   >
-                    {history.length}
-                  </Text>
+                    <Text
+                      style={
+                        styles.attemptCountText
+                      }
+                    >
+                      {summary.total}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            </>
-          ) : null
+              </>
+            )}
+          </>
         }
         ListEmptyComponent={
           <EmptyState
@@ -368,6 +413,13 @@ export default function HistoryScreen({
               navigation.goBack()
             }
           />
+        }
+        ListFooterComponent={
+          loadingMore ? (
+            <View style={styles.footerLoader}>
+              <ActivityIndicator size="small" color={colors.brand} />
+            </View>
+          ) : null
         }
         renderItem={({
           item,
@@ -401,7 +453,15 @@ function SummaryItem({
   value,
   label,
   tint,
+  trend,
 }) {
+  const trendMeta =
+    trend === "up"
+      ? { icon: "trending-up", color: colors.success }
+      : trend === "down"
+      ? { icon: "trending-down", color: colors.danger }
+      : null;
+
   return (
     <View
       style={styles.summaryItem}
@@ -422,16 +482,27 @@ function SummaryItem({
         />
       </View>
 
-      <Text
-        style={[
-          styles.summaryValue,
-          {
-            color: tint,
-          },
-        ]}
-      >
-        {value}
-      </Text>
+      <View style={styles.summaryValueRow}>
+        <Text
+          style={[
+            styles.summaryValue,
+            {
+              color: tint,
+            },
+          ]}
+        >
+          {value}
+        </Text>
+
+        {trendMeta && (
+          <Ionicons
+            name={trendMeta.icon}
+            size={13}
+            color={trendMeta.color}
+            style={{ marginLeft: 2 }}
+          />
+        )}
+      </View>
 
       <Text
         style={
@@ -470,6 +541,8 @@ function HistoryCard({
   const result =
     getResultState(safePct);
 
+  const typeMeta = getTypeMeta(item.testType);
+
   const date =
     item.date
       ? new Date(
@@ -483,6 +556,8 @@ function HistoryCard({
         )
       : "—";
 
+  const duration = formatDuration(item.totalTimeTakenSeconds);
+
   return (
     <TouchableOpacity
       style={
@@ -491,6 +566,39 @@ function HistoryCard({
       activeOpacity={0.82}
       onPress={onPress}
     >
+      {/* TYPE + RANK ROW */}
+
+      <View style={styles.badgeRow}>
+        <View
+          style={[
+            styles.typeBadge,
+            { backgroundColor: typeMeta.bg },
+          ]}
+        >
+          <Ionicons name={typeMeta.icon} size={10} color={typeMeta.color} />
+          <Text style={[styles.typeBadgeText, { color: typeMeta.color }]}>
+            {typeMeta.label}
+          </Text>
+        </View>
+
+        {item.testType === "live" && item.rank ? (
+          <View style={styles.rankBadge}>
+            <Ionicons name="ribbon-outline" size={10} color={colors.info} />
+            <Text style={styles.rankBadgeText}>
+              Rank #{item.rank}
+              {item.percentile != null ? ` · ${item.percentile}th pct` : ""}
+            </Text>
+          </View>
+        ) : null}
+
+        {duration && (
+          <View style={styles.durationBadge}>
+            <Ionicons name="time-outline" size={10} color={colors.slateSoft} />
+            <Text style={styles.durationBadgeText}>{duration}</Text>
+          </View>
+        )}
+      </View>
+
       {/* TOP ROW */}
 
       <View
@@ -719,16 +827,8 @@ function HistoryCard({
         <AnswerStat
           icon="help-circle-outline"
           value={
-            Math.max(
-              0,
-              (item.totalQuestions ||
-                item.totalMarks ||
-                0) -
-                (item.correctCount ||
-                  0) -
-                (item.wrongCount ||
-                  0)
-            )
+            item.skippedCount ??
+            0
           }
           label="Skipped"
           color={
@@ -1064,6 +1164,39 @@ const styles =
     },
 
     /* =====================================================
+       FILTER CHIPS
+    ===================================================== */
+
+    filterRow: {
+      gap: 8,
+      paddingBottom: 16,
+    },
+
+    filterChip: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: radius.full,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+
+    filterChipActive: {
+      backgroundColor: colors.brand,
+      borderColor: colors.brand,
+    },
+
+    filterChipText: {
+      fontSize: 11.5,
+      fontWeight: "700",
+      color: colors.slate,
+    },
+
+    filterChipTextActive: {
+      color: "#FFFFFF",
+    },
+
+    /* =====================================================
        SUMMARY
     ===================================================== */
 
@@ -1104,6 +1237,11 @@ const styles =
       justifyContent:
         "center",
       marginBottom: 4,
+    },
+
+    summaryValueRow: {
+      flexDirection: "row",
+      alignItems: "center",
     },
 
     summaryValue: {
@@ -1194,6 +1332,61 @@ const styles =
       borderColor:
         colors.border,
       ...shadow.soft,
+    },
+
+    badgeRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: 6,
+      marginBottom: 9,
+    },
+
+    typeBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      borderRadius: radius.full,
+    },
+
+    typeBadgeText: {
+      fontSize: 8.5,
+      fontWeight: "800",
+    },
+
+    rankBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      borderRadius: radius.full,
+      backgroundColor: colors.infoLight,
+    },
+
+    rankBadgeText: {
+      fontSize: 8.5,
+      fontWeight: "800",
+      color: colors.info,
+    },
+
+    durationBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      borderRadius: radius.full,
+      backgroundColor: colors.slateLight,
+      marginLeft: "auto",
+    },
+
+    durationBadgeText: {
+      fontSize: 8.5,
+      fontWeight: "700",
+      color: colors.slateSoft,
     },
 
     cardTop: {
@@ -1407,6 +1600,15 @@ const styles =
       height: 16,
       backgroundColor:
         colors.border,
+    },
+
+    /* =====================================================
+       FOOTER
+    ===================================================== */
+
+    footerLoader: {
+      paddingVertical: 20,
+      alignItems: "center",
     },
 
     /* =====================================================

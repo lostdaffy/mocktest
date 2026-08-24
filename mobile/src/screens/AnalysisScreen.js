@@ -1,15 +1,24 @@
 import {
+  useCallback,
+  useState,
+} from "react";
+
+import {
   View,
   Text,
   StyleSheet,
   FlatList,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
   useColorScheme,
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useFocusEffect } from "@react-navigation/native";
 
-import { useAuth } from "../context/AuthContext";
+import api from "../api/client";
 
 import {
   getColors,
@@ -29,9 +38,19 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
    Premium • Minimal • Responsive • Safe Area Ready
 ========================================================= */
 
-export default function AnalysisScreen() {
+function timeAgo(dateStr) {
+  if (!dateStr) return null;
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  return `${months}mo ago`;
+}
+
+export default function AnalysisScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
 
   /* =======================================================
      THEME
@@ -45,37 +64,36 @@ export default function AnalysisScreen() {
 
   /* =======================================================
      DATA
+     Fetched fresh on every focus - this used to read straight
+     out of the cached AuthContext user object, which meant a
+     student could take several tests and still see stale
+     numbers here until their next login.
   ======================================================= */
 
-  const topicStats = user?.topicStats || [];
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const sorted = [...topicStats].sort(
-    (a, b) =>
-      Number(a.accuracy || 0) -
-      Number(b.accuracy || 0)
+  const load = useCallback(async () => {
+    try {
+      const res = await api.get("/tests/analysis");
+      setData(res.data);
+    } catch (err) {
+      console.log("Analysis loading error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
   );
 
-  const weak = sorted.filter(
-    (topic) =>
-      Number(topic.accuracy || 0) < 60
-  );
-
-  const strong = sorted.filter(
-    (topic) =>
-      Number(topic.accuracy || 0) >= 60
-  );
-
-  const overall =
-    topicStats.length > 0
-      ? Math.round(
-        topicStats.reduce(
-          (sum, topic) =>
-            sum +
-            Number(topic.accuracy || 0),
-          0
-        ) / topicStats.length
-      )
-      : 0;
+  const overall = data?.overall || { accuracy: 0, topicsCount: 0, strongCount: 0, weakCount: 0 };
+  const subjects = data?.subjects || [];
+  const topics = data?.topics || [];
+  const focus = data?.focus || null;
 
   /* =======================================================
      PERFORMANCE
@@ -113,8 +131,27 @@ export default function AnalysisScreen() {
     };
   };
 
-  const brandGradient =
-    gradients.brand;
+  const brandGradient = gradients.brand;
+
+  function openFocusTopic() {
+    if (!focus?.chapter) return;
+    navigation.navigate("ChapterPractice", {
+      subject: focus.subject,
+      chapter: focus.chapter,
+    });
+  }
+
+  /* =======================================================
+     LOADING
+  ======================================================= */
+
+  if (loading) {
+    return (
+      <View style={[styles.centered, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator size="small" color={colors.brand} />
+      </View>
+    );
+  }
 
   /* =======================================================
      RENDER
@@ -128,7 +165,7 @@ export default function AnalysisScreen() {
           backgroundColor: colors.bg,
         },
       ]}
-      data={sorted}
+      data={topics}
       keyExtractor={(item, index) =>
         `${item.subject}-${item.topic}-${index}`
       }
@@ -202,7 +239,7 @@ export default function AnalysisScreen() {
               OVERALL PERFORMANCE
           ================================================= */}
 
-          {topicStats.length > 0 && (
+          {topics.length > 0 && (
             <>
               <LinearGradient
                 colors={brandGradient}
@@ -265,15 +302,15 @@ export default function AnalysisScreen() {
                       styles.overallValue
                     }
                   >
-                    {overall}%
+                    {overall.accuracy}%
                   </Text>
 
                   <Text
                     style={styles.overallSub}
                     numberOfLines={1}
                   >
-                    Across {topicStats.length}{" "}
-                    {topicStats.length === 1
+                    Across {overall.topicsCount}{" "}
+                    {overall.topicsCount === 1
                       ? "topic"
                       : "topics"}
                   </Text>
@@ -302,7 +339,7 @@ export default function AnalysisScreen() {
                         styles.splitValue
                       }
                     >
-                      {strong.length}
+                      {overall.strongCount}
                     </Text>
 
                     <Text
@@ -336,7 +373,7 @@ export default function AnalysisScreen() {
                         styles.splitValue
                       }
                     >
-                      {weak.length}
+                      {overall.weakCount}
                     </Text>
 
                     <Text
@@ -351,11 +388,94 @@ export default function AnalysisScreen() {
               </LinearGradient>
 
               {/* =================================================
+                  SUBJECT ROLLUP
+              ================================================= */}
+
+              {subjects.length > 0 && (
+                <View style={{ marginBottom: spacing.lg }}>
+                  <Text
+                    style={[
+                      styles.subjectRowTitle,
+                      { color: colors.ink },
+                    ]}
+                  >
+                    By Subject
+                  </Text>
+
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.subjectRow}
+                  >
+                    {subjects.map((s) => {
+                      const perf = getAccuracyStyle(s.accuracy);
+                      return (
+                        <View
+                          key={s.subject}
+                          style={[
+                            styles.subjectCard,
+                            topicCard,
+                          ]}
+                        >
+                          <Text
+                            style={[styles.subjectName, { color: colors.ink }]}
+                            numberOfLines={1}
+                          >
+                            {s.subject}
+                          </Text>
+
+                          <Text
+                            style={[styles.subjectAccuracy, { color: perf.tint }]}
+                          >
+                            {s.accuracy}%
+                          </Text>
+
+                          <View
+                            style={[
+                              styles.subjectBarBg,
+                              { backgroundColor: colors.slateLight },
+                            ]}
+                          >
+                            <View
+                              style={[
+                                styles.subjectBarFill,
+                                {
+                                  width: `${Math.max(s.accuracy, 2)}%`,
+                                  backgroundColor: perf.tint,
+                                },
+                              ]}
+                            />
+                          </View>
+
+                          {s.examWeight ? (
+                            <Text
+                              style={[styles.subjectMeta, { color: colors.slateSoft }]}
+                            >
+                              {s.examWeight} Qs in exam
+                            </Text>
+                          ) : (
+                            <Text
+                              style={[styles.subjectMeta, { color: colors.slateSoft }]}
+                            >
+                              {s.topicsCount} topics
+                            </Text>
+                          )}
+                        </View>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              )}
+
+              {/* =================================================
                   SMART TIP
               ================================================= */}
 
-              {weak.length > 0 && (
-                <View
+              {focus && (
+                <TouchableOpacity
+                  activeOpacity={focus.chapter ? 0.82 : 1}
+                  disabled={!focus.chapter}
+                  onPress={openFocusTopic}
                   style={[
                     styles.tipBox,
                     {
@@ -408,15 +528,25 @@ export default function AnalysisScreen() {
                         },
                       ]}
                     >
-                      Focus on your{" "}
-                      {weak.length === 1
-                        ? "weakest topic"
-                        : `${weak.length} weakest topics`}{" "}
-                      first to improve your
-                      score faster.
+                      {overall.weakCount === 1
+                        ? "Your weakest topic is "
+                        : `Start with your weakest: `}
+                      <Text style={{ fontWeight: "800" }}>
+                        {focus.topic}
+                      </Text>{" "}
+                      ({focus.accuracy}% accuracy) to improve your score
+                      faster.
                     </Text>
                   </View>
-                </View>
+
+                  {focus.chapter && (
+                    <Ionicons
+                      name="chevron-forward"
+                      size={16}
+                      color={colors.warn}
+                    />
+                  )}
+                </TouchableOpacity>
               )}
 
               {/* =================================================
@@ -478,7 +608,7 @@ export default function AnalysisScreen() {
                       },
                     ]}
                   >
-                    {topicStats.length}
+                    {overall.topicsCount}
                   </Text>
 
                   <Text
@@ -571,6 +701,8 @@ export default function AnalysisScreen() {
             accuracy
           );
 
+        const lastSeen = timeAgo(item.lastAttemptedAt);
+
         return (
           <View
             style={[
@@ -616,6 +748,7 @@ export default function AnalysisScreen() {
                   {item.attempted ||
                     0}{" "}
                   attempted
+                  {lastSeen ? ` · ${lastSeen}` : ""}
                 </Text>
               </View>
 
@@ -704,17 +837,44 @@ export default function AnalysisScreen() {
                 </Text>
               </View>
 
-              <Text
-                style={[
-                  styles.progressValue,
-                  {
-                    color:
-                      colors.slateSoft,
-                  },
-                ]}
-              >
-                {accuracy}% accuracy
-              </Text>
+              {item.chapter ? (
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() =>
+                    navigation.navigate("ChapterPractice", {
+                      subject: item.subject,
+                      chapter: item.chapter,
+                    })
+                  }
+                  style={styles.practiceLink}
+                >
+                  <Text
+                    style={[
+                      styles.practiceLinkText,
+                      { color: colors.brand },
+                    ]}
+                  >
+                    Practice
+                  </Text>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={11}
+                    color={colors.brand}
+                  />
+                </TouchableOpacity>
+              ) : (
+                <Text
+                  style={[
+                    styles.progressValue,
+                    {
+                      color:
+                        colors.slateSoft,
+                    },
+                  ]}
+                >
+                  {accuracy}% accuracy
+                </Text>
+              )}
             </View>
           </View>
         );
@@ -734,6 +894,12 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
+  },
+
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   contentContainer: {
@@ -933,6 +1099,61 @@ const styles = StyleSheet.create({
     height: 48,
     backgroundColor:
       "rgba(255,255,255,0.18)",
+  },
+
+  /* =====================================================
+     SUBJECT ROLLUP
+  ===================================================== */
+
+  subjectRowTitle: {
+    ...type.h3,
+    fontSize: 15,
+    lineHeight: 19,
+    marginBottom: 9,
+  },
+
+  subjectRow: {
+    gap: 10,
+    paddingRight: 4,
+  },
+
+  subjectCard: {
+    width: 128,
+    padding: 12,
+    borderRadius: radius.lg,
+  },
+
+  subjectName: {
+    ...type.bodyStrong,
+    fontSize: 12.5,
+    lineHeight: 16,
+    marginBottom: 6,
+  },
+
+  subjectAccuracy: {
+    fontSize: 20,
+    lineHeight: 23,
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+
+  subjectBarBg: {
+    width: "100%",
+    height: 5,
+    borderRadius: 4,
+    overflow: "hidden",
+    marginBottom: 7,
+  },
+
+  subjectBarFill: {
+    height: 5,
+    borderRadius: 4,
+    minWidth: 3,
+  },
+
+  subjectMeta: {
+    fontSize: 9.5,
+    fontWeight: "600",
   },
 
   /* =====================================================
@@ -1148,6 +1369,19 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginLeft: 8,
     flexShrink: 0,
+  },
+
+  practiceLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+    marginLeft: 8,
+    flexShrink: 0,
+  },
+
+  practiceLinkText: {
+    fontSize: 9.5,
+    fontWeight: "800",
   },
 
   /* =====================================================

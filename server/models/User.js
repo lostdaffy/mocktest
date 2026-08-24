@@ -46,6 +46,7 @@ const userSchema = new mongoose.Schema(
         attempted: { type: Number, default: 0 },
         correct: { type: Number, default: 0 },
         accuracy: { type: Number, default: 0 }, // 0-100
+        lastAttemptedAt: { type: Date }, // lets Analysis distinguish stale weak-topic data from recent
       },
     ],
 
