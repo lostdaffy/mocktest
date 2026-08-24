@@ -640,6 +640,27 @@ export default function TestListScreen({
                 },
               ]}
             >
+              <TouchableOpacity
+                style={
+                  styles.backButton
+                }
+                activeOpacity={0.75}
+                hitSlop={8}
+                onPress={() =>
+                  navigation.canGoBack()
+                    ? navigation.goBack()
+                    : navigation.navigate(
+                        "HomeTab"
+                      )
+                }
+              >
+                <Ionicons
+                  name="chevron-back"
+                  size={22}
+                  color={colors.ink}
+                />
+              </TouchableOpacity>
+
               <View
                 style={styles.headerText}
               >
@@ -681,19 +702,6 @@ export default function TestListScreen({
                 </Text>
               </View>
 
-              <TouchableOpacity
-                style={
-                  styles.refreshButton
-                }
-                activeOpacity={0.75}
-                onPress={load}
-              >
-                <Ionicons
-                  name="refresh-outline"
-                  size={18}
-                  color={colors.slate}
-                />
-              </TouchableOpacity>
             </View>
 
             {/* =================================================
@@ -1992,18 +2000,14 @@ function getStyles(colors, cardStyle) {
     marginTop: 2,
   },
 
-  refreshButton: {
+  backButton: {
     width: 38,
     height: 38,
-    borderRadius: 19,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: 14,
+    backgroundColor: colors.slateLight,
     alignItems: "center",
     justifyContent: "center",
-    marginLeft: 10,
-    marginBottom: 2,
-    ...shadow.soft,
+    marginRight: 12,
   },
 
   /* =======================================================

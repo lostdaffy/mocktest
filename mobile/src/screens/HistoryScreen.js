@@ -225,6 +225,23 @@ export default function HistoryScreen({
                 styles.header
               }
             >
+              <TouchableOpacity
+                style={
+                  styles.backButton
+                }
+                activeOpacity={0.75}
+                hitSlop={8}
+                onPress={() =>
+                  navigation.goBack()
+                }
+              >
+                <Ionicons
+                  name="chevron-back"
+                  size={22}
+                  color={colors.ink}
+                />
+              </TouchableOpacity>
+
               <View
                 style={
                   styles.headerTextWrap
@@ -256,21 +273,6 @@ export default function HistoryScreen({
                 </Text>
               </View>
 
-              <TouchableOpacity
-                style={
-                  styles.refreshButton
-                }
-                activeOpacity={0.75}
-                onPress={() => load(true)}
-              >
-                <Ionicons
-                  name="refresh-outline"
-                  size={19}
-                  color={
-                    colors.slate
-                  }
-                />
-              </TouchableOpacity>
             </View>
 
             {/* ===========================================
@@ -1146,21 +1148,17 @@ const styles =
       marginTop: 3,
     },
 
-    refreshButton: {
+    backButton: {
       width: 38,
       height: 38,
       borderRadius: 14,
       backgroundColor:
-        colors.surface,
-      borderWidth: 1,
-      borderColor:
-        colors.border,
+        colors.slateLight,
       alignItems:
         "center",
       justifyContent:
         "center",
-      marginLeft: 12,
-      ...shadow.soft,
+      marginRight: 12,
     },
 
     /* =====================================================

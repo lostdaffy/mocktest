@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 
 import AppAlert from "../components/AppAlert";
@@ -64,6 +65,17 @@ export default function ProfileScreen({
   const [savingEmail, setSavingEmail] =
     useState(false);
 
+  /* Name edit (the pencil on the profile card) */
+
+  const [nameModalOpen, setNameModalOpen] =
+    useState(false);
+
+  const [nameDraft, setNameDraft] =
+    useState(user?.name || "");
+
+  const [savingName, setSavingName] =
+    useState(false);
+
   /* =======================================================
      HIDE NATIVE HEADER
   ======================================================= */
@@ -73,6 +85,64 @@ export default function ProfileScreen({
       headerShown: false,
     });
   }, [navigation]);
+
+  /* =======================================================
+     SAVE NAME
+  ======================================================= */
+
+  function openNameEditor() {
+    setNameDraft(user?.name || "");
+    setNameModalOpen(true);
+  }
+
+  async function saveName() {
+    const cleanName =
+      nameDraft.trim();
+
+    if (!cleanName) {
+      AppAlert.alert(
+        "Name required",
+        "Please enter your name."
+      );
+      return;
+    }
+
+    if (
+      cleanName === (user?.name || "").trim()
+    ) {
+      setNameModalOpen(false);
+      return;
+    }
+
+    setSavingName(true);
+
+    try {
+      await api.patch(
+        "/auth/profile",
+        {
+          name: cleanName,
+        }
+      );
+
+      await refreshUser();
+
+      setNameModalOpen(false);
+
+      AppAlert.alert(
+        "Name updated",
+        "Your name has been saved successfully."
+      );
+    } catch (err) {
+      AppAlert.alert(
+        "Couldn't save",
+        err.response?.data
+          ?.message ||
+          "Please try again."
+      );
+    } finally {
+      setSavingName(false);
+    }
+  }
 
   /* =======================================================
      SAVE EMAIL
@@ -291,6 +361,23 @@ export default function ProfileScreen({
           <View
             style={styles.header}
           >
+            <TouchableOpacity
+              style={
+                styles.backButton
+              }
+              activeOpacity={0.75}
+              hitSlop={8}
+              onPress={() =>
+                navigation.goBack()
+              }
+            >
+              <Ionicons
+                name="chevron-back"
+                size={22}
+                color="#FFFFFF"
+              />
+            </TouchableOpacity>
+
             <View
               style={
                 styles.headerText
@@ -325,43 +412,18 @@ export default function ProfileScreen({
                 activeOpacity={
                   0.75
                 }
-                onPress={
-                  refreshUser
+                onPress={() =>
+                  navigation.navigate(
+                    "Notifications"
+                  )
                 }
               >
                 <Ionicons
-                  name="refresh-outline"
+                  name="notifications-outline"
                   size={19}
                   color="#FFFFFF"
                 />
               </TouchableOpacity>
-
-              <View
-                style={
-                  styles.notificationWrap
-                }
-              >
-                <TouchableOpacity
-                  style={
-                    styles.headerCircle
-                  }
-                  activeOpacity={
-                    0.75
-                  }
-                >
-                  <Ionicons
-                    name="notifications-outline"
-                    size={19}
-                    color="#FFFFFF"
-                  />
-                </TouchableOpacity>
-
-                <View
-                  style={
-                    styles.notificationDot
-                  }
-                />
-              </View>
             </View>
           </View>
 
@@ -526,6 +588,10 @@ export default function ProfileScreen({
                   }
                   activeOpacity={
                     0.75
+                  }
+                  hitSlop={8}
+                  onPress={
+                    openNameEditor
                   }
                 >
                   <Ionicons
@@ -1031,6 +1097,99 @@ export default function ProfileScreen({
           </View>
         </View>
       </ScrollView>
+
+      {/* =====================================================
+          EDIT NAME
+      ===================================================== */}
+
+      <Modal
+        visible={nameModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() =>
+          setNameModalOpen(false)
+        }
+      >
+        <View
+          style={styles.modalBackdrop}
+        >
+          <View
+            style={styles.modalCard}
+          >
+            <Text
+              style={styles.modalTitle}
+            >
+              Edit name
+            </Text>
+
+            <Text
+              style={styles.modalSubtitle}
+            >
+              This is the name shown on leaderboards and your result cards.
+            </Text>
+
+            <TextInput
+              style={styles.modalInput}
+              value={nameDraft}
+              onChangeText={setNameDraft}
+              placeholder="Your full name"
+              placeholderTextColor={
+                colors.slateSoft
+              }
+              autoFocus
+              maxLength={50}
+            />
+
+            <View
+              style={styles.modalActions}
+            >
+              <TouchableOpacity
+                style={
+                  styles.modalCancel
+                }
+                activeOpacity={0.8}
+                onPress={() =>
+                  setNameModalOpen(false)
+                }
+              >
+                <Text
+                  style={
+                    styles.modalCancelText
+                  }
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modalSave,
+                  savingName &&
+                    styles.modalSaveDisabled,
+                ]}
+                activeOpacity={0.85}
+                disabled={savingName}
+                onPress={saveName}
+              >
+                {savingName ? (
+                  <ActivityIndicator
+                    size="small"
+                    color="#FFFFFF"
+                  />
+                ) : (
+                  <Text
+                    style={
+                      styles.modalSaveText
+                    }
+                  >
+                    Save
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1283,6 +1442,22 @@ const styles =
         "space-between",
     },
 
+    backButton: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor:
+        "rgba(255,255,255,0.12)",
+      borderWidth: 1,
+      borderColor:
+        "rgba(255,255,255,0.20)",
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+      marginRight: 12,
+    },
+
     headerText: {
       flex: 1,
       minWidth: 0,
@@ -1328,24 +1503,107 @@ const styles =
         "center",
     },
 
-    notificationWrap: {
-      position:
-        "relative",
+    /* =====================================================
+       EDIT NAME MODAL
+    ===================================================== */
+
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor:
+        "rgba(15,23,42,0.55)",
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+      paddingHorizontal: 24,
     },
 
-    notificationDot: {
-      position:
-        "absolute",
-      width: 9,
-      height: 9,
-      borderRadius: 5,
+    modalCard: {
+      width: "100%",
       backgroundColor:
-        "#8B5CF6",
-      right: 1,
-      top: -1,
-      borderWidth: 1.5,
+        colors.surface,
+      borderRadius:
+        radius.xl,
+      padding: 20,
+      ...shadow.lg,
+    },
+
+    modalTitle: {
+      fontSize: 18,
+      lineHeight: 23,
+      fontWeight: "800",
+      color: colors.ink,
+    },
+
+    modalSubtitle: {
+      marginTop: 4,
+      fontSize: 12,
+      lineHeight: 17,
+      color: colors.slate,
+    },
+
+    modalInput: {
+      marginTop: 16,
+      height: 46,
+      borderRadius:
+        radius.md,
+      borderWidth: 1,
       borderColor:
-        "#15158C",
+        colors.border,
+      backgroundColor:
+        colors.bg,
+      paddingHorizontal: 14,
+      fontSize: 14,
+      color: colors.ink,
+    },
+
+    modalActions: {
+      flexDirection:
+        "row",
+      gap: 10,
+      marginTop: 16,
+    },
+
+    modalCancel: {
+      flex: 1,
+      height: 44,
+      borderRadius:
+        radius.md,
+      backgroundColor:
+        colors.slateLight,
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+    },
+
+    modalCancelText: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: colors.slate,
+    },
+
+    modalSave: {
+      flex: 1,
+      height: 44,
+      borderRadius:
+        radius.md,
+      backgroundColor:
+        colors.brand,
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+    },
+
+    modalSaveDisabled: {
+      opacity: 0.6,
+    },
+
+    modalSaveText: {
+      fontSize: 13,
+      fontWeight: "800",
+      color: "#FFFFFF",
     },
 
     /* =====================================================

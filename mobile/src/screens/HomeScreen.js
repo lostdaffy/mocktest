@@ -442,6 +442,11 @@ export default function HomeScreen({
             }
             activeOpacity={0.72}
             hitSlop={8}
+            onPress={() =>
+              navigation.navigate(
+                "Notifications"
+              )
+            }
           >
             <Ionicons
               name="notifications-outline"

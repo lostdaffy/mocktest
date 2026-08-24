@@ -190,6 +190,27 @@ export default function AnalysisScreen({ navigation }) {
           ================================================= */}
 
           <View style={styles.pageHeader}>
+            <TouchableOpacity
+              style={[
+                styles.backButton,
+                {
+                  backgroundColor:
+                    colors.slateLight,
+                },
+              ]}
+              activeOpacity={0.75}
+              hitSlop={8}
+              onPress={() =>
+                navigation.goBack()
+              }
+            >
+              <Ionicons
+                name="chevron-back"
+                size={22}
+                color={colors.ink}
+              />
+            </TouchableOpacity>
+
             <View
               style={[
                 styles.headerIcon,
@@ -915,6 +936,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: spacing.lg,
+  },
+
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
   },
 
   headerIcon: {

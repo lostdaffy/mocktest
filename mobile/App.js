@@ -39,6 +39,7 @@ import ChapterPracticeScreen from "./src/screens/ChapterPracticeScreen";
 import PyqExamPickerScreen from "./src/screens/PyqExamPickerScreen";
 import PyqYearListScreen from "./src/screens/PyqYearListScreen";
 import PyqPapersScreen from "./src/screens/PyqPapersScreen";
+import NotificationsScreen from "./src/screens/NotificationsScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -139,6 +140,7 @@ function AppStack() {
     <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: colors.brand }, headerTintColor: "#fff", headerShown: false, }}>
       <Stack.Screen name="Home" component={MainTabs} options={{ headerShown: false }} />
       <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: "Profile" }} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: "Notifications" }} />
       <Stack.Screen name="HistoryTab" component={HistoryScreen} options={{ title: "Test History" }} />
       <Stack.Screen name="TestList" component={TestListScreen} options={{ title: "Tests" }} />
       <Stack.Screen name="TestTaking" component={TestTakingScreen} options={{ headerShown: false }} />

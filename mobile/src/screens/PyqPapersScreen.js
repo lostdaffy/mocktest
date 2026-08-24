@@ -364,23 +364,6 @@ export default function PyqPapersScreen({
                 </Text>
               </View>
 
-              <TouchableOpacity
-                style={
-                  styles.headerButton
-                }
-                activeOpacity={
-                  0.75
-                }
-                onPress={load}
-              >
-                <Ionicons
-                  name="refresh-outline"
-                  size={18}
-                  color={
-                    colors.slate
-                  }
-                />
-              </TouchableOpacity>
             </View>
 
             {/* =================================================
