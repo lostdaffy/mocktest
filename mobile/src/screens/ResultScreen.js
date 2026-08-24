@@ -71,6 +71,50 @@ function getTestLanguage(attempt, question) {
   );
 }
 
+function getLocalizedText(
+  question,
+  language
+) {
+  if (!question) return "";
+
+  const lang =
+    normalizeLanguage(language);
+
+  if (
+    lang === "hi" &&
+    typeof question.textHi ===
+      "string" &&
+    question.textHi.trim()
+  ) {
+    return question.textHi;
+  }
+
+  return question.text || "";
+}
+
+function getLocalizedOptions(
+  question,
+  language
+) {
+  if (!question) return [];
+
+  const lang =
+    normalizeLanguage(language);
+
+  if (
+    lang === "hi" &&
+    Array.isArray(
+      question.optionsHi
+    ) &&
+    question.optionsHi.length ===
+      question.options?.length
+  ) {
+    return question.optionsHi;
+  }
+
+  return question.options || [];
+}
+
 function getLocalizedSolution(
   question,
   language
@@ -1225,13 +1269,25 @@ function WrongAnswerCard({
 
   if (!question) return null;
 
+  const localizedText =
+    getLocalizedText(
+      question,
+      language
+    );
+
+  const localizedOptions =
+    getLocalizedOptions(
+      question,
+      language
+    );
+
   const selectedAnswer =
-    question.options?.[
+    localizedOptions?.[
       answer.selectedIndex
     ];
 
   const correctAnswer =
-    question.options?.[
+    localizedOptions?.[
       question.correctIndex
     ];
 
@@ -1298,7 +1354,7 @@ function WrongAnswerCard({
       <Text
         style={styles.wrongQuestion}
       >
-        {question.text}
+        {localizedText}
       </Text>
 
       {/* ANSWERS */}

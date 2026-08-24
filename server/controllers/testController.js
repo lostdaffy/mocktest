@@ -366,8 +366,9 @@ async function submitTest(req, res) {
     const test = await Test.findById(req.params.id).populate("questions");
     if (!test) return res.status(404).json({ message: "Test not found" });
 
-    const { answers } = req.body;
+    const { answers, language } = req.body;
     const answerMap = new Map(answers.map((a) => [String(a.questionId), a]));
+    const attemptLanguage = language === "hi" ? "hi" : "en";
 
     let correctCount = 0;
     let wrongCount = 0;
@@ -438,6 +439,7 @@ async function submitTest(req, res) {
       totalTimeTakenSeconds: totalTime,
       status: "submitted",
       submittedAt: new Date(),
+      language: attemptLanguage,
     });
 
     // Update user's per-topic accuracy stats (drives "Aaj Ka Test" + weak topic detection)

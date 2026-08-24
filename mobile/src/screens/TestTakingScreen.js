@@ -724,6 +724,7 @@ export default function TestTakingScreen({
                     false,
                 })
               ),
+            language,
           };
 
           const res =
@@ -758,6 +759,7 @@ export default function TestTakingScreen({
       [
         answers,
         currentIdx,
+        language,
         navigation,
         recordTimeSpent,
         test,

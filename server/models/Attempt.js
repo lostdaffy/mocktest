@@ -29,6 +29,13 @@ const attemptSchema = new mongoose.Schema(
 
     status: { type: String, enum: ["in_progress", "submitted", "auto_submitted"], default: "in_progress" },
     submittedAt: { type: Date },
+
+    // Which language the student actually took the test in (the toggle in
+    // TestTakingScreen). Stored so the result/review screen can show the
+    // same textHi/optionsHi/solutionHi content instead of always falling
+    // back to English - a student who took the whole paper in Hindi
+    // shouldn't have to read the solution in English.
+    language: { type: String, enum: ["en", "hi"], default: "en" },
   },
   { timestamps: true }
 );
