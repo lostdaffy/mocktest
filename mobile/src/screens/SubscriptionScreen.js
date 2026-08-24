@@ -77,25 +77,38 @@ const BENEFITS = [
   },
 ];
 
+// perDay is derived rather than hardcoded so it can never drift out of
+// sync with the price sitting right above it.
 const PLANS = [
+  {
+    id: "quarterly",
+    label: "3 Months",
+    price: 149,
+    mrp: 449,
+    days: 90,
+    off: "67% OFF",
+  },
   {
     id: "half_yearly",
     label: "6 Months",
-    price: 149,
-    mrp: 299,
-    perDay: "₹0.82/day",
-    off: "50% OFF",
+    price: 249,
+    mrp: 899,
+    days: 180,
+    off: "72% OFF",
+    best: true,
   },
   {
     id: "yearly",
     label: "12 Months",
-    price: 249,
-    mrp: 999,
-    perDay: "₹0.68/day",
+    price: 449,
+    mrp: 1799,
+    days: 365,
     off: "75% OFF",
-    best: true,
   },
-];
+].map((plan) => ({
+  ...plan,
+  perDay: `₹${(plan.price / plan.days).toFixed(2)}/day`,
+}));
 
 /* =========================================================
    SCREEN
@@ -111,8 +124,13 @@ export default function SubscriptionScreen({
   const [credits, setCredits] =
     useState(0);
 
+  // Defaults to the plan marked `best` so the recommended option is
+  // pre-selected without hardcoding an id that could go stale.
   const [selected, setSelected] =
-    useState("yearly");
+    useState(
+      PLANS.find((p) => p.best)?.id ||
+        PLANS[0].id
+    );
 
   const [loadingCredits, setLoadingCredits] =
     useState(true);

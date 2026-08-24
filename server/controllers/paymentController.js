@@ -4,12 +4,18 @@ const Subscription = require("../models/Subscription");
 const User = require("../models/User");
 const { resolveCoupon } = require("./couponController");
 
+// Plan keys are historical - "half_yearly"/"yearly" describe the duration,
+// not the price, so they stay stable even when pricing changes. Adding a
+// new key here is all it takes to offer another plan; every duration and
+// price lookup in the app reads from these two maps.
 const PLAN_PRICES = {
-  half_yearly: 149,
-  yearly: 249,
+  quarterly: 149,
+  half_yearly: 249,
+  yearly: 449,
 };
 
 const PLAN_DURATION_MONTHS = {
+  quarterly: 3,
   half_yearly: 6,
   yearly: 12,
 };
@@ -30,7 +36,7 @@ function getRazorpayInstance() {
   });
 }
 
-// POST /api/payments/create-order  { plan: "half_yearly" | "yearly", useCredits: boolean }
+// POST /api/payments/create-order  { plan: "quarterly" | "half_yearly" | "yearly", useCredits: boolean }
 async function createOrder(req, res) {
   try {
     const { plan, useCredits, couponCode } = req.body;

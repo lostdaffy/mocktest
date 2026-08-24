@@ -3,7 +3,7 @@ const User = require("../models/User");
 const Subscription = require("../models/Subscription");
 
 const EXAM_OPTIONS = ["SSC_CGL", "UP_POLICE", "RAILWAY", "BANKING", "CTET"];
-const PLAN_DURATION_MONTHS = { half_yearly: 6, yearly: 12 };
+const PLAN_DURATION_MONTHS = { quarterly: 3, half_yearly: 6, yearly: 12 };
 
 // Builds the Mongo filter shared by list/stats/export, so the three stay
 // in sync - a filter combination always means the same thing everywhere.

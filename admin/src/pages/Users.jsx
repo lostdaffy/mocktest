@@ -15,6 +15,11 @@ import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 
 const PAGE_SIZE = 25;
+const PLAN_LABELS = {
+  quarterly: "3mo",
+  half_yearly: "6mo",
+  yearly: "12mo",
+};
 const EXAM_LABELS = {
   SSC_CGL: "SSC",
   UP_POLICE: "UP Police",
@@ -303,7 +308,7 @@ export default function Users() {
                     <p className="text-xs text-slate-soft mt-1">
                       {u.subscriptionStatus === "active" ? (
                         <span className="text-success font-medium">
-                          ⭐ Premium ({u.subscriptionPlan === "yearly" ? "12mo" : u.subscriptionPlan === "half_yearly" ? "6mo" : "?"}) ·
+                          ⭐ Premium ({PLAN_LABELS[u.subscriptionPlan] || "?"}) ·
                           expires {u.subscriptionExpiresAt ? new Date(u.subscriptionExpiresAt).toLocaleDateString("en-IN") : "—"}
                         </span>
                       ) : (
@@ -441,6 +446,7 @@ export default function Users() {
                   onChange={(e) => setSubPlan(e.target.value)}
                   className="w-full rv-input text-sm"
                 >
+                  <option value="quarterly">3 Months</option>
                   <option value="half_yearly">6 Months</option>
                   <option value="yearly">12 Months</option>
                 </select>
