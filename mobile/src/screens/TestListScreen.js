@@ -13,10 +13,12 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  useColorScheme,
 } from "react-native";
 
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AppAlert from "../components/AppAlert";
@@ -25,11 +27,12 @@ import { useAuth } from "../context/AuthContext";
 import { isSubscribed } from "../utils/subscription";
 
 import {
-  colors,
+  getColors,
+  getCard,
+  gradients,
   spacing,
   radius,
   type,
-  card,
   shadow,
 } from "../theme/theme";
 
@@ -195,6 +198,21 @@ export default function TestListScreen({
   navigation,
 }) {
   const insets = useSafeAreaInsets();
+
+  const scheme = useColorScheme();
+  const isDark = scheme === "dark";
+  const colors = useMemo(
+    () => getColors(isDark),
+    [isDark]
+  );
+  const cardStyle = useMemo(
+    () => getCard(isDark),
+    [isDark]
+  );
+  const styles = useMemo(
+    () => getStyles(colors, cardStyle),
+    [colors, cardStyle]
+  );
 
   const { user } = useAuth();
 
@@ -691,6 +709,8 @@ export default function TestListScreen({
                 icon="calendar-outline"
                 value={totalUpcoming}
                 label="Exams"
+                colors={colors}
+                styles={styles}
               />
 
               <View
@@ -703,6 +723,8 @@ export default function TestListScreen({
                 icon="flash-outline"
                 value={thisWeekCount}
                 label="This week"
+                colors={colors}
+                styles={styles}
               />
 
               <View
@@ -715,6 +737,8 @@ export default function TestListScreen({
                 icon="gift-outline"
                 value={freeCount}
                 label="Free"
+                colors={colors}
+                styles={styles}
               />
             </View>
 
@@ -731,6 +755,8 @@ export default function TestListScreen({
                 onStart={() =>
                   startExam(nextExam)
                 }
+                colors={colors}
+                styles={styles}
               />
             )}
 
@@ -794,6 +820,8 @@ export default function TestListScreen({
           !nextExam ? (
             <EmptyState
               onRefresh={load}
+              colors={colors}
+              styles={styles}
             />
           ) : null
         }
@@ -806,6 +834,8 @@ export default function TestListScreen({
             onPress={() =>
               startExam(item)
             }
+            colors={colors}
+            styles={styles}
           />
         )}
       />
@@ -821,6 +851,8 @@ function QuickStat({
   icon,
   value,
   label,
+  colors,
+  styles,
 }) {
   return (
     <View
@@ -867,6 +899,8 @@ function LiveHero({
   subscribed,
   starting,
   onStart,
+  colors,
+  styles,
 }) {
   const premiumLocked =
     !exam.isFree &&
@@ -940,15 +974,24 @@ function LiveHero({
     >
       {/* TOP ACCENT */}
 
-      <View
-        style={[
-          styles.heroAccent,
-          {
-            backgroundColor:
-              accent,
-          },
-        ]}
-      />
+      {isLive ? (
+        <LinearGradient
+          colors={gradients.danger}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.heroAccent}
+        />
+      ) : (
+        <View
+          style={[
+            styles.heroAccent,
+            {
+              backgroundColor:
+                accent,
+            },
+          ]}
+        />
+      )}
 
       {/* LIVE STATUS */}
 
@@ -1048,6 +1091,8 @@ function LiveHero({
           text={formatDate(
             exam.scheduledAt
           )}
+          colors={colors}
+          styles={styles}
         />
 
         <View
@@ -1062,6 +1107,8 @@ function LiveHero({
             exam.scheduledAt,
             exam.durationMinutes
           )}
+          colors={colors}
+          styles={styles}
         />
       </View>
 
@@ -1181,6 +1228,8 @@ function LiveHero({
               : "—"
           }
           label="Duration"
+          colors={colors}
+          styles={styles}
         />
 
         <View
@@ -1193,6 +1242,8 @@ function LiveHero({
           icon="people-outline"
           value="All India"
           label="Competition"
+          colors={colors}
+          styles={styles}
         />
 
         <View
@@ -1205,6 +1256,8 @@ function LiveHero({
           icon="trophy-outline"
           value="Rank"
           label="Result"
+          colors={colors}
+          styles={styles}
         />
       </View>
 
@@ -1310,6 +1363,8 @@ function LiveHero({
 function ScheduleItem({
   icon,
   text,
+  colors,
+  styles,
 }) {
   return (
     <View
@@ -1343,6 +1398,8 @@ function HeroStat({
   icon,
   value,
   label,
+  colors,
+  styles,
 }) {
   return (
     <View
@@ -1391,6 +1448,8 @@ function LiveExamCard({
   subscribed,
   starting,
   onPress,
+  colors,
+  styles,
 }) {
   const premiumLocked =
     !exam.isFree &&
@@ -1757,6 +1816,8 @@ function LiveExamCard({
 
 function EmptyState({
   onRefresh,
+  colors,
+  styles,
 }) {
   return (
     <View
@@ -1827,7 +1888,12 @@ function EmptyState({
    STYLES
 ========================================================= */
 
-const styles = StyleSheet.create({
+// A function instead of a module-level StyleSheet.create() call - this
+// screen's colors are theme-dependent (see getColors(isDark) above), so the
+// styles have to be rebuilt whenever the theme changes rather than baked in
+// once at import time.
+function getStyles(colors, cardStyle) {
+  return StyleSheet.create({
   /* =======================================================
      GENERAL
   ======================================================= */
@@ -2388,7 +2454,7 @@ const styles = StyleSheet.create({
   ======================================================= */
 
   examCard: {
-    ...card,
+    ...cardStyle,
     minHeight: 88,
     marginHorizontal: spacing.lg,
     marginBottom: 9,
@@ -2652,4 +2718,5 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     fontWeight: "900",
   },
-});
+  });
+}

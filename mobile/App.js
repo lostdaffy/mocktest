@@ -1,9 +1,22 @@
 import { StatusBar } from "expo-status-bar";
+import * as Notifications from "expo-notifications";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+
+// Expo requires this to be set explicitly, otherwise a notification that
+// arrives while the app is already open (foreground) is silently dropped
+// instead of showing a banner - e.g. the "live exam starts in 15 min"
+// reminder while a student is mid-app.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { colors, TAB_BAR_HEIGHT } from "./src/theme/theme";

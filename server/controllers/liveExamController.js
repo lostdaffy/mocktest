@@ -296,6 +296,35 @@ async function deleteLiveExam(req, res) {
   res.json({ message: "Live exam aur uske questions delete ho gaye" });
 }
 
+// GET /api/live-exams/:id/attempts (admin) -> results + integrity flags for
+// a live exam, so a background-app violation (see Attempt.integrityFlags)
+// is actually visible to someone, not just silently recorded.
+async function getLiveExamAttempts(req, res) {
+  const test = await Test.findOne({ _id: req.params.id, type: "live" });
+  if (!test) return res.status(404).json({ message: "Live exam not found" });
+
+  const attempts = await Attempt.find({ test: test._id, status: { $ne: "in_progress" } })
+    .sort({ score: -1 })
+    .populate("user", "name phone")
+    .select("user score accuracy rank percentile status integrityFlags submittedAt");
+
+  res.json({
+    attempts: attempts.map((a) => ({
+      attemptId: a._id,
+      name: a.user?.name || "Unknown",
+      phone: a.user?.phone || null,
+      score: a.score,
+      accuracy: a.accuracy,
+      rank: a.rank,
+      percentile: a.percentile,
+      autoSubmitted: a.status === "auto_submitted",
+      submittedAt: a.submittedAt,
+      backgroundCount: a.integrityFlags?.backgroundCount || 0,
+      backgroundSeconds: a.integrityFlags?.backgroundSeconds || 0,
+    })),
+  });
+}
+
 module.exports = {
   listLiveExams,
   createLiveExam,
@@ -307,4 +336,5 @@ module.exports = {
   publishLiveExam,
   cancelLiveExam,
   deleteLiveExam,
+  getLiveExamAttempts,
 };

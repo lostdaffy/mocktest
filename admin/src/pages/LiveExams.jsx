@@ -7,6 +7,8 @@ import {
   RiDeleteBinLine,
   RiCloseLine,
   RiCheckLine,
+  RiTrophyLine,
+  RiAlarmWarningLine,
 } from "@remixicon/react";
 import api from "../api/axios";
 import { useToast } from "../components/Toast";
@@ -65,6 +67,11 @@ export default function LiveExams() {
   // Review modal
   const [reviewExam, setReviewExam] = useState(null);
   const [reviewLoading, setReviewLoading] = useState(false);
+
+  // Results & integrity modal (ended exams)
+  const [resultsExam, setResultsExam] = useState(null);
+  const [resultsAttempts, setResultsAttempts] = useState([]);
+  const [resultsLoading, setResultsLoading] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -255,6 +262,19 @@ export default function LiveExams() {
       openReview(reviewExam._id);
     } catch (err) {
       toast.error(err.response?.data?.message || "Update failed");
+    }
+  }
+
+  async function openResults(exam) {
+    setResultsExam(exam);
+    setResultsLoading(true);
+    try {
+      const res = await api.get(`/live-exams/${exam._id}/attempts`);
+      setResultsAttempts(res.data.attempts || []);
+    } catch (err) {
+      toast.error("Couldn't load results");
+    } finally {
+      setResultsLoading(false);
     }
   }
 
@@ -540,9 +560,14 @@ export default function LiveExams() {
                     <p className="font-semibold text-ink">{exam.title}</p>
                     <p className="text-xs text-slate-400">{new Date(exam.scheduledAt).toLocaleString("en-IN")}</p>
                   </div>
-                  <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200">
-                    Review
-                  </button>
+                  <div className="flex gap-2">
+                    <button onClick={() => openResults(exam)} className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20 flex items-center gap-1.5">
+                      <RiTrophyLine size={14} /> Results
+                    </button>
+                    <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200">
+                      Review
+                    </button>
+                  </div>
                 </div>
               ))}
             </Section>
@@ -580,6 +605,15 @@ export default function LiveExams() {
           onRemoveQuestion={removeQuestion}
           onUpdateQuestion={updateQuestion}
           editable={reviewExam.publishStatus === "draft"}
+        />
+      )}
+
+      {resultsExam && (
+        <ResultsModal
+          exam={resultsExam}
+          attempts={resultsAttempts}
+          loading={resultsLoading}
+          onClose={() => setResultsExam(null)}
         />
       )}
     </div>
@@ -706,6 +740,65 @@ function ReviewModal({ exam, onClose, onRemoveQuestion, onUpdateQuestion, editab
             )
           )}
           {exam.questions.length === 0 && <Empty text="Abhi tak koi question add nahi hua." />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResultsModal({ exam, attempts, loading, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+        <div className="flex items-center justify-between p-5 border-b border-slate-100">
+          <div>
+            <h3 className="font-display text-lg font-bold text-ink">{exam.title} — Results</h3>
+            <p className="text-xs text-slate-400">
+              {attempts.length} attempt{attempts.length === 1 ? "" : "s"} · sorted by rank
+            </p>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-xl">
+            ✕
+          </button>
+        </div>
+
+        <div className="overflow-y-auto p-5 space-y-2 flex-1">
+          {loading ? (
+            <p className="text-slate-400">Loading...</p>
+          ) : attempts.length === 0 ? (
+            <Empty text="Koi student ne ye live exam attempt nahi kiya." />
+          ) : (
+            attempts.map((a) => (
+              <div key={a.attemptId} className="flex items-center justify-between border border-slate-100 rounded-xl p-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 shrink-0">
+                    #{a.rank ?? "-"}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-ink flex items-center gap-2">
+                      {a.name}
+                      {a.autoSubmitted && (
+                        <span className="text-[10px] font-bold bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">
+                          AUTO-SUBMITTED
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {a.phone || "—"} · Score {a.score} · {a.accuracy}% accuracy
+                    </p>
+                  </div>
+                </div>
+                {a.backgroundCount > 0 && (
+                  <div
+                    className="flex items-center gap-1.5 text-xs font-medium bg-red-50 text-red-600 px-2.5 py-1 rounded-full shrink-0"
+                    title={`Left the app ${a.backgroundCount} time(s), ~${a.backgroundSeconds}s total`}
+                  >
+                    <RiAlarmWarningLine size={13} /> left app {a.backgroundCount}x
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

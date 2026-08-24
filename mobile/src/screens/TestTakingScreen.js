@@ -16,6 +16,7 @@ import {
   BackHandler,
   Modal,
   FlatList,
+  AppState,
 } from "react-native";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -113,6 +114,66 @@ export default function TestTakingScreen({
   const submittingRef =
     useRef(false);
 
+  /*
+    Live exam only: the shared wall-clock
+    deadline (from the server) and the
+    offset between server time and this
+    device's clock, so the countdown can be
+    recomputed from absolute time on every
+    tick instead of drifting while the app
+    is backgrounded.
+  */
+  const liveEndsAtMsRef =
+    useRef(null);
+
+  const serverTimeOffsetMsRef =
+    useRef(0);
+
+  /*
+    Live exam integrity signal: how many
+    times, and for how long, the student
+    left the app mid-attempt.
+  */
+  const backgroundCountRef =
+    useRef(0);
+
+  const backgroundSecondsRef =
+    useRef(0);
+
+  const backgroundedAtRef =
+    useRef(null);
+
+  const hasWarnedBackgroundRef =
+    useRef(false);
+
+  // Declared early (not just above the submit handler) since the live-exam
+  // autosave effect below also needs it, and effects run top-to-bottom in
+  // source order within the same component.
+  const buildAnswersPayload =
+    useCallback(() => {
+      if (!test?.questions)
+        return [];
+
+      return test.questions.map(
+        (question) => ({
+          questionId:
+            question._id,
+          selectedIndex:
+            answers[question._id]
+              ?.selectedIndex ??
+            null,
+          timeTakenSeconds:
+            answers[question._id]
+              ?.timeTakenSeconds ||
+            0,
+          markedForReview:
+            answers[question._id]
+              ?.markedForReview ||
+            false,
+        })
+      );
+    }, [test, answers]);
+
   /* =======================================================
      LOAD TEST
   ======================================================= */
@@ -163,6 +224,31 @@ export default function TestTakingScreen({
       setSecondsLeft(
         initialSeconds
       );
+
+      /*
+        Store the shared deadline as an
+        absolute timestamp (not a countdown)
+        so the timer can self-correct after
+        the app is backgrounded instead of
+        just resuming a stale decrement.
+      */
+      if (
+        loadedTest?.type === "live" &&
+        res.data?.live?.endsAt
+      ) {
+        liveEndsAtMsRef.current = new Date(
+          res.data.live.endsAt
+        ).getTime();
+
+        serverTimeOffsetMsRef.current =
+          res.data.live.serverTime
+            ? new Date(
+                res.data.live.serverTime
+              ).getTime() - Date.now()
+            : 0;
+      } else {
+        liveEndsAtMsRef.current = null;
+      }
 
       questionStartRef.current =
         Date.now();
@@ -263,8 +349,45 @@ export default function TestTakingScreen({
   useEffect(() => {
     if (!test) return;
 
+    // Live exams run on the shared server deadline, recomputed fresh from
+    // absolute time every tick - immune to setInterval being throttled
+    // while the app is backgrounded, unlike a plain decrement. Non-live
+    // tests have no shared deadline to sync against, so they keep the
+    // simple per-second countdown.
+    const isLiveSynced =
+      test.type === "live" &&
+      !!liveEndsAtMsRef.current;
+
     const timer =
       setInterval(() => {
+        if (isLiveSynced) {
+          const remaining = Math.max(
+            0,
+            Math.floor(
+              (liveEndsAtMsRef.current -
+                (Date.now() +
+                  serverTimeOffsetMsRef.current)) /
+                1000
+            )
+          );
+
+          setSecondsLeft(remaining);
+
+          if (remaining <= 0) {
+            clearInterval(timer);
+
+            if (
+              handleSubmitRef.current
+            ) {
+              handleSubmitRef.current(
+                true
+              );
+            }
+          }
+
+          return;
+        }
+
         setSecondsLeft((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
@@ -287,6 +410,124 @@ export default function TestTakingScreen({
     return () =>
       clearInterval(timer);
   }, [test]);
+
+  /* =======================================================
+     LIVE EXAM INTEGRITY (app-background tracking)
+  ======================================================= */
+
+  useEffect(() => {
+    if (!test || test.type !== "live")
+      return;
+
+    const sub = AppState.addEventListener(
+      "change",
+      (nextState) => {
+        if (
+          nextState === "background" ||
+          nextState === "inactive"
+        ) {
+          backgroundedAtRef.current =
+            Date.now();
+          return;
+        }
+
+        if (
+          nextState === "active" &&
+          backgroundedAtRef.current
+        ) {
+          const awaySeconds = Math.round(
+            (Date.now() -
+              backgroundedAtRef.current) /
+              1000
+          );
+
+          backgroundedAtRef.current = null;
+
+          // Ignore trivial OS-level flicker (e.g. the notification shade)
+          // so a real violation is what actually gets counted and shown.
+          if (awaySeconds > 2) {
+            backgroundCountRef.current += 1;
+            backgroundSecondsRef.current +=
+              awaySeconds;
+
+            if (
+              !hasWarnedBackgroundRef.current
+            ) {
+              hasWarnedBackgroundRef.current = true;
+
+              AppAlert.alert(
+                "Live exam ke dauran app se bahar mat jao",
+                "Baar baar app se bahar jaana is attempt ko review ke liye flag kar sakta hai.",
+                [{ text: "Theek hai" }]
+              );
+            }
+          }
+
+          // Recompute the timer immediately from the absolute deadline -
+          // don't wait for the next 1s tick, which may itself have been
+          // delayed by the same backgrounding.
+          if (
+            liveEndsAtMsRef.current &&
+            handleSubmitRef.current
+          ) {
+            const remaining = Math.max(
+              0,
+              Math.floor(
+                (liveEndsAtMsRef.current -
+                  (Date.now() +
+                    serverTimeOffsetMsRef.current)) /
+                  1000
+              )
+            );
+
+            setSecondsLeft(remaining);
+
+            if (remaining <= 0) {
+              handleSubmitRef.current(
+                true
+              );
+            }
+          }
+        }
+      }
+    );
+
+    return () => sub.remove();
+  }, [test]);
+
+  /* =======================================================
+     LIVE EXAM AUTOSAVE
+  ======================================================= */
+
+  useEffect(() => {
+    if (!test || test.type !== "live")
+      return;
+
+    const timer = setInterval(() => {
+      if (submittingRef.current) return;
+
+      api
+        .patch(
+          `/tests/${testId}/progress`,
+          {
+            answers:
+              buildAnswersPayload(),
+            integrityFlags: {
+              backgroundCount:
+                backgroundCountRef.current,
+              backgroundSeconds:
+                backgroundSecondsRef.current,
+            },
+          }
+        )
+        .catch(() => {
+          // Autosave failing silently beats interrupting the student mid-exam.
+        });
+    }, 20000);
+
+    return () =>
+      clearInterval(timer);
+  }, [test, testId, buildAnswersPayload]);
 
   /* =======================================================
      QUESTION STOPWATCH
@@ -700,31 +941,14 @@ export default function TestTakingScreen({
         try {
           const payload = {
             answers:
-              test.questions.map(
-                (question) => ({
-                  questionId:
-                    question._id,
-                  selectedIndex:
-                    answers[
-                      question._id
-                    ]
-                      ?.selectedIndex ??
-                    null,
-                  timeTakenSeconds:
-                    answers[
-                      question._id
-                    ]
-                      ?.timeTakenSeconds ||
-                    0,
-                  markedForReview:
-                    answers[
-                      question._id
-                    ]
-                      ?.markedForReview ||
-                    false,
-                })
-              ),
+              buildAnswersPayload(),
             language,
+            integrityFlags: {
+              backgroundCount:
+                backgroundCountRef.current,
+              backgroundSeconds:
+                backgroundSecondsRef.current,
+            },
           };
 
           const res =
@@ -757,7 +981,7 @@ export default function TestTakingScreen({
         }
       },
       [
-        answers,
+        buildAnswersPayload,
         currentIdx,
         language,
         navigation,
@@ -1026,15 +1250,21 @@ export default function TestTakingScreen({
         <View
           style={[
             styles.timerBox,
-            secondsLeft <= 60 &&
+            (secondsLeft <= 60 ||
+              test?.type === "live") &&
               styles.timerBoxDanger,
           ]}
         >
           <Ionicons
-            name="time-outline"
+            name={
+              test?.type === "live"
+                ? "radio-button-on"
+                : "time-outline"
+            }
             size={15}
             color={
-              secondsLeft <= 60
+              secondsLeft <= 60 ||
+              test?.type === "live"
                 ? colors.danger
                 : colors.brand
             }
@@ -1043,7 +1273,8 @@ export default function TestTakingScreen({
           <Text
             style={[
               styles.timerText,
-              secondsLeft <= 60 &&
+              (secondsLeft <= 60 ||
+                test?.type === "live") &&
                 styles.timerTextDanger,
             ]}
           >

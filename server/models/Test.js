@@ -29,6 +29,9 @@ const testSchema = new mongoose.Schema(
     scheduledAt: { type: Date },
     liveStatus: { type: String, enum: ["upcoming", "live", "completed"] },
     participantCount: { type: Number, default: 0 },
+    // Set once the "starts in 15 minutes" push reminder has gone out, so the
+    // scheduler tick never sends it twice.
+    reminderSentAt: { type: Date },
 
     // Access control
     isFree: { type: Boolean, default: false },

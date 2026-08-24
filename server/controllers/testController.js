@@ -191,6 +191,11 @@ async function getTest(req, res) {
   // wall-clock moment for everyone. Without this check the "live" exam was
   // live in name only - any student could open it days early, take it
   // alone, and land on a leaderboard against people who hadn't sat it yet.
+  //
+  // One Attempt lookup is reused for everything below (already-attempted
+  // check, free-trial accounting, and creating the in-progress record) -
+  // it used to be two separate queries for the same fact.
+  let liveAttempt = null;
   if (test.type === "live") {
     const state = liveState(test);
     const { startsAt, endsAt } = liveWindow(test);
@@ -215,24 +220,20 @@ async function getTest(req, res) {
 
     // One shot only - a live exam can't be re-entered after submitting,
     // the way a practice test can.
-    const existing = await Attempt.findOne({ user: req.user._id, test: test._id });
-    if (existing && existing.status !== "in_progress") {
+    liveAttempt = await Attempt.findOne({ user: req.user._id, test: test._id });
+    if (liveAttempt && liveAttempt.status !== "in_progress") {
       return res.status(403).json({
         message: "You've already submitted this live exam.",
         code: "LIVE_ALREADY_ATTEMPTED",
-        attemptId: existing._id,
+        attemptId: liveAttempt._id,
       });
     }
-  }
 
-  // Live exams: a genuine "N free tries, then subscribe" trial. Revisiting a
-  // test the student already started (e.g. resuming, or reviewing after
-  // submit) never counts again - only a genuinely NEW live exam uses up a
-  // free slot.
-  if (test.type === "live" && !hasActiveSubscription(req.user)) {
-    const alreadyStarted = await Attempt.exists({ user: req.user._id, test: test._id });
-
-    if (!alreadyStarted) {
+    // Live exams: a genuine "N free tries, then subscribe" trial. Revisiting
+    // a test the student already started (e.g. resuming, or reviewing after
+    // submit) never counts again - only a genuinely NEW live exam uses up a
+    // free slot.
+    if (!liveAttempt && !hasActiveSubscription(req.user)) {
       const used = req.user.freeUsage.liveExamsUsed;
 
       if (used >= FREE_LIVE_EXAMS) {
@@ -243,6 +244,16 @@ async function getTest(req, res) {
       }
 
       await User.findByIdAndUpdate(req.user._id, { $inc: { "freeUsage.liveExamsUsed": 1 } });
+    }
+
+    // Create the in-progress record right at entry, not at submit. This is
+    // what makes synchronized submission possible: without an Attempt
+    // existing from the moment the student walks in, a student who never
+    // taps submit leaves absolutely no trace, and nothing can ever
+    // auto-finalize them when the shared window closes (see
+    // server/jobs/liveExamScheduler.js).
+    if (!liveAttempt) {
+      liveAttempt = await Attempt.create({ user: req.user._id, test: test._id, status: "in_progress", answers: [] });
     }
   }
 
@@ -361,143 +372,237 @@ async function createWeeklyRevision(req, res) {
 
 // POST /api/tests/:id/submit
 // body: { answers: [{ questionId, selectedIndex, timeTakenSeconds }] }
+// Grades a set of raw answers against a (questions-populated) test and
+// writes the result to an Attempt - either updating one that already
+// exists (a live exam's in-progress record, created at entry - see
+// getTest) or creating a fresh one (every other test type still creates
+// its Attempt at submit time, same as before).
+//
+// Shared by the manual submit endpoint AND server/jobs/liveExamScheduler.js
+// (which finalizes anyone still "in_progress" once a live exam's shared
+// window closes) - one grading implementation, so a scheduler-finalized
+// result is scored identically to a manually-submitted one.
+async function finalizeAttempt(test, userId, answers, options = {}) {
+  const { attemptDoc, autoSubmitted, integrityFlags, language } = options;
+  const answerMap = new Map((answers || []).map((a) => [String(a.questionId), a]));
+
+  let correctCount = 0;
+  let wrongCount = 0;
+  let skippedCount = 0;
+  let totalTime = 0;
+  const evaluatedAnswers = [];
+  const topicUpdates = {}; // for updating user.topicStats
+
+  for (const q of test.questions) {
+    const given = answerMap.get(String(q._id));
+    const selectedIndex = given?.selectedIndex ?? null;
+    const timeTaken = given?.timeTakenSeconds || 0;
+    totalTime += timeTaken;
+
+    let isCorrect = false;
+    if (selectedIndex === null || selectedIndex === undefined) {
+      skippedCount++;
+    } else if (selectedIndex === q.correctIndex) {
+      isCorrect = true;
+      correctCount++;
+    } else {
+      wrongCount++;
+    }
+
+    evaluatedAnswers.push({
+      question: q._id,
+      selectedIndex,
+      isCorrect,
+      timeTakenSeconds: timeTaken,
+      markedForReview: given?.markedForReview || false,
+    });
+
+    // Track per-topic stats for the recommendation engine
+    const key = `${q.subject}|${q.topic}`;
+    if (!topicUpdates[key]) topicUpdates[key] = { subject: q.subject, topic: q.topic, attempted: 0, correct: 0 };
+    if (selectedIndex !== null && selectedIndex !== undefined) {
+      topicUpdates[key].attempted++;
+      if (isCorrect) topicUpdates[key].correct++;
+    }
+
+    // Update global question stats (used to auto-flag confusing questions)
+    q.timesAttempted++;
+    if (isCorrect) q.timesCorrect++;
+    q.wrongAnswerRate = q.timesAttempted > 0 ? 1 - q.timesCorrect / q.timesAttempted : 0;
+    if (q.wrongAnswerRate >= 0.8 && q.timesAttempted >= 20 && q.status === "published") {
+      q.status = "under_review";
+      q.flagReason = `High wrong-answer rate (${Math.round(q.wrongAnswerRate * 100)}%) - possible error or genuinely hard`;
+    }
+    await q.save();
+  }
+
+  const marksPerQ = test.marksPerQuestion || 1;
+  const negMark = test.negativeMarking ?? 0.25;
+  const totalMarks = test.questions.length * marksPerQ;
+  const score = correctCount * marksPerQ - wrongCount * negMark;
+  const accuracy = correctCount + wrongCount > 0 ? Math.round((correctCount / (correctCount + wrongCount)) * 100) : 0;
+
+  const attemptData = {
+    answers: evaluatedAnswers,
+    score,
+    totalMarks,
+    correctCount,
+    wrongCount,
+    skippedCount,
+    accuracy,
+    totalTimeTakenSeconds: totalTime,
+    status: autoSubmitted ? "auto_submitted" : "submitted",
+    submittedAt: new Date(),
+    language: language === "hi" ? "hi" : "en",
+  };
+  if (integrityFlags) attemptData.integrityFlags = integrityFlags;
+
+  let attempt;
+  if (attemptDoc) {
+    Object.assign(attemptDoc, attemptData);
+    attempt = attemptDoc;
+    await attempt.save();
+  } else {
+    attempt = await Attempt.create({ user: userId, test: test._id, ...attemptData });
+  }
+
+  // Update user's per-topic accuracy stats (drives "Aaj Ka Test" + weak topic detection)
+  const user = await User.findById(userId);
+  for (const key in topicUpdates) {
+    const upd = topicUpdates[key];
+    if (upd.attempted === 0) continue;
+    let stat = user.topicStats.find((t) => t.subject === upd.subject && t.topic === upd.topic);
+    if (!stat) {
+      stat = { subject: upd.subject, topic: upd.topic, examType: test.examType, attempted: 0, correct: 0, accuracy: 0 };
+      user.topicStats.push(stat);
+    }
+    stat.attempted += upd.attempted;
+    stat.correct += upd.correct;
+    stat.accuracy = Math.round((stat.correct / stat.attempted) * 100);
+    stat.lastAttemptedAt = new Date();
+  }
+  // Streak update
+  const today = new Date().toDateString();
+  const lastActive = user.lastActiveDate ? new Date(user.lastActiveDate).toDateString() : null;
+  if (lastActive !== today) {
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    user.streakCount = lastActive === yesterday ? user.streakCount + 1 : 1;
+    user.lastActiveDate = new Date();
+  }
+  await user.save();
+
+  // Live exam rank calculation (if applicable). Excludes still-in-progress
+  // attempts - once a live exam creates an Attempt at entry (not just at
+  // submit), a mid-exam attempt sitting at its default score:0 would
+  // otherwise pollute the rank of anyone who has already finished with a
+  // negative (negative-marking) score.
+  if (test.type === "live") {
+    const better = await Attempt.countDocuments({ test: test._id, status: { $ne: "in_progress" }, score: { $gt: score } });
+    attempt.rank = better + 1;
+    const totalParticipants = await Attempt.countDocuments({ test: test._id, status: { $ne: "in_progress" } });
+    attempt.percentile = totalParticipants > 0 ? Math.round(((totalParticipants - attempt.rank) / totalParticipants) * 100) : null;
+    await attempt.save();
+  }
+
+  // Adaptive difficulty: if this was a chapter-practice test, update the
+  // student's mastery for that chapter and possibly promote them a level.
+  let levelUpdate = null;
+  if (test.examType === "CHAPTER_PRACTICE" && test.subject && test.topic) {
+    levelUpdate = await updateChapterMastery(userId, test.subject, test.topic, accuracy);
+  }
+
+  return { attempt, score, totalMarks, correctCount, wrongCount, skippedCount, accuracy, levelUpdate };
+}
+
 async function submitTest(req, res) {
   try {
     const test = await Test.findById(req.params.id).populate("questions");
     if (!test) return res.status(404).json({ message: "Test not found" });
 
-    const { answers, language } = req.body;
-    const answerMap = new Map(answers.map((a) => [String(a.questionId), a]));
-    const attemptLanguage = language === "hi" ? "hi" : "en";
+    const { answers, language, integrityFlags } = req.body;
 
-    let correctCount = 0;
-    let wrongCount = 0;
-    let skippedCount = 0;
-    let totalTime = 0;
-    const evaluatedAnswers = [];
-    const topicUpdates = {}; // for updating user.topicStats
-
-    for (const q of test.questions) {
-      const given = answerMap.get(String(q._id));
-      const selectedIndex = given?.selectedIndex ?? null;
-      const timeTaken = given?.timeTakenSeconds || 0;
-      totalTime += timeTaken;
-
-      let isCorrect = false;
-      if (selectedIndex === null || selectedIndex === undefined) {
-        skippedCount++;
-      } else if (selectedIndex === q.correctIndex) {
-        isCorrect = true;
-        correctCount++;
-      } else {
-        wrongCount++;
+    // Live exams already have an in-progress Attempt from the moment the
+    // student entered (see getTest). Reuse it instead of creating a second
+    // record, and treat an already-finalized one as "nothing to do" rather
+    // than an error - the scheduler in server/jobs/liveExamScheduler.js can
+    // legitimately finalize a straggler moments before their own submit
+    // request lands.
+    let attemptDoc = null;
+    if (test.type === "live") {
+      attemptDoc = await Attempt.findOne({ user: req.user._id, test: test._id });
+      if (attemptDoc && attemptDoc.status !== "in_progress") {
+        return res.json({
+          attemptId: attemptDoc._id,
+          score: attemptDoc.score,
+          totalMarks: attemptDoc.totalMarks,
+          correctCount: attemptDoc.correctCount,
+          wrongCount: attemptDoc.wrongCount,
+          skippedCount: attemptDoc.skippedCount,
+          accuracy: attemptDoc.accuracy,
+          rank: attemptDoc.rank,
+          percentile: attemptDoc.percentile,
+          levelUpdate: null,
+          alreadyFinalized: true,
+        });
       }
-
-      evaluatedAnswers.push({
-        question: q._id,
-        selectedIndex,
-        isCorrect,
-        timeTakenSeconds: timeTaken,
-        markedForReview: given?.markedForReview || false,
-      });
-
-      // Track per-topic stats for the recommendation engine
-      const key = `${q.subject}|${q.topic}`;
-      if (!topicUpdates[key]) topicUpdates[key] = { subject: q.subject, topic: q.topic, attempted: 0, correct: 0 };
-      if (selectedIndex !== null && selectedIndex !== undefined) {
-        topicUpdates[key].attempted++;
-        if (isCorrect) topicUpdates[key].correct++;
-      }
-
-      // Update global question stats (used to auto-flag confusing questions)
-      q.timesAttempted++;
-      if (isCorrect) q.timesCorrect++;
-      q.wrongAnswerRate = q.timesAttempted > 0 ? 1 - q.timesCorrect / q.timesAttempted : 0;
-      if (q.wrongAnswerRate >= 0.8 && q.timesAttempted >= 20 && q.status === "published") {
-        q.status = "under_review";
-        q.flagReason = `High wrong-answer rate (${Math.round(q.wrongAnswerRate * 100)}%) - possible error or genuinely hard`;
-      }
-      await q.save();
     }
 
-    const marksPerQ = test.marksPerQuestion || 1;
-    const negMark = test.negativeMarking ?? 0.25;
-    const totalMarks = test.questions.length * marksPerQ;
-    const score = correctCount * marksPerQ - wrongCount * negMark;
-    const accuracy = correctCount + wrongCount > 0 ? Math.round((correctCount / (correctCount + wrongCount)) * 100) : 0;
-
-    const attempt = await Attempt.create({
-      user: req.user._id,
-      test: test._id,
-      answers: evaluatedAnswers,
-      score,
-      totalMarks,
-      correctCount,
-      wrongCount,
-      skippedCount,
-      accuracy,
-      totalTimeTakenSeconds: totalTime,
-      status: "submitted",
-      submittedAt: new Date(),
-      language: attemptLanguage,
+    const result = await finalizeAttempt(test, req.user._id, answers, {
+      attemptDoc,
+      language,
+      integrityFlags,
     });
 
-    // Update user's per-topic accuracy stats (drives "Aaj Ka Test" + weak topic detection)
-    const user = await User.findById(req.user._id);
-    for (const key in topicUpdates) {
-      const upd = topicUpdates[key];
-      if (upd.attempted === 0) continue;
-      let stat = user.topicStats.find((t) => t.subject === upd.subject && t.topic === upd.topic);
-      if (!stat) {
-        stat = { subject: upd.subject, topic: upd.topic, examType: test.examType, attempted: 0, correct: 0, accuracy: 0 };
-        user.topicStats.push(stat);
-      }
-      stat.attempted += upd.attempted;
-      stat.correct += upd.correct;
-      stat.accuracy = Math.round((stat.correct / stat.attempted) * 100);
-      stat.lastAttemptedAt = new Date();
-    }
-    // Streak update
-    const today = new Date().toDateString();
-    const lastActive = user.lastActiveDate ? new Date(user.lastActiveDate).toDateString() : null;
-    if (lastActive !== today) {
-      const yesterday = new Date(Date.now() - 86400000).toDateString();
-      user.streakCount = lastActive === yesterday ? user.streakCount + 1 : 1;
-      user.lastActiveDate = new Date();
-    }
-    await user.save();
-
-    // Live exam rank calculation (if applicable)
-    if (test.type === "live") {
-      const better = await Attempt.countDocuments({ test: test._id, score: { $gt: score } });
-      attempt.rank = better + 1;
-      const totalParticipants = await Attempt.countDocuments({ test: test._id });
-      attempt.percentile = Math.round(((totalParticipants - attempt.rank) / totalParticipants) * 100);
-      await attempt.save();
-    }
-
-    // Adaptive difficulty: if this was a chapter-practice test, update the
-    // student's mastery for that chapter and possibly promote them a level.
-    let levelUpdate = null;
-    if (test.examType === "CHAPTER_PRACTICE" && test.subject && test.topic) {
-      levelUpdate = await updateChapterMastery(req.user._id, test.subject, test.topic, accuracy);
-    }
-
     res.json({
-      attemptId: attempt._id,
-      score,
-      totalMarks,
-      correctCount,
-      wrongCount,
-      skippedCount,
-      accuracy,
-      rank: attempt.rank,
-      percentile: attempt.percentile,
-      levelUpdate, // { newLevel, isCompleted } when a chapter test promoted the student
+      attemptId: result.attempt._id,
+      score: result.score,
+      totalMarks: result.totalMarks,
+      correctCount: result.correctCount,
+      wrongCount: result.wrongCount,
+      skippedCount: result.skippedCount,
+      accuracy: result.accuracy,
+      rank: result.attempt.rank,
+      percentile: result.attempt.percentile,
+      levelUpdate: result.levelUpdate, // { newLevel, isCompleted } when a chapter test promoted the student
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to submit test", error: err.message });
+  }
+}
+
+// PATCH /api/tests/:id/progress -> periodic autosave during a live exam
+// Persists raw (ungraded) answers onto the in-progress Attempt created at
+// entry, so a student who never taps submit still has their real progress
+// on record for the scheduler to finalize when the shared window closes.
+async function saveLiveProgress(req, res) {
+  try {
+    const { answers, integrityFlags } = req.body;
+    const attempt = await Attempt.findOne({ user: req.user._id, test: req.params.id, status: "in_progress" });
+    // Nothing to save against - either the student never entered (shouldn't
+    // happen, getTest creates it) or it's already been finalized. Either
+    // way, silently no-op rather than error - autosave must never interrupt
+    // the student.
+    if (!attempt) return res.json({ saved: false });
+
+    attempt.answers = (answers || []).map((a) => ({
+      question: a.questionId,
+      selectedIndex: a.selectedIndex ?? null,
+      isCorrect: false, // graded only at finalize time
+      timeTakenSeconds: a.timeTakenSeconds || 0,
+      markedForReview: a.markedForReview || false,
+    }));
+    // Keep the integrity snapshot current too, so a straggler the scheduler
+    // has to finalize (see server/jobs/liveExamScheduler.js) still carries
+    // an accurate background-app count instead of whatever was true at entry.
+    if (integrityFlags) attempt.integrityFlags = integrityFlags;
+    await attempt.save();
+
+    res.json({ saved: true });
+  } catch (err) {
+    // Same reasoning as above - autosave failing silently beats surfacing
+    // an error mid-exam over something the student can't act on.
+    res.json({ saved: false });
   }
 }
 
@@ -811,6 +916,8 @@ module.exports = {
   getTodayTest,
   createWeeklyRevision,
   submitTest,
+  saveLiveProgress,
+  finalizeAttempt,
   getAttemptResult,
   getPyqList,
   getPyqYears,

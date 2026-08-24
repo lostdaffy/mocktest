@@ -7,6 +7,7 @@ const {
   googleAuth,
   getMe,
   updateProfile,
+  registerPushToken,
   requestOtp,
   loginWithOtp,
   resetPassword,
@@ -22,5 +23,6 @@ router.post("/login-otp", loginWithOtp); // mobile + OTP login
 router.post("/reset-password", resetPassword); // reset password using OTP
 router.get("/me", protect, getMe);
 router.patch("/profile", protect, updateProfile);
+router.post("/push-token", protect, registerPushToken);
 
 module.exports = router;

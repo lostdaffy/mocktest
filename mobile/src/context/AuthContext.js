@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../api/client";
 import AppAlert from "../components/AppAlert";
+import { registerForPushNotifications } from "../utils/notifications";
 
 const AuthContext = createContext(null);
 
@@ -52,6 +53,10 @@ export function AuthProvider({ children }) {
     await AsyncStorage.setItem("token", data.token);
     await AsyncStorage.setItem("user", JSON.stringify(data.user));
     setUser(data.user);
+    // Fire-and-forget: covers every login path (password, OTP, Google,
+    // signup) since they all funnel through here. Never awaited by the
+    // caller - a slow/denied permission prompt must not block login.
+    registerForPushNotifications(api);
   }
 
   async function login(phone, password) {

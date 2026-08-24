@@ -8,6 +8,7 @@ const {
   getTodayTest,
   createWeeklyRevision,
   submitTest,
+  saveLiveProgress,
   getAttemptResult,
   listMyAttempts,
   getFreeLimits,
@@ -37,6 +38,7 @@ router.post("/generate/full-mock", protect, createFullMock);
 router.post("/generate/topic", protect, createTopicTest); // topic-wise: always free, unlimited
 router.post("/generate/weekly-revision", protect, createWeeklyRevision);
 router.post("/:id/submit", protect, submitTest);
+router.patch("/:id/progress", protect, saveLiveProgress);
 router.get("/attempts/:attemptId", protect, getAttemptResult);
 
 module.exports = router;

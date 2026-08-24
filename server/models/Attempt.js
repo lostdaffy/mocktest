@@ -30,6 +30,14 @@ const attemptSchema = new mongoose.Schema(
     status: { type: String, enum: ["in_progress", "submitted", "auto_submitted"], default: "in_progress" },
     submittedAt: { type: Date },
 
+    // Basic live-exam integrity signal: how many times, and for how long,
+    // the student left the app mid-attempt. Not used to auto-disqualify -
+    // just surfaced to the admin so a suspicious attempt can be reviewed.
+    integrityFlags: {
+      backgroundCount: { type: Number, default: 0 },
+      backgroundSeconds: { type: Number, default: 0 },
+    },
+
     // Which language the student actually took the test in (the toggle in
     // TestTakingScreen). Stored so the result/review screen can show the
     // same textHi/optionsHi/solutionHi content instead of always falling

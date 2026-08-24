@@ -286,6 +286,18 @@ async function updateProfile(req, res) {
   }
 }
 
+// POST /api/auth/push-token  { token }
+// Registers this device's Expo push token, used for live-exam start
+// reminders. Overwritten on every call - always reflects whichever device
+// the student most recently logged in on.
+async function registerPushToken(req, res) {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ message: "token chahiye" });
+
+  await User.findByIdAndUpdate(req.user._id, { pushToken: token });
+  res.json({ message: "Push token saved" });
+}
+
 // POST /api/auth/request-otp  { phone }
 // Used for BOTH "login with OTP" and "forgot password". Generates a 6-digit
 // OTP tied to the phone number and delivers it via real SMS.
@@ -385,6 +397,7 @@ module.exports = {
   googleAuth,
   getMe,
   updateProfile,
+  registerPushToken,
   requestOtp,
   loginWithOtp,
   resetPassword,

@@ -62,6 +62,11 @@ const userSchema = new mongoose.Schema(
     // review" which is a per-attempt, in-exam-only flag)
     bookmarkedQuestions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Question" }],
 
+    // Expo push token for this device, used for live-exam start reminders.
+    // Overwritten on every login/signup, so it always reflects the device
+    // the student most recently used.
+    pushToken: { type: String },
+
     // Referral system
     referralCode: { type: String, unique: true, sparse: true, index: true }, // this user's own code to share
     referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }, // who referred this user

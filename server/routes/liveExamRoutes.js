@@ -11,6 +11,7 @@ const {
   publishLiveExam,
   cancelLiveExam,
   deleteLiveExam,
+  getLiveExamAttempts,
 } = require("../controllers/liveExamController");
 const { protect, adminOnly } = require("../middleware/auth");
 
@@ -22,6 +23,7 @@ router.get("/:id", protect, adminOnly, getLiveExamForReview);
 router.patch("/:id", protect, adminOnly, updateLiveExam);
 router.delete("/:id", protect, adminOnly, deleteLiveExam);
 router.get("/:id/section-status", protect, adminOnly, getLiveExamSectionStatus);
+router.get("/:id/attempts", protect, adminOnly, getLiveExamAttempts);
 router.post("/:id/add-questions", protect, adminOnly, addQuestionsToLiveExam);
 router.delete("/:id/question/:questionId", protect, adminOnly, removeQuestionFromLiveExam);
 router.patch("/:id/publish", protect, adminOnly, publishLiveExam);

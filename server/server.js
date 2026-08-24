@@ -120,6 +120,11 @@ const PORT = process.env.PORT || 5000;
 async function start() {
   await connectDB();
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+  // The only background job in this app - see server/jobs/liveExamScheduler.js
+  // for what it does. Runs every 30s for the lifetime of the process.
+  const { runLiveExamTick } = require("./jobs/liveExamScheduler");
+  setInterval(runLiveExamTick, 30_000);
 }
 
 start();
