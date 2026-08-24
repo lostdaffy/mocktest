@@ -3,15 +3,19 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
-    // Not required anymore - a Google-signup user may never set a phone.
-    // Still unique when present (sparse index allows many nulls).
+    // Signup is phone-only now, so every new account has one. Kept sparse
+    // rather than required because accounts created back when Google
+    // Sign-In existed may have no phone at all.
     phone: { type: String, unique: true, sparse: true, trim: true, index: true },
     email: { type: String, trim: true, lowercase: true, unique: true, sparse: true, default: null },
-    // Not required anymore - a Google-signup user authenticates via Google,
-    // not a password. Phone+password users always have this set.
+    // Every phone-signup account has this. Optional only for the legacy
+    // Google-created accounts described above, which log in via OTP.
     passwordHash: { type: String, select: false },
     passwordResetOTPHash: { type: String, select: false },
     passwordResetExpires: { type: Date, select: false },
+    // Google Sign-In has been removed. These two stay on the schema so
+    // pre-existing documents still load and validate - nothing writes them
+    // any more.
     googleId: { type: String, unique: true, sparse: true, index: true },
     authProvider: { type: String, enum: ["password", "google"], default: "password" },
 

@@ -53,7 +53,7 @@ export function AuthProvider({ children }) {
     await AsyncStorage.setItem("token", data.token);
     await AsyncStorage.setItem("user", JSON.stringify(data.user));
     setUser(data.user);
-    // Fire-and-forget: covers every login path (password, OTP, Google,
+    // Fire-and-forget: covers every login path (password, OTP,
     // signup) since they all funnel through here. Never awaited by the
     // caller - a slow/denied permission prompt must not block login.
     registerForPushNotifications(api);
@@ -74,14 +74,6 @@ export function AuthProvider({ children }) {
   async function loginWithOtp(phone, otp) {
     const res = await api.post("/auth/login-otp", { phone, otp });
     await persistSession(res.data);
-  }
-
-  // Signs in (or signs up, on first use) with a Google ID token obtained
-  // client-side via expo-auth-session.
-  async function googleLogin(idToken) {
-    const res = await api.post("/auth/google", { idToken });
-    await persistSession(res.data);
-    return res.data; // { user, isNewUser }
   }
 
   async function sendSignupOtp(phone) {
@@ -117,7 +109,6 @@ export function AuthProvider({ children }) {
         login,
         signup,
         sendSignupOtp,
-        googleLogin,
         logout,
         refreshUser,
         requestOtp,

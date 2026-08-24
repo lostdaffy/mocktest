@@ -18,8 +18,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "../context/AuthContext";
-import GoogleSignInButton from "../components/GoogleSignInButton";
-import { GOOGLE_SIGNIN_ENABLED } from "../config/google";
 
 import {
   colors,
@@ -821,55 +819,6 @@ export default function LoginScreen({
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* =================================================
-              GOOGLE
-          ================================================= */}
-
-          {GOOGLE_SIGNIN_ENABLED && (
-            <>
-              <View
-                style={
-                  styles.dividerRow
-                }
-              >
-                <View
-                  style={
-                    styles.dividerLine
-                  }
-                />
-
-                <View
-                  style={
-                    styles.dividerBadge
-                  }
-                >
-                  <Text
-                    style={
-                      styles.dividerText
-                    }
-                  >
-                    OR
-                  </Text>
-                </View>
-
-                <View
-                  style={
-                    styles.dividerLine
-                  }
-                />
-              </View>
-
-              <View
-                style={
-                  styles.googleButtonWrap
-                }
-              >
-                <GoogleSignInButton
-                  label="Continue with Google"
-                />
-              </View>
-            </>
-          )}
         </View>
 
         {/* =================================================
@@ -1417,54 +1366,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
 
     justifyContent: "center",
-  },
-
-  /* =======================================================
-     GOOGLE
-  ======================================================= */
-
-  googleButtonWrap: {
-    zIndex: 50,
-
-    elevation: 4,
-  },
-
-  /* =======================================================
-     DIVIDER
-  ======================================================= */
-
-  dividerRow: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    gap: 9,
-
-    marginVertical: spacing.md,
-
-    zIndex: 40,
-  },
-
-  dividerLine: {
-    flex: 1,
-
-    height: 1,
-
-    backgroundColor: colors.border,
-  },
-
-  dividerBadge: {
-    paddingHorizontal: 5,
-  },
-
-  dividerText: {
-    ...type.tiny,
-
-    color: colors.slateSoft,
-
-    fontWeight: "800",
-
-    letterSpacing: 0.5,
   },
 
   /* =======================================================

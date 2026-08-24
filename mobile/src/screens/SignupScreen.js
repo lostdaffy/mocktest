@@ -19,8 +19,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "../context/AuthContext";
-import GoogleSignInButton from "../components/GoogleSignInButton";
-import { GOOGLE_SIGNIN_ENABLED } from "../config/google";
 
 import {
   colors,
@@ -367,49 +365,6 @@ export default function SignupScreen({
               : `Code sent to +91 ${phone}`}
           </Text>
         </View>
-
-        {/* =================================================
-            GOOGLE
-        ================================================= */}
-
-        {step === 1 &&
-          GOOGLE_SIGNIN_ENABLED && (
-            <View
-              style={
-                styles.googleWrap
-              }
-            >
-              <GoogleSignInButton
-                label="Sign up with Google"
-              />
-
-              <View
-                style={
-                  styles.dividerRow
-                }
-              >
-                <View
-                  style={
-                    styles.dividerLine
-                  }
-                />
-
-                <Text
-                  style={
-                    styles.dividerText
-                  }
-                >
-                  OR SIGN UP WITH PHONE
-                </Text>
-
-                <View
-                  style={
-                    styles.dividerLine
-                  }
-                />
-              </View>
-            </View>
-          )}
 
         {/* =================================================
             CARD
@@ -1244,50 +1199,6 @@ const styles = StyleSheet.create({
       "center",
 
     maxWidth: 310,
-  },
-
-  /* =======================================================
-     GOOGLE
-  ======================================================= */
-
-  googleWrap: {
-    marginBottom:
-      spacing.md,
-  },
-
-  dividerRow: {
-    flexDirection:
-      "row",
-
-    alignItems:
-      "center",
-
-    gap: 10,
-
-    marginTop:
-      spacing.md,
-  },
-
-  dividerLine: {
-    flex: 1,
-
-    height: 1,
-
-    backgroundColor:
-      colors.border,
-  },
-
-  dividerText: {
-    fontSize: 9,
-
-    fontWeight:
-      "800",
-
-    color:
-      colors.slateSoft,
-
-    letterSpacing:
-      0.35,
   },
 
   /* =======================================================

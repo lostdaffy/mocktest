@@ -37,7 +37,7 @@ export function configureNotificationHandler() {
 
 // Requests permission and grabs this device's Expo push token, then persists
 // it server-side (see AuthContext.js, called right after
-// login/signup/OTP/Google - whichever the student used). Never throws - a
+// login/signup/OTP - whichever the student used). Never throws - a
 // student who denies the permission, or is on Expo Go / a simulator with no
 // push capability, should just carry on using the app normally.
 export async function registerForPushNotifications(api) {

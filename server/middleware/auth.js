@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 // Verifies the JWT AND that it's still the most recent one issued for this
-// user. Every login (password, OTP, or Google) generates a fresh
+// user. Every login (password or OTP) generates a fresh
 // activeSessionId and embeds it in the token; if a newer login has
 // happened since this token was issued, the value here won't match
 // anymore and the request is rejected - this is the single-device

@@ -252,14 +252,32 @@ export default function ReferralScreen({
     );
   }
 
+  // The API field is referralCredits - reading `info.credits` meant the
+  // balance always rendered as ₹0 no matter how much a student had earned.
   const credits =
     Number(
-      info.credits || 0
+      info.referralCredits || 0
     );
 
   const referralCount =
     Number(
       info.referralCount || 0
+    );
+
+  // Reward amount and the limited-time flag both come from the server
+  // (config/referral.js) so the wording here can never drift from what
+  // students actually get credited.
+  const reward =
+    Number(
+      info.rewardPerSignup || 0
+    );
+
+  const offerActive =
+    info.offerActive !== false;
+
+  const maxDiscountPercent =
+    Number(
+      info.maxDiscountPercent || 50
     );
 
   return (
@@ -434,10 +452,32 @@ export default function ReferralScreen({
                   styles.heroSubtitle
                 }
               >
-                Earn ₹30–₹50 credit when
-                your friend makes their
-                first purchase.
+                Earn ₹{reward} credit every
+                time a friend installs the app
+                with your code.
               </Text>
+
+              {offerActive && (
+                <View
+                  style={
+                    styles.limitedBadge
+                  }
+                >
+                  <Ionicons
+                    name="time-outline"
+                    size={11}
+                    color="#FFFFFF"
+                  />
+
+                  <Text
+                    style={
+                      styles.limitedBadgeText
+                    }
+                  >
+                    LIMITED TIME OFFER
+                  </Text>
+                </View>
+              )}
             </View>
 
             <View
@@ -755,7 +795,7 @@ export default function ReferralScreen({
             num="3"
             icon="wallet-outline"
             title="You earn credit"
-            desc="Get ₹30 for a 6-month plan or ₹50 for a 12-month plan."
+            desc={`₹${reward} lands in your balance as soon as they sign up — no purchase needed.`}
             last
           />
         </View>
@@ -850,9 +890,12 @@ export default function ReferralScreen({
               styles.note
             }
           >
-            Credit can cover up to 50% of a
-            plan. It's earned when your friend
-            makes their first paid purchase.
+            Credit is earned the moment your friend signs up with your code,
+            and is used when you buy a subscription — it can cover up to{" "}
+            {maxDiscountPercent}% of a plan.
+            {offerActive
+              ? " This is a limited-time offer and may be withdrawn later; credit you've already earned stays yours."
+              : ""}
           </Text>
         </View>
       </ScrollView>
@@ -1205,6 +1248,33 @@ const styles =
       color:
         "rgba(255,255,255,0.78)",
       marginTop: 5,
+    },
+
+    limitedBadge: {
+      flexDirection:
+        "row",
+      alignItems:
+        "center",
+      alignSelf:
+        "flex-start",
+      gap: 4,
+      marginTop: 9,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius:
+        radius.full,
+      backgroundColor:
+        "rgba(255,255,255,0.18)",
+      borderWidth: 1,
+      borderColor:
+        "rgba(255,255,255,0.28)",
+    },
+
+    limitedBadgeText: {
+      fontSize: 8,
+      fontWeight: "900",
+      letterSpacing: 0.6,
+      color: "#FFFFFF",
     },
 
     heroArtwork: {

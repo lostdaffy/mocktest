@@ -14,11 +14,10 @@ const PLAN_DURATION_MONTHS = {
   yearly: 12,
 };
 
-// Credit a referrer earns when someone they referred completes a purchase.
-const REFERRAL_REWARD = {
-  half_yearly: 30,
-  yearly: 50,
-};
+// Referral reward lives in config/referral.js now - it's awarded at signup
+// (controllers/authController.js), not here at purchase time. Imported only
+// so getReferralInfo can tell the app what a referral is currently worth.
+const { REFERRAL_SIGNUP_REWARD, REFERRAL_OFFER_ACTIVE } = require("../config/referral");
 
 // Cap how much of a purchase can be paid with referral credits, so a plan
 // is never fully free (protects revenue and discourages fraud rings).
@@ -150,15 +149,10 @@ async function activateSubscription({ razorpayOrderId, razorpayPaymentId, razorp
   buyer.subscriptionPlan = subscription.plan;
   await buyer.save();
 
-  if (buyer.referredBy) {
-    const priorPaid = await Subscription.countDocuments({ user: buyer._id, status: "paid" });
-    if (priorPaid === 1) {
-      const reward = REFERRAL_REWARD[subscription.plan] || 0;
-      await User.findByIdAndUpdate(buyer.referredBy, {
-        $inc: { referralCredits: reward, referralCount: 1 },
-      });
-    }
-  }
+  // NOTE: the referrer is NOT rewarded here any more. The Refer & Earn
+  // payout moved to signup time (see controllers/authController.js and
+  // config/referral.js) - a friend installing the app is now what earns
+  // the credit, not their eventual purchase.
 
   if (subscription.couponCode) {
     try {
@@ -257,7 +251,9 @@ async function getReferralInfo(req, res) {
     referralCode: user.referralCode,
     referralCredits: user.referralCredits,
     referralCount: user.referralCount,
-    rewards: REFERRAL_REWARD,
+    rewardPerSignup: REFERRAL_SIGNUP_REWARD,
+    offerActive: REFERRAL_OFFER_ACTIVE,
+    maxDiscountPercent: MAX_CREDIT_DISCOUNT_PERCENT,
     shareMessage: `Rankveer pe practice karo! Mera referral code "${user.referralCode}" use karo signup pe. SSC, UP Police, Railway, Banking, CTET ke unlimited mock tests, PYQs aur live exams.`,
   });
 }

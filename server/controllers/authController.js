@@ -1,16 +1,10 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 const PhoneOtp = require("../models/PhoneOtp");
 const { generateOtpCode, sendOtp } = require("../services/otpService");
-
-// One or more valid audiences for Google ID tokens - Expo's auth flow can
-// present the Web client ID (proxy flow) or a platform-specific client ID
-// (standalone build), so all configured client IDs are accepted.
-const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_ID || "").split(",").map((s) => s.trim()).filter(Boolean);
-const googleClient = new OAuth2Client();
+const { REFERRAL_SIGNUP_REWARD, REFERRAL_OFFER_ACTIVE } = require("../config/referral");
 
 // Starts a fresh session for a user: generates a new random sessionId,
 // saves it as the ONLY valid one on the User document, and returns a JWT
@@ -28,7 +22,7 @@ async function startSession(user) {
 }
 
 // Shape returned to the client after any successful login/signup - kept in
-// one place so every entry point (password, OTP, Google, signup) returns
+// one place so every entry point (password, OTP, signup) returns
 // exactly the same fields.
 function publicUser(user) {
   return {
@@ -158,6 +152,18 @@ async function signup(req, res) {
       referredBy,
     });
 
+    // Referral payout happens HERE, at signup - see config/referral.js for
+    // why it's on install rather than on the friend's eventual purchase.
+    // Signup happens exactly once per account, so this can't double-pay;
+    // rewardedReferral is still set as an explicit audit trail.
+    if (referredBy && REFERRAL_OFFER_ACTIVE) {
+      await User.findByIdAndUpdate(referredBy, {
+        $inc: { referralCredits: REFERRAL_SIGNUP_REWARD, referralCount: 1 },
+      });
+      user.rewardedReferral = true;
+      await user.save();
+    }
+
     // OTP can't be reused for another signup attempt now that it's done its job.
     await PhoneOtp.deleteOne({ phone: phone.trim() });
 
@@ -180,10 +186,13 @@ async function login(req, res) {
     const user = await User.findOne({ phone }).select("+passwordHash");
     if (!user) return res.status(401).json({ message: "Invalid phone number or password" });
 
+    // Legacy accounts created before Google Sign-In was removed have no
+    // password. OTP login still works for them (it only needs the phone),
+    // so point them there rather than leaving them stuck.
     if (!user.passwordHash) {
       return res.status(400).json({
-        message: "This account was created with Google. Use 'Sign in with Google' instead.",
-        code: "GOOGLE_ACCOUNT",
+        message: "Is account pe password set nahi hai. OTP se login karo, phir Profile mein password bana lo.",
+        code: "NO_PASSWORD_SET",
       });
     }
 
@@ -195,62 +204,6 @@ async function login(req, res) {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Login failed", error: err.message });
-  }
-}
-
-// POST /api/auth/google  { idToken }
-// One button, two jobs: creates a new account on first use, logs in on
-// every use after. If a phone-signup account already exists with the same
-// (verified) email, Google is linked to it instead of creating a duplicate.
-async function googleAuth(req, res) {
-  try {
-    const { idToken } = req.body;
-    if (!idToken) return res.status(400).json({ message: "idToken is required" });
-    if (GOOGLE_CLIENT_IDS.length === 0) {
-      return res.status(500).json({ message: "Google Sign-In isn't configured on the server yet (GOOGLE_CLIENT_ID missing in .env)" });
-    }
-
-    let payload;
-    try {
-      const ticket = await googleClient.verifyIdToken({ idToken, audience: GOOGLE_CLIENT_IDS });
-      payload = ticket.getPayload();
-    } catch (err) {
-      return res.status(401).json({ message: "Google sign-in verification failed. Please try again." });
-    }
-
-    if (!payload?.email_verified) {
-      return res.status(401).json({ message: "Google account email isn't verified" });
-    }
-
-    const email = payload.email.toLowerCase();
-    let user = await User.findOne({ googleId: payload.sub });
-
-    if (!user) {
-      // Same person, previously signed up with phone+password - link
-      // instead of creating a second account for the same email.
-      user = await User.findOne({ email });
-      if (user) {
-        user.googleId = payload.sub;
-        await user.save();
-      }
-    }
-
-    if (!user) {
-      const myReferralCode = await generateUniqueReferralCode(payload.name);
-      user = await User.create({
-        name: payload.name || "Student",
-        email,
-        googleId: payload.sub,
-        authProvider: "google",
-        referralCode: myReferralCode,
-      });
-    }
-
-    const token = await startSession(user);
-    res.json({ token, user: publicUser(user), isNewUser: user.createdAt.getTime() === user.updatedAt.getTime() });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Google sign-in failed", error: err.message });
   }
 }
 
@@ -394,7 +347,6 @@ module.exports = {
   signup,
   sendSignupOtp,
   login,
-  googleAuth,
   getMe,
   updateProfile,
   registerPushToken,
