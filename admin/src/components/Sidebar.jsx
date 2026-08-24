@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   RiDashboardLine,
@@ -74,15 +74,18 @@ export default function Sidebar({ open, onClose }) {
       >
         {/* BRAND */}
         <div className="flex items-center justify-between gap-3 px-5 h-[68px] border-b border-white/10 shrink-0">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xs bg-brand-gradient grid place-items-center font-display font-extrabold shrink-0">
-              R
-            </div>
-            <div className="min-w-0">
-              <p className="font-display font-bold leading-tight truncate">Rankveer</p>
-              <p className="text-[10px] text-white/45 tracking-wide">ADMIN PANEL</p>
-            </div>
-          </div>
+          <Link
+            to="/"
+            onClick={onClose}
+            className="min-w-0 rounded-xs transition-opacity hover:opacity-90"
+            aria-label="Rankveer - go to dashboard"
+          >
+            <img
+              src="/images/brand_logo.png"
+              alt="Rankveer"
+              className="h-full w-auto"
+            />
+          </Link>
 
           <button
             onClick={onClose}

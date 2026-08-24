@@ -642,7 +642,7 @@ export default function SubscriptionScreen({
                   styles.referralSub
                 }
               >
-                Earn ₹30–₹50 credit per
+                Earn ₹5 credit per
                 successful referral
               </Text>
             </View>
@@ -967,8 +967,8 @@ const styles = StyleSheet.create({
   },
 
   heroBadgeText: {
-    fontSize: 7.5,
-    lineHeight: 10,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "900",
     color: "#FFFFFF",
     letterSpacing: 0.55,
@@ -1056,7 +1056,7 @@ const styles = StyleSheet.create({
   },
 
   creditSub: {
-    fontSize: 9.5,
+    fontSize: 10,
     lineHeight: 14,
     color: "#047857",
     marginTop: 1,
@@ -1171,8 +1171,8 @@ const styles = StyleSheet.create({
   },
 
   bestBadgeText: {
-    fontSize: 7,
-    lineHeight: 9,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "900",
     color: "#FFFFFF",
     letterSpacing: 0.45,
@@ -1232,14 +1232,14 @@ const styles = StyleSheet.create({
   },
 
   offText: {
-    fontSize: 7.5,
-    lineHeight: 10,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "900",
     color: colors.danger,
   },
 
   planPerDay: {
-    fontSize: 9.5,
+    fontSize: 12,
     lineHeight: 14,
     color: colors.slate,
     marginTop: 4,
@@ -1247,7 +1247,7 @@ const styles = StyleSheet.create({
   },
 
   planHint: {
-    fontSize: 8.5,
+    fontSize: 11,
     lineHeight: 12,
     color: colors.brand,
     marginTop: 2,
@@ -1324,7 +1324,7 @@ const styles = StyleSheet.create({
   },
 
   referralSub: {
-    fontSize: 9.5,
+    fontSize: 12,
     lineHeight: 14,
     color: colors.slate,
     marginTop: 2,
@@ -1360,8 +1360,8 @@ const styles = StyleSheet.create({
   },
 
   trustText: {
-    fontSize: 8.5,
-    lineHeight: 12,
+    fontSize: 10,
+    lineHeight: 14,
     color: colors.slateSoft,
     fontWeight: "600",
   },
@@ -1403,8 +1403,8 @@ const styles = StyleSheet.create({
   },
 
   footerFrom: {
-    fontSize: 7.5,
-    lineHeight: 10,
+    fontSize: 10,
+    lineHeight: 13,
     color: colors.slateSoft,
     fontWeight: "700",
   },
@@ -1423,7 +1423,7 @@ const styles = StyleSheet.create({
   },
 
   footerOriginal: {
-    fontSize: 9,
+    fontSize: 10,
     lineHeight: 13,
     color: colors.slateSoft,
     textDecorationLine:
@@ -1431,8 +1431,8 @@ const styles = StyleSheet.create({
   },
 
   footerLabel: {
-    fontSize: 8.5,
-    lineHeight: 12,
+    fontSize: 10,
+    lineHeight: 14,
     color: colors.slateSoft,
     fontWeight: "600",
     marginTop: 1,
