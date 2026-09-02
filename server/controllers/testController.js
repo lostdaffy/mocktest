@@ -393,6 +393,13 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
   const evaluatedAnswers = [];
   const topicUpdates = {}; // for updating user.topicStats
 
+  // Per-question stat updates are collected here and flushed as ONE
+  // bulkWrite after the loop. Saving each question individually meant a
+  // 100-question mock did 100 sequential round-trips to MongoDB before the
+  // student saw their result - several seconds of pure network latency on
+  // a hosted DB, and the single biggest cause of slow submits.
+  const questionOps = [];
+
   for (const q of test.questions) {
     const given = answerMap.get(String(q._id));
     const selectedIndex = given?.selectedIndex ?? null;
@@ -426,14 +433,34 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
     }
 
     // Update global question stats (used to auto-flag confusing questions)
-    q.timesAttempted++;
-    if (isCorrect) q.timesCorrect++;
-    q.wrongAnswerRate = q.timesAttempted > 0 ? 1 - q.timesCorrect / q.timesAttempted : 0;
-    if (q.wrongAnswerRate >= 0.8 && q.timesAttempted >= 20 && q.status === "published") {
-      q.status = "under_review";
-      q.flagReason = `High wrong-answer rate (${Math.round(q.wrongAnswerRate * 100)}%) - possible error or genuinely hard`;
+    const timesAttempted = (q.timesAttempted || 0) + 1;
+    const timesCorrect = (q.timesCorrect || 0) + (isCorrect ? 1 : 0);
+    const wrongAnswerRate = timesAttempted > 0 ? 1 - timesCorrect / timesAttempted : 0;
+
+    const update = {
+      $set: { wrongAnswerRate },
+      $inc: { timesAttempted: 1, ...(isCorrect ? { timesCorrect: 1 } : {}) },
+    };
+
+    if (wrongAnswerRate >= 0.8 && timesAttempted >= 20 && q.status === "published") {
+      update.$set.status = "under_review";
+      update.$set.flagReason = `High wrong-answer rate (${Math.round(
+        wrongAnswerRate * 100
+      )}%) - possible error or genuinely hard`;
     }
-    await q.save();
+
+    questionOps.push({ updateOne: { filter: { _id: q._id }, update } });
+  }
+
+  // Fire-and-forget relative to the student: these counters feed admin
+  // dashboards, not the result the student is waiting on, so a failure here
+  // must never turn a successfully-graded attempt into an error.
+  if (questionOps.length > 0) {
+    try {
+      await Question.bulkWrite(questionOps, { ordered: false });
+    } catch (err) {
+      console.error("Question stat bulkWrite failed (attempt still graded):", err.message);
+    }
   }
 
   const marksPerQ = test.marksPerQuestion || 1;

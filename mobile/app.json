@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Smart Test Engine",
+    "name": "Rankveer",
     "slug": "smart-test-engine",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,7 +12,7 @@
     "android": {
       "package": "com.satya.smarttestengine",
       "adaptiveIcon": {
-        "backgroundColor": "#1053F3",
+        "backgroundColor": "#F4F1FC",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -30,7 +30,16 @@
       "expo-secure-store",
       "expo-status-bar",
       "expo-notifications",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 240,
+          "resizeMode": "contain",
+          "backgroundColor": "#F7F8FC"
+        }
+      ]
     ]
   }
 }
