@@ -29,6 +29,24 @@ const { REFERRAL_SIGNUP_REWARD, REFERRAL_OFFER_ACTIVE } = require("../config/ref
 // is never fully free (protects revenue and discourages fraud rings).
 const MAX_CREDIT_DISCOUNT_PERCENT = 50;
 
+// Payments stay OFF while the server holds Razorpay TEST keys. In test mode
+// anyone can "pay" with Razorpay's publicly documented test card numbers and
+// walk away with a real subscription. Putting the live keys (rzp_live_...)
+// in Render switches payments on by itself - the app asks /api/app-config,
+// so no app update is needed. ALLOW_TEST_PAYMENTS=true is for local
+// development only; never set it on the live server.
+function paymentsEnabled() {
+  const keyId = process.env.RAZORPAY_KEY_ID || "";
+  if (!keyId || !process.env.RAZORPAY_KEY_SECRET) return false;
+  if (keyId.startsWith("rzp_test_")) return process.env.ALLOW_TEST_PAYMENTS === "true";
+  return true;
+}
+
+const PAYMENTS_OFF = {
+  message: "Payments abhi shuru nahi hue hain - jaldi aa rahe hain!",
+  code: "PAYMENTS_DISABLED",
+};
+
 function getRazorpayInstance() {
   return new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -39,6 +57,8 @@ function getRazorpayInstance() {
 // POST /api/payments/create-order  { plan: "quarterly" | "half_yearly" | "yearly", useCredits: boolean }
 async function createOrder(req, res) {
   try {
+    if (!paymentsEnabled()) return res.status(503).json(PAYMENTS_OFF);
+
     const { plan, useCredits, couponCode } = req.body;
     const basePrice = PLAN_PRICES[plan];
     if (!basePrice) return res.status(400).json({ message: "Invalid plan" });
@@ -176,6 +196,8 @@ async function activateSubscription({ razorpayOrderId, razorpayPaymentId, razorp
 // body: { razorpay_order_id, razorpay_payment_id, razorpay_signature, subscriptionId }
 async function verifyPayment(req, res) {
   try {
+    if (!paymentsEnabled()) return res.status(503).json(PAYMENTS_OFF);
+
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
     const expectedSignature = crypto
@@ -231,7 +253,9 @@ async function razorpayWebhook(req, res) {
     }
 
     const event = req.body.event;
-    if (event === "payment.captured") {
+    if (event === "payment.captured" && !paymentsEnabled()) {
+      console.warn("payment.captured webhook ignored - payments are disabled (test keys / not configured)");
+    } else if (event === "payment.captured") {
       const payment = req.body.payload?.payment?.entity;
       if (payment?.order_id && payment?.id) {
         await activateSubscription({
@@ -264,4 +288,4 @@ async function getReferralInfo(req, res) {
   });
 }
 
-module.exports = { createOrder, verifyPayment, razorpayWebhook, getReferralInfo, PLAN_PRICES };
+module.exports = { createOrder, verifyPayment, razorpayWebhook, getReferralInfo, PLAN_PRICES, paymentsEnabled };

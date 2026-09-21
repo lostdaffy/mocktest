@@ -135,6 +135,13 @@ export default function SubscriptionScreen({
   const [loadingCredits, setLoadingCredits] =
     useState(true);
 
+  // The server switches payments off while Razorpay is on test keys and
+  // back on (by itself) once live keys are in place. Assumed ON until the
+  // server says otherwise - it enforces this too, so a missed check can't
+  // let a purchase through.
+  const [paymentsOn, setPaymentsOn] =
+    useState(true);
+
   /* =======================================================
      LOAD REFERRAL CREDIT
   ======================================================= */
@@ -162,10 +169,28 @@ export default function SubscriptionScreen({
       }
     }, []);
 
+  const loadPaymentStatus =
+    useCallback(async () => {
+      try {
+        const res = await api.get(
+          "/app-config",
+          { timeout: 8000 }
+        );
+
+        setPaymentsOn(
+          res.data?.paymentsEnabled !==
+            false
+        );
+      } catch (err) {
+        // Non-critical - the server still refuses if payments are off.
+      }
+    }, []);
+
   useFocusEffect(
     useCallback(() => {
       loadCredits();
-    }, [loadCredits])
+      loadPaymentStatus();
+    }, [loadCredits, loadPaymentStatus])
   );
 
   /* =======================================================
@@ -752,8 +777,13 @@ export default function SubscriptionScreen({
         </View>
 
         <TouchableOpacity
-          style={styles.buyWrapper}
+          style={[
+            styles.buyWrapper,
+            !paymentsOn &&
+              styles.buyWrapperDisabled,
+          ]}
           activeOpacity={0.86}
+          disabled={!paymentsOn}
           onPress={() =>
             navigation.navigate(
               "Payment",
@@ -783,13 +813,19 @@ export default function SubscriptionScreen({
                 styles.buyButtonText
               }
             >
-              {isActive
+              {!paymentsOn
+                ? "Payments coming soon"
+                : isActive
                 ? "Renew Now"
                 : "Continue to Payment"}
             </Text>
 
             <Ionicons
-              name="arrow-forward"
+              name={
+                paymentsOn
+                  ? "arrow-forward"
+                  : "time-outline"
+              }
               size={17}
               color="#FFFFFF"
             />
@@ -1436,6 +1472,10 @@ const styles = StyleSheet.create({
     color: colors.slateSoft,
     fontWeight: "600",
     marginTop: 1,
+  },
+
+  buyWrapperDisabled: {
+    opacity: 0.55,
   },
 
   buyWrapper: {

@@ -4,6 +4,7 @@ const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const jwt = require("jsonwebtoken");
 const connectDB = require("./config/db");
+const { paymentsEnabled } = require("./controllers/paymentController");
 
 const authRoutes = require("./routes/authRoutes");
 const questionRoutes = require("./routes/questionRoutes");
@@ -43,6 +44,12 @@ function validateEnv() {
 }
 
 validateEnv();
+
+if (!paymentsEnabled()) {
+  console.warn(
+    "⚠️  Payments are OFF - Razorpay test keys (or no keys) configured. Put the rzp_live_ keys in the environment to turn them on."
+  );
+}
 
 // Not fatal - the app still works - but "forgot password" is dead until
 // this is set, and nobody notices until a student is locked out.
@@ -195,6 +202,9 @@ app.get("/api/app-config", (req, res) => {
       process.env.ANDROID_STORE_URL ||
       "https://play.google.com/store/apps/details?id=com.satya.smarttestengine",
     updateMessage: process.env.APP_UPDATE_MESSAGE || null,
+    // false while Razorpay is on test keys - the app shows "coming soon"
+    // instead of a buy button (see paymentController.paymentsEnabled).
+    paymentsEnabled: paymentsEnabled(),
   });
 });
 
