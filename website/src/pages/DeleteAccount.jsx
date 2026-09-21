@@ -19,7 +19,15 @@ export default function DeleteAccount() {
       <section className="pb-24">
         <div className="wrap">
           <article className="legal-card prose-legal">
-            <h2>How to request deletion</h2>
+            <h2>Delete it yourself in the app (instant)</h2>
+            <ol>
+              <li>Open the {site.brandName} app and go to <strong>Profile</strong>.</li>
+              <li>Tap <strong>Delete account</strong>.</li>
+              <li>Enter your password and tap <strong>Delete forever</strong>. Your account is deleted immediately.</li>
+            </ol>
+
+            <h2>Or request deletion by email</h2>
+            <p>If you no longer have the app or can't sign in:</p>
             <ol>
               <li>Send an email to <SupportEmail /> with the subject <strong>"Delete my account"</strong>.</li>
               <li>Include the <strong>mobile number registered</strong> with your {site.brandName} account.</li>
@@ -45,6 +53,11 @@ export default function DeleteAccount() {
             <ul>
               <li><strong>Payment and invoice records</strong> — kept only for the period required by Indian tax and accounting laws, then deleted.</li>
               <li><strong>Live exam leaderboards</strong> — your entries are removed or anonymised so your name no longer appears.</li>
+              <li>
+                <strong>A scrambled record of your mobile number</strong> — a one-way code (not the number itself) kept for up to 12
+                months, only so the same number can't delete and re-register to claim sign-up offers or free tests again. It
+                can't be turned back into your number.
+              </li>
               <li><strong>Combined statistics</strong> — anonymous totals, such as how many people answered a question correctly, which cannot identify you.</li>
             </ul>
 

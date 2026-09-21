@@ -81,6 +81,14 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
+  // Permanently deletes the account on the server (password required),
+  // then clears this device the same way logout does.
+  async function deleteAccount(password) {
+    await api.post("/auth/delete-account", { password });
+    await AsyncStorage.multiRemove(["token", "user"]);
+    setUser(null);
+  }
+
   // Re-fetches the latest user data from the backend (e.g. after a payment,
   // to get the freshly-updated subscription status without re-login).
   async function refreshUser() {
@@ -100,6 +108,7 @@ export function AuthProvider({ children }) {
         signup,
         sendSignupOtp,
         logout,
+        deleteAccount,
         refreshUser,
       }}
     >

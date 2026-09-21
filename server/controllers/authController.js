@@ -3,6 +3,11 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../models/User");
 const PhoneOtp = require("../models/PhoneOtp");
+const Attempt = require("../models/Attempt");
+const Report = require("../models/Report");
+const Test = require("../models/Test");
+const Subscription = require("../models/Subscription");
+const DeletedAccount = require("../models/DeletedAccount");
 const { generateOtpCode, sendOtp } = require("../services/otpService");
 const { isEmailConfigured, sendPasswordResetCode } = require("../services/emailService");
 const { claimSend, releaseSend, throttleMessage } = require("../utils/sendThrottle");
@@ -82,6 +87,52 @@ function maskEmail(email) {
 }
 
 const isDuplicateKey = (err, field) => err && err.code === 11000 && (!field || JSON.stringify(err.keyPattern || {}).includes(field));
+
+// Keyed with the server secret so the stored value can't be reversed, or
+// matched against a guessed number, by anyone who only has the database.
+// (Rotating JWT_SECRET just means older records stop matching - harmless.)
+const hashPhone = (phone) =>
+  crypto.createHmac("sha256", process.env.JWT_SECRET).update(`deleted-phone:${phone}`).digest("hex");
+
+// Asks an already-logged-in student for their password again before a
+// sensitive action (changing the recovery email, deleting the account).
+// Shares the login lockout counter, so a stolen, unlocked phone can't be
+// used to brute-force the password through these screens either.
+// Returns null when the password is right, otherwise the response to send.
+async function recheckPassword(userId, password, wrongMessage) {
+  const me = await User.findById(userId).select("+passwordHash +failedLoginAttempts +lockUntil");
+  if (!me.passwordHash) return null; // legacy account - there's no password to check
+
+  if (me.lockUntil && me.lockUntil > new Date()) {
+    const minutes = Math.ceil((me.lockUntil - Date.now()) / 60000);
+    return {
+      status: 423,
+      body: { message: `Bahut baar galat password daala gaya. ${minutes} minute baad try karo.`, code: "ACCOUNT_LOCKED" },
+    };
+  }
+
+  if (!password || !(await bcrypt.compare(String(password), me.passwordHash))) {
+    if (password) {
+      const failed = await User.findByIdAndUpdate(
+        me._id,
+        { $inc: { failedLoginAttempts: 1 } },
+        { new: true, select: "+failedLoginAttempts" }
+      );
+      if (failed.failedLoginAttempts >= MAX_LOGIN_FAILURES) {
+        await User.updateOne(
+          { _id: me._id },
+          { $set: { lockUntil: new Date(Date.now() + LOCK_MINUTES * 60 * 1000), failedLoginAttempts: 0 } }
+        );
+      }
+    }
+    return { status: 401, body: { message: wrongMessage, code: "PASSWORD_REQUIRED" } };
+  }
+
+  if (me.failedLoginAttempts) {
+    await User.updateOne({ _id: me._id }, { failedLoginAttempts: 0 });
+  }
+  return null;
+}
 
 // Generates a short, human-friendly referral code (e.g. "SATYA4K2"). Retries
 // on the rare chance of a collision.
@@ -222,6 +273,11 @@ async function signup(req, res) {
     const passwordHash = await bcrypt.hash(password, 10);
     const myReferralCode = await generateUniqueReferralCode(name);
 
+    // Has this number deleted an account before? Then it doesn't get a
+    // second referral payout or a fresh set of free tests - otherwise
+    // delete-and-sign-up-again would be a free, repeatable loop.
+    const priorAccount = await DeletedAccount.findOne({ phoneHash: hashPhone(phone) }).lean();
+
     let user;
     try {
       user = await User.create({
@@ -234,6 +290,7 @@ async function signup(req, res) {
         examGoals: examGoals || [],
         referralCode: myReferralCode,
         referredBy,
+        ...(priorAccount?.freeUsage ? { freeUsage: priorAccount.freeUsage } : {}),
       });
     } catch (err) {
       // Two signups racing for the same phone/email - the unique indexes
@@ -251,7 +308,7 @@ async function signup(req, res) {
     // why it's on install rather than on the friend's eventual purchase.
     // Signup happens exactly once per account, so this can't double-pay;
     // rewardedReferral is still set as an explicit audit trail.
-    if (referredBy && REFERRAL_OFFER_ACTIVE) {
+    if (referredBy && REFERRAL_OFFER_ACTIVE && !priorAccount) {
       await User.findByIdAndUpdate(referredBy, {
         $inc: { referralCredits: REFERRAL_SIGNUP_REWARD, referralCount: 1 },
       });
@@ -372,34 +429,12 @@ async function updateProfile(req, res) {
         // effectively changing who can take over the account. Anyone
         // holding an unlocked phone shouldn't be able to do that silently -
         // ask for the password first.
-        const me = await User.findById(req.user._id).select("+passwordHash +failedLoginAttempts +lockUntil");
-        if (me.passwordHash) {
-          // Shares the login lockout counter, so this box can't be used to
-          // brute-force the password from a stolen, already-logged-in phone.
-          if (me.lockUntil && me.lockUntil > new Date()) {
-            const minutes = Math.ceil((me.lockUntil - Date.now()) / 60000);
-            return res.status(423).json({ message: `Bahut baar galat password daala gaya. ${minutes} minute baad try karo.`, code: "ACCOUNT_LOCKED" });
-          }
-          if (!currentPassword || !(await bcrypt.compare(String(currentPassword), me.passwordHash))) {
-            if (currentPassword) {
-              const failed = await User.findByIdAndUpdate(
-                me._id,
-                { $inc: { failedLoginAttempts: 1 } },
-                { new: true, select: "+failedLoginAttempts" }
-              );
-              if (failed.failedLoginAttempts >= MAX_LOGIN_FAILURES) {
-                await User.updateOne(
-                  { _id: me._id },
-                  { $set: { lockUntil: new Date(Date.now() + LOCK_MINUTES * 60 * 1000), failedLoginAttempts: 0 } }
-                );
-              }
-            }
-            return res.status(401).json({ message: "Email badalne ke liye apna current password sahi daalo", code: "PASSWORD_REQUIRED" });
-          }
-          if (me.failedLoginAttempts) {
-            await User.updateOne({ _id: me._id }, { failedLoginAttempts: 0 });
-          }
-        }
+        const denied = await recheckPassword(
+          req.user._id,
+          currentPassword,
+          "Email badalne ke liye apna current password sahi daalo"
+        );
+        if (denied) return res.status(denied.status).json(denied.body);
         if (await User.findOne({ email: cleanEmail, _id: { $ne: req.user._id } })) {
           return res.status(409).json({ message: "Ye email pehle se kisi aur account mein use ho raha hai", code: "EMAIL_TAKEN" });
         }
@@ -536,6 +571,63 @@ async function resetPassword(req, res) {
   }
 }
 
+// POST /api/auth/delete-account  { password }
+// In-app account deletion (a Play Store requirement). Removes everything
+// rankveer.com/delete-account says is removed. Paid subscription records
+// are kept, as Indian tax/accounting law requires, but they only point at
+// an account id that no longer exists - no name, phone or email is left
+// in them.
+async function deleteAccount(req, res) {
+  try {
+    // The admin account runs the platform - losing it by a stray tap in the
+    // student app would lock everyone out of the admin panel.
+    if (req.user.role === "admin") {
+      return res.status(403).json({ message: "Admin account app se delete nahi ho sakta.", code: "ADMIN_ACCOUNT" });
+    }
+
+    const denied = await recheckPassword(req.user._id, req.body.password, "Account delete karne ke liye apna password sahi daalo");
+    if (denied) return res.status(denied.status).json(denied.body);
+
+    const userId = req.user._id;
+    const phone = req.user.phone;
+    const usage = req.user.freeUsage || {};
+
+    // Recorded first: if anything below fails, the account still exists and
+    // the student can simply try again.
+    if (phone) {
+      await DeletedAccount.findOneAndUpdate(
+        { phoneHash: hashPhone(phone) },
+        {
+          freeUsage: {
+            mockTestsUsed: usage.mockTestsUsed || 0,
+            liveExamsUsed: usage.liveExamsUsed || 0,
+            pyqUsed: usage.pyqUsed || 0,
+          },
+          deletedAt: new Date(),
+        },
+        { upsert: true }
+      );
+    }
+
+    await Promise.all([
+      Attempt.deleteMany({ user: userId }), // results, answers, live-exam ranks
+      Report.deleteMany({ reportedBy: userId }),
+      Test.deleteMany({ generatedForUser: userId }), // their personal practice tests
+      Subscription.deleteMany({ user: userId, status: { $ne: "paid" } }), // unpaid orders aren't tax records
+      phone ? PhoneOtp.deleteMany({ phone }) : null,
+    ]);
+
+    // Last - this also ends every session, since the auth middleware
+    // rejects tokens for users that no longer exist.
+    await User.deleteOne({ _id: userId });
+
+    res.json({ message: "Aapka account aur uska data delete ho gaya hai." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Account delete nahi ho paaya, thodi der baad try karo" });
+  }
+}
+
 module.exports = {
   signup,
   sendSignupOtp,
@@ -545,4 +637,5 @@ module.exports = {
   registerPushToken,
   forgotPassword,
   resetPassword,
+  deleteAccount,
 };

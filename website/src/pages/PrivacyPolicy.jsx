@@ -84,15 +84,17 @@ export default function PrivacyPolicy() {
 
             <h2>5. How long we keep information</h2>
             <p>
-              We keep your information for as long as your account is active. If you ask us to delete your account, we delete or anonymise
-              your personal information within 30 days, except records we must keep by law — such as payment and invoice records needed for
-              tax and accounting — which we keep only for the period the law requires.
+              We keep your information for as long as your account is active. When you delete your account in the app it is deleted
+              immediately; if you ask us by email, we delete or anonymise your personal information within 30 days. The exceptions are
+              records we must keep by law — such as payment and invoice records needed for tax and accounting — which we keep only for the
+              period the law requires, and a one-way scrambled code of your mobile number (not the number itself), kept for up to 12
+              months only to stop the same number re-claiming sign-up offers.
             </p>
 
             <h2>6. Your choices and rights</h2>
             <ul>
               <li><strong>Access and correction:</strong> you can view and edit your name, email and language in the app, or ask us for a copy of your information.</li>
-              <li><strong>Deletion:</strong> you can ask us to delete your account and data — see <Link to="/delete-account/">how to delete your account</Link>.</li>
+              <li><strong>Deletion:</strong> you can delete your account yourself in the app (Profile → Delete account), or ask us by email — see <Link to="/delete-account/">how to delete your account</Link>.</li>
               <li><strong>Notifications:</strong> you can turn off notifications at any time in your phone's settings.</li>
               <li><strong>Withdrawing consent:</strong> you can stop using the Service and request deletion at any time.</li>
             </ul>

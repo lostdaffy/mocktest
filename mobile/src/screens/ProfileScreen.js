@@ -52,6 +52,7 @@ export default function ProfileScreen({
     user,
     logout,
     refreshUser,
+    deleteAccount,
   } = useAuth();
 
   const [savingLang, setSavingLang] =
@@ -73,6 +74,22 @@ export default function ProfileScreen({
 
   const [emailPwError, setEmailPwError] =
     useState("");
+
+  /* =======================================================
+     DELETE ACCOUNT (Play Store requires this in-app)
+  ======================================================= */
+
+  const [deleteOpen, setDeleteOpen] =
+    useState(false);
+
+  const [deletePw, setDeletePw] =
+    useState("");
+
+  const [deleteError, setDeleteError] =
+    useState("");
+
+  const [deleting, setDeleting] =
+    useState(false);
 
   /* =======================================================
      NAME EDIT
@@ -303,6 +320,44 @@ export default function ProfileScreen({
         },
       ]
     );
+  }
+
+  /* =======================================================
+     DELETE ACCOUNT
+  ======================================================= */
+
+  function openDeleteAccount() {
+    setDeletePw("");
+    setDeleteError("");
+    setDeleteOpen(true);
+  }
+
+  async function confirmDeleteAccount() {
+    if (!deletePw) {
+      setDeleteError(
+        "Enter your password to confirm"
+      );
+      return;
+    }
+
+    setDeleting(true);
+    setDeleteError("");
+
+    try {
+      // Signs this device out as well - the screen unmounts right after.
+      await deleteAccount(deletePw);
+
+      AppAlert.alert(
+        "Account deleted",
+        "Your account and its data have been permanently deleted."
+      );
+    } catch (err) {
+      setDeleteError(
+        err.response?.data?.message ||
+          "Couldn't delete the account. Please try again."
+      );
+      setDeleting(false);
+    }
   }
 
   /* =======================================================
@@ -1102,6 +1157,65 @@ export default function ProfileScreen({
           </TouchableOpacity>
 
           {/* =================================================
+              DELETE ACCOUNT
+          ================================================= */}
+
+          <TouchableOpacity
+            style={[
+              styles.logoutCard,
+              styles.deleteCard,
+            ]}
+            onPress={
+              openDeleteAccount
+            }
+            activeOpacity={0.78}
+          >
+            <View
+              style={
+                styles.logoutIcon
+              }
+            >
+              <Ionicons
+                name="trash-outline"
+                size={20}
+                color={
+                  colors.danger
+                }
+              />
+            </View>
+
+            <View
+              style={
+                styles.logoutInfo
+              }
+            >
+              <Text
+                style={
+                  styles.logoutTitle
+                }
+              >
+                Delete account
+              </Text>
+
+              <Text
+                style={
+                  styles.logoutSubtitle
+                }
+              >
+                Permanently remove your account and data
+              </Text>
+            </View>
+
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={
+                colors.danger
+              }
+            />
+          </TouchableOpacity>
+
+          {/* =================================================
               SECURITY
           ================================================= */}
 
@@ -1246,6 +1360,136 @@ export default function ProfileScreen({
                     }
                   >
                     Save
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* =====================================================
+          DELETE ACCOUNT CONFIRMATION
+      ===================================================== */}
+
+      <Modal
+        visible={deleteOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() =>
+          !deleting &&
+          setDeleteOpen(false)
+        }
+      >
+        <View
+          style={
+            styles.modalBackdrop
+          }
+        >
+          <View
+            style={
+              styles.modalCard
+            }
+          >
+            <Text
+              style={
+                styles.modalTitle
+              }
+            >
+              Delete your account?
+            </Text>
+
+            <Text
+              style={
+                styles.modalSubtitle
+              }
+            >
+              This permanently deletes your profile, test results, progress,
+              bookmarks and referral credits. It can't be undone, and any
+              time left on your plan is lost without a refund.
+            </Text>
+
+            <TextInput
+              style={
+                styles.modalInput
+              }
+              value={deletePw}
+              onChangeText={(value) => {
+                setDeletePw(value);
+                setDeleteError("");
+              }}
+              placeholder="Enter your password to confirm"
+              placeholderTextColor={
+                colors.slateSoft
+              }
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="done"
+              onSubmitEditing={
+                confirmDeleteAccount
+              }
+            />
+
+            {deleteError ? (
+              <Text
+                style={
+                  styles.modalError
+                }
+              >
+                {deleteError}
+              </Text>
+            ) : null}
+
+            <View
+              style={
+                styles.modalActions
+              }
+            >
+              <TouchableOpacity
+                style={
+                  styles.modalCancel
+                }
+                activeOpacity={0.8}
+                disabled={deleting}
+                onPress={() =>
+                  setDeleteOpen(false)
+                }
+              >
+                <Text
+                  style={
+                    styles.modalCancelText
+                  }
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modalSave,
+                  styles.modalDanger,
+                  deleting &&
+                    styles.modalSaveDisabled,
+                ]}
+                activeOpacity={0.85}
+                disabled={deleting}
+                onPress={
+                  confirmDeleteAccount
+                }
+              >
+                {deleting ? (
+                  <ActivityIndicator
+                    size="small"
+                    color="#FFFFFF"
+                  />
+                ) : (
+                  <Text
+                    style={
+                      styles.modalSaveText
+                    }
+                  >
+                    Delete forever
                   </Text>
                 )}
               </TouchableOpacity>
@@ -1744,6 +1988,11 @@ const styles =
       paddingHorizontal: 14,
       fontSize: 14,
       color: colors.ink,
+    },
+
+    modalDanger: {
+      backgroundColor:
+        colors.danger,
     },
 
     modalError: {
@@ -2330,6 +2579,12 @@ const styles =
     logoutInfo: {
       flex: 1,
       minWidth: 0,
+    },
+
+    deleteCard: {
+      marginTop: 10,
+      backgroundColor:
+        "transparent",
     },
 
     logoutTitle: {

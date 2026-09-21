@@ -9,6 +9,7 @@ const {
   registerPushToken,
   forgotPassword,
   resetPassword,
+  deleteAccount,
 } = require("../controllers/authController");
 const { protect } = require("../middleware/auth");
 
@@ -20,5 +21,6 @@ router.post("/reset-password", resetPassword); // reset password using the email
 router.get("/me", protect, getMe);
 router.patch("/profile", protect, updateProfile);
 router.post("/push-token", protect, registerPushToken);
+router.post("/delete-account", protect, deleteAccount); // in-app account deletion (Play Store requirement)
 
 module.exports = router;
