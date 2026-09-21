@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -40,6 +41,8 @@ import PyqExamPickerScreen from "./src/screens/PyqExamPickerScreen";
 import PyqYearListScreen from "./src/screens/PyqYearListScreen";
 import PyqPapersScreen from "./src/screens/PyqPapersScreen";
 import NotificationsScreen from "./src/screens/NotificationsScreen";
+import ForceUpdateScreen from "./src/screens/ForceUpdateScreen";
+import { checkForRequiredUpdate } from "./src/utils/appUpdate";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -162,6 +165,26 @@ function AppStack() {
 
 function RootNavigator() {
   const { user, loading } = useAuth();
+  const [requiredUpdate, setRequiredUpdate] = useState(null);
+
+  // Deliberately NOT awaited before showing the app. The backend can take
+  // ~50s to wake from a cold start, and the check fails open anyway, so
+  // making every launch wait on it would only slow startup for nothing. In
+  // the rare case an update IS required, the screen swaps in the moment the
+  // answer arrives.
+  useEffect(() => {
+    let cancelled = false;
+    checkForRequiredUpdate().then((result) => {
+      if (!cancelled && result.required) setRequiredUpdate(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (requiredUpdate) {
+    return <ForceUpdateScreen {...requiredUpdate} />;
+  }
 
   if (loading) {
     return <SplashScreen />;

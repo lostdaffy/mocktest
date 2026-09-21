@@ -89,29 +89,18 @@ export default function Login() {
 }
 
 function LoginForm({ onForgot }) {
-  const [mode, setMode] = useState("password"); // "password" | "otp"
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [sendingOtp, setSendingOtp] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const phoneRef = useRef(null);
-  const { login, loginWithOtp } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     phoneRef.current?.focus();
   }, []);
-
-  function switchMode(next) {
-    setMode(next);
-    setError("");
-    setOtpSent(false);
-    setOtp("");
-  }
 
   function friendlyError(err) {
     if (err.response?.status === 429) return "Too many attempts. Please wait a few minutes before trying again.";
@@ -132,41 +121,6 @@ function LoginForm({ onForgot }) {
     }
   }
 
-  async function handleSendOtp() {
-    if (phone.length !== 10) {
-      setError("Enter a valid 10-digit phone number");
-      return;
-    }
-    setError("");
-    setSendingOtp(true);
-    try {
-      await api.post("/auth/request-otp", { phone });
-      setOtpSent(true);
-    } catch (err) {
-      setError(friendlyError(err));
-    } finally {
-      setSendingOtp(false);
-    }
-  }
-
-  async function handleOtpLogin(e) {
-    e.preventDefault();
-    if (otp.length !== 6) {
-      setError("Enter the 6-digit code");
-      return;
-    }
-    setError("");
-    setLoading(true);
-    try {
-      await loginWithOtp(phone, otp);
-      navigate("/");
-    } catch (err) {
-      setError(friendlyError(err));
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
     <>
       <div className="mb-7">
@@ -174,41 +128,7 @@ function LoginForm({ onForgot }) {
         <p className="text-sm text-slate mt-1">Sign in to the admin console</p>
       </div>
 
-      {/* Segmented mode toggle */}
-      <div className="flex bg-slate-light rounded-xl p-1 mb-6">
-        <button
-          type="button"
-          onClick={() => switchMode("password")}
-          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
-            mode === "password" ? "bg-surface text-brand shadow-soft" : "text-slate hover:text-ink-soft"
-          }`}
-        >
-          Password
-        </button>
-        <button
-          type="button"
-          onClick={() => switchMode("otp")}
-          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
-            mode === "otp" ? "bg-surface text-brand shadow-soft" : "text-slate hover:text-ink-soft"
-          }`}
-        >
-          OTP
-        </button>
-      </div>
-
-      <form
-        onSubmit={
-          mode === "password"
-            ? handlePasswordLogin
-            : otpSent
-            ? handleOtpLogin
-            : (e) => {
-                e.preventDefault();
-                handleSendOtp();
-              }
-        }
-        className="space-y-5"
-      >
+      <form onSubmit={handlePasswordLogin} className="space-y-5">
         <div>
           <label className="block text-sm font-medium text-ink-soft mb-1.5">Admin Phone Number</label>
           <div className="relative">
@@ -219,7 +139,6 @@ function LoginForm({ onForgot }) {
               inputMode="numeric"
               autoComplete="tel"
               value={phone}
-              disabled={mode === "otp" && otpSent}
               onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
               className="rv-input !pl-10"
               placeholder="Admin Phone Number"
@@ -229,104 +148,64 @@ function LoginForm({ onForgot }) {
           </div>
         </div>
 
-        {mode === "password" ? (
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-sm font-medium text-ink-soft">AdminPassword</label>
-              <button type="button" onClick={onForgot} className="text-xs font-medium text-brand hover:underline">
-                Forgot password?
-              </button>
-            </div>
-            <div className="relative">
-              <RiLockLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-soft" />
-              <input
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="rv-input !pl-10 !pr-11"
-                placeholder="••••••••"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-soft hover:text-slate"
-                tabIndex={-1}
-              >
-                {showPassword ? <RiEyeOffLine size={17} /> : <RiEyeLine size={17} />}
-              </button>
-            </div>
-          </div>
-        ) : otpSent ? (
-          <div>
-            <label className="block text-sm font-medium text-ink-soft mb-1.5">Verification Code</label>
-            <div className="relative">
-              <RiKeyLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-soft" />
-              <input
-                type="text"
-                inputMode="numeric"
-                autoFocus
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ""))}
-                className="rv-input !pl-10 tracking-widest font-semibold"
-                placeholder="000000"
-                maxLength={6}
-                required
-              />
-            </div>
-            <button type="button" onClick={handleSendOtp} disabled={sendingOtp} className="text-xs font-medium text-brand hover:underline mt-2">
-              {sendingOtp ? "Sending..." : "Resend code"}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-sm font-medium text-ink-soft">Admin Password</label>
+            <button type="button" onClick={onForgot} className="text-xs font-medium text-brand hover:underline">
+              Forgot password?
             </button>
           </div>
-        ) : null}
+          <div className="relative">
+            <RiLockLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-soft" />
+            <input
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="rv-input !pl-10 !pr-11"
+              placeholder="••••••••"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-soft hover:text-slate"
+              tabIndex={-1}
+            >
+              {showPassword ? <RiEyeOffLine size={17} /> : <RiEyeLine size={17} />}
+            </button>
+          </div>
+        </div>
 
         {error && <p className="text-sm text-danger bg-danger-light border border-danger-border rounded-lg px-3 py-2">{error}</p>}
 
-        {mode === "password" ? (
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-soft shadow-brand/20"
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        ) : otpSent ? (
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-soft shadow-brand/20"
-          >
-            {loading ? "Verifying..." : "Verify & Sign In"}
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleSendOtp}
-            disabled={sendingOtp}
-            className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-soft shadow-brand/20"
-          >
-            {sendingOtp ? "Sending..." : "Send Code"}
-          </button>
-        )}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-soft shadow-brand/20"
+        >
+          {loading ? "Signing in..." : "Sign In"}
+        </button>
       </form>
     </>
   );
 }
 
-// Forgot-password: phone -> OTP + new password -> done. Reuses the same
-// /auth/request-otp and /auth/reset-password endpoints the mobile app's
-// password reset already uses.
+// Forgot-password: phone -> emailed code + new password -> done. Same
+// /auth/forgot-password + /auth/reset-password endpoints the mobile app
+// uses; the code goes to the account's email (SMS is only used to verify
+// a number at signup).
 function ForgotPasswordFlow({ onBack }) {
   const [step, setStep] = useState(1); // 1 = enter phone, 2 = enter OTP + new password, 3 = done
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [sentTo, setSentTo] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function requestOtp(e) {
+  async function requestCode(e) {
     e.preventDefault();
     setError("");
     if (phone.length !== 10) {
@@ -335,7 +214,9 @@ function ForgotPasswordFlow({ onBack }) {
     }
     setLoading(true);
     try {
-      await api.post("/auth/request-otp", { phone });
+      const res = await api.post("/auth/forgot-password", { phone });
+      setSentTo(res.data?.maskedEmail || "your registered email");
+      setOtp("");
       setStep(2);
     } catch (err) {
       setError(err.response?.data?.message || "Couldn't send the code. Please try again.");
@@ -357,9 +238,13 @@ function ForgotPasswordFlow({ onBack }) {
     }
     setLoading(true);
     try {
-      await api.post("/auth/reset-password", { phone, otp, newPassword });
+      await api.post("/auth/reset-password", { phone, code: otp, newPassword });
       setStep(3);
     } catch (err) {
+      if (err.response?.data?.code === "CODE_ATTEMPTS_EXCEEDED") {
+        setOtp("");
+        setStep(1);
+      }
       setError(err.response?.data?.message || "Couldn't reset the password. Please check the code and try again.");
     } finally {
       setLoading(false);
@@ -370,11 +255,11 @@ function ForgotPasswordFlow({ onBack }) {
     <>
       <div className="mb-7">
         <h1 className="font-display text-2xl font-bold text-ink">{step === 3 ? "Password reset" : "Reset your password"}</h1>
-        {step !== 3 && <p className="text-sm text-slate mt-1">We'll text a code to verify it's you</p>}
+        {step !== 3 && <p className="text-sm text-slate mt-1">We'll email a reset code to the address on this account</p>}
       </div>
 
       {step === 1 && (
-        <form onSubmit={requestOtp} className="space-y-5">
+        <form onSubmit={requestCode} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-ink-soft mb-1.5">Admin Phone Number</label>
             <div className="relative">
@@ -400,7 +285,7 @@ function ForgotPasswordFlow({ onBack }) {
             disabled={loading}
             className="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-60 shadow-soft shadow-brand/20"
           >
-            {loading ? "Sending..." : "Send Code"}
+            {loading ? "Sending..." : "Email Me a Code"}
           </button>
 
           <button
@@ -415,10 +300,10 @@ function ForgotPasswordFlow({ onBack }) {
 
       {step === 2 && (
         <form onSubmit={resetPassword} className="space-y-5">
-          <p className="text-sm text-slate -mt-2">Code sent by SMS to {phone}.</p>
+          <p className="text-sm text-slate -mt-2">Code sent to {sentTo}. Check Spam if it's not in your inbox.</p>
 
           <div>
-            <label className="block text-sm font-medium text-ink-soft mb-1.5">Verification Code</label>
+            <label className="block text-sm font-medium text-ink-soft mb-1.5">Reset Code</label>
             <div className="relative">
               <RiKeyLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-soft" />
               <input

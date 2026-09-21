@@ -63,6 +63,17 @@ export default function ProfileScreen({
   const [savingEmail, setSavingEmail] =
     useState(false);
 
+  // Changing the email changes where password-reset codes go, so the
+  // server asks for the current password first.
+  const [emailPwOpen, setEmailPwOpen] =
+    useState(false);
+
+  const [emailPw, setEmailPw] =
+    useState("");
+
+  const [emailPwError, setEmailPwError] =
+    useState("");
+
   /* =======================================================
      NAME EDIT
   ======================================================= */
@@ -164,28 +175,75 @@ export default function ProfileScreen({
       return;
     }
 
+    if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        cleanEmail
+      )
+    ) {
+      AppAlert.alert(
+        "Invalid email",
+        "Please enter a valid email address."
+      );
+      return;
+    }
+
+    setEmailPw("");
+    setEmailPwError("");
+    setEmailPwOpen(true);
+  }
+
+  async function confirmEmailChange() {
+    if (!emailPw) {
+      setEmailPwError(
+        "Enter your current password"
+      );
+      return;
+    }
+
     setSavingEmail(true);
+    setEmailPwError("");
 
     try {
       await api.patch(
         "/auth/profile",
         {
-          email: cleanEmail,
+          email: email
+            .trim()
+            .toLowerCase(),
+          currentPassword: emailPw,
         }
       );
 
       await refreshUser();
 
+      setEmailPwOpen(false);
+      setEmailPw("");
+
       AppAlert.alert(
         "Email updated",
-        "Your email address has been saved successfully."
+        "Password reset codes will now be sent to this email."
       );
     } catch (err) {
-      AppAlert.alert(
-        "Couldn't save",
+      const code =
+        err.response?.data?.code;
+
+      const message =
         err.response?.data?.message ||
-          "Please try again."
-      );
+        "Please try again.";
+
+      // Wrong password / locked: keep the modal open so they can retry.
+      if (
+        code === "PASSWORD_REQUIRED" ||
+        code === "ACCOUNT_LOCKED"
+      ) {
+        setEmailPwError(message);
+      } else {
+        setEmailPwOpen(false);
+        AppAlert.alert(
+          "Couldn't save",
+          message
+        );
+      }
     } finally {
       setSavingEmail(false);
     }
@@ -1195,6 +1253,141 @@ export default function ProfileScreen({
           </View>
         </View>
       </Modal>
+
+      {/* =====================================================
+          CONFIRM EMAIL CHANGE (PASSWORD)
+      ===================================================== */}
+
+      <Modal
+        visible={emailPwOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() =>
+          !savingEmail &&
+          setEmailPwOpen(false)
+        }
+      >
+        <View
+          style={
+            styles.modalBackdrop
+          }
+        >
+          <View
+            style={
+              styles.modalCard
+            }
+          >
+            <Text
+              style={
+                styles.modalTitle
+              }
+            >
+              Confirm it's you
+            </Text>
+
+            <Text
+              style={
+                styles.modalSubtitle
+              }
+            >
+              Password reset codes will go to{" "}
+              {email.trim().toLowerCase()}. Enter your current password to confirm.
+            </Text>
+
+            <TextInput
+              style={
+                styles.modalInput
+              }
+              value={emailPw}
+              onChangeText={(value) => {
+                setEmailPw(value);
+                setEmailPwError("");
+              }}
+              placeholder="Current password"
+              placeholderTextColor={
+                colors.slateSoft
+              }
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={
+                confirmEmailChange
+              }
+            />
+
+            {emailPwError ? (
+              <Text
+                style={
+                  styles.modalError
+                }
+              >
+                {emailPwError}
+              </Text>
+            ) : null}
+
+            <View
+              style={
+                styles.modalActions
+              }
+            >
+              <TouchableOpacity
+                style={
+                  styles.modalCancel
+                }
+                activeOpacity={0.8}
+                disabled={
+                  savingEmail
+                }
+                onPress={() =>
+                  setEmailPwOpen(
+                    false
+                  )
+                }
+              >
+                <Text
+                  style={
+                    styles.modalCancelText
+                  }
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modalSave,
+                  savingEmail &&
+                    styles.modalSaveDisabled,
+                ]}
+                activeOpacity={0.85}
+                disabled={
+                  savingEmail
+                }
+                onPress={
+                  confirmEmailChange
+                }
+              >
+                {savingEmail ? (
+                  <ActivityIndicator
+                    size="small"
+                    color="#FFFFFF"
+                  />
+                ) : (
+                  <Text
+                    style={
+                      styles.modalSaveText
+                    }
+                  >
+                    Confirm
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1551,6 +1744,13 @@ const styles =
       paddingHorizontal: 14,
       fontSize: 14,
       color: colors.ink,
+    },
+
+    modalError: {
+      marginTop: 8,
+      fontSize: 12.5,
+      fontWeight: "600",
+      color: colors.danger,
     },
 
     modalActions: {

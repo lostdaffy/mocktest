@@ -8,6 +8,8 @@ const phoneOtpSchema = new mongoose.Schema(
     phone: { type: String, required: true, index: true },
     otpHash: { type: String, required: true },
     expiresAt: { type: Date, required: true },
+    // Wrong guesses against this code; it's discarded after too many.
+    attempts: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

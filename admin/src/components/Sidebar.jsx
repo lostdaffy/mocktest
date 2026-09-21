@@ -81,7 +81,7 @@ export default function Sidebar({ open, onClose }) {
             aria-label="Rankveer - go to dashboard"
           >
             <img
-              src="/images/brand_logo.png"
+              src={`${import.meta.env.BASE_URL}images/brand_logo.png`}
               alt="Rankveer"
               className="h-full w-auto"
             />

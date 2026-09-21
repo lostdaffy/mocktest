@@ -53,8 +53,8 @@ export function AuthProvider({ children }) {
     await AsyncStorage.setItem("token", data.token);
     await AsyncStorage.setItem("user", JSON.stringify(data.user));
     setUser(data.user);
-    // Fire-and-forget: covers every login path (password, OTP,
-    // signup) since they all funnel through here. Never awaited by the
+    // Fire-and-forget: covers every login path (password login
+    // and signup) since they all funnel through here. Never awaited by the
     // caller - a slow/denied permission prompt must not block login.
     registerForPushNotifications(api);
   }
@@ -64,20 +64,10 @@ export function AuthProvider({ children }) {
     await persistSession(res.data);
   }
 
-  // Requests an OTP for the given phone (used for OTP login and password reset).
-  async function requestOtp(phone) {
-    const res = await api.post("/auth/request-otp", { phone });
-    return res.data;
-  }
-
-  // Logs in using a mobile OTP instead of a password.
-  async function loginWithOtp(phone, otp) {
-    const res = await api.post("/auth/login-otp", { phone, otp });
-    await persistSession(res.data);
-  }
-
-  async function sendSignupOtp(phone) {
-    const res = await api.post("/auth/signup/request-otp", { phone });
+  // email is sent along so the server can reject an already-used email
+  // before paying for the SMS.
+  async function sendSignupOtp(phone, email) {
+    const res = await api.post("/auth/signup/request-otp", { phone, email });
     return res.data;
   }
 
@@ -111,8 +101,6 @@ export function AuthProvider({ children }) {
         sendSignupOtp,
         logout,
         refreshUser,
-        requestOtp,
-        loginWithOtp,
       }}
     >
       {children}

@@ -28,14 +28,17 @@
 // silently succeeding, so a misconfigured server fails loudly at request
 // time instead of pretending an OTP went out when it didn't.
 
+const crypto = require("crypto");
 const twilio = require("twilio");
 
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 
+// crypto.randomInt, not Math.random: Math.random is predictable enough that
+// codes guarding account access shouldn't come from it.
 function generateOtpCode() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 1000000).toString();
 }
 
 // Sends a real OTP SMS. Throws on any failure (missing config, network

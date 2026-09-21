@@ -1,0 +1,8 @@
+node_modules/
+# Build output - regenerate with `npm run build`
+dist/
+# Temporary prerender bundle, deleted at the end of every build
+dist-ssr/
+
+# Upload bundle for cPanel - regenerate from dist/
+*-upload.zip

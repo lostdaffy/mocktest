@@ -69,10 +69,11 @@ export default function ForgotPasswordScreen({
     useState("");
 
   /* =======================================================
-     REQUEST OTP
+     REQUEST RESET CODE (sent by EMAIL - SMS is only used to
+     verify the number at signup)
   ======================================================= */
 
-  async function requestOtp() {
+  async function requestCode() {
     const cleanPhone =
       phone.replace(/\D/g, "");
 
@@ -94,15 +95,18 @@ export default function ForgotPasswordScreen({
     setLoading(true);
 
     try {
-      await api.post(
-        "/auth/request-otp",
+      const res = await api.post(
+        "/auth/forgot-password",
         {
           phone: cleanPhone,
         }
       );
 
       setPhone(cleanPhone);
-      setSentTo(cleanPhone);
+      setSentTo(
+        res.data?.maskedEmail ||
+        "your registered email"
+      );
       setOtp("");
       setNewPassword("");
       setFocused(null);
@@ -154,7 +158,7 @@ export default function ForgotPasswordScreen({
         "/auth/reset-password",
         {
           phone,
-          otp: cleanOtp,
+          code: cleanOtp,
           newPassword,
         }
       );
@@ -173,6 +177,16 @@ export default function ForgotPasswordScreen({
         ]
       );
     } catch (err) {
+      // Code used up: send them back to request a fresh one instead
+      // of letting them keep typing into a dead code.
+      if (
+        err.response?.data?.code ===
+        "CODE_ATTEMPTS_EXCEEDED"
+      ) {
+        setOtp("");
+        setStep(1);
+      }
+
       setError(
         err.response?.data?.message ||
         "Reset failed. Check the code and try again."
@@ -434,7 +448,7 @@ export default function ForgotPasswordScreen({
             >
               {step === 1
                 ? "We'll help you get back into your account"
-                : `Verification code sent to +91 ${sentTo}`}
+                : `Reset code sent to ${sentTo}`}
             </Text>
 
             {/* =================================================
@@ -520,7 +534,7 @@ export default function ForgotPasswordScreen({
                     }
                     returnKeyType="done"
                     onSubmitEditing={
-                      requestOtp
+                      requestCode
                     }
                   />
                 </View>
@@ -539,10 +553,10 @@ export default function ForgotPasswordScreen({
 
                 <PrimaryButton
                   loading={loading}
-                  text="Send verification code"
+                  text="Email me a reset code"
                   icon="arrow-forward"
                   onPress={
-                    requestOtp
+                    requestCode
                   }
                 />
               </>
@@ -590,8 +604,9 @@ export default function ForgotPasswordScreen({
                         styles.cardIntroText
                       }
                     >
-                      Enter the code from your SMS
-                      and choose a new password.
+                      Enter the 6-digit code from your
+                      email (check Spam too) and choose
+                      a new password.
                     </Text>
                   </View>
                 </View>
@@ -821,6 +836,35 @@ export default function ForgotPasswordScreen({
                     Change phone number
                   </Text>
                 </TouchableOpacity>
+
+                {/* RESEND */}
+
+                <TouchableOpacity
+                  style={
+                    styles.changeNumber
+                  }
+                  activeOpacity={0.7}
+                  disabled={loading}
+                  onPress={
+                    requestCode
+                  }
+                >
+                  <Ionicons
+                    name="refresh-outline"
+                    size={14}
+                    color={
+                      colors.brand
+                    }
+                  />
+
+                  <Text
+                    style={
+                      styles.changeNumberText
+                    }
+                  >
+                    Resend code
+                  </Text>
+                </TouchableOpacity>
               </>
             )}
           </View>
@@ -913,8 +957,8 @@ function InfoBox() {
       <Text
         style={styles.infoText}
       >
-        We'll send a verification code
-        to this number.
+        We'll email a reset code to the
+        email linked to this number.
       </Text>
     </View>
   );

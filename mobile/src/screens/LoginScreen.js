@@ -45,14 +45,7 @@ export default function LoginScreen({
 }) {
   const insets = useSafeAreaInsets();
 
-  const {
-    login,
-    requestOtp,
-    loginWithOtp,
-  } = useAuth();
-
-  const [mode, setMode] =
-    useState("password");
+  const { login } = useAuth();
 
   const [phone, setPhone] =
     useState("");
@@ -63,35 +56,14 @@ export default function LoginScreen({
   const [showPass, setShowPass] =
     useState(false);
 
-  const [otp, setOtp] =
-    useState("");
-
-  const [otpSent, setOtpSent] =
-    useState(false);
-
   const [focused, setFocused] =
     useState(null);
 
   const [loading, setLoading] =
     useState(false);
 
-  const [resending, setResending] =
-    useState(false);
-
   const [error, setError] =
     useState("");
-
-  /* =======================================================
-     SWITCH MODE
-  ======================================================= */
-
-  function switchMode(next) {
-    setMode(next);
-    setError("");
-    setOtpSent(false);
-    setOtp("");
-    setFocused(null);
-  }
 
   /* =======================================================
      PASSWORD LOGIN
@@ -117,96 +89,6 @@ export default function LoginScreen({
 
     try {
       await login(phone, password);
-    } catch (err) {
-      if (
-        err.response?.data?.code ===
-        "GOOGLE_ACCOUNT"
-      ) {
-        setError(
-          err.response.data.message
-        );
-      } else {
-        setError(
-          err.response?.data?.message ||
-            "Login failed. Please try again."
-        );
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  /* =======================================================
-     SEND OTP
-  ======================================================= */
-
-  async function handleSendOtp() {
-    if (phone.length !== 10) {
-      setError(
-        "Enter a valid 10-digit mobile number"
-      );
-      return;
-    }
-
-    setError("");
-    setLoading(true);
-
-    try {
-      await requestOtp(phone);
-      setOtpSent(true);
-      setFocused("otp");
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Couldn't send OTP"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  /* =======================================================
-     RESEND OTP
-  ======================================================= */
-
-  async function handleResendOtp() {
-    if (resending) return;
-
-    setError("");
-    setResending(true);
-
-    try {
-      await requestOtp(phone);
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Couldn't resend OTP"
-      );
-    } finally {
-      setResending(false);
-    }
-  }
-
-  /* =======================================================
-     OTP LOGIN
-  ======================================================= */
-
-  async function handleOtpLogin() {
-    if (otp.length !== 6) {
-      setError(
-        "Enter the 6-digit code"
-      );
-      return;
-    }
-
-    setError("");
-    setLoading(true);
-
-    try {
-      await loginWithOtp(
-        phone,
-        otp
-      );
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -320,81 +202,6 @@ export default function LoginScreen({
           </Text>
 
           {/* =================================================
-              MODE TOGGLE
-          ================================================= */}
-
-          <View
-            style={styles.modeToggle}
-          >
-            <TouchableOpacity
-              style={[
-                styles.modeTab,
-                mode === "password" &&
-                  styles.modeTabActive,
-              ]}
-              onPress={() =>
-                switchMode(
-                  "password"
-                )
-              }
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="lock-closed-outline"
-                size={15}
-                color={
-                  mode === "password"
-                    ? colors.brand
-                    : colors.slate
-                }
-              />
-
-              <Text
-                style={[
-                  styles.modeTabText,
-                  mode ===
-                    "password" &&
-                    styles.modeTabTextActive,
-                ]}
-              >
-                Password
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.modeTab,
-                mode === "otp" &&
-                  styles.modeTabActive,
-              ]}
-              onPress={() =>
-                switchMode("otp")
-              }
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="chatbubble-ellipses-outline"
-                size={15}
-                color={
-                  mode === "otp"
-                    ? colors.brand
-                    : colors.slate
-                }
-              />
-
-              <Text
-                style={[
-                  styles.modeTabText,
-                  mode === "otp" &&
-                    styles.modeTabTextActive,
-                ]}
-              >
-                OTP
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* =================================================
               PHONE
           ================================================= */}
 
@@ -425,9 +232,6 @@ export default function LoginScreen({
               textContentType="telephoneNumber"
               autoComplete="tel"
               maxLength={10}
-              editable={
-                !(mode === "otp" && otpSent)
-              }
               value={phone}
               onChangeText={(value) => {
                 const clean =
@@ -448,11 +252,7 @@ export default function LoginScreen({
               onBlur={() =>
                 setFocused(null)
               }
-              returnKeyType={
-                mode === "password"
-                  ? "next"
-                  : "done"
-              }
+              returnKeyType="next"
             />
           </View>
 
@@ -460,272 +260,105 @@ export default function LoginScreen({
               PASSWORD
           ================================================= */}
 
-          {mode === "password" ? (
-            <>
-              <Text
-                style={styles.label}
-              >
-                Password
-              </Text>
+          <Text
+            style={styles.label}
+          >
+            Password
+          </Text>
 
-              <View
-                style={field("pass")}
-              >
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={18}
-                  color={iconColor(
-                    "pass"
-                  )}
-                />
+          <View
+            style={field("pass")}
+          >
+            <Ionicons
+              name="lock-closed-outline"
+              size={18}
+              color={iconColor(
+                "pass"
+              )}
+            />
 
-                <TextInput
-                  style={styles.input}
-                  placeholder="Your password"
-                  placeholderTextColor={
-                    colors.slateSoft
-                  }
-                  secureTextEntry={
-                    !showPass
-                  }
-                  textContentType="password"
-                  autoComplete="password"
-                  value={password}
-                  onChangeText={(value) => {
-                    setPassword(value);
+            <TextInput
+              style={styles.input}
+              placeholder="Your password"
+              placeholderTextColor={
+                colors.slateSoft
+              }
+              secureTextEntry={
+                !showPass
+              }
+              textContentType="password"
+              autoComplete="password"
+              value={password}
+              onChangeText={(value) => {
+                setPassword(value);
 
-                    if (error) {
-                      setError("");
-                    }
-                  }}
-                  onFocus={() =>
-                    setFocused("pass")
-                  }
-                  onBlur={() =>
-                    setFocused(null)
-                  }
-                  returnKeyType="done"
-                  onSubmitEditing={
-                    handlePasswordLogin
-                  }
-                />
-
-                <TouchableOpacity
-                  onPress={() =>
-                    setShowPass(
-                      (value) =>
-                        !value
-                    )
-                  }
-                  hitSlop={{
-                    top: 10,
-                    bottom: 10,
-                    left: 10,
-                    right: 10,
-                  }}
-                  activeOpacity={0.7}
-                  style={
-                    styles.eyeButton
-                  }
-                >
-                  <Ionicons
-                    name={
-                      showPass
-                        ? "eye-off-outline"
-                        : "eye-outline"
-                    }
-                    size={19}
-                    color={
-                      colors.slateSoft
-                    }
-                  />
-                </TouchableOpacity>
-              </View>
-
-              <TouchableOpacity
-                style={
-                  styles.forgotWrap
+                if (error) {
+                  setError("");
                 }
-                onPress={() =>
-                  navigation.navigate(
-                    "ForgotPassword"
-                  )
-                }
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={
-                    styles.forgot
-                  }
-                >
-                  Forgot password?
-                </Text>
-              </TouchableOpacity>
-            </>
-          ) : otpSent ? (
-            /* =================================================
-               OTP SENT
-            ================================================= */
-            <>
-              <Text
-                style={styles.label}
-              >
-                Verification code
-              </Text>
+              }}
+              onFocus={() =>
+                setFocused("pass")
+              }
+              onBlur={() =>
+                setFocused(null)
+              }
+              returnKeyType="done"
+              onSubmitEditing={
+                handlePasswordLogin
+              }
+            />
 
-              <View
-                style={field("otp")}
-              >
-                <Ionicons
-                  name="keypad-outline"
-                  size={18}
-                  color={iconColor(
-                    "otp"
-                  )}
-                />
-
-                <TextInput
-                  style={[
-                    styles.input,
-                    styles.otpInput,
-                  ]}
-                  placeholder="6-digit code"
-                  placeholderTextColor={
-                    colors.slateSoft
-                  }
-                  keyboardType="number-pad"
-                  textContentType="oneTimeCode"
-                  autoComplete="sms-otp"
-                  maxLength={6}
-                  value={otp}
-                  onChangeText={(value) => {
-                    const clean =
-                      value.replace(
-                        /[^0-9]/g,
-                        ""
-                      );
-
-                    setOtp(clean);
-
-                    if (error) {
-                      setError("");
-                    }
-                  }}
-                  onFocus={() =>
-                    setFocused("otp")
-                  }
-                  onBlur={() =>
-                    setFocused(null)
-                  }
-                  autoFocus
-                  returnKeyType="done"
-                  onSubmitEditing={
-                    handleOtpLogin
-                  }
-                />
-              </View>
-
-              <View
-                style={styles.otpInfo}
-              >
-                <View
-                  style={
-                    styles.otpInfoIcon
-                  }
-                >
-                  <Ionicons
-                    name="shield-checkmark-outline"
-                    size={15}
-                    color={
-                      colors.brand
-                    }
-                  />
-                </View>
-
-                <Text
-                  style={
-                    styles.otpInfoText
-                  }
-                  numberOfLines={2}
-                >
-                  Verification code sent to{" "}
-                  <Text
-                    style={
-                      styles.otpPhone
-                    }
-                  >
-                    +91 {phone}
-                  </Text>
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                onPress={
-                  handleResendOtp
-                }
-                disabled={resending}
-                style={
-                  styles.forgotWrap
-                }
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={
-                    styles.forgot
-                  }
-                >
-                  {resending
-                    ? "Sending..."
-                    : "Resend code"}
-                </Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            /* =================================================
-               OTP INITIAL
-            ================================================= */
-            <View
-              style={styles.otpHint}
+            <TouchableOpacity
+              onPress={() =>
+                setShowPass(
+                  (value) =>
+                    !value
+                )
+              }
+              hitSlop={{
+                top: 10,
+                bottom: 10,
+                left: 10,
+                right: 10,
+              }}
+              activeOpacity={0.7}
+              style={
+                styles.eyeButton
+              }
             >
-              <View
-                style={
-                  styles.otpHintIcon
+              <Ionicons
+                name={
+                  showPass
+                    ? "eye-off-outline"
+                    : "eye-outline"
                 }
-              >
-                <Ionicons
-                  name="chatbubble-ellipses-outline"
-                  size={16}
-                  color={
-                    colors.brand
-                  }
-                />
-              </View>
-
-              <View
-                style={
-                  styles.otpHintCopy
+                size={19}
+                color={
+                  colors.slateSoft
                 }
-              >
-                <Text
-                  style={
-                    styles.otpHintTitle
-                  }
-                >
-                  Login with OTP
-                </Text>
+              />
+            </TouchableOpacity>
+          </View>
 
-                <Text
-                  style={
-                    styles.otpHintText
-                  }
-                >
-                  We'll send a 6-digit
-                  verification code to
-                  your mobile.
-                </Text>
-              </View>
-            </View>
-          )}
+          <TouchableOpacity
+            style={
+              styles.forgotWrap
+            }
+            onPress={() =>
+              navigation.navigate(
+                "ForgotPassword"
+              )
+            }
+            activeOpacity={0.7}
+          >
+            <Text
+              style={
+                styles.forgot
+              }
+            >
+              Forgot password?
+            </Text>
+          </TouchableOpacity>
 
           {/* =================================================
               ERROR
@@ -760,13 +393,7 @@ export default function LoginScreen({
           ================================================= */}
 
           <TouchableOpacity
-            onPress={
-              mode === "password"
-                ? handlePasswordLogin
-                : otpSent
-                ? handleOtpLogin
-                : handleSendOtp
-            }
+            onPress={handlePasswordLogin}
             disabled={loading}
             activeOpacity={0.86}
             style={styles.buttonTouchable}
@@ -795,12 +422,7 @@ export default function LoginScreen({
                       styles.buttonText
                     }
                   >
-                    {mode ===
-                    "password"
-                      ? "Sign In"
-                      : otpSent
-                      ? "Verify & Sign In"
-                      : "Send OTP"}
+                    Sign In
                   </Text>
 
                   <View
@@ -981,64 +603,6 @@ const styles = StyleSheet.create({
   },
 
   /* =======================================================
-     MODE TOGGLE
-  ======================================================= */
-
-  modeToggle: {
-    flexDirection: "row",
-
-    backgroundColor: colors.slateLight,
-
-    borderRadius: radius.md,
-
-    padding: 4,
-
-    marginBottom: spacing.md,
-
-    zIndex: 40,
-
-    elevation: 5,
-  },
-
-  modeTab: {
-    flex: 1,
-
-    minHeight: 40,
-
-    paddingVertical: 8,
-
-    borderRadius: radius.sm,
-
-    alignItems: "center",
-
-    justifyContent: "center",
-
-    flexDirection: "row",
-
-    gap: 6,
-
-    zIndex: 41,
-  },
-
-  modeTabActive: {
-    backgroundColor: colors.surface,
-
-    ...shadow.sm,
-  },
-
-  modeTabText: {
-    ...type.small,
-
-    fontWeight: "700",
-
-    color: colors.slate,
-  },
-
-  modeTabTextActive: {
-    color: colors.brand,
-  },
-
-  /* =======================================================
      INPUT
   ======================================================= */
 
@@ -1108,14 +672,6 @@ const styles = StyleSheet.create({
     zIndex: 61,
   },
 
-  otpInput: {
-    letterSpacing: 6,
-
-    fontWeight: "800",
-
-    fontSize: 18,
-  },
-
   eyeButton: {
     width: 34,
 
@@ -1148,124 +704,6 @@ const styles = StyleSheet.create({
     color: colors.brand,
 
     fontWeight: "700",
-  },
-
-  /* =======================================================
-     OTP INFO
-  ======================================================= */
-
-  otpInfo: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    gap: 9,
-
-    backgroundColor: colors.brandTint,
-
-    borderWidth: 1,
-
-    borderColor: colors.brandLight,
-
-    borderRadius: radius.md,
-
-    padding: 10,
-
-    marginBottom: spacing.sm,
-
-    zIndex: 40,
-  },
-
-  otpInfoIcon: {
-    width: 31,
-
-    height: 31,
-
-    borderRadius: 10,
-
-    backgroundColor: colors.surface,
-
-    alignItems: "center",
-
-    justifyContent: "center",
-  },
-
-  otpInfoText: {
-    flex: 1,
-
-    ...type.tiny,
-
-    color: colors.slate,
-
-    lineHeight: 16,
-
-    fontWeight: "600",
-  },
-
-  otpPhone: {
-    color: colors.brand,
-
-    fontWeight: "800",
-  },
-
-  otpHint: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    gap: 10,
-
-    backgroundColor: colors.brandTint,
-
-    borderRadius: radius.md,
-
-    borderWidth: 1,
-
-    borderColor: colors.brandLight,
-
-    padding: 11,
-
-    marginBottom: spacing.md,
-
-    zIndex: 40,
-  },
-
-  otpHintIcon: {
-    width: 34,
-
-    height: 34,
-
-    borderRadius: 11,
-
-    backgroundColor: colors.surface,
-
-    alignItems: "center",
-
-    justifyContent: "center",
-  },
-
-  otpHintCopy: {
-    flex: 1,
-
-    minWidth: 0,
-  },
-
-  otpHintTitle: {
-    fontSize: 11.5,
-
-    fontWeight: "800",
-
-    color: colors.ink,
-
-    marginBottom: 2,
-  },
-
-  otpHintText: {
-    fontSize: 10.5,
-
-    lineHeight: 15,
-
-    color: colors.slate,
   },
 
   /* =======================================================

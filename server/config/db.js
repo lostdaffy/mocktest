@@ -1,10 +1,6 @@
 const mongoose = require("mongoose");
 
-// Connection pool sized for real concurrent traffic - Mongoose's default
-// (100) is often fine, but setting it explicitly plus fail-fast timeouts
-// means a DB hiccup surfaces as a clear error within seconds instead of
-// requests hanging indefinitely while Node waits on a connection that's
-// never coming.
+
 async function connectDB() {
   mongoose.set("strictQuery", true);
 

@@ -148,15 +148,16 @@ export default function SignupScreen({
       phone.replace(/\D/g, "");
 
     const cleanEmail =
-      email.trim();
+      email.trim().toLowerCase();
 
     if (
       !cleanName ||
       !cleanPhone ||
+      !cleanEmail ||
       !password
     ) {
       setError(
-        "Name, phone and password are required"
+        "Name, phone, email and password are required"
       );
       return;
     }
@@ -166,6 +167,19 @@ export default function SignupScreen({
     ) {
       setError(
         "Enter a valid 10-digit mobile number"
+      );
+      return;
+    }
+
+    // Email is the only way to reset a forgotten password (SMS is only
+    // used here, to verify the number), so it's required and checked.
+    if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        cleanEmail
+      )
+    ) {
+      setError(
+        "Enter a valid email address"
       );
       return;
     }
@@ -182,7 +196,8 @@ export default function SignupScreen({
 
     try {
       await sendSignupOtp(
-        cleanPhone
+        cleanPhone,
+        cleanEmail
       );
 
       setPhone(cleanPhone);
@@ -211,7 +226,7 @@ export default function SignupScreen({
     setResending(true);
 
     try {
-      await sendSignupOtp(phone);
+      await sendSignupOtp(phone, email);
 
       AppAlert.alert(
         "OTP resent",
@@ -490,7 +505,7 @@ export default function SignupScreen({
                     styles.optional
                   }
                 >
-                  · optional
+                  · for password reset
                 </Text>
               </Text>
 

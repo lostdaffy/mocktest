@@ -8,6 +8,20 @@
       "cwd": "admin",
       "port": 5173,
       "autoPort": true
+    },
+    {
+      "name": "website",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "website",
+      "port": 4176
+    },
+    {
+      "name": "website-build",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview"],
+      "cwd": "website",
+      "port": 4176
     }
   ]
 }

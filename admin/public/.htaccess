@@ -1,0 +1,51 @@
+# Apache / LiteSpeed config for the admin panel, served from rankveer.com/admin/
+#
+# Vite copies everything in admin/public/ into dist/ at build time, so this
+# file ships with the deployment automatically. Upload the CONTENTS of
+# admin/dist/ into public_html/admin/ - and make sure hidden files are
+# visible in File Manager, or this file gets silently left behind.
+#
+# WHY THIS IS NEEDED: the admin panel is a single-page app. Only index.html
+# exists on disk - every other path (/admin/users, /admin/live-exams, ...)
+# is handled by React Router in the browser. Without the rewrite below the
+# server looks for a real "users" folder, finds none, and returns 404. That
+# breaks page refreshes and every bookmarked link.
+
+# No "Index of /admin/assets/" file listings.
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /admin/
+
+  # Admin passwords must never travel over plain HTTP. This lives here as
+  # well as in the website's root .htaccess because a folder that has its
+  # own RewriteEngine does NOT inherit the parent's rewrite rules.
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Serve real files and directories (JS, CSS, images) untouched.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Everything else falls through to the SPA shell so the router handles it.
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Vite fingerprints asset filenames, so those are safe to cache hard.
+  <FilesMatch "\.(js|css|woff2?|png|jpg|jpeg|gif|svg|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # index.html must never be cached, or browsers keep loading an old build
+  # (and its now-deleted asset files) after every deploy.
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+
+  # Internal tool: never index, never embed in someone else's page.
+  Header set X-Robots-Tag "noindex, nofollow"
+  Header set X-Frame-Options "DENY"
+</IfModule>

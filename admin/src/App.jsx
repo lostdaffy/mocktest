@@ -19,7 +19,7 @@ import Coupons from "./pages/Coupons";
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
       <ThemeProvider>
         <AuthProvider>
           <ToastProvider>

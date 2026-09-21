@@ -1,0 +1,31 @@
+{
+  "_readme": "Edit the values below, then run `node build.mjs` and upload the contents of dist/ to public_html/. Keys starting with _ are ignored. Empty required fields show as yellow placeholders on the site and are listed when you build.",
+
+  "siteUrl": "https://rankveer.com",
+  "brandName": "Rankveer",
+
+  "_legalName": "REQUIRED. Your registered business name, or your own full name if you run it as a sole proprietor. Must match your Razorpay KYC.",
+  "legalName": "",
+
+  "_supportEmail": "REQUIRED. Use an inbox you actually read (a Gmail is fine). An @rankveer.com address will NOT receive mail until the domain's DNS is sorted.",
+  "supportEmail": "",
+
+  "_supportPhone": "Optional. Shown on the Contact page if filled, e.g. +91 98765 43210",
+  "supportPhone": "",
+
+  "_businessAddress": "REQUIRED. Payment gateways check that the website lists one.",
+  "businessAddress": "",
+
+  "supportHours": "Monday to Saturday, 10:00 AM – 6:00 PM (IST)",
+
+  "_grievanceOfficerName": "REQUIRED. Name of the person handling complaints, as required under India's IT Rules. Can be you.",
+  "grievanceOfficerName": "",
+
+  "_jurisdictionCity": "REQUIRED. City whose courts govern the Terms, usually where you are based, e.g. Lucknow",
+  "jurisdictionCity": "",
+
+  "_playStoreUrl": "Leave empty until the app is live - the site shows 'coming soon' instead of a broken link.",
+  "playStoreUrl": "",
+
+  "policyEffectiveDate": "17 September 2026"
+}

@@ -28,7 +28,9 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem("adminToken");
       localStorage.removeItem("adminUser");
-      window.location.href = "/login";
+      // Hard redirect bypasses the router, so it has to include the base
+      // path itself - a bare "/login" would land on the public website.
+      window.location.href = `${import.meta.env.BASE_URL}login`;
     }
     return Promise.reject(err);
   }

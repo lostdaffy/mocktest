@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Upload bundle for cPanel - regenerate from dist/
+*-upload.zip

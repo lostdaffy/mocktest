@@ -7,12 +7,27 @@ const userSchema = new mongoose.Schema(
     // rather than required because accounts created back when Google
     // Sign-In existed may have no phone at all.
     phone: { type: String, unique: true, sparse: true, trim: true, index: true },
-    email: { type: String, trim: true, lowercase: true, unique: true, sparse: true, default: null },
+    // No `default: null` on purpose. A sparse unique index only skips
+    // documents where the field is *absent* - an explicit null is indexed
+    // like any other value, so a null default made the second account
+    // without an email fail with a duplicate-key error. Leave it unset.
+    // Required for new signups (it's the password-reset channel), but older
+    // accounts may still lack one.
+    email: { type: String, trim: true, lowercase: true, unique: true, sparse: true },
     // Every phone-signup account has this. Optional only for the legacy
     // Google-created accounts described above, which log in via OTP.
     passwordHash: { type: String, select: false },
     passwordResetOTPHash: { type: String, select: false },
     passwordResetExpires: { type: Date, select: false },
+    // Wrong reset codes entered against the current code. The code is
+    // thrown away after too many, so a 6-digit code can't be brute-forced.
+    passwordResetAttempts: { type: Number, default: 0, select: false },
+
+    // Per-account login lockout. IP-based rate limits alone don't protect a
+    // single account here: most Indian mobile users sit behind carrier NAT,
+    // so thousands share an IP (and an attacker can simply rotate IPs).
+    failedLoginAttempts: { type: Number, default: 0, select: false },
+    lockUntil: { type: Date, select: false },
     // Google Sign-In has been removed. These two stay on the schema so
     // pre-existing documents still load and validate - nothing writes them
     // any more.

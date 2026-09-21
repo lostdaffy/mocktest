@@ -1,0 +1,301 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================================
+   BASE
+========================================================= */
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    /* Sticky header height + breathing room, so #section jumps don't land
+       underneath it. */
+    scroll-padding-top: 88px;
+  }
+
+  body {
+    @apply overflow-x-hidden bg-bg font-sans text-base leading-relaxed text-ink antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display leading-tight tracking-[-0.02em] text-ink;
+  }
+
+  [lang="hi"] {
+    @apply font-hindi tracking-normal;
+  }
+
+  :focus-visible {
+    @apply outline outline-[3px] outline-offset-[3px] outline-brand/40;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+/* =========================================================
+   COMPONENTS
+   Class names repeated across several pages live here; one-off
+   layout stays as utilities in the JSX.
+========================================================= */
+
+@layer components {
+  .wrap {
+    @apply mx-auto w-full max-w-site px-5 md:px-8;
+  }
+
+  .icon {
+    @apply h-5 w-5 flex-none fill-none stroke-current;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ---- buttons */
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[14px] border border-transparent px-[22px] py-[13px] text-[15px] font-semibold leading-tight transition duration-200 active:scale-[0.98];
+  }
+
+  .btn-sm {
+    @apply rounded-sm px-4 py-2.5 text-sm;
+  }
+
+  .btn-lg {
+    @apply px-[26px] py-4 text-base;
+  }
+
+  .btn-primary {
+    @apply bg-brand-gradient text-white shadow-brand hover:-translate-y-px hover:text-white hover:shadow-brand-lg;
+  }
+
+  .btn-secondary {
+    @apply border-line bg-surface text-ink shadow-soft hover:border-brand/40 hover:text-brand;
+  }
+
+  .btn-light {
+    @apply bg-white text-brand-dark shadow-[0_12px_28px_-12px_rgb(0_0_0/0.35)] hover:-translate-y-px hover:text-brand-dark;
+  }
+
+  .btn-soon {
+    @apply cursor-default hover:translate-y-0 active:scale-100;
+  }
+
+  .nav-link {
+    @apply rounded-xs px-3.5 py-3 text-base font-medium text-ink-soft transition-colors hover:bg-brand-tint hover:text-brand lg:px-3 lg:py-2 lg:text-[15px];
+  }
+
+  /* ---- surfaces */
+
+  .card {
+    @apply rounded-lg border border-line bg-surface shadow-soft;
+  }
+
+  .icon-tile {
+    @apply grid h-[46px] w-[46px] flex-none place-items-center rounded-[14px] border;
+  }
+
+  .icon-tile .icon {
+    @apply h-[23px] w-[23px];
+  }
+
+  .icon-tile-sm {
+    @apply h-10 w-10 rounded-sm;
+  }
+
+  .icon-tile-sm .icon {
+    @apply h-5 w-5;
+  }
+
+  /* Category tints - the same set the app uses for exam/subject chips. */
+  .tint-blue {
+    @apply border-[#C9DCFF] bg-[#EAF1FF] text-[#2563EB];
+  }
+  .tint-violet {
+    @apply border-[#E0D2FF] bg-[#F3EDFF] text-[#7C3AED];
+  }
+  .tint-green {
+    @apply border-[#BCE8CD] bg-[#EAF8F0] text-[#16A34A];
+  }
+  .tint-orange {
+    @apply border-[#FBD5BD] bg-[#FFF1E8] text-[#EA580C];
+  }
+  .tint-red {
+    @apply border-[#F6C9CF] bg-[#FEF0F2] text-[#DC3545];
+  }
+  .tint-teal {
+    @apply border-[#BFE8E8] bg-[#E8F7F7] text-[#0F8B8D];
+  }
+
+  /* ---- section headings */
+
+  .section {
+    @apply py-[76px] lg:py-[104px];
+  }
+
+  .section-alt {
+    @apply border-t border-line bg-gradient-to-b from-surface to-bg;
+  }
+
+  .section-head {
+    @apply mx-auto mb-12 max-w-[700px] text-center;
+  }
+
+  .kicker {
+    @apply inline-block text-[13px] font-bold uppercase tracking-[0.09em] text-brand;
+  }
+
+  .section-title {
+    @apply mt-2.5 text-[clamp(28px,3.8vw,44px)] font-extrabold tracking-[-0.03em];
+  }
+
+  .section-lead {
+    @apply mt-3.5 text-[17px] text-slate;
+  }
+
+  .text-gradient {
+    @apply bg-brand-gradient bg-clip-text text-transparent;
+  }
+
+  .check-icon {
+    @apply h-[18px] w-[18px] text-success;
+    stroke-width: 2.6;
+  }
+
+  .live-dot {
+    @apply h-2.5 w-2.5 flex-none animate-live-pulse rounded-full bg-red-500 motion-reduce:animate-none;
+  }
+
+  /* ---- pricing: gradient border without an extra wrapper element */
+
+  .price-featured {
+    @apply shadow-lift;
+    border: 2px solid transparent;
+    background:
+      linear-gradient(#fff, #fff) padding-box,
+      linear-gradient(135deg, #2563eb 0%, #4f46e5 55%, #7c3aed 100%) border-box;
+  }
+
+  /* ---- faq */
+
+  .faq-item {
+    @apply rounded-md border border-line bg-surface transition-[border-color,box-shadow] duration-200 open:border-brand/30 open:shadow-card;
+  }
+
+  .faq-item summary {
+    @apply flex cursor-pointer list-none items-center justify-between gap-4 px-[22px] py-[19px] text-[16.5px] font-semibold text-ink;
+  }
+
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-icon {
+    @apply relative h-7 w-7 flex-none rounded-[9px] bg-brand-tint;
+  }
+
+  .faq-icon::before,
+  .faq-icon::after {
+    @apply absolute left-1/2 top-1/2 h-0.5 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand transition-transform duration-200;
+    content: "";
+  }
+
+  .faq-icon::after {
+    @apply rotate-90;
+  }
+
+  .faq-item[open] .faq-icon::after {
+    @apply rotate-0;
+  }
+
+  .faq-answer {
+    @apply px-[22px] pb-5 text-[15.5px] text-slate;
+  }
+
+  .faq-answer a {
+    @apply font-semibold text-brand;
+  }
+
+  /* ---- inner pages */
+
+  .page-hero {
+    @apply relative overflow-hidden pb-9 pt-[52px] text-center;
+  }
+
+  .page-title {
+    @apply mt-2.5 text-[clamp(30px,4.6vw,48px)] font-extrabold tracking-[-0.03em];
+  }
+
+  .legal-card {
+    @apply mx-auto max-w-[840px] rounded-xl border border-line bg-surface p-[clamp(24px,5vw,56px)] shadow-soft;
+  }
+
+  .prose-legal h2 {
+    @apply mb-3 mt-10 text-[22px] font-bold;
+  }
+
+  .prose-legal h2:first-child {
+    @apply mt-0;
+  }
+
+  .prose-legal h3 {
+    @apply mb-2 mt-6 text-[17px] font-bold;
+  }
+
+  .prose-legal p,
+  .prose-legal li {
+    @apply text-base leading-[1.75] text-ink-soft;
+  }
+
+  .prose-legal p + p {
+    @apply mt-3;
+  }
+
+  .prose-legal ul,
+  .prose-legal ol {
+    @apply my-3 pl-[22px];
+  }
+
+  .prose-legal ul {
+    @apply list-disc;
+  }
+
+  .prose-legal ol {
+    @apply list-decimal;
+  }
+
+  .prose-legal li + li {
+    @apply mt-1.5;
+  }
+
+  .prose-legal a,
+  .callout a {
+    @apply text-brand underline underline-offset-[3px] [overflow-wrap:anywhere] hover:text-brand-dark;
+  }
+
+  .prose-legal strong {
+    @apply text-ink;
+  }
+
+  .prose-legal code,
+  .callout code {
+    @apply rounded-[6px] bg-slate-light px-1.5 py-px text-[0.9em] text-ink;
+  }
+
+  .callout {
+    @apply my-5 rounded-[14px] border border-brand-light bg-brand-tint px-[18px] py-4 text-ink-soft;
+  }
+
+  /* Visible stand-in for a site.config.json value that hasn't been filled
+     in yet - impossible to miss when reviewing a page before launch. */
+  .placeholder {
+    @apply rounded-[6px] border border-dashed border-[#F5D9A6] bg-[#FFF7E8] px-1.5 py-px text-[0.92em] font-semibold text-[#92400E] no-underline;
+  }
+}
