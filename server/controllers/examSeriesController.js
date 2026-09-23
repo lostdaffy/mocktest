@@ -227,30 +227,56 @@ async function removeQuestionFromMock(req, res) {
 // GET /api/exam-series/subjects/list -> subjects with per-chapter published practice counts
 async function listSubjectsForAdmin(req, res) {
   const Subject = require("../models/Subject");
-  const subjects = await Subject.find({ isActive: true }).sort({ displayOrder: 1 });
+  const subjects = await Subject.find({ isActive: true }).sort({ displayOrder: 1 }).lean();
 
-  const withCounts = await Promise.all(
-    subjects.map(async (s) => {
-      const chapters = await Promise.all(
-        s.chapters.map(async (ch) => {
-          const published = await Test.countDocuments({
-            type: "practice",
-            subject: s.name,
-            topic: ch.name,
-            publishStatus: "published",
-          });
-          const drafts = await Test.countDocuments({
-            type: "practice",
-            subject: s.name,
-            topic: ch.name,
-            publishStatus: "draft",
-          });
-          return { name: ch.name, topics: ch.topics, publishedTests: published, draftTests: drafts };
-        })
-      );
-      return { _id: s._id, name: s.name, icon: s.icon, chapters };
-    })
-  );
+  // ONE aggregation for the whole screen. This used to run two
+  // countDocuments per chapter - with 10 subjects of 20 chapters that was
+  // 400 separate queries on every page load, and it got slower as chapters
+  // were added. Now it's a single grouped count, and the per-level split
+  // comes along for free so the UI can show Easy/Medium/Hard/Advanced
+  // counts without asking again.
+  const counts = await Test.aggregate([
+    { $match: { type: "practice", publishStatus: { $in: ["published", "draft"] } } },
+    {
+      $group: {
+        _id: { subject: "$subject", topic: "$topic", level: "$difficultyLevel", status: "$publishStatus" },
+        n: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const emptyLevels = () => ({
+    easy: { published: 0, draft: 0 },
+    medium: { published: 0, draft: 0 },
+    hard: { published: 0, draft: 0 },
+    advanced: { published: 0, draft: 0 },
+  });
+
+  const byChapter = new Map();
+  for (const row of counts) {
+    const key = `${row._id.subject} ${row._id.topic}`;
+    if (!byChapter.has(key)) byChapter.set(key, { published: 0, draft: 0, levels: emptyLevels() });
+    const entry = byChapter.get(key);
+    const status = row._id.status === "published" ? "published" : "draft";
+    entry[status] += row.n;
+    if (entry.levels[row._id.level]) entry.levels[row._id.level][status] += row.n;
+  }
+
+  const withCounts = subjects.map((s) => ({
+    _id: s._id,
+    name: s.name,
+    icon: s.icon,
+    chapters: (s.chapters || []).map((ch) => {
+      const entry = byChapter.get(`${s.name} ${ch.name}`);
+      return {
+        name: ch.name,
+        topics: ch.topics,
+        publishedTests: entry?.published || 0,
+        draftTests: entry?.draft || 0,
+        levels: entry?.levels || emptyLevels(),
+      };
+    }),
+  }));
 
   res.json({ subjects: withCounts });
 }
@@ -333,9 +359,33 @@ async function generatePracticeTest(req, res) {
 // GET /api/exam-series/practice/:subject/:chapter -> all practice tests for a chapter (admin)
 async function listPracticeTests(req, res) {
   const { subject, chapter } = req.params;
-  const tests = await Test.find({ type: "practice", subject, topic: chapter })
-    .sort({ difficultyLevel: 1, seriesNumber: -1 })
-    .select("-questions");
+
+  // Sorting on difficultyLevel sorted it ALPHABETICALLY - advanced, easy,
+  // hard, medium - which is why the list looked shuffled. levelOrder sorts
+  // it the way the levels actually progress. questionCount is computed in
+  // the database so the (large) questions array never leaves it.
+  const tests = await Test.aggregate([
+    { $match: { type: "practice", subject, topic: chapter } },
+    {
+      $addFields: {
+        questionCount: { $size: { $ifNull: ["$questions", []] } },
+        levelOrder: {
+          $switch: {
+            branches: [
+              { case: { $eq: ["$difficultyLevel", "easy"] }, then: 0 },
+              { case: { $eq: ["$difficultyLevel", "medium"] }, then: 1 },
+              { case: { $eq: ["$difficultyLevel", "hard"] }, then: 2 },
+              { case: { $eq: ["$difficultyLevel", "advanced"] }, then: 3 },
+            ],
+            default: 4,
+          },
+        },
+      },
+    },
+    { $project: { questions: 0 } },
+    { $sort: { levelOrder: 1, seriesNumber: -1, createdAt: -1 } },
+  ]);
+
   res.json({ tests });
 }
 

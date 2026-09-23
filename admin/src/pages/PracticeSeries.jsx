@@ -4,13 +4,12 @@ import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 
 const LEVELS = ["easy", "medium", "hard", "advanced"];
-// Uses the same four difficulty colours the mobile app shows students, so
-// a chapter that reads "hard" here looks "hard" in the app too.
-const LEVEL_COLORS = {
-  easy: "bg-easy-bg text-easy border-easy/30 hover:border-easy",
-  medium: "bg-medium-bg text-medium border-medium/30 hover:border-medium",
-  hard: "bg-hard-bg text-hard border-hard/30 hover:border-hard",
-  advanced: "bg-advanced-bg text-advanced border-advanced/30 hover:border-advanced",
+// Badge colours for the level headings in the grouped test list.
+const LEVEL_BADGES = {
+  easy: "bg-easy-bg text-easy",
+  medium: "bg-medium-bg text-medium",
+  hard: "bg-hard-bg text-hard",
+  advanced: "bg-advanced-bg text-advanced",
 };
 
 export default function PracticeSeries() {
@@ -54,14 +53,19 @@ export default function PracticeSeries() {
     try {
       await api.delete(`/exam-series/mock/${testId}/question/${questionId}`);
       openReview(testId); // refresh the review
-      loadChapterTests(selectedSubject.name, openChapter.name);
+      setChapterTests((tests) =>
+        tests.map((t) => (t._id === testId ? { ...t, questionCount: Math.max(0, (t.questionCount || 1) - 1) } : t))
+      );
     } catch (err) {
       toast.error("Couldn't remove the question");
     }
   }
 
-  async function load(keepSubjectName) {
-    setLoading(true);
+  // silent: refresh the counts in the background without blanking the page.
+  // Every publish/delete used to trigger a full "Loading..." re-render of
+  // the whole subject list, which is what made the screen feel slow.
+  async function load(keepSubjectName, { silent = false } = {}) {
+    if (!silent) setLoading(true);
     try {
       const res = await api.get("/exam-series/subjects/list");
       setSubjects(res.data.subjects);
@@ -71,9 +75,9 @@ export default function PracticeSeries() {
         if (updated) setSelectedSubject(updated);
       }
     } catch (err) {
-      setMessage("Couldn't load subjects. Is the backend running?");
+      if (!silent) setMessage("Couldn't load subjects. Is the backend running?");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
@@ -118,7 +122,7 @@ export default function PracticeSeries() {
       });
       setMessage("✅ " + res.data.message);
       loadChapterTests(selectedSubject.name, chapter.name);
-      load(selectedSubject.name);
+      load(selectedSubject.name, { silent: true });
     } catch (err) {
       setMessage("❌ " + (err.response?.data?.message || "Couldn't generate the test"));
     } finally {
@@ -130,8 +134,11 @@ export default function PracticeSeries() {
     try {
       await api.patch(`/exam-series/practice/${testId}/publish`, { isFree });
       toast.success("Test published");
-      loadChapterTests(selectedSubject.name, openChapter.name);
-      load(selectedSubject.name);
+      // Update the row we already have instead of refetching the list.
+      setChapterTests((tests) =>
+        tests.map((t) => (t._id === testId ? { ...t, publishStatus: "published", isFree: !!isFree } : t))
+      );
+      load(selectedSubject.name, { silent: true });
     } catch (err) {
       toast.error("Publish failed: " + (err.response?.data?.message || ""));
     }
@@ -148,8 +155,8 @@ export default function PracticeSeries() {
     try {
       await api.delete(`/exam-series/mock/${testId}`);
       toast.success("Test deleted");
-      loadChapterTests(selectedSubject.name, openChapter.name);
-      load(selectedSubject.name);
+      setChapterTests((tests) => tests.filter((t) => t._id !== testId));
+      load(selectedSubject.name, { silent: true });
     } catch (err) {
       toast.error("Delete failed");
     }
@@ -262,97 +269,127 @@ export default function PracticeSeries() {
                     {ch.draftTests > 0 && ` · ${ch.draftTests} draft`}
                     {(ch.topics?.length || 0) > 0 && ` · ${ch.topics.length} topics`}
                   </p>
+                  {ch.levels && (
+                    <div className="flex gap-1.5 mt-2 flex-wrap">
+                      {LEVELS.map((level) => {
+                        const c = ch.levels[level] || { published: 0, draft: 0 };
+                        const total = c.published + c.draft;
+                        return (
+                          <span
+                            key={level}
+                            className={`text-[11px] px-1.5 py-0.5 rounded capitalize ${
+                              total ? LEVEL_BADGES[level] : "bg-slate-light text-slate-soft"
+                            }`}
+                            title={`${c.published} published, ${c.draft} draft`}
+                          >
+                            {level} {total}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
                 <span className="text-slate-soft">{isOpen ? "▲" : "▼"}</span>
               </button>
 
               {isOpen && (
                 <div className="border-t border-border-soft p-5 bg-slate-light">
-                  <p className="text-xs font-medium text-slate mb-2">Build a new test — pick a level:</p>
-                  <div className="flex gap-2 flex-wrap mb-5">
-                    {LEVELS.map((level) => {
-                      const busy = genBusy === `${ch.name}-${level}`;
-                      return (
-                        <button
-                          key={level}
-                          onClick={() => generate(ch, level)}
-                          disabled={!!genBusy}
-                          className={`px-4 py-2 rounded-lg border text-sm font-medium capitalize transition-colors disabled:opacity-50 inline-flex items-center gap-2 ${LEVEL_COLORS[level]}`}
-                        >
-                          {busy ? (
-                            <>
-                              <span className="inline-block w-3.5 h-3.5 border-2 border-border-strong border-t-slate rounded-full animate-spin"></span>
-                              Building...
-                            </>
-                          ) : (
-                            `+ ${level}`
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <p className="text-xs font-medium text-slate mb-2">Tests in this chapter:</p>
                   {testsLoading ? (
-                    <p className="text-sm text-slate-soft">Loading...</p>
-                  ) : chapterTests.length === 0 ? (
-                    <p className="text-sm text-slate-soft">No tests yet — build one above.</p>
+                    <p className="text-sm text-slate-soft">Loading tests...</p>
                   ) : (
-                    <div className="space-y-2">
-                      {chapterTests.map((t) => (
-                        <div
-                          key={t._id}
-                          className="bg-surface border border-border rounded-xl p-3 flex items-center justify-between gap-3 flex-wrap"
-                        >
-                          <div>
-                            <p className="font-medium text-ink text-sm">{t.title}</p>
-                            <p className="text-xs text-slate-soft">
-                              <span className="capitalize">{t.difficultyLevel}</span> ·{" "}
-                              <span
-                                className={t.publishStatus === "published" ? "text-success" : "text-warn"}
-                              >
-                                {t.publishStatus}
-                              </span>
-                              {t.publishStatus === "published" && (
-                                <span className={t.isFree ? "text-success" : "text-brand"}>
-                                  {" "}
-                                  · {t.isFree ? "FREE" : "Premium"}
+                    <div className="space-y-4">
+                      {/* One block per level, in the order students climb them,
+                          instead of one list with all four mixed together. */}
+                      {LEVELS.map((level) => {
+                        const levelTests = chapterTests.filter((t) => t.difficultyLevel === level);
+                        const busy = genBusy === `${ch.name}-${level}`;
+                        return (
+                          <div key={level} className="bg-surface border border-border rounded-xl overflow-hidden">
+                            <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-border-soft">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs font-semibold px-2 py-0.5 rounded capitalize ${LEVEL_BADGES[level]}`}>
+                                  {level}
                                 </span>
-                              )}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => openReview(t._id)}
-                              className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium"
-                            >
-                              👁 Review
-                            </button>
-                            {t.publishStatus === "draft" && (
-                              <>
-                                <button
-                                  onClick={() => publishTest(t._id, true)}
-                                  className="px-3 py-1.5 rounded-lg bg-success-light0 hover:bg-success text-white text-xs font-medium"
-                                >
-                                  Publish FREE
-                                </button>
-                                <button
-                                  onClick={() => publishTest(t._id, false)}
-                                  className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-xs font-medium"
-                                >
-                                  Publish Premium
-                                </button>
-                              </>
+                                <span className="text-xs text-slate-soft">
+                                  {levelTests.length} test{levelTests.length === 1 ? "" : "s"}
+                                  {levelTests.filter((t) => t.publishStatus === "published").length > 0 &&
+                                    ` · ${levelTests.filter((t) => t.publishStatus === "published").length} published`}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => generate(ch, level)}
+                                disabled={!!genBusy}
+                                className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-xs font-medium disabled:opacity-50 inline-flex items-center gap-2"
+                              >
+                                {busy ? (
+                                  <>
+                                    <span className="inline-block w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+                                    Building...
+                                  </>
+                                ) : (
+                                  "+ Build test"
+                                )}
+                              </button>
+                            </div>
+
+                            {levelTests.length === 0 ? (
+                              <p className="text-xs text-slate-soft px-4 py-3">No {level} test yet.</p>
+                            ) : (
+                              <div className="divide-y divide-border-soft">
+                                {levelTests.map((t) => (
+                                  <div key={t._id} className="px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+                                    <div className="min-w-0">
+                                      <p className="font-medium text-ink text-sm">{t.title}</p>
+                                      <p className="text-xs text-slate-soft">
+                                        {typeof t.questionCount === "number" && `${t.questionCount} questions · `}
+                                        <span className={t.publishStatus === "published" ? "text-success" : "text-warn"}>
+                                          {t.publishStatus}
+                                        </span>
+                                        {t.publishStatus === "published" && (
+                                          <span className={t.isFree ? "text-success" : "text-brand"}>
+                                            {" "}
+                                            · {t.isFree ? "FREE" : "Premium"}
+                                          </span>
+                                        )}
+                                      </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => openReview(t._id)}
+                                        className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium"
+                                      >
+                                        👁 Review
+                                      </button>
+                                      {t.publishStatus === "draft" && (
+                                        <>
+                                          <button
+                                            onClick={() => publishTest(t._id, true)}
+                                            className="px-3 py-1.5 rounded-lg bg-success-light0 hover:bg-success text-white text-xs font-medium"
+                                          >
+                                            Publish FREE
+                                          </button>
+                                          <button
+                                            onClick={() => publishTest(t._id, false)}
+                                            className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-xs font-medium"
+                                          >
+                                            Publish Premium
+                                          </button>
+                                        </>
+                                      )}
+                                      <button
+                                        onClick={() => deleteTest(t._id)}
+                                        className="px-3 py-1.5 rounded-lg bg-danger-light hover:opacity-80 text-danger text-xs font-medium"
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
                             )}
-                            <button
-                              onClick={() => deleteTest(t._id)}
-                              className="px-3 py-1.5 rounded-lg bg-danger-light hover:bg-danger-light text-danger text-xs font-medium"
-                            >
-                              Delete
-                            </button>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
 

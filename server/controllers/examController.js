@@ -8,10 +8,83 @@ const {
 } = require("../utils/liveExam");
 
 
-// GET /api/exams -> list all configured exams
+// GET /api/exams -> list configured exams
+// ?includeInactive=1 also returns archived patterns (admin screen), each one
+// carrying how many tests already exist for it, so deleting a pattern that
+// real papers depend on is a decision made with the number in front of you.
 async function listExamPatterns(req, res) {
-  const patterns = await ExamPattern.find({ isActive: true });
-  res.json({ patterns });
+  const includeInactive = req.query.includeInactive === "1" || req.query.includeInactive === "true";
+  const patterns = await ExamPattern.find(includeInactive ? {} : { isActive: true })
+    .sort({ isActive: -1, displayName: 1 })
+    .lean();
+
+  if (!includeInactive) return res.json({ patterns });
+
+  // One grouped count for every exam type, instead of a query per pattern.
+  const usage = await Test.aggregate([{ $group: { _id: "$examType", n: { $sum: 1 } } }]);
+  const usageByType = new Map(usage.map((u) => [u._id, u.n]));
+
+  res.json({
+    patterns: patterns.map((p) => ({ ...p, testCount: usageByType.get(p.examType) || 0 })),
+  });
+}
+
+// PATCH /api/exams/:id (admin) -> edit an existing pattern.
+// Kept separate from the upsert above: that one is keyed on examType, so
+// using it to rename an exam would quietly create a SECOND pattern instead
+// of renaming the one you were editing.
+async function updateExamPattern(req, res) {
+  try {
+    const { examType, displayName, durationMinutes, negativeMarking, marksPerQuestion, sections, isActive } = req.body;
+
+    const pattern = await ExamPattern.findById(req.params.id);
+    if (!pattern) return res.status(404).json({ message: "Exam pattern not found" });
+
+    if (examType && examType !== pattern.examType) {
+      const clash = await ExamPattern.findOne({ examType, _id: { $ne: pattern._id } });
+      if (clash) return res.status(409).json({ message: `Exam code "${examType}" already exists` });
+      pattern.examType = examType;
+    }
+    if (displayName !== undefined) pattern.displayName = displayName;
+    if (durationMinutes !== undefined) pattern.durationMinutes = durationMinutes;
+    if (negativeMarking !== undefined) pattern.negativeMarking = negativeMarking;
+    if (marksPerQuestion !== undefined) pattern.marksPerQuestion = marksPerQuestion;
+    if (Array.isArray(sections)) pattern.sections = sections;
+    if (isActive !== undefined) pattern.isActive = !!isActive;
+
+    await pattern.save();
+    res.json({ message: "Exam pattern updated", pattern });
+  } catch (err) {
+    res.status(500).json({ message: "Couldn't update the exam pattern", error: err.message });
+  }
+}
+
+// DELETE /api/exams/:id (admin)
+// Archives by default - the pattern disappears from the app and from test
+// generation but can be brought back, and any papers already built from it
+// keep working. ?permanent=1 removes the document for good; existing tests
+// are never touched either way.
+async function deleteExamPattern(req, res) {
+  try {
+    const pattern = await ExamPattern.findById(req.params.id);
+    if (!pattern) return res.status(404).json({ message: "Exam pattern not found" });
+
+    const permanent = req.query.permanent === "1" || req.query.permanent === "true";
+    if (!permanent) {
+      pattern.isActive = false;
+      await pattern.save();
+      return res.json({ message: `"${pattern.displayName}" archived`, pattern });
+    }
+
+    await ExamPattern.deleteOne({ _id: pattern._id });
+    const testCount = await Test.countDocuments({ examType: pattern.examType });
+    res.json({
+      message: `"${pattern.displayName}" deleted permanently`,
+      keptTests: testCount, // papers already built from it stay as they are
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Couldn't delete the exam pattern", error: err.message });
+  }
 }
 
 // POST /api/exams (admin only) -> define/update a new exam pattern once.
@@ -127,6 +200,8 @@ async function getLeaderboard(req, res) {
 module.exports = {
   listExamPatterns,
   upsertExamPattern,
+  updateExamPattern,
+  deleteExamPattern,
   listUpcomingLiveExams,
   getLeaderboard,
 };

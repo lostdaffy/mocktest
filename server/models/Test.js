@@ -61,4 +61,10 @@ const testSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Every practice-test lookup - the admin's Subject Practice screen and the
+// app's chapter list alike - filters on exactly these three fields. Without
+// this index each one scanned the whole Test collection, which gets slower
+// with every test that's ever generated.
+testSchema.index({ type: 1, subject: 1, topic: 1 });
+
 module.exports = mongoose.model("Test", testSchema);
