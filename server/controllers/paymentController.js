@@ -29,6 +29,9 @@ const { REFERRAL_SIGNUP_REWARD, REFERRAL_OFFER_ACTIVE } = require("../config/ref
 // is never fully free (protects revenue and discourages fraud rings).
 const MAX_CREDIT_DISCOUNT_PERCENT = 50;
 
+// How long an unpaid order holds one of a coupon's remaining uses.
+const COUPON_HOLD_MINUTES = 15;
+
 // Payments stay OFF while the server holds Razorpay TEST keys. In test mode
 // anyone can "pay" with Razorpay's publicly documented test card numbers and
 // walk away with a real subscription. Putting the live keys (rzp_live_...)
@@ -81,6 +84,37 @@ async function createOrder(req, res) {
       } catch (err) {
         return res.status(400).json({ message: err.message });
       }
+
+      // One coupon, one use per student. Without this, a single student can
+      // buy again and again on the same code - each purchase is only one
+      // use, so even maxUses can't stop them until the count runs out.
+      const alreadyUsed = await Subscription.findOne({
+        user: req.user._id,
+        couponCode: appliedCoupon.code,
+        status: "paid",
+      });
+      if (alreadyUsed) {
+        return res.status(400).json({ message: "Ye coupon aap pehle use kar chuke ho" });
+      }
+
+      // Checkouts other students already have open count against the limit
+      // too. usedCount only rises once money lands, so without this a
+      // single-use coupon that leaks can be opened by twenty people at once
+      // and every one of them pays. Their own abandoned attempts are
+      // excluded (they'd otherwise lock themselves out for 15 minutes), and
+      // a hold expires after 15 minutes so an abandoned checkout doesn't
+      // keep a coupon reserved forever.
+      if (appliedCoupon.maxUses !== null) {
+        const pendingHolds = await Subscription.countDocuments({
+          couponCode: appliedCoupon.code,
+          status: "created",
+          user: { $ne: req.user._id },
+          createdAt: { $gte: new Date(Date.now() - COUPON_HOLD_MINUTES * 60 * 1000) },
+        });
+        if (appliedCoupon.usedCount + pendingHolds >= appliedCoupon.maxUses) {
+          return res.status(400).json({ message: "This coupon has reached its usage limit" });
+        }
+      }
     } else if (useCredits && user.referralCredits > 0) {
       const maxDiscount = Math.floor((basePrice * MAX_CREDIT_DISCOUNT_PERCENT) / 100);
       discount = Math.min(user.referralCredits, maxDiscount);
@@ -109,7 +143,7 @@ async function createOrder(req, res) {
       plan,
       amount: finalAmount,
       creditsUsed: discount,
-      couponCode: appliedCoupon?.code, // harmless if the schema doesn't declare this field - just won't persist
+      couponCode: appliedCoupon?.code,
       startDate,
       endDate,
       razorpayOrderId: order.id,
@@ -183,7 +217,21 @@ async function activateSubscription({ razorpayOrderId, razorpayPaymentId, razorp
   if (subscription.couponCode) {
     try {
       const Coupon = require("../models/Coupon");
-      await Coupon.updateOne({ code: subscription.couponCode }, { $inc: { usedCount: 1 } });
+      // Conditional $inc: two students paying on the last remaining use at
+      // the same moment can't both push the count past maxUses. The one
+      // that loses the race keeps its subscription - the money has already
+      // been taken and refusing it here would be worse - but it is logged
+      // so an over-used coupon is visible rather than silent.
+      const counted = await Coupon.updateOne(
+        {
+          code: subscription.couponCode,
+          $or: [{ maxUses: null }, { $expr: { $lt: ["$usedCount", "$maxUses"] } }],
+        },
+        { $inc: { usedCount: 1 } }
+      );
+      if (counted.modifiedCount === 0) {
+        console.warn(`Coupon ${subscription.couponCode} was used past its limit by subscription ${subscription._id}`);
+      }
     } catch (err) {
       console.error("Coupon usage count update failed (subscription still activated):", err.message);
     }
