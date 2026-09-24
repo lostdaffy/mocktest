@@ -4,6 +4,59 @@ const ExamPattern = require("../models/ExamPattern");
 const { generateQuestions } = require("../services/geminiService");
 const { runValidationPipeline } = require("../services/validationPipeline");
 
+// How much of every mock is made of REAL previous-year questions. The rest
+// is generated fresh. If the PYQ Bank doesn't have enough for a subject,
+// the shortfall is simply generated too - the mock is never left short.
+const PYQ_MIX_PERCENT = 50;
+
+// Pause between Gemini calls, to stay under the free tier's 15 requests/min.
+// Overridable only so the test harness (which stubs Gemini out entirely)
+// doesn't have to sit through the waits.
+const GEMINI_PAUSE_MS = Number(process.env.GEMINI_PAUSE_MS) || 5000;
+
+// Picks real previous-year questions for one section of a mock.
+//
+// Only questions from a PYQ paper the admin has already PUBLISHED are
+// eligible: publishing is what marks them reviewed and answer-keyed
+// (see publishPyqPaper), so nothing unchecked can slip into a mock.
+// Questions already used by another mock of the same exam are avoided
+// first, so two mocks don't end up looking like the same paper; they're
+// only reused if the bank can't supply enough fresh ones.
+async function pickPyqQuestions(examStage, subject, wanted, excludeIds = []) {
+  if (wanted <= 0) return [];
+
+  const base = {
+    source: "pyq",
+    // NOT examStage: the Question schema has no such field, so the value the
+    // PYQ extractor sets is dropped by Mongoose and only examType survives.
+    // examType is an array, and Mongo matches a plain string against it.
+    examType: examStage,
+    subject,
+    status: "published",
+    correctIndex: { $ne: null },
+  };
+
+  const sample = async (exclude, size) => {
+    if (size <= 0) return [];
+    const rows = await Question.aggregate([
+      { $match: { ...base, _id: { $nin: exclude } } },
+      { $sample: { size } },
+      { $project: { _id: 1 } },
+    ]);
+    return rows.map((r) => r._id);
+  };
+
+  const usedInOtherMocks = await Test.distinct("questions", { type: "full_mock", examStage });
+  const picked = await sample([...excludeIds, ...usedInOtherMocks], wanted);
+
+  if (picked.length < wanted) {
+    const more = await sample([...excludeIds, ...picked], wanted - picked.length);
+    picked.push(...more);
+  }
+
+  return picked;
+}
+
 // GET /api/exam-series/exams -> list all configured exams (for the admin's exam-wise pages)
 async function listExams(req, res) {
   const patterns = await ExamPattern.find({ isActive: true }).sort({ displayName: 1 });
@@ -112,23 +165,55 @@ async function generateExamMock(req, res) {
         }
         remaining -= thisBatch;
         // Pause ~5s between calls -> at most ~12 calls/min, safely under the 15 limit
-        await new Promise((r) => setTimeout(r, 5000));
+        await new Promise((r) => setTimeout(r, GEMINI_PAUSE_MS));
       }
     }
 
-    // For each section, generate exam-specific questions fresh, so this mock's
-    // content is guaranteed to be for THIS exam only.
+    // Each section is half REAL previous-year questions and half freshly
+    // generated ones, so a mock feels like the actual paper instead of an
+    // entirely invented one. The PYQ half comes from papers the admin has
+    // already reviewed and published in the PYQ Bank - that feature itself
+    // is untouched, these questions are only referenced here as well.
+    let pyqUsed = 0;
+
     for (const section of pattern.sections) {
+      const sectionStart = allQuestionIds.length;
+
+      const pyqWanted = Math.round((section.questionCount * PYQ_MIX_PERCENT) / 100);
+      const pyqIds = await pickPyqQuestions(examStage, section.subject, pyqWanted, allQuestionIds);
+      if (pyqIds.length > 0) {
+        allQuestionIds.push(...pyqIds);
+        pyqUsed += pyqIds.length;
+        test.questions = allQuestionIds;
+        await test.save();
+      }
+
+      // Whatever the PYQ bank couldn't supply is generated instead, so a
+      // thin bank just means a more AI-heavy mock, never a short one.
+      const aiNeeded = Math.max(0, section.questionCount - pyqIds.length);
+      const easy = Math.round((aiNeeded * (section.difficultyMix?.easy ?? 30)) / 100);
+      const medium = Math.round((aiNeeded * (section.difficultyMix?.medium ?? 50)) / 100);
       const perDifficulty = {
-        easy: Math.round((section.questionCount * (section.difficultyMix?.easy ?? 30)) / 100),
-        medium: Math.round((section.questionCount * (section.difficultyMix?.medium ?? 50)) / 100),
-        hard: Math.round((section.questionCount * (section.difficultyMix?.hard ?? 20)) / 100),
+        easy,
+        medium,
+        hard: Math.max(0, aiNeeded - easy - medium), // takes the rounding, so the section lands on its exact count
       };
 
       for (const [difficulty, count] of Object.entries(perDifficulty)) {
         if (count <= 0) continue;
         await generateInChunks(section, difficulty, count);
       }
+
+      // Shuffle within the section, otherwise every real question sits at
+      // the top of its subject and the mock reads in two obvious halves.
+      const sectionIds = allQuestionIds.slice(sectionStart);
+      for (let i = sectionIds.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [sectionIds[i], sectionIds[j]] = [sectionIds[j], sectionIds[i]];
+      }
+      allQuestionIds.splice(sectionStart, sectionIds.length, ...sectionIds);
+      test.questions = allQuestionIds;
+      await test.save();
     }
 
     // The mock was already created upfront and saved progressively. Just report.
@@ -147,7 +232,7 @@ async function generateExamMock(req, res) {
       : "";
 
     res.status(201).json({
-      message: `Mock #${test.seriesNumber} ban gaya — ${finalCount} questions.${note} Review karke publish karo (100 zaroori).`,
+      message: `Mock #${test.seriesNumber} ban gaya — ${finalCount} questions (${pyqUsed} purane paper se, ${finalCount - pyqUsed} naye).${note} Review karke publish karo (100 zaroori).`,
       test: { _id: test._id, title: test.title, questionCount: finalCount },
     });
   } catch (err) {
@@ -399,8 +484,12 @@ async function listPracticeTests(req, res) {
 // generation just proceeds without grounding, same as before.
 async function getPyqStyleExamples(examStage, subject, limit = 4) {
   if (!subject) return [];
+  // Matches on examType, not examStage: Question has no examStage field, so
+  // the value the PYQ extractor sets never actually reaches the database.
+  // Matching on it meant this silently returned nothing and every batch was
+  // generated ungrounded.
   const docs = await Question.aggregate([
-    { $match: { examStage, subject, source: "pyq", status: "published" } },
+    { $match: { examType: examStage, subject, source: "pyq", status: "published" } },
     { $sample: { size: limit } },
   ]);
   return docs.map((q) => q.text);
