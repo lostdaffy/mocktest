@@ -1,8 +1,10 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const Subscription = require("../models/Subscription");
-
-const EXAM_OPTIONS = ["SSC_CGL", "UP_POLICE", "RAILWAY", "BANKING", "CTET"];
+const Attempt = require("../models/Attempt");
+const Report = require("../models/Report");
+const ExamPattern = require("../models/ExamPattern");
+const { deleteAccountData } = require("../services/accountDeletion");
 const PLAN_DURATION_MONTHS = { quarterly: 3, half_yearly: 6, yearly: 12 };
 
 // Builds the Mongo filter shared by list/stats/export, so the three stay
@@ -65,7 +67,10 @@ async function searchUsers(req, res) {
     User.countDocuments(filter),
   ]);
 
-  res.json({ users, total, page, limit, pages: Math.max(1, Math.ceil(total / limit)), examOptions: EXAM_OPTIONS });
+  // Read from the exam patterns instead of a hardcoded list, so an exam or
+  // post added in admin appears in this filter without a code change.
+  const examOptions = await ExamPattern.distinct("examType", { isActive: true });
+  res.json({ users, total, page, limit, pages: Math.max(1, Math.ceil(total / limit)), examOptions: examOptions.sort() });
 }
 
 // GET /api/admin/users/stats -> summary counts for the dashboard cards.
@@ -214,4 +219,167 @@ async function manageSubscription(req, res) {
   }
 }
 
-module.exports = { searchUsers, getUserStats, exportUsersCsv, adminResetPassword, manageSubscription };
+
+// GET /api/admin/users/:id -> everything support needs about ONE account,
+// in one call: who they are, what state the account is in, what they paid,
+// and what they've actually been doing. Built for the "a user says X isn't
+// working" conversation, where hunting through four screens loses time.
+async function getUserDetail(req, res) {
+  try {
+    // The three auth fields are select:false on the schema (they must never
+    // leak to students) - support genuinely needs them, so ask explicitly.
+    const user = await User.findById(req.params.id).select("+failedLoginAttempts +lockUntil +activeSessionId +passwordHash");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const now = new Date();
+    const [subscriptions, attemptCount, recentAttempts, reportCount, referrer, referredCount] = await Promise.all([
+      Subscription.find({ user: user._id }).sort({ createdAt: -1 }).limit(10).lean(),
+      Attempt.countDocuments({ user: user._id }),
+      Attempt.find({ user: user._id })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .populate("test", "title type examStage")
+        .select("test score totalMarks correctCount wrongCount skippedCount accuracy status rank submittedAt createdAt")
+        .lean(),
+      Report.countDocuments({ reportedBy: user._id }),
+      user.referredBy ? User.findById(user.referredBy).select("name phone").lean() : null,
+      User.countDocuments({ referredBy: user._id }),
+    ]);
+
+    const lockedUntil = user.lockUntil && user.lockUntil > now ? user.lockUntil : null;
+    const expiresAt = user.subscriptionExpiresAt;
+
+    res.json({
+      user: {
+        _id: user._id,
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        role: user.role,
+        examGoals: user.examGoals,
+        preferredLanguage: user.preferredLanguage,
+        streakCount: user.streakCount,
+        lastActiveDate: user.lastActiveDate,
+        createdAt: user.createdAt,
+        subscriptionStatus: user.subscriptionStatus,
+        subscriptionPlan: user.subscriptionPlan,
+        subscriptionExpiresAt: expiresAt,
+        daysLeft: expiresAt ? Math.ceil((new Date(expiresAt) - now) / 86400000) : null,
+        freeUsage: user.freeUsage,
+        referralCode: user.referralCode,
+        referralCredits: user.referralCredits,
+        referredBy: referrer ? { name: referrer.name, phone: referrer.phone } : null,
+        referredCount,
+      },
+      // Each flag is a specific "this is why they're stuck" answer.
+      flags: {
+        locked: !!lockedUntil,
+        lockedUntil,
+        lockMinutesLeft: lockedUntil ? Math.ceil((lockedUntil - now) / 60000) : 0,
+        failedLoginAttempts: user.failedLoginAttempts || 0,
+        hasEmail: !!user.email, // no email = "forgot password" can't work for them
+        hasPassword: !!user.passwordHash, // legacy Google account, can only get in via email reset
+        loggedInSomewhere: !!user.activeSessionId, // single-device: a stale session logs them out elsewhere
+        hasPushToken: !!user.pushToken,
+      },
+      activity: { attemptCount, recentAttempts, reportCount },
+      subscriptions,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Couldn't load the user", error: err.message });
+  }
+}
+
+// PATCH /api/admin/users/:id/unlock
+// Clears the login lockout after the "I'm typing the right password and it
+// says wait 15 minutes" call, without touching their password.
+async function unlockUser(req, res) {
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { $set: { failedLoginAttempts: 0 }, $unset: { lockUntil: 1 } },
+    { new: true }
+  ).select("name phone");
+  if (!user) return res.status(404).json({ message: "User not found" });
+  res.json({ message: `${user.name} ka account unlock ho gaya`, user });
+}
+
+// PATCH /api/admin/users/:id/logout
+// Ends the session on whatever device holds it. This is the fix for "I
+// changed my phone and it says I'm logged in somewhere else" - only one
+// device can be signed in at a time (see middleware/auth.js).
+async function forceLogout(req, res) {
+  const user = await User.findByIdAndUpdate(req.params.id, { $unset: { activeSessionId: 1 } }, { new: true }).select("name phone");
+  if (!user) return res.status(404).json({ message: "User not found" });
+  res.json({ message: `${user.name} ko sabhi devices se logout kar diya. Ab wo naye device pe login kar sakte hain.`, user });
+}
+
+// PATCH /api/admin/users/:id/profile  { name, email, examGoals }
+// Support-side corrections. The email matters most: a student who typed it
+// wrong at signup can never receive a password-reset code until it's fixed,
+// and they can't fix it themselves without logging in first.
+async function updateUserProfile(req, res) {
+  try {
+    const { name, email, examGoals } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (name !== undefined) {
+      if (!String(name).trim()) return res.status(400).json({ message: "Naam khaali nahi ho sakta" });
+      user.name = String(name).trim();
+    }
+
+    if (email !== undefined) {
+      const clean = String(email).trim().toLowerCase();
+      if (clean) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
+          return res.status(400).json({ message: "Email format valid nahi hai" });
+        }
+        const taken = await User.findOne({ email: clean, _id: { $ne: user._id } }).select("_id");
+        if (taken) return res.status(409).json({ message: "Ye email kisi aur account mein use ho raha hai" });
+        user.email = clean;
+      } else {
+        user.email = undefined; // clearing it is allowed; unset keeps the sparse index happy
+      }
+    }
+
+    if (Array.isArray(examGoals)) user.examGoals = examGoals.filter(Boolean);
+
+    await user.save();
+    res.json({ message: "Profile update ho gaya", user: { _id: user._id, name: user.name, email: user.email, examGoals: user.examGoals } });
+  } catch (err) {
+    if (err.code === 11000) return res.status(409).json({ message: "Ye email kisi aur account mein use ho raha hai" });
+    res.status(500).json({ message: "Update failed", error: err.message });
+  }
+}
+
+// DELETE /api/admin/users/:id
+// For the deletion requests that arrive by email (rankveer.com/delete-account
+// promises this route for people who can't sign in). Runs the exact same
+// deletion the app's own button runs - see services/accountDeletion.js.
+async function deleteUser(req, res) {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (user.role === "admin") {
+      return res.status(403).json({ message: "Admin account delete nahi kiya ja sakta" });
+    }
+
+    await deleteAccountData(user);
+    res.json({ message: `${user.name} (${user.phone}) ka account aur data delete ho gaya` });
+  } catch (err) {
+    res.status(500).json({ message: "Delete failed", error: err.message });
+  }
+}
+
+module.exports = {
+  searchUsers,
+  getUserStats,
+  exportUsersCsv,
+  adminResetPassword,
+  manageSubscription,
+  getUserDetail,
+  unlockUser,
+  forceLogout,
+  updateUserProfile,
+  deleteUser,
+};

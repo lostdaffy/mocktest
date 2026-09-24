@@ -88,11 +88,9 @@ function maskEmail(email) {
 
 const isDuplicateKey = (err, field) => err && err.code === 11000 && (!field || JSON.stringify(err.keyPattern || {}).includes(field));
 
-// Keyed with the server secret so the stored value can't be reversed, or
-// matched against a guessed number, by anyone who only has the database.
-// (Rotating JWT_SECRET just means older records stop matching - harmless.)
-const hashPhone = (phone) =>
-  crypto.createHmac("sha256", process.env.JWT_SECRET).update(`deleted-phone:${phone}`).digest("hex");
+// Deleting an account is also something an admin can do on request (see
+// adminUserController), so both paths share one implementation.
+const { deleteAccountData, hashPhone } = require("../services/accountDeletion");
 
 // Asks an already-logged-in student for their password again before a
 // sensitive action (changing the recovery email, deleting the account).
@@ -588,38 +586,7 @@ async function deleteAccount(req, res) {
     const denied = await recheckPassword(req.user._id, req.body.password, "Account delete karne ke liye apna password sahi daalo");
     if (denied) return res.status(denied.status).json(denied.body);
 
-    const userId = req.user._id;
-    const phone = req.user.phone;
-    const usage = req.user.freeUsage || {};
-
-    // Recorded first: if anything below fails, the account still exists and
-    // the student can simply try again.
-    if (phone) {
-      await DeletedAccount.findOneAndUpdate(
-        { phoneHash: hashPhone(phone) },
-        {
-          freeUsage: {
-            mockTestsUsed: usage.mockTestsUsed || 0,
-            liveExamsUsed: usage.liveExamsUsed || 0,
-            pyqUsed: usage.pyqUsed || 0,
-          },
-          deletedAt: new Date(),
-        },
-        { upsert: true }
-      );
-    }
-
-    await Promise.all([
-      Attempt.deleteMany({ user: userId }), // results, answers, live-exam ranks
-      Report.deleteMany({ reportedBy: userId }),
-      Test.deleteMany({ generatedForUser: userId }), // their personal practice tests
-      Subscription.deleteMany({ user: userId, status: { $ne: "paid" } }), // unpaid orders aren't tax records
-      phone ? PhoneOtp.deleteMany({ phone }) : null,
-    ]);
-
-    // Last - this also ends every session, since the auth middleware
-    // rejects tokens for users that no longer exist.
-    await User.deleteOne({ _id: userId });
+    await deleteAccountData(req.user);
 
     res.json({ message: "Aapka account aur uska data delete ho gaya hai." });
   } catch (err) {

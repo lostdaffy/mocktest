@@ -54,6 +54,90 @@ export default function Users() {
   const [subReason, setSubReason] = useState("");
   const [subSaving, setSubSaving] = useState(false);
 
+  // ---- Support view: everything about one account, and the fixes for it
+  const [detailId, setDetailId] = useState(null);
+  const [detail, setDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [actionBusy, setActionBusy] = useState("");
+
+  async function openDetail(id) {
+    setDetailId(id);
+    setDetail(null);
+    setDetailLoading(true);
+    try {
+      const res = await api.get("/admin/users/" + id);
+      setDetail(res.data);
+      setEditName(res.data.user?.name || "");
+      setEditEmail(res.data.user?.email || "");
+    } catch (err) {
+      toast.error("Couldn't load the user: " + (err.response?.data?.message || err.message));
+      setDetailId(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  }
+
+  function closeDetail() {
+    setDetailId(null);
+    setDetail(null);
+  }
+
+  async function runUserAction(path, busyKey) {
+    setActionBusy(busyKey);
+    try {
+      const res = await api.patch("/admin/users/" + detailId + path);
+      toast.success(res.data.message || "Done");
+      await openDetail(detailId);
+      load(page);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Action failed");
+    } finally {
+      setActionBusy("");
+    }
+  }
+
+  async function saveUserProfile() {
+    setSavingProfile(true);
+    try {
+      await api.patch("/admin/users/" + detailId + "/profile", { name: editName, email: editEmail });
+      toast.success("Profile updated");
+      await openDetail(detailId);
+      load(page);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Couldn't save");
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
+  async function deleteUserAccount() {
+    const u = detail?.user;
+    const ok = await toast.confirm({
+      title: "Delete this account?",
+      message:
+        (u ? u.name + " (" + u.phone + ") — " : "") +
+        "profile, test results, progress and referral credits are removed permanently. Paid payment records are kept for tax. This can't be undone.",
+      confirmLabel: "Delete forever",
+      danger: true,
+    });
+    if (!ok) return;
+    setActionBusy("delete");
+    try {
+      const res = await api.delete("/admin/users/" + detailId);
+      toast.success(res.data.message || "Account deleted");
+      closeDetail();
+      load(page);
+      loadStats();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Delete failed");
+    } finally {
+      setActionBusy("");
+    }
+  }
+
   const debounceRef = useRef(null);
 
   function currentParams(targetPage = page, term = search) {
@@ -331,6 +415,12 @@ export default function Users() {
 
                   <div className="flex flex-col gap-2 shrink-0">
                     <button
+                      onClick={() => openDetail(u._id)}
+                      className="px-3.5 py-1.5 rounded-lg bg-ink-soft/5 hover:bg-ink-soft/10 text-ink-soft text-xs font-medium transition-colors whitespace-nowrap"
+                    >
+                      Details
+                    </button>
+                    <button
                       onClick={() => openSubModal(u)}
                       className="px-3.5 py-1.5 rounded-lg bg-brand/5 hover:bg-brand/10 text-brand text-xs font-medium transition-colors whitespace-nowrap"
                     >
@@ -370,6 +460,208 @@ export default function Users() {
           >
             <RiArrowRightSLine size={18} />
           </button>
+        </div>
+      )}
+
+      {/* Support view: one account, its state, and the fixes for it */}
+      {detailId && (
+        <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-surface rounded-lg w-full max-w-3xl max-h-[88vh] flex flex-col">
+            <div className="flex items-start justify-between p-5 border-b border-border-soft">
+              <div className="min-w-0">
+                <h3 className="font-semibold text-ink">{detail?.user?.name || "Loading..."}</h3>
+                {detail?.user && (
+                  <p className="text-xs text-slate-soft mt-0.5">
+                    {detail.user.phone || "no phone"}
+                    {detail.user.email ? " · " + detail.user.email : " · no email"}
+                    {" · joined " + new Date(detail.user.createdAt).toLocaleDateString("en-IN")}
+                    {detail.user.role === "admin" && " · ADMIN"}
+                  </p>
+                )}
+              </div>
+              <button onClick={closeDetail} className="text-slate-soft hover:text-slate text-2xl leading-none">
+                ×
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto flex-1 space-y-5">
+              {detailLoading || !detail ? (
+                <p className="text-sm text-slate-soft">Loading account...</p>
+              ) : (
+                <>
+                  {/* Why they're stuck, at a glance */}
+                  <div className="flex flex-wrap gap-2">
+                    {detail.flags.locked && (
+                      <Flag tone="danger">🔒 Locked · {detail.flags.lockMinutesLeft} min left</Flag>
+                    )}
+                    {!detail.flags.hasEmail && <Flag tone="warn">No email · password reset impossible</Flag>}
+                    {!detail.flags.hasPassword && <Flag tone="warn">No password set · can only get in via email reset</Flag>}
+                    {detail.flags.loggedInSomewhere && <Flag tone="slate">Logged in on a device</Flag>}
+                    {detail.flags.failedLoginAttempts > 0 && (
+                      <Flag tone="slate">{detail.flags.failedLoginAttempts} failed login attempts</Flag>
+                    )}
+                    {!detail.flags.hasPushToken && <Flag tone="slate">No notifications token</Flag>}
+                    {!detail.flags.locked &&
+                      detail.flags.hasEmail &&
+                      detail.flags.hasPassword &&
+                      detail.flags.failedLoginAttempts === 0 && <Flag tone="success">Account healthy</Flag>}
+                  </div>
+
+                  {/* The three fixes that solve most support calls */}
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => runUserAction("/unlock", "unlock")}
+                      disabled={!!actionBusy}
+                      className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium disabled:opacity-50"
+                    >
+                      {actionBusy === "unlock" ? "Unlocking..." : "Unlock login"}
+                    </button>
+                    <button
+                      onClick={() => runUserAction("/logout", "logout")}
+                      disabled={!!actionBusy}
+                      className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium disabled:opacity-50"
+                    >
+                      {actionBusy === "logout" ? "Logging out..." : "Log out of all devices"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        closeDetail();
+                        setResetTarget(detail.user);
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-warn-light hover:opacity-80 text-warn text-xs font-medium"
+                    >
+                      Reset password
+                    </button>
+                    <button
+                      onClick={() => {
+                        closeDetail();
+                        openSubModal(detail.user);
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-brand/5 hover:bg-brand/10 text-brand text-xs font-medium"
+                    >
+                      Manage plan
+                    </button>
+                    {detail.user.role !== "admin" && (
+                      <button
+                        onClick={deleteUserAccount}
+                        disabled={!!actionBusy}
+                        className="px-3 py-1.5 rounded-lg bg-danger-light hover:opacity-80 text-danger text-xs font-medium ml-auto disabled:opacity-50"
+                      >
+                        {actionBusy === "delete" ? "Deleting..." : "Delete account"}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Fixing a mistyped email is what makes password reset work again */}
+                  <Panel title="Profile">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs text-slate mb-1">Name</label>
+                        <input value={editName} onChange={(e) => setEditName(e.target.value)} className="rv-input !py-1.5 text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate mb-1">Email (password reset goes here)</label>
+                        <input
+                          value={editEmail}
+                          onChange={(e) => setEditEmail(e.target.value)}
+                          placeholder="not set"
+                          className="rv-input !py-1.5 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 mt-3">
+                      <button
+                        onClick={saveUserProfile}
+                        disabled={savingProfile}
+                        className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-xs font-medium disabled:opacity-50"
+                      >
+                        {savingProfile ? "Saving..." : "Save"}
+                      </button>
+                      <span className="text-xs text-slate-soft">
+                        Exam: {(detail.user.examGoals || []).join(", ") || "—"} · Language:{" "}
+                        {detail.user.preferredLanguage || "—"} · Streak: {detail.user.streakCount || 0}
+                      </span>
+                    </div>
+                  </Panel>
+
+                  <Panel title="Subscription">
+                    <p className="text-sm text-ink">
+                      {detail.user.subscriptionStatus === "active" ? (
+                        <span className="text-success font-medium">
+                          Premium ({PLAN_LABELS[detail.user.subscriptionPlan] || detail.user.subscriptionPlan || "?"})
+                          {typeof detail.user.daysLeft === "number" && " · " + detail.user.daysLeft + " days left"}
+                        </span>
+                      ) : (
+                        <span className="text-slate">{detail.user.subscriptionStatus || "free"}</span>
+                      )}
+                      {detail.user.subscriptionExpiresAt &&
+                        " · expires " + new Date(detail.user.subscriptionExpiresAt).toLocaleDateString("en-IN")}
+                    </p>
+                    <p className="text-xs text-slate-soft mt-1">
+                      Free usage — mocks {detail.user.freeUsage?.mockTestsUsed || 0} · live{" "}
+                      {detail.user.freeUsage?.liveExamsUsed || 0} · PYQ {detail.user.freeUsage?.pyqUsed || 0}
+                    </p>
+
+                    {detail.subscriptions?.length > 0 ? (
+                      <div className="mt-3 space-y-1.5">
+                        {detail.subscriptions.map((s) => (
+                          <div key={s._id} className="text-xs flex items-center justify-between gap-3 border-b border-border-soft pb-1.5">
+                            <span className="text-ink-soft">
+                              ₹{s.amount} · {PLAN_LABELS[s.plan] || s.plan}
+                              {s.couponCode && " · coupon " + s.couponCode}
+                              {s.creditsUsed > 0 && " · ₹" + s.creditsUsed + " credit"}
+                            </span>
+                            <span className={s.status === "paid" ? "text-success" : "text-slate-soft"}>
+                              {s.status} · {new Date(s.createdAt).toLocaleDateString("en-IN")}
+                            </span>
+                          </div>
+                        ))}
+                        <p className="text-[11px] text-slate-soft pt-1">
+                          Razorpay payment id of the latest paid order:{" "}
+                          {detail.subscriptions.find((s) => s.status === "paid")?.razorpayPaymentId || "—"}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-soft mt-2">No payment records.</p>
+                    )}
+                  </Panel>
+
+                  <Panel title={"Activity · " + (detail.activity?.attemptCount || 0) + " tests taken"}>
+                    {detail.activity?.recentAttempts?.length > 0 ? (
+                      <div className="space-y-1.5">
+                        {detail.activity.recentAttempts.map((a) => (
+                          <div key={a._id} className="text-xs flex items-center justify-between gap-3 border-b border-border-soft pb-1.5">
+                            <span className="text-ink-soft truncate">{a.test?.title || "Deleted test"}</span>
+                            <span className="text-slate-soft whitespace-nowrap">
+                              {a.status === "in_progress" ? (
+                                <span className="text-warn">in progress</span>
+                              ) : (
+                                a.score + "/" + (a.totalMarks || 0) + " · " + (a.accuracy || 0) + "%"
+                              )}
+                              {" · " + new Date(a.submittedAt || a.createdAt).toLocaleDateString("en-IN")}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-soft">Hasn't taken any test yet.</p>
+                    )}
+                    <p className="text-xs text-slate-soft mt-2">
+                      Question reports filed: {detail.activity?.reportCount || 0}
+                    </p>
+                  </Panel>
+
+                  <Panel title="Referrals">
+                    <p className="text-xs text-slate">
+                      Code <b className="text-ink">{detail.user.referralCode || "—"}</b> · ₹
+                      {detail.user.referralCredits || 0} credit · {detail.user.referredCount || 0} joined with it
+                      {detail.user.referredBy && " · referred by " + detail.user.referredBy.name + " (" + detail.user.referredBy.phone + ")"}
+                    </p>
+                  </Panel>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -484,6 +776,25 @@ export default function Users() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function Flag({ tone, children }) {
+  const tones = {
+    danger: "bg-danger-light text-danger",
+    warn: "bg-warn-light text-warn",
+    success: "bg-success-light text-success",
+    slate: "bg-slate-light text-slate",
+  };
+  return <span className={"text-[11px] font-medium px-2 py-1 rounded-full " + (tones[tone] || tones.slate)}>{children}</span>;
+}
+
+function Panel({ title, children }) {
+  return (
+    <div className="border border-border-soft rounded-xl p-4">
+      <p className="text-xs font-semibold text-slate uppercase tracking-wide mb-2">{title}</p>
+      {children}
     </div>
   );
 }
