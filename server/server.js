@@ -175,7 +175,11 @@ const authLimit = (max, keyGenerator) =>
 // limiter on "/api/auth/signup" would also count every
 // "/api/auth/signup/request-otp" call and lock a real student out of
 // finishing signup after a resend and a couple of mistyped codes.
-app.post("/api/auth/login", authLimit(10, phoneKey), authLimit(300));
+// 20, not 10: the account itself locks for a day after 10 wrong passwords
+// (see MAX_LOGIN_FAILURES), so this limiter only needs to stop request
+// floods. At 10 it fired first and a genuine student saw "too many
+// requests" instead of the countdown telling them how many tries were left.
+app.post("/api/auth/login", authLimit(20, phoneKey), authLimit(300));
 app.post("/api/auth/signup/request-otp", authLimit(5, phoneKey), authLimit(30));
 app.post("/api/auth/signup", authLimit(15, phoneKey));
 app.post("/api/auth/forgot-password", authLimit(5, phoneKey), authLimit(60));

@@ -370,11 +370,10 @@ export default function ChapterPracticeScreen({
     LEVELS[0];
 
 
-  const activeLocked =
-    !isCompleted &&
-    activeIdx >
-      currentLevelIdx;
-
+  // Levels are NOT locked behind each other. Plenty of students already
+  // know the basics - coaching, school, a second attempt - and making them
+  // clear Easy before touching Hard only wasted their time. The level the
+  // app suggests is still highlighted, but any level opens straight away.
 
   const activeTests =
     useMemo(
@@ -660,9 +659,6 @@ export default function ChapterPracticeScreen({
               featuredTest={
                 featuredTest
               }
-              activeLocked={
-                activeLocked
-              }
               starting={
                 starting
               }
@@ -767,11 +763,6 @@ export default function ChapterPracticeScreen({
                   level,
                   index
                 ) => {
-                  const locked =
-                    !isCompleted &&
-                    index >
-                      currentLevelIdx;
-
                   const completed =
                     isCompleted ||
                     index <
@@ -809,12 +800,6 @@ export default function ChapterPracticeScreen({
                             colors.brand,
                         },
 
-                        locked && {
-                          backgroundColor:
-                            colors.slateLight,
-
-                          opacity: 0.72,
-                        },
                       ]}
                       activeOpacity={
                         0.78
@@ -838,23 +823,18 @@ export default function ChapterPracticeScreen({
                       >
                         <Ionicons
                           name={
-                            locked
-                              ? "lock-closed"
-                              : completed
+                            completed
                               ? "checkmark"
                               : "ellipse"
                           }
                           size={
-                            completed ||
-                            locked
+                            completed
                               ? 14
                               : 7
                           }
                           color={
                             active
                               ? "#FFFFFF"
-                              : locked
-                              ? colors.slateSoft
                               : level.tint
                           }
                         />
@@ -870,10 +850,6 @@ export default function ChapterPracticeScreen({
                           active && {
                             color:
                               "#FFFFFF",
-                          },
-                          locked && {
-                            color:
-                              colors.slateSoft,
                           },
                         ]}
                       >
@@ -905,83 +881,6 @@ export default function ChapterPracticeScreen({
                 }
               )}
             </View>
-
-
-            {/* =================================================
-                LOCK NOTICE
-            ================================================= */}
-
-            {activeLocked && (
-              <View
-                style={[
-                  styles.lockedNotice,
-                  {
-                    backgroundColor:
-                      colors.slateLight,
-
-                    borderColor:
-                      colors.border,
-                  },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.lockedIcon,
-                    {
-                      backgroundColor:
-                        colors.surface,
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name="lock-closed"
-                    size={15}
-                    color={
-                      colors.slate
-                    }
-                  />
-                </View>
-
-                <View
-                  style={
-                    styles.lockedCopy
-                  }
-                >
-                  <Text
-                    style={[
-                      styles.lockedTitle,
-                      {
-                        color:
-                          colors.ink,
-                      },
-                    ]}
-                  >
-                    {activeLevel.label}{" "}
-                    locked
-                  </Text>
-
-                  <Text
-                    style={[
-                      styles.lockedText,
-                      {
-                        color:
-                          colors.slate,
-                      },
-                    ]}
-                  >
-                    Complete a{" "}
-                    {
-                      LEVELS[
-                        activeIdx -
-                          1
-                      ]?.label
-                    }{" "}
-                    test first to unlock
-                    this level.
-                  </Text>
-                </View>
-              </View>
-            )}
 
 
             {/* =================================================
@@ -1019,9 +918,7 @@ export default function ChapterPracticeScreen({
                     },
                   ]}
                 >
-                  {activeLocked
-                    ? "Previous level needs to be cleared"
-                    : activeTests.length
+                  {activeTests.length
                     ? `${activeTests.length} ${
                         activeTests.length ===
                         1
@@ -1033,9 +930,8 @@ export default function ChapterPracticeScreen({
               </View>
 
 
-              {!activeLocked &&
-                activeTests.length >
-                  0 && (
+              {activeTests.length >
+                0 && (
                   <View
                     style={[
                       styles.readyBadge,
@@ -1082,9 +978,6 @@ export default function ChapterPracticeScreen({
             level={
               activeLevel.label
             }
-            locked={
-              activeLocked
-            }
             colors={
               colors
             }
@@ -1116,37 +1009,15 @@ export default function ChapterPracticeScreen({
             starting={
               starting
             }
-            activeLocked={
-              activeLocked
-            }
             colors={
               colors
             }
             testCard={
               testCard
             }
-            onPress={() => {
-              if (
-                activeLocked
-              ) {
-                AppAlert.alert(
-                  "Level locked",
-                  `Complete a ${
-                    LEVELS[
-                      activeIdx -
-                        1
-                    ]?.label ||
-                    "previous"
-                  } test first.`
-                );
-
-                return;
-              }
-
-              startTest(
-                item
-              );
-            }}
+            onPress={() =>
+              startTest(item)
+            }
           />
         )}
       />
@@ -1169,7 +1040,6 @@ function PracticeHero({
   totalTests,
   inProgressTests,
   featuredTest,
-  activeLocked,
   starting,
   colors,
   onStart,
@@ -1487,8 +1357,7 @@ function PracticeHero({
           FEATURED TEST
       ================================================= */}
 
-      {featuredTest &&
-        !activeLocked && (
+      {featuredTest && (
           <View
             style={[
               styles.featuredBox,
@@ -1617,43 +1486,6 @@ function PracticeHero({
         )}
 
 
-      {/* =================================================
-          LOCKED
-      ================================================= */}
-
-      {activeLocked && (
-        <View
-          style={[
-            styles.heroLocked,
-            {
-              backgroundColor:
-                colors.slateLight,
-            },
-          ]}
-        >
-          <Ionicons
-            name="lock-closed"
-            size={14}
-            color={
-              colors.slate
-            }
-          />
-
-          <Text
-            style={[
-              styles.heroLockedText,
-              {
-                color:
-                  colors.slate,
-              },
-            ]}
-          >
-            Complete the previous
-            level to continue
-          </Text>
-        </View>
-      )}
-
     </View>
   );
 }
@@ -1669,7 +1501,6 @@ function PracticeTestCard({
   level,
   subscribed,
   starting,
-  activeLocked,
   colors,
   testCard,
   onPress,
@@ -1703,9 +1534,6 @@ function PracticeTestCard({
             colors.border,
         },
 
-        activeLocked && {
-          opacity: 0.62,
-        },
       ]}
       activeOpacity={0.78}
       disabled={
@@ -2020,9 +1848,7 @@ function PracticeTestCard({
             styles.cardAction,
             {
               backgroundColor:
-                activeLocked
-                  ? colors.slateLight
-                  : premiumLocked
+                premiumLocked
                   ? colors.warnLight
                   : colors.brandTint,
             },
@@ -2030,7 +1856,6 @@ function PracticeTestCard({
         >
           <Ionicons
             name={
-              activeLocked ||
               premiumLocked
                 ? "lock-closed"
                 : completed
@@ -2041,9 +1866,7 @@ function PracticeTestCard({
             }
             size={15}
             color={
-              activeLocked
-                ? colors.slateSoft
-                : premiumLocked
+              premiumLocked
                 ? colors.warn
                 : colors.brand
             }
@@ -2062,13 +1885,8 @@ function PracticeTestCard({
 
 function EmptyState({
   level,
-  locked,
   colors,
 }) {
-  if (locked) {
-    return null;
-  }
-
   return (
     <View
       style={

@@ -29,8 +29,24 @@ const SIGNUP_SMS = { cooldownSec: 60, dailyMax: 5 }; // per phone number
 const GLOBAL_SMS = { cooldownSec: 0, dailyMax: Number(process.env.SMS_DAILY_LIMIT) || 500 };
 const RESET_EMAIL = { cooldownSec: 60, dailyMax: 5 }; // per account
 const MAX_CODE_ATTEMPTS = 5; // wrong guesses before a code is discarded
-const MAX_LOGIN_FAILURES = 5; // wrong passwords before the account locks
-const LOCK_MINUTES = 15;
+const MAX_LOGIN_FAILURES = 10; // wrong passwords before the account locks
+const LOCK_MINUTES = 24 * 60; // and then it stays locked for a full day
+// From this many failures on, the reply starts counting down out loud. The
+// early wrong tries stay vague so an attacker learns nothing from them; by
+// the 7th it's a real person mistyping their own password, and they deserve
+// the warning before the door shuts for a day.
+const WARN_AFTER_FAILURES = 7;
+
+// 90 -> "1 ghanta 30 minute". Telling a locked-out student to "try again in
+// 1440 minutes" is technically true and completely useless.
+function waitText(minutes) {
+  const total = Math.max(1, Math.ceil(minutes));
+  if (total < 60) return `${total} minute`;
+  const hours = Math.floor(total / 60);
+  const mins = total % 60;
+  const hourWord = hours === 1 ? "ghanta" : "ghante";
+  return mins ? `${hours} ${hourWord} ${mins} minute` : `${hours} ${hourWord}`;
+}
 const RESET_CODE_MINUTES = 15;
 
 const PHONE_RE = /^[6-9]\d{9}$/;
@@ -105,7 +121,7 @@ async function recheckPassword(userId, password, wrongMessage) {
     const minutes = Math.ceil((me.lockUntil - Date.now()) / 60000);
     return {
       status: 423,
-      body: { message: `Bahut baar galat password daala gaya. ${minutes} minute baad try karo.`, code: "ACCOUNT_LOCKED" },
+      body: { message: `Bahut baar galat password daala gaya. ${waitText(minutes)} baad try karo.`, code: "ACCOUNT_LOCKED" },
     };
   }
 
@@ -343,7 +359,7 @@ async function login(req, res) {
     if (user.lockUntil && user.lockUntil > new Date()) {
       const minutes = Math.ceil((user.lockUntil - Date.now()) / 60000);
       return res.status(423).json({
-        message: `Bahut baar galat password daala gaya. ${minutes} minute baad try karo, ya "Forgot password" se naya password bana lo.`,
+        message: `Bahut baar galat password daala gaya. ${waitText(minutes)} baad try karo, ya "Forgot password" se abhi naya password bana lo.`,
         code: "ACCOUNT_LOCKED",
         retryAfterSec: minutes * 60,
       });
@@ -373,14 +389,17 @@ async function login(req, res) {
           { $set: { lockUntil: new Date(Date.now() + LOCK_MINUTES * 60 * 1000), failedLoginAttempts: 0 } }
         );
         return res.status(423).json({
-          message: `Bahut baar galat password daala gaya. Account ${LOCK_MINUTES} minute ke liye lock hai. "Forgot password" se naya password bana sakte ho.`,
+          message: `Bahut baar galat password daala gaya. Account ${waitText(LOCK_MINUTES)} ke liye lock hai. "Forgot password" se abhi naya password bana sakte ho.`,
           code: "ACCOUNT_LOCKED",
           retryAfterSec: LOCK_MINUTES * 60,
         });
       }
       const left = MAX_LOGIN_FAILURES - updated.failedLoginAttempts;
       return res.status(401).json({
-        message: left <= 2 ? `Phone number ya password galat hai. ${left} try baaki, phir account kuch der ke liye lock ho jayega.` : "Phone number ya password galat hai",
+        message:
+          updated.failedLoginAttempts >= WARN_AFTER_FAILURES
+            ? `Phone number ya password galat hai. ${left} try baaki, phir account ${waitText(LOCK_MINUTES)} ke liye lock ho jayega.`
+            : "Phone number ya password galat hai",
       });
     }
 
