@@ -46,3 +46,7 @@ Thumbs.db
 *.tgz
 *.tar.gz
 .cache/
+# ---- Database backups ----
+# These hold real user data - phone numbers, emails, password hashes and
+# payment records. They must never enter git history, public repo or not.
+backups/

@@ -30,6 +30,20 @@ const examPatternSchema = new mongoose.Schema(
     sections: [
       {
         subject: { type: String, required: true }, // "Maths"
+
+        // Extra subjects this one section also draws questions from.
+        //
+        // A paper's section and a study subject are not the same thing. SSC's
+        // "General Awareness" section is built from GK, Science and Current
+        // Affairs together, while RRB Group D asks Science as a section of its
+        // own. Tying a section to exactly one subject forced an impossible
+        // choice - Science had to be either a GK chapter (wrong for Railway)
+        // or its own subject (invisible to SSC).
+        //
+        // The section always includes `subject`; these are added to it. Empty
+        // means the section is just `subject`, exactly as before.
+        sources: [{ type: String }],
+
         questionCount: { type: Number, required: true },
         // The official syllabus for this section of this post's paper. The
         // generator is told to ask ONLY from these and to spread questions

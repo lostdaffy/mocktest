@@ -5,6 +5,7 @@ import { useToast } from "../components/Toast";
 
 const emptySection = () => ({
   subject: "",
+  sources: [],
   questionCount: 25,
   difficultyMix: { easy: 30, medium: 50, hard: 20 },
   syllabus: [],
@@ -92,6 +93,7 @@ export default function ExamPatterns() {
       examLevel: p.examLevel || "",
       sections: (p.sections || []).map((s) => ({
         subject: s.subject,
+        sources: s.sources || [],
         questionCount: s.questionCount,
         difficultyMix: { easy: 30, medium: 50, hard: 20, ...(s.difficultyMix || {}) },
         syllabus: (s.syllabus || []).map((t) =>
@@ -352,6 +354,21 @@ export default function ExamPatterns() {
                         ✕
                       </button>
                     </div>
+                    <div>
+                      <input
+                        placeholder="Also draw from (e.g. Science, Current Affairs)"
+                        value={(s.sources || []).join(", ")}
+                        onChange={(e) =>
+                          updateSection(idx, "sources", e.target.value.split(",").map((x) => x.trim()).filter(Boolean))
+                        }
+                        className="w-full rv-input !py-1.5 text-sm"
+                      />
+                      <p className="text-xs text-slate-soft mt-1">
+                        Extra subjects this one section is built from. SSC&apos;s General Awareness is GK + Science +
+                        Current Affairs together; leave blank if the section is just {s.subject || "one subject"}.
+                      </p>
+                    </div>
+
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs text-slate-soft">Difficulty mix %:</span>
                       {["easy", "medium", "hard"].map((level) => (
@@ -484,7 +501,7 @@ function PatternCard({ p, editing, archived, onEdit, onArchive, onRestore, onDel
       <div className="flex flex-wrap gap-1.5 mt-3">
         {(p.sections || []).map((s, i) => (
           <span key={i} className="text-xs bg-brand/10 text-brand-dark px-2 py-0.5 rounded-full">
-            {s.subject} ({s.questionCount})
+            {[s.subject, ...(s.sources || [])].join(" + ")} ({s.questionCount})
             {(s.syllabus?.length || 0) > 0 && (
               <span className="text-slate">
                 {" "}

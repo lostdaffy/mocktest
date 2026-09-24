@@ -2,10 +2,18 @@ const Question = require("../models/Question");
 const ExamPattern = require("../models/ExamPattern");
 const Test = require("../models/Test");
 const User = require("../models/User");
+const { subjectsForSection, expandSubjectNames } = require("./catalog");
 
 // Picks N random published questions matching filters, respecting an
 // easy/medium/hard mix percentage.
-async function pickQuestionsForSection({ examType, subject, count, difficultyMix, excludeIds = [] }) {
+//
+// `subject` may be one name or several: a paper's section can be built from
+// more than one study subject (SSC's General Awareness is GK + Science +
+// Current Affairs), and one subject can be tagged under several names
+// ("Maths" / "Quant"). Both are resolved before anything is matched.
+async function pickQuestionsForSection({ examType, subject, subjects, count, difficultyMix, excludeIds = [] }) {
+  const subjectNames = await expandSubjectNames(subjects && subjects.length ? subjects : [subject]);
+  const subjectMatch = { $in: subjectNames };
   const buckets = [
     { difficulty: "easy", n: Math.round((count * (difficultyMix?.easy ?? 30)) / 100) },
     { difficulty: "medium", n: Math.round((count * (difficultyMix?.medium ?? 50)) / 100) },
@@ -19,7 +27,7 @@ async function pickQuestionsForSection({ examType, subject, count, difficultyMix
       {
         $match: {
           examType: examType,
-          subject,
+          subject: subjectMatch,
           difficulty: bucket.difficulty,
           status: "published",
           _id: { $nin: excludeIds },
@@ -38,12 +46,36 @@ async function pickQuestionsForSection({ examType, subject, count, difficultyMix
       {
         $match: {
           examType: examType,
-          subject,
+          subject: subjectMatch,
           status: "published",
           _id: { $nin: [...excludeIds, ...alreadyIds] },
         },
       },
       { $sample: { size: shortBy } },
+    ]);
+    picked = picked.concat(filler);
+  }
+
+  // Still short, so take from the same subject regardless of which exam the
+  // questions were written for.
+  //
+  // This is what makes adding an exam an admin job. A new exam starts with
+  // nothing tagged to it, and filtering strictly by examType would hand its
+  // first students an empty paper even though the bank is full of questions
+  // on exactly those subjects. Percentage is Percentage. As questions get
+  // generated for the new exam they are preferred above, and this fallback
+  // quietly stops being used.
+  if (picked.length < count) {
+    const alreadyIds = picked.map((p) => p._id);
+    const filler = await Question.aggregate([
+      {
+        $match: {
+          subject: subjectMatch,
+          status: "published",
+          _id: { $nin: [...excludeIds, ...alreadyIds] },
+        },
+      },
+      { $sample: { size: count - picked.length } },
     ]);
     picked = picked.concat(filler);
   }
@@ -63,9 +95,10 @@ async function generateFullMock(examType) {
   for (const section of pattern.sections) {
     const qs = await pickQuestionsForSection({
       examType,
-      subject: section.subject,
+      subjects: await subjectsForSection(section),
       count: section.questionCount,
       difficultyMix: section.difficultyMix,
+      excludeIds: allQuestions.map((q) => q._id),
     });
     allQuestions = allQuestions.concat(qs);
   }

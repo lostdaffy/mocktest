@@ -84,6 +84,60 @@ duplicate, you clear it, run again.
 
 ---
 
+## The catalog: subjects, chapters, exams
+
+Three ideas, and keeping them apart is what stops the whole thing tangling:
+
+| | What it is | Where it lives |
+| --- | --- | --- |
+| **Subject** | A study area, as a student thinks of it — Maths, Science, Current Affairs | Subjects & Chapters |
+| **Section** | A box in the real paper, e.g. "General Awareness, 25 questions" | Exam Patterns |
+| **Chapter** | What a student actually practises — Percentage, Circles | inside a Subject |
+
+**A section can draw on several subjects.** SSC's General Awareness is GK + Science +
+Current Affairs together, while RRB Group D asks Science as a section of its own.
+That is the "also draw from" box on a section. Without it, Science had to be either
+a GK chapter (wrong for Railway) or its own subject (invisible to SSC).
+
+**A subject can go by several names.** Banking papers say "Quant" for Maths. Put the
+other names in "Other names for this subject" and one bank serves both. A Banking
+student's Practice tab was empty for exactly this reason.
+
+**A chapter says which exams it belongs to.** An Agniveer student is never shown
+Coordinate Geometry. A chapter with no exams ticked shows in every exam, so nothing
+disappears just because it hasn't been tagged yet.
+
+**A chapter's `category` is only a heading** — अंकगणित, ज्यामिति, इतिहास. This is
+how a big area like History gets its own heading without becoming its own subject.
+It has to stay inside GK: the paper's General Awareness section draws on subject
+"GK", so a separate History subject would simply never be asked.
+
+### Adding a new exam
+
+No code change, and no new questions:
+
+1. **Exam Patterns → Add** — sections, question counts, difficulty mix, syllabus.
+2. **Subjects & Chapters** — tick the new exam on the chapters it should show.
+3. Done. Its students get subjects, chapters and a working mock from the bank that
+   already exists. Questions tagged to the new exam are preferred as they get
+   generated; until then the shared bank fills in.
+
+### When a screen comes up empty
+
+The banner at the top of **Subjects & Chapters** is the first place to look. It
+reports, worst first:
+
+- a section asking for a subject that doesn't exist (**high** — empties a screen)
+- a subject no exam section draws on, so its questions can never reach a mock
+- a chapter whose topics match no published question
+- a chapter tagged to an exam that isn't configured
+- a syllabus topic with no chapter to practise it in
+
+None of these throw an error when you set them up. They fail silently, months
+later, for one group of students. Three were live when this was written.
+
+---
+
 ## Question quality
 
 Only questions with `status: "published"` ever reach a student. Everything the
