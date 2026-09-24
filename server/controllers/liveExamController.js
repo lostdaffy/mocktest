@@ -121,7 +121,9 @@ async function getLiveExamSectionStatus(req, res) {
 async function getPyqStyleExamples(examType, subject, limit = 4) {
   if (!subject) return [];
   const docs = await Question.aggregate([
-    { $match: { examStage: examType, subject, source: "pyq", status: "published" } },
+    // examType, not examStage: Question has no examStage field, so Mongoose
+    // drops the value the PYQ extractor sets and this matched nothing.
+    { $match: { examType, subject, source: "pyq", status: "published" } },
     { $sample: { size: limit } },
   ]);
   return docs.map((q) => q.text);
@@ -163,6 +165,8 @@ async function addQuestionsToLiveExam(req, res) {
       count: batch,
       examMode: true,
       pyqExamples,
+      examLevel: pattern?.examLevel,
+      syllabusTopics: pattern?.sections?.find((x) => x.subject === subject)?.syllabus || [],
     });
 
     const newIds = [];

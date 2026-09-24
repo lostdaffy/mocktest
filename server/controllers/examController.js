@@ -35,7 +35,7 @@ async function listExamPatterns(req, res) {
 // of renaming the one you were editing.
 async function updateExamPattern(req, res) {
   try {
-    const { examType, displayName, durationMinutes, negativeMarking, marksPerQuestion, sections, isActive } = req.body;
+    const { examType, displayName, durationMinutes, negativeMarking, marksPerQuestion, sections, isActive, examLevel, examGroup, postName } = req.body;
 
     const pattern = await ExamPattern.findById(req.params.id);
     if (!pattern) return res.status(404).json({ message: "Exam pattern not found" });
@@ -49,7 +49,10 @@ async function updateExamPattern(req, res) {
     if (durationMinutes !== undefined) pattern.durationMinutes = durationMinutes;
     if (negativeMarking !== undefined) pattern.negativeMarking = negativeMarking;
     if (marksPerQuestion !== undefined) pattern.marksPerQuestion = marksPerQuestion;
-    if (Array.isArray(sections)) pattern.sections = sections;
+    if (Array.isArray(sections)) pattern.sections = normalizeSections(sections);
+    if (examLevel !== undefined) pattern.examLevel = examLevel;
+    if (examGroup !== undefined) pattern.examGroup = examGroup;
+    if (postName !== undefined) pattern.postName = postName;
     if (isActive !== undefined) pattern.isActive = !!isActive;
 
     await pattern.save();
@@ -87,14 +90,64 @@ async function deleteExamPattern(req, res) {
   }
 }
 
+// Accepts a syllabus written any of the ways an admin (or an older client)
+// might send it and stores one shape:
+//   "Percentage"                                  -> topic, no sub-topics
+//   "Percentage: successive change, profit link"  -> topic + sub-topics
+//   { topic, subTopics }                          -> used as-is
+// Blank lines and empty sub-topics are dropped, so typing artefacts never
+// reach the question generator as if they were syllabus.
+function normalizeSyllabus(syllabus) {
+  if (!Array.isArray(syllabus)) return [];
+
+  return syllabus
+    .map((entry) => {
+      if (entry && typeof entry === "object") {
+        return {
+          topic: String(entry.topic || "").trim(),
+          subTopics: (Array.isArray(entry.subTopics) ? entry.subTopics : []).map((s) => String(s).trim()).filter(Boolean),
+        };
+      }
+
+      const line = String(entry || "").trim();
+      if (!line) return { topic: "", subTopics: [] };
+      const splitAt = line.indexOf(":");
+      if (splitAt === -1) return { topic: line, subTopics: [] };
+      return {
+        topic: line.slice(0, splitAt).trim(),
+        subTopics: line
+          .slice(splitAt + 1)
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      };
+    })
+    .filter((entry) => entry.topic);
+}
+
+function normalizeSections(sections) {
+  if (!Array.isArray(sections)) return sections;
+  return sections.map((s) => ({ ...s, syllabus: normalizeSyllabus(s.syllabus) }));
+}
+
 // POST /api/exams (admin only) -> define/update a new exam pattern once.
 // After this, mock tests for this exam auto-generate forever - no manual work.
 async function upsertExamPattern(req, res) {
-  const { examType, displayName, durationMinutes, negativeMarking, marksPerQuestion, sections } = req.body;
+  const { examType, displayName, durationMinutes, negativeMarking, marksPerQuestion, sections, examLevel, examGroup, postName } = req.body;
 
   const pattern = await ExamPattern.findOneAndUpdate(
     { examType },
-    { displayName, durationMinutes, negativeMarking, marksPerQuestion, sections, isActive: true },
+    {
+      displayName,
+      durationMinutes,
+      negativeMarking,
+      marksPerQuestion,
+      sections: normalizeSections(sections),
+      examLevel,
+      examGroup,
+      postName,
+      isActive: true,
+    },
     { upsert: true, new: true }
   );
 

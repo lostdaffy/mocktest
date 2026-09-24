@@ -14,6 +14,17 @@ const PYQ_MIX_PERCENT = 50;
 // doesn't have to sit through the waits.
 const GEMINI_PAUSE_MS = Number(process.env.GEMINI_PAUSE_MS) || 5000;
 
+// Feeds a long syllabus to the model in rotating slices. Each batch is a
+// separate call with no memory of the previous one, so handing it all 40
+// topics every time just makes it keep picking the same familiar few.
+function syllabusSlice(topics, offset, size = 8) {
+  if (!topics || topics.length === 0) return [];
+  if (topics.length <= size) return topics;
+  const out = [];
+  for (let i = 0; i < size; i++) out.push(topics[(offset + i) % topics.length]);
+  return out;
+}
+
 // Picks real previous-year questions for one section of a mock.
 //
 // Only questions from a PYQ paper the admin has already PUBLISHED are
@@ -131,6 +142,7 @@ async function generateExamMock(req, res) {
 
     const allQuestionIds = [];
     let hadFailure = false;
+    const syllabusOffsets = new Map(); // per subject, so each batch moves along the syllabus
 
     // Helper: generate questions in small chunks (max 12 per call for quality &
     // valid JSON), with a short pause between calls so we stay under Gemini's
@@ -141,6 +153,9 @@ async function generateExamMock(req, res) {
       let remaining = totalCount;
       while (remaining > 0) {
         const thisBatch = Math.min(CHUNK, remaining);
+        const offset = syllabusOffsets.get(section.subject) || 0;
+        const topics = syllabusSlice(section.syllabus, offset);
+        syllabusOffsets.set(section.subject, offset + (topics.length || 1));
         try {
           const rawQuestions = await generateQuestions({
             examType: examStage,
@@ -149,6 +164,8 @@ async function generateExamMock(req, res) {
             topic: section.subject,
             difficulty,
             count: thisBatch,
+            examLevel: pattern.examLevel,
+            syllabusTopics: topics,
           });
           for (const raw of rawQuestions) {
             raw.examStage = examStage;
@@ -392,6 +409,7 @@ async function generatePracticeTest(req, res) {
         topic: topicsForPrompt, // all topics of the chapter in one call
         difficulty: genDifficulty,
         count: 12, // one batch = one call
+        syllabusTopics: topicList, // the chapter's topics ARE its syllabus
       });
 
       for (const raw of rawQuestions) {
@@ -537,6 +555,10 @@ async function addQuestionsToMock(req, res) {
       count: batch,
       examMode: true, // real-exam-style questions (mixed difficulty like actual paper)
       pyqExamples, // fresh real-question reference for THIS batch - every batch gets grounded, not just one
+      examLevel: pattern?.examLevel,
+      // Random starting point, so topping a mock up twice doesn't ask the
+      // same corner of the syllabus both times.
+      syllabusTopics: syllabusSlice(sectionDef?.syllabus, Math.floor(Math.random() * 100)),
     });
 
     const newIds = [];

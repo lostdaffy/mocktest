@@ -3,12 +3,20 @@ import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 
-const emptySection = () => ({ subject: "", questionCount: 25, difficultyMix: { easy: 30, medium: 50, hard: 20 } });
+const emptySection = () => ({
+  subject: "",
+  questionCount: 25,
+  difficultyMix: { easy: 30, medium: 50, hard: 20 },
+  syllabus: [],
+});
 const emptyForm = () => ({
   examType: "",
   displayName: "",
+  examGroup: "",
+  postName: "",
   durationMinutes: 60,
   negativeMarking: 0.25,
+  examLevel: "",
   sections: [emptySection()],
 });
 
@@ -79,10 +87,16 @@ export default function ExamPatterns() {
       displayName: p.displayName,
       durationMinutes: p.durationMinutes,
       negativeMarking: p.negativeMarking ?? 0.25,
+      examGroup: p.examGroup || "",
+      postName: p.postName || "",
+      examLevel: p.examLevel || "",
       sections: (p.sections || []).map((s) => ({
         subject: s.subject,
         questionCount: s.questionCount,
         difficultyMix: { easy: 30, medium: 50, hard: 20, ...(s.difficultyMix || {}) },
+        syllabus: (s.syllabus || []).map((t) =>
+          typeof t === "string" ? t : t.subTopics?.length ? `${t.topic}: ${t.subTopics.join(", ")}` : t.topic
+        ),
       })),
     });
     setShowForm(true);
@@ -102,12 +116,21 @@ export default function ExamPatterns() {
       return;
     }
     setSaving(true);
+    // Blank syllabus lines are typing artefacts, not topics - drop them
+    // before saving so the generator isn't handed empty entries.
+    const payload = {
+      ...form,
+      sections: form.sections.map((s) => ({
+        ...s,
+        syllabus: (s.syllabus || []).map((t) => t.trim()).filter(Boolean),
+      })),
+    };
     try {
       if (editingId) {
-        await api.patch(`/exams/${editingId}`, form);
+        await api.patch(`/exams/${editingId}`, payload);
         toast.success(`"${form.displayName}" updated`);
       } else {
-        await api.post("/exams", form);
+        await api.post("/exams", payload);
         toast.success(`"${form.displayName}" saved`);
       }
       closeForm();
@@ -227,6 +250,28 @@ export default function ExamPatterns() {
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-ink-soft mb-1.5">
+                Exam group <span className="text-slate-soft font-normal">· optional</span>
+              </label>
+              <input
+                value={form.examGroup}
+                onChange={(e) => setForm({ ...form, examGroup: e.target.value })}
+                placeholder="e.g. Agniveer"
+                className="rv-input"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-ink-soft mb-1.5">
+                Post <span className="text-slate-soft font-normal">· optional</span>
+              </label>
+              <input
+                value={form.postName}
+                onChange={(e) => setForm({ ...form, postName: e.target.value })}
+                placeholder="e.g. Army GD"
+                className="rv-input"
+              />
+            </div>
+            <div>
               <label className="block text-sm font-medium text-ink-soft mb-1.5">Duration (minutes)</label>
               <input
                 type="number"
@@ -248,6 +293,23 @@ export default function ExamPatterns() {
                 className="rv-input"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-ink-soft mb-1.5">
+              Exam level & scope <span className="text-slate-soft font-normal">· told to the question generator</span>
+            </label>
+            <textarea
+              rows={2}
+              value={form.examLevel}
+              onChange={(e) => setForm({ ...form, examLevel: e.target.value })}
+              placeholder="e.g. 10th-pass level Army entrance exam. Basic maths, science and GK. NOT graduate or UPSC level."
+              className="rv-input !py-2"
+            />
+            <p className="text-xs text-slate-soft mt-1">
+              One or two lines describing who takes this exam and how hard it is. This is what stops questions coming out
+              too easy or too advanced.
+            </p>
           </div>
 
           <div>
@@ -308,6 +370,26 @@ export default function ExamPatterns() {
                       <span className={`text-xs ${mixTotal === 100 ? "text-slate-soft" : "text-warn font-medium"}`}>
                         = {mixTotal}%{mixTotal !== 100 && " (should be 100)"}
                       </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-ink-soft mb-1">
+                        Syllabus for {s.subject || "this section"}{" "}
+                        <span className="text-slate-soft font-normal">
+                          · one topic per line, sub-topics after a colon
+                          {(s.syllabus || []).filter((t) => t.trim()).length > 0 &&
+                            ` · ${(s.syllabus || []).filter((t) => t.trim()).length} topics`}
+                        </span>
+                      </label>
+                      <textarea
+                        rows={4}
+                        value={(s.syllabus || []).join("\n")}
+                        onChange={(e) => updateSection(idx, "syllabus", e.target.value.split("\n"))}
+                        placeholder={
+                          "Percentage: successive change, profit link\nProfit and Loss: discount, marked price\nAverage\nSimple & Compound Interest"
+                        }
+                        className="rv-input !py-2 text-sm font-mono"
+                      />
                     </div>
                   </div>
                 );
@@ -378,6 +460,11 @@ function PatternCard({ p, editing, archived, onEdit, onArchive, onRestore, onDel
         <div className="min-w-0">
           <p className="font-semibold text-ink truncate">{p.displayName}</p>
           <p className="text-xs text-slate-soft mb-3">
+            {(p.examGroup || p.postName) && (
+              <span className="text-slate">
+                {[p.examGroup, p.postName].filter(Boolean).join(" › ")} ·{" "}
+              </span>
+            )}
             {p.examType}
             {archived && <span className="ml-2 text-warn font-medium">Archived</span>}
           </p>
@@ -398,9 +485,22 @@ function PatternCard({ p, editing, archived, onEdit, onArchive, onRestore, onDel
         {(p.sections || []).map((s, i) => (
           <span key={i} className="text-xs bg-brand/10 text-brand-dark px-2 py-0.5 rounded-full">
             {s.subject} ({s.questionCount})
+            {(s.syllabus?.length || 0) > 0 && (
+              <span className="text-slate">
+                {" "}
+                · {s.syllabus.length} topics
+                {s.syllabus.reduce((n, t) => n + (t.subTopics?.length || 0), 0) > 0 &&
+                  ", " + s.syllabus.reduce((n, t) => n + (t.subTopics?.length || 0), 0) + " sub-topics"}
+              </span>
+            )}
           </span>
         ))}
       </div>
+
+      {/* Without a syllabus the generator is guessing what this exam asks */}
+      {(p.sections || []).some((s) => !(s.syllabus?.length > 0)) && (
+        <p className="text-xs text-warn mt-2">⚠ Syllabus missing in some sections — questions will be less accurate.</p>
+      )}
 
       <div className="flex gap-2 mt-4 pt-4 border-t border-border-soft">
         {archived ? (

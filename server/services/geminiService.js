@@ -169,11 +169,53 @@ const EXAM_CONTEXT = {
   },
 };
 
-async function generateQuestions({ examType, examDisplayName, subject, topic, difficulty = "medium", count = 10, pyqExamples = [], examMode = false }) {
-  const ctx = EXAM_CONTEXT[examType] || {
-    fullName: examDisplayName || examType,
-    level: `${examDisplayName || examType} exam level. Keep questions strictly appropriate for this specific exam's syllabus and difficulty.`,
+async function generateQuestions({
+  examType,
+  examDisplayName,
+  subject,
+  topic,
+  difficulty = "medium",
+  count = 10,
+  pyqExamples = [],
+  examMode = false,
+  examLevel = "",
+  syllabusTopics = [],
+}) {
+  const builtIn = EXAM_CONTEXT[examType];
+  const ctx = {
+    fullName: builtIn?.fullName || examDisplayName || examType,
+    // The level written on the exam pattern wins: it's exam-specific and the
+    // admin can correct it without a code change. EXAM_CONTEXT stays as the
+    // fallback for the exams that were set up before this field existed.
+    level:
+      (examLevel || "").trim() ||
+      builtIn?.level ||
+      `${examDisplayName || examType} exam level. Keep questions strictly appropriate for this specific exam's syllabus and difficulty.`,
   };
+
+  // The actual syllabus, when the admin has filled it in on the exam
+  // pattern. This is the strongest accuracy lever we have: without it the
+  // model guesses what "GK for this exam" means.
+  // A topic can be a plain string or { topic, subTopics } - the sub-topics
+  // are what stop "Percentage" from being answered with whatever the model
+  // feels like that day.
+  const syllabusLines = syllabusTopics
+    .map((t) => {
+      if (typeof t === "string") return t.trim();
+      const subs = (t?.subTopics || []).filter(Boolean).join(", ");
+      return [String(t?.topic || "").trim(), subs].filter(Boolean).join(" - ");
+    })
+    .filter(Boolean);
+
+  const syllabusBlock = syllabusLines.length
+    ? `OFFICIAL SYLLABUS for "${subject}" in ${ctx.fullName} - ask ONLY from these topics:
+${syllabusLines.map((t, i) => `${i + 1}. ${t}`).join("\n")}
+- Where a topic lists sub-topics after the dash, stay inside those sub-topics.
+- Spread the ${count} questions ACROSS these topics; do not put most of them on one topic.
+- A topic outside this list is out of syllabus - never use one.
+
+`
+    : "";
 
   const examplesBlock = pyqExamples.length
     ? `Real previous-year ${ctx.fullName} question examples for style/difficulty reference (match this style, do NOT copy):\n${pyqExamples
@@ -206,7 +248,7 @@ CRITICAL RULES ABOUT SCOPE (follow strictly):
 - Do NOT include questions from other exams' syllabus or a harder/easier exam's level.
 - Every question must be something that could realistically appear in the actual ${ctx.fullName} exam.
 
-${examplesBlock}${countLine}
+${syllabusBlock}${examplesBlock}${countLine}
 
 EXAM-REALISM RULES:
 ${difficultyInstruction}
