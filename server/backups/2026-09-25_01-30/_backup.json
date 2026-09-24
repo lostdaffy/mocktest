@@ -1,0 +1,20 @@
+{
+  "takenAt": "2026-09-24T20:00:20.597Z",
+  "database": "test",
+  "collections": {
+    "attempts": 0,
+    "coupons": 1,
+    "deletedaccounts": 1,
+    "exampatterns": 5,
+    "otpthrottles": 0,
+    "phoneotps": 0,
+    "questions": 0,
+    "reports": 0,
+    "sessions": 0,
+    "subjects": 6,
+    "subscriptions": 6,
+    "tests": 0,
+    "users": 3
+  },
+  "totalDocuments": 22
+}

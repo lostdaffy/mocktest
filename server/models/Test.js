@@ -67,4 +67,14 @@ const testSchema = new mongoose.Schema(
 // with every test that's ever generated.
 testSchema.index({ type: 1, subject: 1, topic: 1 });
 
+// What a student's exam page asks for: this exam's published papers of this
+// kind, newest series first.
+testSchema.index({ examStage: 1, type: 1, publishStatus: 1, seriesNumber: -1 });
+
+// The live-exam list and the scheduler both scan by schedule.
+testSchema.index({ type: 1, publishStatus: 1, scheduledAt: 1 });
+
+// "Aaj Ka Test" for one student, built fresh each day.
+testSchema.index({ generatedForUser: 1, createdAt: -1 });
+
 module.exports = mongoose.model("Test", testSchema);

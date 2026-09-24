@@ -77,6 +77,10 @@ export function AuthProvider({ children }) {
   }
 
   async function logout() {
+    // Fire-and-forget: tells the server to end this session so the token
+    // stops working immediately instead of staying valid until it expires.
+    // Never awaited - a student on a dead network must still get logged out.
+    api.post("/auth/logout").catch(() => {});
     await AsyncStorage.multiRemove(["token", "user"]);
     setUser(null);
   }

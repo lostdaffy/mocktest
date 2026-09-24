@@ -48,6 +48,12 @@ const questionSchema = new mongoose.Schema(
     timesCorrect: { type: Number, default: 0 },
     wrongAnswerRate: { type: Number, default: 0 }, // auto-recalculated, used to flag confusing questions
 
+    // The question text with case, spacing and punctuation stripped out, so
+    // "What is 15% of 240?" and "what is 15 % of 240" are recognised as the
+    // same question. Indexed because every generation checks new questions
+    // against the bank before putting them in a test.
+    textKey: { type: String, index: true },
+
     // Repeat-detection / Exam Match Engine
     embedding: { type: [Number], select: false }, // vector for similarity search
     repeatCount: { type: Number, default: 0 }, // how many times a near-identical PYQ has appeared historically

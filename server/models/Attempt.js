@@ -50,4 +50,16 @@ const attemptSchema = new mongoose.Schema(
 
 attemptSchema.index({ test: 1, score: -1 }); // for fast leaderboard queries
 
+// "Has this student already taken this test?" runs on every test card, every
+// list, every entry into a live exam - the single most frequent query in the
+// app once students are actually using it.
+attemptSchema.index({ user: 1, test: 1 });
+
+// Their history, newest first: the analysis screen, the daily goal count and
+// the admin's per-student view all read it this way.
+attemptSchema.index({ user: 1, createdAt: -1 });
+
+// The live-exam scheduler looks for attempts still open when a window closes.
+attemptSchema.index({ status: 1, test: 1 });
+
 module.exports = mongoose.model("Attempt", attemptSchema);

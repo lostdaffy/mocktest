@@ -1,8 +1,7 @@
 const Test = require("../models/Test");
 const Question = require("../models/Question");
 const ExamPattern = require("../models/ExamPattern");
-const { generateQuestions } = require("../services/geminiService");
-const { runValidationPipeline } = require("../services/validationPipeline");
+const { createVerifiedQuestions, qualityNote } = require("../services/questionFactory");
 
 // How much of every mock is made of REAL previous-year questions. The rest
 // is generated fresh. If the PYQ Bank doesn't have enough for a subject,
@@ -142,6 +141,7 @@ async function generateExamMock(req, res) {
 
     const allQuestionIds = [];
     let hadFailure = false;
+    let flaggedTotal = 0;
     const syllabusOffsets = new Map(); // per subject, so each batch moves along the syllabus
 
     // Helper: generate questions in small chunks (max 12 per call for quality &
@@ -157,22 +157,24 @@ async function generateExamMock(req, res) {
         const topics = syllabusSlice(section.syllabus, offset);
         syllabusOffsets.set(section.subject, offset + (topics.length || 1));
         try {
-          const rawQuestions = await generateQuestions({
-            examType: examStage,
-            examDisplayName: pattern.displayName,
-            subject: section.subject,
-            topic: section.subject,
-            difficulty,
-            count: thisBatch,
-            examLevel: pattern.examLevel,
-            syllabusTopics: topics,
+          // Only questions that pass the rule checks AND the AI's own
+          // re-solve come back here. Anything doubtful is saved to the
+          // review queue instead of being put in front of a student.
+          const built = await createVerifiedQuestions({
+            needed: thisBatch,
+            tag: { examStage },
+            generateParams: {
+              examType: examStage,
+              examDisplayName: pattern.displayName,
+              subject: section.subject,
+              topic: section.subject,
+              difficulty,
+              examLevel: pattern.examLevel,
+              syllabusTopics: topics,
+            },
           });
-          for (const raw of rawQuestions) {
-            raw.examStage = examStage;
-            const validated = await runValidationPipeline(raw);
-            const q = await Question.create(validated);
-            allQuestionIds.push(q._id);
-          }
+          flaggedTotal += built.flagged + built.duplicates;
+          allQuestionIds.push(...built.ids);
           // Save progress to the mock after each successful batch
           test.questions = allQuestionIds;
           await test.save();
@@ -244,9 +246,9 @@ async function generateExamMock(req, res) {
       });
     }
 
-    const note = hadFailure
-      ? ` (Kuch batches rate limit ki wajah se skip hue — "Add Questions" se baaki pure karo.)`
-      : "";
+    const note =
+      (hadFailure ? ` (Kuch batches rate limit ki wajah se skip hue — "Add Questions" se baaki pure karo.)` : "") +
+      (flaggedTotal ? ` (${flaggedTotal} question jaanch mein fail ya repeat nikle - review queue mein hain, mock mein nahi.)` : "");
 
     res.status(201).json({
       message: `Mock #${test.seriesNumber} ban gaya — ${finalCount} questions (${pyqUsed} purane paper se, ${finalCount - pyqUsed} naye).${note} Review karke publish karo (100 zaroori).`,
@@ -401,24 +403,23 @@ async function generatePracticeTest(req, res) {
     const topicsForPrompt = topicList.join(", ");
 
     let allQuestionIds = [];
+    let quality = { flagged: 0, duplicates: 0 };
     try {
-      const rawQuestions = await generateQuestions({
-        examType: "PRACTICE",
-        examDisplayName: `${subject} - ${chapter} practice`,
-        subject,
-        topic: topicsForPrompt, // all topics of the chapter in one call
-        difficulty: genDifficulty,
-        count: 12, // one batch = one call
-        syllabusTopics: topicList, // the chapter's topics ARE its syllabus
+      const built = await createVerifiedQuestions({
+        needed: 12,
+        tag: { examStage: "PRACTICE", chapter },
+        generateParams: {
+          examType: "PRACTICE",
+          examDisplayName: `${subject} - ${chapter} practice`,
+          subject,
+          topic: topicsForPrompt, // all topics of the chapter in one call
+          difficulty: genDifficulty,
+          syllabusTopics: topicList, // the chapter's topics ARE its syllabus
+        },
       });
 
-      for (const raw of rawQuestions) {
-        raw.examStage = "PRACTICE";
-        raw.chapter = chapter;
-        const validated = await runValidationPipeline(raw);
-        const q = await Question.create(validated);
-        allQuestionIds.push(q._id);
-      }
+      quality = built;
+      allQuestionIds.push(...built.ids);
     } catch (err) {
       console.log(`Practice generation fail (${chapter}/${difficulty}): ${err.message}`);
     }
@@ -450,7 +451,7 @@ async function generatePracticeTest(req, res) {
     });
 
     res.status(201).json({
-      message: `${chapter} ka ${difficulty} test ban gaya (${allQuestionIds.length} questions). Review karke publish karo.`,
+      message: `${chapter} ka ${difficulty} test ban gaya (${allQuestionIds.length} questions)${qualityNote(quality)}. Review karke publish karo.`,
       test: { _id: test._id, title: test.title, questionCount: allQuestionIds.length },
     });
   } catch (err) {
@@ -545,29 +546,25 @@ async function addQuestionsToMock(req, res) {
       count = Math.min(count, roomLeft);
     }
 
-    const batch = Math.min(count, 12); // cap for quality + valid JSON
+    const batch = Math.min(count, 12);
     const pyqExamples = await getPyqStyleExamples(test.examStage, subject);
-    const rawQuestions = await generateQuestions({
-      examType: test.examStage,
-      examDisplayName: displayName,
-      subject: subject || "General",
-      topic: subject || "General",
-      count: batch,
-      examMode: true, // real-exam-style questions (mixed difficulty like actual paper)
-      pyqExamples, // fresh real-question reference for THIS batch - every batch gets grounded, not just one
-      examLevel: pattern?.examLevel,
-      // Random starting point, so topping a mock up twice doesn't ask the
-      // same corner of the syllabus both times.
-      syllabusTopics: syllabusSlice(sectionDef?.syllabus, Math.floor(Math.random() * 100)),
+    const built = await createVerifiedQuestions({
+      needed: batch,
+      tag: { examStage: test.examStage },
+      generateParams: {
+        examType: test.examStage,
+        examDisplayName: displayName,
+        subject: subject || "General",
+        topic: subject || "General",
+        examMode: true, // real-exam-style questions (mixed difficulty like actual paper)
+        pyqExamples, // fresh real-question reference for THIS batch - every batch gets grounded, not just one
+        examLevel: pattern?.examLevel,
+        // Random starting point, so topping a mock up twice doesn't ask the
+        // same corner of the syllabus both times.
+        syllabusTopics: syllabusSlice(sectionDef?.syllabus, Math.floor(Math.random() * 100)),
+      },
     });
-
-    const newIds = [];
-    for (const raw of rawQuestions) {
-      raw.examStage = test.examStage;
-      const validated = await runValidationPipeline(raw);
-      const q = await Question.create(validated);
-      newIds.push(q._id);
-    }
+    const newIds = built.ids;
 
     test.questions.push(...newIds);
     await test.save();
@@ -581,7 +578,7 @@ async function addQuestionsToMock(req, res) {
         : ` No real PYQs found yet for ${subject} - upload some in PYQ Bank for closer style-matching.`;
 
     res.json({
-      message: `${newIds.length} questions add ho gaye${sectionNote}. Total ${test.questions.length} questions.${groundingNote}`,
+      message: `${newIds.length} questions add ho gaye${sectionNote}${qualityNote(built)}. Total ${test.questions.length} questions.${groundingNote}`,
       added: newIds.length,
       totalCount: test.questions.length,
       groundedInRealPyqs: pyqExamples.length > 0,

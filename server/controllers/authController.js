@@ -8,6 +8,7 @@ const Report = require("../models/Report");
 const Test = require("../models/Test");
 const Subscription = require("../models/Subscription");
 const DeletedAccount = require("../models/DeletedAccount");
+const Session = require("../models/Session");
 const { generateOtpCode, sendOtp } = require("../services/otpService");
 const { isEmailConfigured, sendPasswordResetCode } = require("../services/emailService");
 const { claimSend, releaseSend, throttleMessage } = require("../utils/sendThrottle");
@@ -62,14 +63,112 @@ const DUMMY_HASH = bcrypt.hashSync("rankveer-timing-guard", 10);
 // carrying it. Any token issued before this call stops working the moment
 // this save() completes - that's the entire single-device mechanism, no
 // device tracking needed.
-async function startSession(user) {
+async function startSession(user, req) {
   const sessionId = crypto.randomBytes(24).toString("hex");
   user.activeSessionId = sessionId;
   await user.save();
-  const token = jwt.sign({ id: user._id, sessionId }, process.env.JWT_SECRET, {
+
+  // A row per sign-in, so the account holder can see where they're logged in
+  // and end a session they don't recognise (see listSessions below).
+  const session = await Session.create({
+    user: user._id,
+    userAgent: String(req?.headers?.["user-agent"] || "").slice(0, 300),
+    ip: req?.ip,
+  });
+
+  const token = jwt.sign({ id: user._id, sessionId, sid: session._id.toString() }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || "30d",
   });
   return token;
+}
+
+// Turns a raw user-agent into something an admin can recognise at a glance.
+function describeDevice(userAgent = "") {
+  const ua = String(userAgent);
+  if (!ua) return "Unknown device";
+
+  const app = /okhttp|expo|RankVeer/i.test(ua) ? "Rankveer app" : null;
+  const browser =
+    (/Edg\//.test(ua) && "Edge") ||
+    (/OPR\//.test(ua) && "Opera") ||
+    (/Chrome\//.test(ua) && "Chrome") ||
+    (/Safari\//.test(ua) && "Safari") ||
+    (/Firefox\//.test(ua) && "Firefox") ||
+    null;
+  const os =
+    (/Windows/.test(ua) && "Windows") ||
+    (/Android/.test(ua) && "Android") ||
+    (/iPhone|iPad|iOS/.test(ua) && "iPhone/iPad") ||
+    (/Mac OS X|Macintosh/.test(ua) && "Mac") ||
+    (/Linux/.test(ua) && "Linux") ||
+    null;
+
+  return [app || browser, os].filter(Boolean).join(" on ") || "Unknown device";
+}
+
+// POST /api/auth/logout -> ends THIS session.
+// Clearing the token on the device is not enough on its own: the token stays
+// valid until it expires, and the session would sit in the list below
+// looking active for weeks.
+async function logout(req, res) {
+  if (req.sessionId) {
+    await Session.updateOne(
+      { _id: req.sessionId, user: req.user._id },
+      { $set: { revokedAt: new Date(), revokedReason: "logged out" } }
+    );
+  }
+  res.json({ message: "Logout ho gaya" });
+}
+
+// GET /api/auth/sessions -> where this account is signed in right now.
+// Only ever returns the caller's own sessions.
+async function listSessions(req, res) {
+  const sessions = await Session.find({ user: req.user._id, revokedAt: null }).sort({ lastSeenAt: -1 }).lean();
+
+  res.json({
+    sessions: sessions.map((s) => ({
+      _id: s._id,
+      device: describeDevice(s.userAgent),
+      userAgent: s.userAgent,
+      ip: s.ip,
+      startedAt: s.createdAt,
+      lastSeenAt: s.lastSeenAt,
+      current: String(s._id) === String(req.sessionId || ""),
+    })),
+  });
+}
+
+// DELETE /api/auth/sessions/:id -> end one session (that device is signed out
+// on its very next request).
+async function revokeSession(req, res) {
+  const session = await Session.findOne({ _id: req.params.id, user: req.user._id });
+  if (!session) return res.status(404).json({ message: "Ye session nahi mila" });
+
+  session.revokedAt = new Date();
+  session.revokedReason = "revoked by account owner";
+  await session.save();
+
+  res.json({
+    message: String(session._id) === String(req.sessionId || "")
+      ? "Is device se logout ho gaye"
+      : "Us device se logout kar diya",
+  });
+}
+
+// POST /api/auth/sessions/revoke-others -> sign out everywhere except here.
+// The one to reach for when you've used someone else's laptop.
+async function revokeOtherSessions(req, res) {
+  const result = await Session.updateMany(
+    { user: req.user._id, revokedAt: null, _id: { $ne: req.sessionId } },
+    { $set: { revokedAt: new Date(), revokedReason: "signed out from another device" } }
+  );
+
+  res.json({
+    message: result.modifiedCount
+      ? `${result.modifiedCount} doosre device se logout kar diya`
+      : "Aur kahin login nahi ho",
+    revoked: result.modifiedCount,
+  });
 }
 
 // Shape returned to the client after any successful login/signup - kept in
@@ -333,7 +432,7 @@ async function signup(req, res) {
     // OTP can't be reused for another signup attempt now that it's done its job.
     await PhoneOtp.deleteOne({ phone });
 
-    const token = await startSession(user);
+    const token = await startSession(user, req);
     res.status(201).json({ token, user: publicUser(user) });
   } catch (err) {
     console.error(err);
@@ -408,7 +507,7 @@ async function login(req, res) {
       user.lockUntil = undefined;
     }
 
-    const token = await startSession(user); // also saves the cleared counters
+    const token = await startSession(user, req); // also saves the cleared counters
     res.json({ token, user: publicUser(user) });
   } catch (err) {
     console.error(err);
@@ -580,6 +679,10 @@ async function resetPassword(req, res) {
     // since a password reset often means "I think someone else has access."
     user.activeSessionId = null;
     await user.save();
+    await Session.updateMany(
+      { user: user._id, revokedAt: null },
+      { $set: { revokedAt: new Date(), revokedReason: "password reset" } }
+    );
 
     res.json({ message: "Password reset ho gaya. Ab naye password se login karo." });
   } catch (err) {
@@ -624,4 +727,8 @@ module.exports = {
   forgotPassword,
   resetPassword,
   deleteAccount,
+  listSessions,
+  revokeSession,
+  revokeOtherSessions,
+  logout,
 };

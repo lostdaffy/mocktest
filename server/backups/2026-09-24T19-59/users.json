@@ -1,0 +1,115 @@
+[
+ {
+  "_id": "6a85b78365151e960d7c156a",
+  "name": "Admin",
+  "phone": "9520552387",
+  "email": null,
+  "passwordHash": "$2a$10$8pIK.2dgGqnsrl.JZJudT.qXt9iYT/VMKIAuYVn.0ugvhJU/HGxVe",
+  "authProvider": "password",
+  "preferredLanguage": "hi",
+  "examGoals": [],
+  "subscriptionStatus": "free",
+  "streakCount": 0,
+  "badges": [],
+  "freeUsage": {
+   "mockTestsUsed": 0,
+   "liveExamsUsed": 0,
+   "pyqUsed": 0
+  },
+  "bookmarkedQuestions": [],
+  "referralCode": "ADMINMT05VGC7",
+  "referredBy": null,
+  "referralCredits": 0,
+  "referralCount": 0,
+  "rewardedReferral": false,
+  "selectedSubjects": [
+   "Maths"
+  ],
+  "role": "admin",
+  "topicStats": [],
+  "chapterProgress": [],
+  "createdAt": "2026-08-19T14:02:43.458Z",
+  "updatedAt": "2026-09-24T19:01:13.296Z",
+  "__v": 0,
+  "activeSessionId": "6addf8cfa55765cd53e4a060289bb794b9c1909bc601a597",
+  "failedLoginAttempts": 0
+ },
+ {
+  "_id": "6ab287ada8a1a6bc2ff9b1d6",
+  "name": "Megha Kapil",
+  "phone": "9548400698",
+  "email": "meghakapil9548@gmail.com",
+  "passwordHash": "$2a$10$HiEVy2TSvjGurmDiAwanIOPa7iqHwQZOHnIu7ReSJv09a1A92ZCWG",
+  "passwordResetAttempts": 0,
+  "failedLoginAttempts": 0,
+  "authProvider": "password",
+  "preferredLanguage": "hi",
+  "examGoals": [
+   "SSC_CGL"
+  ],
+  "subscriptionStatus": "active",
+  "streakCount": 0,
+  "badges": [],
+  "freeUsage": {
+   "mockTestsUsed": 0,
+   "liveExamsUsed": 0,
+   "pyqUsed": 0
+  },
+  "bookmarkedQuestions": [],
+  "referralCode": "MEGHEYIW",
+  "referredBy": null,
+  "referralCredits": 0,
+  "referralCount": 0,
+  "rewardedReferral": false,
+  "selectedSubjects": [
+   "Maths"
+  ],
+  "role": "student",
+  "topicStats": [],
+  "chapterProgress": [],
+  "createdAt": "2026-09-22T13:50:37.573Z",
+  "updatedAt": "2026-09-23T12:28:52.314Z",
+  "__v": 0,
+  "activeSessionId": "d776cc9fb62a1746f1fc9ef185cbf4e0074439acaa48a116",
+  "subscriptionExpiresAt": "2027-03-22T13:57:02.782Z",
+  "subscriptionPlan": "quarterly"
+ },
+ {
+  "_id": "6ab3680dd747f81c563838f6",
+  "name": "Sudhir",
+  "phone": "7906553667",
+  "email": "sudhirparle2@gmail.com",
+  "passwordHash": "$2a$10$2VKOEHMU55jhrnQJVaWNBeiHwxFNC5mbnbHKxMezZCopPha9qbowC",
+  "passwordResetAttempts": 0,
+  "failedLoginAttempts": 0,
+  "authProvider": "password",
+  "preferredLanguage": "hi",
+  "examGoals": [
+   "BANKING"
+  ],
+  "subscriptionStatus": "active",
+  "streakCount": 0,
+  "badges": [],
+  "freeUsage": {
+   "mockTestsUsed": 0,
+   "liveExamsUsed": 0,
+   "pyqUsed": 0
+  },
+  "bookmarkedQuestions": [],
+  "referralCode": "SUDHSN86",
+  "referredBy": null,
+  "referralCredits": 0,
+  "referralCount": 0,
+  "rewardedReferral": false,
+  "selectedSubjects": [],
+  "role": "student",
+  "topicStats": [],
+  "chapterProgress": [],
+  "createdAt": "2026-09-23T05:47:57.419Z",
+  "updatedAt": "2026-09-23T05:51:58.818Z",
+  "__v": 0,
+  "activeSessionId": "14f36a5c77e158969dd9b08bdb32c575c3d4fd85a1b49877",
+  "subscriptionExpiresAt": "2026-12-23T05:51:58.580Z",
+  "subscriptionPlan": "quarterly"
+ }
+]

@@ -1,0 +1,369 @@
+[
+ {
+  "_id": "6a4c29544196454246f3e1fd",
+  "name": "Maths",
+  "__v": 0,
+  "chapters": [
+   {
+    "name": "Percentage",
+    "nameHi": "प्रतिशत",
+    "topics": [
+     "Percentage"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d517586"
+   },
+   {
+    "name": "Profit and Loss",
+    "nameHi": "लाभ और हानि",
+    "topics": [
+     "Profit and Loss"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d517587"
+   },
+   {
+    "name": "Ratio and Proportion",
+    "nameHi": "अनुपात और समानुपात",
+    "topics": [
+     "Ratio and Proportion"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d517588"
+   },
+   {
+    "name": "Time and Work",
+    "nameHi": "समय और कार्य",
+    "topics": [
+     "Time and Work"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d517589"
+   },
+   {
+    "name": "Time Speed Distance",
+    "nameHi": "समय चाल दूरी",
+    "topics": [
+     "Time Speed Distance"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d51758a"
+   },
+   {
+    "name": "Average",
+    "nameHi": "औसत",
+    "topics": [
+     "Average"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d51758b"
+   },
+   {
+    "name": "Simple and Compound Interest",
+    "nameHi": "साधारण और चक्रवृद्धि ब्याज",
+    "topics": [
+     "Simple Interest",
+     "Compound Interest"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d51758c"
+   },
+   {
+    "name": "Number System",
+    "nameHi": "संख्या प्रणाली",
+    "topics": [
+     "Number System"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d51758d"
+   }
+  ],
+  "createdAt": "2026-07-06T22:16:52.006Z",
+  "displayOrder": 1,
+  "icon": "🔢",
+  "isActive": true,
+  "nameHi": "गणित",
+  "updatedAt": "2026-07-06T22:23:35.842Z"
+ },
+ {
+  "_id": "6a4c29554196454246f3e1fe",
+  "name": "Reasoning",
+  "__v": 0,
+  "chapters": [
+   {
+    "name": "Blood Relation",
+    "nameHi": "रक्त संबंध",
+    "topics": [
+     "Blood Relation"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d517590"
+   },
+   {
+    "name": "Number Series",
+    "nameHi": "संख्या श्रृंखला",
+    "topics": [
+     "Number Series"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d517591"
+   },
+   {
+    "name": "Coding Decoding",
+    "nameHi": "कोडिंग डिकोडिंग",
+    "topics": [
+     "Coding Decoding"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d517592"
+   },
+   {
+    "name": "Syllogism",
+    "nameHi": "न्याय निगमन",
+    "topics": [
+     "Syllogism"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d517593"
+   },
+   {
+    "name": "Direction Sense",
+    "nameHi": "दिशा ज्ञान",
+    "topics": [
+     "Direction Sense"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d517594"
+   },
+   {
+    "name": "Analogy",
+    "nameHi": "सादृश्यता",
+    "topics": [
+     "Analogy"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d517595"
+   },
+   {
+    "name": "Seating Arrangement",
+    "nameHi": "बैठक व्यवस्था",
+    "topics": [
+     "Seating Arrangement"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2954bbbb9fb03d517596"
+   }
+  ],
+  "createdAt": "2026-07-06T22:16:52.885Z",
+  "displayOrder": 2,
+  "icon": "🧩",
+  "isActive": true,
+  "nameHi": "तर्कशक्ति",
+  "updatedAt": "2026-07-06T22:16:52.885Z"
+ },
+ {
+  "_id": "6a4c29554196454246f3e1ff",
+  "name": "English",
+  "__v": 0,
+  "chapters": [
+   {
+    "name": "Reading Comprehension",
+    "topics": [
+     "Reading Comprehension"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d517598"
+   },
+   {
+    "name": "Grammar",
+    "topics": [
+     "Grammar"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d517599"
+   },
+   {
+    "name": "Vocabulary",
+    "topics": [
+     "Vocabulary"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d51759a"
+   },
+   {
+    "name": "Error Spotting",
+    "topics": [
+     "Error Spotting"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d51759b"
+   },
+   {
+    "name": "Fill in the Blanks",
+    "topics": [
+     "Fill in the Blanks"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d51759c"
+   }
+  ],
+  "createdAt": "2026-07-06T22:16:53.072Z",
+  "displayOrder": 3,
+  "icon": "📖",
+  "isActive": true,
+  "nameHi": "अंग्रेज़ी",
+  "updatedAt": "2026-07-06T22:16:53.072Z"
+ },
+ {
+  "_id": "6a4c29554196454246f3e200",
+  "name": "General Hindi",
+  "__v": 0,
+  "chapters": [
+   {
+    "name": "Vyakaran",
+    "nameHi": "व्याकरण",
+    "topics": [
+     "Hindi Grammar"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d51759e"
+   },
+   {
+    "name": "Samas",
+    "nameHi": "समास",
+    "topics": [
+     "Samas"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d51759f"
+   },
+   {
+    "name": "Sandhi",
+    "nameHi": "संधि",
+    "topics": [
+     "Sandhi"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d5175a0"
+   },
+   {
+    "name": "Muhavare",
+    "nameHi": "मुहावरे",
+    "topics": [
+     "Muhavare"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d5175a1"
+   }
+  ],
+  "createdAt": "2026-07-06T22:16:53.212Z",
+  "displayOrder": 4,
+  "icon": "✍️",
+  "isActive": true,
+  "nameHi": "सामान्य हिंदी",
+  "updatedAt": "2026-07-06T22:16:53.212Z"
+ },
+ {
+  "_id": "6a4c29554196454246f3e201",
+  "name": "GK",
+  "__v": 0,
+  "chapters": [
+   {
+    "name": "Indian History",
+    "nameHi": "भारतीय इतिहास",
+    "topics": [
+     "Static GK - Indian History"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d5175a3"
+   },
+   {
+    "name": "Indian Polity",
+    "nameHi": "भारतीय राजव्यवस्था",
+    "topics": [
+     "Indian Polity"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d5175a4"
+   },
+   {
+    "name": "Geography",
+    "nameHi": "भूगोल",
+    "topics": [
+     "Geography"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d5175a5"
+   },
+   {
+    "name": "General Science",
+    "nameHi": "सामान्य विज्ञान",
+    "topics": [
+     "General Science"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d5175a6"
+   },
+   {
+    "name": "Economics",
+    "nameHi": "अर्थशास्त्र",
+    "topics": [
+     "Economics"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d5175a7"
+   }
+  ],
+  "createdAt": "2026-07-06T22:16:53.285Z",
+  "displayOrder": 5,
+  "icon": "🌍",
+  "isActive": true,
+  "nameHi": "सामान्य ज्ञान",
+  "updatedAt": "2026-07-06T22:16:53.285Z"
+ },
+ {
+  "_id": "6a4c29554196454246f3e202",
+  "name": "Current Affairs",
+  "__v": 0,
+  "chapters": [
+   {
+    "name": "National Affairs",
+    "topics": [
+     "National Current Affairs"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d5175a9"
+   },
+   {
+    "name": "International Affairs",
+    "topics": [
+     "International Current Affairs"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d5175aa"
+   },
+   {
+    "name": "Sports",
+    "topics": [
+     "Sports Current Affairs"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d5175ab"
+   },
+   {
+    "name": "Awards and Honours",
+    "topics": [
+     "Awards and Honours"
+    ],
+    "displayOrder": 0,
+    "_id": "6a4c2955bbbb9fb03d5175ac"
+   }
+  ],
+  "createdAt": "2026-07-06T22:16:53.486Z",
+  "displayOrder": 6,
+  "icon": "📰",
+  "isActive": true,
+  "nameHi": "समसामयिकी",
+  "updatedAt": "2026-07-06T22:16:53.486Z"
+ }
+]

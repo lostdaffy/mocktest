@@ -14,6 +14,96 @@ const { FREE_MOCK_TESTS, FREE_LIVE_EXAMS, FREE_TRIAL_DAYS } = require("../config
 const { liveWindow, liveState, secondsRemaining } = require("../utils/liveExam");
 const { updateChapterMastery } = require("./subjectController");
 
+// A day means an Indian calendar day. Every streak and daily-goal
+// calculation in this file uses this, so a test finished at 11pm counts for
+// the day the student actually did it, wherever the server happens to run.
+function istDayKey(date) {
+  const ist = new Date(new Date(date).getTime() + 5.5 * 60 * 60 * 1000);
+  return ist.toISOString().slice(0, 10);
+}
+
+function startOfTodayIST() {
+  const ist = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+  ist.setUTCHours(0, 0, 0, 0);
+  return new Date(ist.getTime() - 5.5 * 60 * 60 * 1000);
+}
+
+// GET /api/tests/daily -> everything the home screen needs to say
+// "you're on day 6, you've done 12 of 20 questions today".
+//
+// The streak is worked out HERE rather than trusted from the database: it is
+// only written when a test is submitted, so a student who stopped coming a
+// week ago would otherwise keep seeing their old streak until they submitted
+// something again.
+async function getDailyStatus(req, res) {
+  try {
+    const user = req.user;
+    const todayStart = startOfTodayIST();
+    const todayKey = istDayKey(new Date());
+    const yesterdayKey = istDayKey(new Date(Date.now() - 86400000));
+    const lastActiveKey = user.lastActiveDate ? istDayKey(user.lastActiveDate) : null;
+
+    // Alive only if they practised today or yesterday; otherwise it's over.
+    const streakAlive = lastActiveKey === todayKey || lastActiveKey === yesterdayKey;
+    const currentStreak = streakAlive ? user.streakCount || 0 : 0;
+    const doneToday = lastActiveKey === todayKey;
+
+    // What they've actually answered today, across every test - the daily
+    // test, chapter practice, a mock, anything.
+    const todaysAttempts = await Attempt.find({
+      user: user._id,
+      $or: [{ submittedAt: { $gte: todayStart } }, { createdAt: { $gte: todayStart } }],
+    })
+      .select("answers.selectedIndex answers.isCorrect status")
+      .lean();
+
+    let questionsToday = 0;
+    let correctToday = 0;
+    for (const attempt of todaysAttempts) {
+      for (const a of attempt.answers || []) {
+        if (a.selectedIndex === null || a.selectedIndex === undefined) continue;
+        questionsToday++;
+        if (a.isCorrect) correctToday++;
+      }
+    }
+
+    const goal = user.dailyGoal || 20;
+
+    res.json({
+      date: todayKey,
+      streak: {
+        current: currentStreak,
+        best: Math.max(user.bestStreak || 0, currentStreak),
+        practisedToday: doneToday,
+        // True when yesterday counted but today hasn't yet - the one moment
+        // a reminder is actually worth sending.
+        atRiskToday: streakAlive && !doneToday,
+        lastActiveDate: user.lastActiveDate || null,
+      },
+      today: {
+        questionsDone: questionsToday,
+        correct: correctToday,
+        goal,
+        remaining: Math.max(0, goal - questionsToday),
+        goalMet: questionsToday >= goal,
+        accuracy: questionsToday ? Math.round((correctToday / questionsToday) * 100) : null,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Daily status load nahi hua", error: err.message });
+  }
+}
+
+// PATCH /api/tests/daily/goal { goal } -> let a student pick their own bar.
+async function setDailyGoal(req, res) {
+  const goal = Number(req.body.goal);
+  if (!Number.isFinite(goal) || goal < 5 || goal > 200) {
+    return res.status(400).json({ message: "Daily goal 5 se 200 questions ke beech rakho" });
+  }
+  await User.updateOne({ _id: req.user._id }, { $set: { dailyGoal: Math.round(goal) } });
+  res.json({ message: `Roz ka lakshya ${Math.round(goal)} questions set ho gaya`, goal: Math.round(goal) });
+}
+
 function hasActiveSubscription(user) {
   return (
     user.subscriptionStatus === "active" &&
@@ -234,16 +324,17 @@ async function getTest(req, res) {
     // submit) never counts again - only a genuinely NEW live exam uses up a
     // free slot.
     if (!liveAttempt && !hasActiveSubscription(req.user)) {
-      const used = req.user.freeUsage.liveExamsUsed;
+      const claimed = await User.findOneAndUpdate(
+        { _id: req.user._id, "freeUsage.liveExamsUsed": { $lt: FREE_LIVE_EXAMS } },
+        { $inc: { "freeUsage.liveExamsUsed": 1 } }
+      );
 
-      if (used >= FREE_LIVE_EXAMS) {
+      if (!claimed) {
         return res.status(402).json({
           message: `Aapke ${FREE_LIVE_EXAMS} free live exams khatam ho gaye. Unlimited live exams ke liye subscribe karo.`,
           code: "SUBSCRIPTION_REQUIRED",
         });
       }
-
-      await User.findByIdAndUpdate(req.user._id, { $inc: { "freeUsage.liveExamsUsed": 1 } });
     }
 
     // Create the in-progress record right at entry, not at submit. This is
@@ -293,17 +384,33 @@ async function createFullMock(req, res) {
   try {
     const { examType } = req.body;
 
-    if (!hasActiveSubscription(req.user)) {
-      if (req.user.freeUsage.mockTestsUsed >= FREE_MOCK_TESTS) {
+    // The free mock is claimed in one atomic update, not read-then-write:
+    // two taps at the same moment used to sail past the limit together.
+    const onFreeTier = !hasActiveSubscription(req.user);
+    if (onFreeTier) {
+      const claimed = await User.findOneAndUpdate(
+        { _id: req.user._id, "freeUsage.mockTestsUsed": { $lt: FREE_MOCK_TESTS } },
+        { $inc: { "freeUsage.mockTestsUsed": 1 } }
+      );
+      if (!claimed) {
         return res.status(402).json({
           message: `Aapke ${FREE_MOCK_TESTS} free mock tests khatam ho gaye. Unlimited mocks ke liye subscribe karo.`,
           code: "SUBSCRIPTION_REQUIRED",
         });
       }
-      await User.findByIdAndUpdate(req.user._id, { $inc: { "freeUsage.mockTestsUsed": 1 } });
     }
 
-    const test = await generateFullMock(examType);
+    let test;
+    try {
+      test = await generateFullMock(examType);
+    } catch (err) {
+      // Hand the free mock back. It used to be counted before the test was
+      // built, so a bank that wasn't ready yet silently cost a student one
+      // of the few free tests they get.
+      if (onFreeTier) await User.findByIdAndUpdate(req.user._id, { $inc: { "freeUsage.mockTestsUsed": -1 } });
+      throw err;
+    }
+
     res.status(201).json({ test });
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -508,13 +615,16 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
     stat.accuracy = Math.round((stat.correct / stat.attempted) * 100);
     stat.lastAttemptedAt = new Date();
   }
-  // Streak update
-  const today = new Date().toDateString();
-  const lastActive = user.lastActiveDate ? new Date(user.lastActiveDate).toDateString() : null;
-  if (lastActive !== today) {
-    const yesterday = new Date(Date.now() - 86400000).toDateString();
-    user.streakCount = lastActive === yesterday ? user.streakCount + 1 : 1;
+  // Streak update. Days are counted in IST, not in the server's timezone -
+  // a student finishing a test at 11pm in India was otherwise credited to
+  // the next day and their streak looked broken the following evening.
+  const todayIST = istDayKey(new Date());
+  const lastActiveIST = user.lastActiveDate ? istDayKey(user.lastActiveDate) : null;
+  if (lastActiveIST !== todayIST) {
+    const yesterdayIST = istDayKey(new Date(Date.now() - 86400000));
+    user.streakCount = lastActiveIST === yesterdayIST ? (user.streakCount || 0) + 1 : 1;
     user.lastActiveDate = new Date();
+    if (user.streakCount > (user.bestStreak || 0)) user.bestStreak = user.streakCount;
   }
   await user.save();
 
@@ -936,6 +1046,8 @@ async function getFreeLimits(req, res) {
 }
 
 module.exports = {
+  getDailyStatus,
+  setDailyGoal,
   listTests,
   getTest,
   createFullMock,

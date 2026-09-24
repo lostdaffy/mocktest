@@ -20,6 +20,10 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
+    // Tell the server too, so this device stops counting as an active
+    // session on the Login Activity page. Clearing the browser alone would
+    // leave the token valid and the session sitting there looking live.
+    api.post("/auth/logout").catch(() => {});
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminUser");
     setUser(null);

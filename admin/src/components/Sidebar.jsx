@@ -13,6 +13,7 @@ import {
   RiLogoutBoxRLine,
   RiFilePaperLine,
   RiCoupon3Line,
+  RiShieldKeyholeLine,
   RiCloseLine,
 } from "@remixicon/react";
 
@@ -29,7 +30,7 @@ const NAV_GROUPS = [
       { to: "/exam-series", label: "Exam Mock Series", Icon: RiFileList3Line },
       { to: "/practice-series", label: "Subject Practice", Icon: RiBookOpenLine },
       { to: "/pyq-bank", label: "PYQ Bank", Icon: RiFilePaperLine },
-      { to: "/questions", label: "Manage Questions", Icon: RiQuestionnaireLine },
+      { to: "/questions", label: "Question Review", Icon: RiQuestionnaireLine },
     ],
   },
   {
@@ -47,6 +48,10 @@ const NAV_GROUPS = [
       { to: "/reports", label: "Student Reports", Icon: RiFlag2Line },
       { to: "/coupons", label: "Coupons", Icon: RiCoupon3Line },
     ],
+  },
+  {
+    label: "Account",
+    items: [{ to: "/sessions", label: "Login Activity", Icon: RiShieldKeyholeLine }],
   },
 ];
 

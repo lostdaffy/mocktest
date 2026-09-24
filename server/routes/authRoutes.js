@@ -10,6 +10,10 @@ const {
   forgotPassword,
   resetPassword,
   deleteAccount,
+  listSessions,
+  revokeSession,
+  revokeOtherSessions,
+  logout,
 } = require("../controllers/authController");
 const { protect } = require("../middleware/auth");
 
@@ -22,5 +26,11 @@ router.get("/me", protect, getMe);
 router.patch("/profile", protect, updateProfile);
 router.post("/push-token", protect, registerPushToken);
 router.post("/delete-account", protect, deleteAccount); // in-app account deletion (Play Store requirement)
+
+// Where this account is signed in, and how to end a session you do not recognise
+router.post("/logout", protect, logout);
+router.get("/sessions", protect, listSessions);
+router.delete("/sessions/:id", protect, revokeSession);
+router.post("/sessions/revoke-others", protect, revokeOtherSessions);
 
 module.exports = router;

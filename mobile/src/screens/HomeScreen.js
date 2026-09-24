@@ -13,10 +13,10 @@ import {
   ScrollView,
   RefreshControl,
   ActivityIndicator,
-  Dimensions,
   Image,
   Animated,
   Easing,
+  useWindowDimensions,
 } from "react-native";
 
 import AppAlert from "../components/AppAlert";
@@ -35,9 +35,6 @@ import {
   type,
   card,
 } from "../theme/theme";
-
-const { width: SCREEN_WIDTH } =
-  Dimensions.get("window");
 
 /* =========================================================
    LOGO
@@ -1351,8 +1348,19 @@ function HomeCarousel({
   const [activeIndex, setActiveIndex] =
     useState(0);
 
+  // Measured from the carousel's own box, not from the window, and measured
+  // again whenever it changes. The window is the wrong number on a tablet
+  // (the app is centred in a narrower column there, see ResponsiveShell in
+  // App.js), and a width captured once at startup left the carousel stuck
+  // between two slides after a rotate or a split-screen resize.
+  const { width: windowWidth } =
+    useWindowDimensions();
+
+  const [trackWidth, setTrackWidth] =
+    useState(0);
+
   const slideWidth =
-    SCREEN_WIDTH -
+    (trackWidth || windowWidth) -
     spacing.lg * 2;
 
   useEffect(() => {
@@ -1417,6 +1425,11 @@ function HomeCarousel({
     <View
       style={
         styles.carouselWrapper
+      }
+      onLayout={(e) =>
+        setTrackWidth(
+          e.nativeEvent.layout.width
+        )
       }
     >
       <ScrollView

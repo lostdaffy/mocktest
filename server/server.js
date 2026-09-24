@@ -185,7 +185,24 @@ app.post("/api/auth/signup", authLimit(15, phoneKey));
 app.post("/api/auth/forgot-password", authLimit(5, phoneKey), authLimit(60));
 app.post("/api/auth/reset-password", authLimit(10, phoneKey), authLimit(60));
 
-app.get("/api/health", (req, res) => res.json({ status: "ok", time: new Date() }));
+// Health check. Reports the DATABASE state too, because "the web server is
+// up" is not the same as "the app works" - a server that can't reach Mongo
+// answers every request with an error while looking perfectly healthy here.
+app.get("/api/health", (req, res) => {
+  const states = ["disconnected", "connected", "connecting", "disconnecting"];
+  const dbState = states[require("mongoose").connection.readyState] || "unknown";
+  const healthy = dbState === "connected";
+
+  res.status(healthy ? 200 : 503).json({
+    status: healthy ? "ok" : "degraded",
+    database: dbState,
+    // So "did my deploy actually go live?" can be answered from a browser,
+    // without reading Render's logs.
+    version: require("./package.json").version,
+    uptimeSeconds: Math.round(process.uptime()),
+    time: new Date(),
+  });
+});
 
 // GET /api/app-config -> what the mobile app checks on every launch.
 //
@@ -224,22 +241,73 @@ app.use("/api/live-exams", liveExamRoutes);
 app.use("/api/pyq", pyqRoutes);
 app.use("/api/admin/coupons", couponRoutes);
 
-// Fallback error handler
+// Fallback error handler.
+//
+// The full error goes to the server log with a short id; the student only
+// gets that id. An exception message can carry a database name, a file path
+// or part of a query, and none of that belongs on a phone screen - but
+// without an id, "something went wrong" is unsupportable: nobody can find
+// which error it was.
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong", error: err.message });
+  const errorId = Math.random().toString(36).slice(2, 8).toUpperCase();
+  console.error(`[${errorId}] ${req.method} ${req.originalUrl} ->`, err.stack || err.message);
+
+  res.status(err.status || 500).json({
+    message: "Kuch galat ho gaya. Thodi der baad try karo.",
+    errorId,
+    // Only while developing, never from the deployed server.
+    ...(process.env.NODE_ENV === "production" ? {} : { error: err.message }),
+  });
 });
 
 const PORT = process.env.PORT || 5000;
 
 async function start() {
   await connectDB();
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
   // The only background job in this app - see server/jobs/liveExamScheduler.js
   // for what it does. Runs every 30s for the lifetime of the process.
   const { runLiveExamTick } = require("./jobs/liveExamScheduler");
-  setInterval(runLiveExamTick, 30_000);
+  const tick = setInterval(runLiveExamTick, 30_000);
+
+  // Render sends SIGTERM on every deploy and then kills the process. Without
+  // this, requests in flight at that moment are cut off mid-answer - and the
+  // worst possible moment for that is a student submitting a live exam.
+  // Finish what's already started, then close the database cleanly.
+  let shuttingDown = false;
+  const shutdown = async (signal) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`${signal} received - finishing in-flight requests, then shutting down...`);
+    clearInterval(tick);
+
+    const forceExit = setTimeout(() => {
+      console.error("Requests didn't finish in 10s - shutting down anyway.");
+      process.exit(1);
+    }, 10_000);
+    forceExit.unref();
+
+    server.close(async () => {
+      try {
+        await require("mongoose").connection.close();
+      } catch (_) {
+        // closing on the way out - nothing useful left to do about it
+      }
+      console.log("Shutdown complete.");
+      process.exit(0);
+    });
+  };
+
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
+
+  // A promise nobody caught used to take the whole server down silently,
+  // logging nothing. Log it and keep serving - one broken request must not
+  // end the session of everyone mid-exam.
+  process.on("unhandledRejection", (reason) => {
+    console.error("Unhandled promise rejection:", reason);
+  });
 }
 
 start();

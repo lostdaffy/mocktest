@@ -52,8 +52,18 @@ const userSchema = new mongoose.Schema(
     subscriptionPlan: { type: String, enum: ["quarterly", "half_yearly", "yearly"] }, // mirrors the Subscription doc, for quick display in admin
 
     // Gamification
+    // Consecutive days with at least one test submitted. Stored as-is and
+    // interpreted on read (see dailyStatus): if lastActiveDate is older than
+    // yesterday the streak is already broken, whether or not the student has
+    // opened the app since - otherwise a 5-day streak keeps showing on the
+    // home screen weeks after they stopped coming.
     streakCount: { type: Number, default: 0 },
+    bestStreak: { type: Number, default: 0 }, // their record, never reset
     lastActiveDate: { type: Date },
+    // Questions a day this student is aiming for. One number, shown on the
+    // home screen as progress, so "practice daily" is something they can
+    // actually see themselves doing.
+    dailyGoal: { type: Number, default: 20, min: 5, max: 200 },
     badges: [{ type: String }],
 
     // Aggregated performance (updated after each attempt, used by recommendation engine)

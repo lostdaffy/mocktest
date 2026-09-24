@@ -16,6 +16,7 @@ import ExamMocks from "./pages/ExamMocks";
 import PracticeSeries from "./pages/PracticeSeries";
 import PyqBank from "./pages/PyqBank";
 import Coupons from "./pages/Coupons";
+import Sessions from "./pages/Sessions";
 
 export default function App() {
   return (
@@ -118,6 +119,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Coupons />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sessions"
+              element={
+                <ProtectedRoute>
+                  <Sessions />
                 </ProtectedRoute>
               }
             />

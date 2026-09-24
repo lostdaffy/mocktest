@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { View, useWindowDimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -193,12 +194,32 @@ function RootNavigator() {
   return <NavigationContainer>{user ? <AppStack /> : <AuthStack />}</NavigationContainer>;
 }
 
+// Every screen here is designed for a phone-width column. On a tablet the
+// same layout stretched edge to edge - giant cards, a line of text running
+// the full width, everything feeling blown up. So on a wide screen we keep
+// the app at a comfortable reading width and centre it, with the page
+// colour filling the space around it. Phones are untouched.
+const PHONE_MAX_WIDTH = 560;
+
+function ResponsiveShell({ children }) {
+  const { width } = useWindowDimensions();
+  if (width <= PHONE_MAX_WIDTH + 48) return children;
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.slateLight, alignItems: "center" }}>
+      <View style={{ flex: 1, width: PHONE_MAX_WIDTH, backgroundColor: colors.bg }}>{children}</View>
+    </View>
+  );
+}
+
 export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
         <StatusBar style="dark" />
-        <RootNavigator />
+        <ResponsiveShell>
+          <RootNavigator />
+        </ResponsiveShell>
         <AppAlertHost />
       </AuthProvider>
     </SafeAreaProvider>

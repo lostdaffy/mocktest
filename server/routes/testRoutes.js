@@ -6,6 +6,8 @@ const {
   createFullMock,
   createTopicTest,
   getTodayTest,
+  getDailyStatus,
+  setDailyGoal,
   createWeeklyRevision,
   submitTest,
   saveLiveProgress,
@@ -23,6 +25,8 @@ const { getLeaderboard } = require("../controllers/examController");
 const { protect, requireActiveSubscription } = require("../middleware/auth");
 
 router.get("/today", protect, getTodayTest);
+router.get("/daily", protect, getDailyStatus); // streak + today's progress for the home screen
+router.patch("/daily/goal", protect, setDailyGoal);
 router.get("/my-attempts", protect, listMyAttempts);
 router.get("/analysis", protect, getAnalysis);
 router.get("/free-limits", protect, getFreeLimits);

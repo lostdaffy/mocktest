@@ -1,12 +1,17 @@
 {
-  "name": "exam-app-backend",
-  "version": "1.0.0",
-  "description": "Backend for Exam Practice App - Smart Test Engine",
+  "name": "rankveer-backend",
+  "version": "2.0.0",
+  "description": "RankVeer backend - exam prep, question generation and quality gate",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "backup": "node scripts/backupDb.js",
+    "restore": "node scripts/restoreDb.js",
+    "indexes": "node scripts/syncIndexes.js",
+    "audit:questions": "node scripts/auditQuestions.js",
+    "rebuild:practice": "node scripts/rebuildPracticeTests.js",
     "generate:questions": "node scripts/generateQuestions.js",
     "seed:patterns": "node scripts/seedExamPatterns.js",
     "seed:subjects": "node scripts/seedSubjects.js"

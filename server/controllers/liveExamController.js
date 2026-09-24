@@ -2,8 +2,7 @@ const Test = require("../models/Test");
 const Question = require("../models/Question");
 const Attempt = require("../models/Attempt");
 const ExamPattern = require("../models/ExamPattern");
-const { generateQuestions } = require("../services/geminiService");
-const { runValidationPipeline } = require("../services/validationPipeline");
+const { createVerifiedQuestions, qualityNote } = require("../services/questionFactory");
 const { liveState } = require("../utils/liveExam");
 
 // Live exams get their OWN question pool, generated directly for the live
@@ -157,25 +156,23 @@ async function addQuestionsToLiveExam(req, res) {
 
     const batch = Math.min(count, 12); // cap for quality + valid JSON
     const pyqExamples = await getPyqStyleExamples(test.examType, subject);
-    const rawQuestions = await generateQuestions({
-      examType: test.examType,
-      examDisplayName: displayName,
-      subject: subject || "General",
-      topic: subject || "General",
-      count: batch,
-      examMode: true,
-      pyqExamples,
-      examLevel: pattern?.examLevel,
-      syllabusTopics: pattern?.sections?.find((x) => x.subject === subject)?.syllabus || [],
+    // Only verified questions reach a live exam - there is no second chance
+    // to fix a bad question once thousands of students are sitting it.
+    const built = await createVerifiedQuestions({
+      needed: batch,
+      tag: { examStage: test.examType },
+      generateParams: {
+        examType: test.examType,
+        examDisplayName: displayName,
+        subject: subject || "General",
+        topic: subject || "General",
+        examMode: true,
+        pyqExamples,
+        examLevel: pattern?.examLevel,
+        syllabusTopics: pattern?.sections?.find((x) => x.subject === subject)?.syllabus || [],
+      },
     });
-
-    const newIds = [];
-    for (const raw of rawQuestions) {
-      raw.examStage = test.examType;
-      const validated = await runValidationPipeline(raw);
-      const q = await Question.create(validated);
-      newIds.push(q._id);
-    }
+    const newIds = built.ids;
 
     test.questions.push(...newIds);
     await test.save();
@@ -189,7 +186,7 @@ async function addQuestionsToLiveExam(req, res) {
         : ` No real PYQs found yet for ${subject} - upload some in PYQ Bank for closer style-matching.`;
 
     res.json({
-      message: `${newIds.length} questions add ho gaye${sectionNote}. Total ${test.questions.length} questions.${groundingNote}`,
+      message: `${newIds.length} questions add ho gaye${sectionNote}${qualityNote(built)}. Total ${test.questions.length} questions.${groundingNote}`,
       added: newIds.length,
       totalCount: test.questions.length,
       groundedInRealPyqs: pyqExamples.length > 0,

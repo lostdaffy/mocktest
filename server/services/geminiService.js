@@ -22,6 +22,34 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// The free tier allows about 15 requests a minute, and it counts EVERY call -
+// generation and verification alike. Two admins generating at once, or one
+// admin building a mock while another builds a practice test, used to sail
+// past that limit and everything started failing with 429s.
+//
+// So every call to Gemini goes through one queue: they run one at a time,
+// with a minimum gap between them. 4.5s -> ~13 calls a minute, just under
+// the limit, and nothing has to think about pacing at the call site.
+const GEMINI_MIN_GAP_MS = Number(process.env.GEMINI_MIN_GAP_MS) || 4500;
+let queueTail = Promise.resolve();
+let lastCallAt = 0;
+
+function queued(fn) {
+  const run = queueTail.then(async () => {
+    const waitFor = lastCallAt + GEMINI_MIN_GAP_MS - Date.now();
+    if (waitFor > 0) await sleep(waitFor);
+    try {
+      return await fn();
+    } finally {
+      lastCallAt = Date.now();
+    }
+  });
+  // The queue must keep moving even when a call fails, so swallow the
+  // rejection here - the caller still gets it from `run`.
+  queueTail = run.catch(() => {});
+  return run;
+}
+
 // Robustly parse JSON that an LLM produced. LLMs often wrap JSON in markdown
 // fences, add trailing commas, or use smart quotes. This cleans the common
 // cases and returns null if it still can't be parsed.
@@ -58,7 +86,13 @@ function tryParseJson(text) {
   }
 }
 
-async function callGeminiRaw(parts, { jsonMode = true, maxRetries = 4 } = {}) {
+// Every request to Gemini funnels through here, so this is where the queue
+// belongs - callers just await as before.
+async function callGeminiRaw(parts, opts = {}) {
+  return queued(() => callGeminiNow(parts, opts));
+}
+
+async function callGeminiNow(parts, { jsonMode = true, maxRetries = 4 } = {}) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not set in .env");
 
@@ -101,15 +135,21 @@ async function callGeminiRaw(parts, { jsonMode = true, maxRetries = 4 } = {}) {
 
     const errText = await res.text();
 
-    // 429 = rate limit hit. Gemini free tier allows only 15 requests/minute.
-    // Instead of failing, wait and retry automatically.
-    if (res.status === 429 && attempt < maxRetries) {
+    // Worth waiting out rather than failing:
+    //   429 - our own rate limit (free tier: ~15 requests/minute)
+    //   503 - "this model is experiencing high demand", Google's side, and
+    //         common enough that not retrying it once cost a whole batch of
+    //         rebuilt practice tests
+    //   500/502/504 - transient errors on the way there
+    const RETRYABLE = [429, 500, 502, 503, 504];
+    if (RETRYABLE.includes(res.status) && attempt < maxRetries) {
       attempt++;
-      // Try to honor the retryDelay Gemini suggests, else back off progressively
-      let waitSeconds = 20 * attempt;
+      // Honour the delay Gemini asks for; otherwise back off progressively.
+      let waitSeconds = res.status === 429 ? 20 * attempt : 10 * attempt;
       const match = errText.match(/"retryDelay":\s*"(\d+)s"/);
       if (match) waitSeconds = parseInt(match[1], 10) + 2;
-      console.log(`Gemini rate limit hit. Waiting ${waitSeconds}s then retrying (attempt ${attempt}/${maxRetries})...`);
+      const why = res.status === 429 ? "rate limit hit" : `busy (${res.status})`;
+      console.log(`Gemini ${why}. Waiting ${waitSeconds}s then retrying (attempt ${attempt}/${maxRetries})...`);
       await sleep(waitSeconds * 1000);
       continue;
     }
@@ -169,7 +209,59 @@ const EXAM_CONTEXT = {
   },
 };
 
-async function generateQuestions({
+// Quality drops off inside a single request: the first few questions come
+// out sharp and the last ones get lazy and repetitive. So a request for 12
+// is served as small requests instead of one big one - the model starts
+// fresh each time and every question gets the same effort. Calls are cheap
+// now (the queue paces them, and verification is batched), so this buys
+// quality without endangering the free tier.
+const QUESTIONS_PER_CALL = Number(process.env.GEMINI_QUESTIONS_PER_CALL) || 6;
+
+// Same reason on the checking side: a checker asked to solve 12 questions in
+// one go starts rubber-stamping the tail.
+const VERIFY_PER_CALL = Number(process.env.GEMINI_VERIFY_PER_CALL) || 6;
+
+// "What is 15% of 240?" and "what is 15 % of 240" are the same question.
+const normalizeText = (t) =>
+  String(t || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9ऀ-ॿ]+/g, " ")
+    .trim();
+
+// Splits the work into small requests, drops repeats, and tops up whatever
+// the repeats cost - so asking for 12 still gives 12 usable questions.
+async function generateQuestions(params) {
+  const { count = 10 } = params;
+  const seen = new Set();
+  const collected = [];
+
+  // A couple of extra rounds beyond what's needed, to replace anything
+  // dropped as a repeat. Bounded on purpose: a model that keeps repeating
+  // itself must not be able to spend the whole daily quota chasing the last
+  // question - better to hand over a slightly shorter, clean set.
+  const maxRounds = Math.ceil(count / QUESTIONS_PER_CALL) + 2;
+
+  for (let round = 0; round < maxRounds && collected.length < count; round++) {
+    const remaining = count - collected.length;
+    const batch = await generateOneBatch({
+      ...params,
+      count: Math.min(QUESTIONS_PER_CALL, remaining),
+      avoidTexts: collected.map((q) => q.text),
+    });
+
+    for (const q of batch) {
+      const key = normalizeText(q.text);
+      if (!key || seen.has(key)) continue; // a repeat of one we already have
+      seen.add(key);
+      collected.push(q);
+      if (collected.length === count) break;
+    }
+  }
+
+  return collected;
+}
+
+async function generateOneBatch({
   examType,
   examDisplayName,
   subject,
@@ -180,6 +272,7 @@ async function generateQuestions({
   examMode = false,
   examLevel = "",
   syllabusTopics = [],
+  avoidTexts = [],
 }) {
   const builtIn = EXAM_CONTEXT[examType];
   const ctx = {
@@ -256,9 +349,21 @@ ${difficultyInstruction}
 QUALITY RULES:
 - Each question has exactly 4 options, only ONE correct. Make wrong options plausible (not obviously wrong).
 - Questions must be factually accurate and unambiguous.
-- No repeated questions in this batch.
 - Solutions must be short, correct, step-by-step.
 - Provide accurate Hindi translation of question, options, and solution.
+
+EVERY QUESTION MUST BE AS GOOD AS THE FIRST:
+- The LAST question must take the same effort as the first one. Do not get shorter, vaguer or more generic as you go.
+- Each question must test a DIFFERENT idea. Never re-use a question's structure with only the numbers or names swapped.
+- Vary the numbers, the names, the framing and the position of the correct answer across the questions.
+- If you cannot produce ${count} genuinely different good questions, return fewer. Quality beats quantity - a weak filler question is worse than no question.${
+    avoidTexts.length
+      ? `
+
+ALREADY ASKED - do not repeat these or a reworded version of them:
+${avoidTexts.map((t, i) => `${i + 1}. ${t}`).join("\n")}`
+      : ""
+  }
 - Return ONLY valid JSON array, no markdown fences, no extra text, in this exact shape:
 
 [
@@ -293,6 +398,69 @@ QUALITY RULES:
  * and compares its answer to the stored correctIndex. If they disagree,
  * the question is flagged for human review instead of auto-publishing.
  */
+// Verifies a WHOLE batch in one request.
+//
+// This used to be one request per question, which is what actually burned
+// through the free tier: a 12-question practice test cost 1 generation call
+// plus 12 verification calls, so a single click blew the 15-a-minute limit
+// and everything after it failed with 429s. Same check, same independent
+// re-solve, one call.
+async function verifyQuestions(questions) {
+  if (!questions.length) return [];
+
+  // Checked in small groups for the same reason questions are written in
+  // small groups: a checker handed a dozen at once starts agreeing with
+  // everything by the end.
+  if (questions.length > VERIFY_PER_CALL) {
+    const out = [];
+    for (let i = 0; i < questions.length; i += VERIFY_PER_CALL) {
+      out.push(...(await verifyQuestions(questions.slice(i, i + VERIFY_PER_CALL))));
+    }
+    return out;
+  }
+
+  const list = questions
+    .map(
+      (q, i) => `Q${i + 1}. ${q.text}
+0. ${q.options[0]}
+1. ${q.options[1]}
+2. ${q.options[2]}
+3. ${q.options[3]}`
+    )
+    .join("\n\n");
+
+  const prompt = `Solve each multiple-choice question below independently. Think step by step for each one, then answer.
+
+${list}
+
+Return ONLY a valid JSON array with one entry per question, in the same order, no extra text:
+[{ "q": 1, "correctIndex": <0-3>, "confidence": <0.0-1.0> }]`;
+
+  let answers = [];
+  try {
+    const result = await callGemini(prompt, { jsonMode: true });
+    answers = Array.isArray(result) ? result : result?.answers || [];
+  } catch (err) {
+    // Verification itself failed - flag everything rather than silently
+    // auto-publishing unverified questions.
+    return questions.map(() => ({ matches: false, aiCorrectIndex: null, confidence: 0, error: err.message }));
+  }
+
+  return questions.map((question, i) => {
+    // Prefer the entry that names this question number; fall back to position.
+    const answer = answers.find((a) => Number(a?.q) === i + 1) || answers[i];
+    if (!answer || answer.correctIndex === undefined || answer.correctIndex === null) {
+      return { matches: false, aiCorrectIndex: null, confidence: 0, error: "no verification returned for this question" };
+    }
+    const matches = Number(answer.correctIndex) === question.correctIndex;
+    return {
+      matches,
+      aiCorrectIndex: Number(answer.correctIndex),
+      confidence: answer.confidence ?? (matches ? 0.9 : 0.3),
+    };
+  });
+}
+
 async function verifyQuestion(question) {
   const prompt = `Solve this multiple-choice question independently. Think step by step, then answer.
 
@@ -422,4 +590,4 @@ If a question has more or fewer than 4 options in the original, still return exa
   });
 }
 
-module.exports = { generateQuestions, verifyQuestion, callGemini, extractQuestionsFromPDF };
+module.exports = { generateQuestions, verifyQuestion, verifyQuestions, callGemini, extractQuestionsFromPDF };

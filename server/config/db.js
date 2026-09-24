@@ -17,6 +17,17 @@ async function connectDB() {
     process.exit(1);
   }
 
+  // Mongoose builds any missing index in the background at startup. When one
+  // fails - a unique index on a field that already holds duplicates is the
+  // usual cause - it does so silently, and the app keeps running without it.
+  // That is how a "unique" constraint turns out never to have existed. Say so
+  // loudly; scripts/syncIndexes.js shows the offending rows.
+  for (const name of mongoose.modelNames()) {
+    mongoose.model(name).on("index", (err) => {
+      if (err) console.error(`INDEX BUILD FAILED on ${name}: ${err.message}\n  Run: node scripts/syncIndexes.js`);
+    });
+  }
+
   mongoose.connection.on("error", (err) => {
     console.error("MongoDB connection error:", err.message);
   });

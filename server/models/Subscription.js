@@ -14,7 +14,10 @@ const subscriptionSchema = new mongoose.Schema(
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
 
-    razorpayOrderId: { type: String },
+    // Looked up by id on every payment verification AND on every webhook
+    // Razorpay sends. Unique because one order must never map to two
+    // subscription records - that is how a payment gets counted twice.
+    razorpayOrderId: { type: String, index: true, unique: true, sparse: true },
     razorpayPaymentId: { type: String },
     razorpaySignature: { type: String },
 
