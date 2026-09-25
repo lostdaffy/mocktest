@@ -33,7 +33,16 @@ function ruleBasedCheck(q) {
 
   // A one-line "because it is" teaches nothing - the solution is the part a
   // student actually learns from, so it has to explain something.
-  if (solution.length < 25) issues.push("solution too short to explain anything");
+  //
+  // But length alone is a bad judge of that. "(3/4) * 100 = 75%." is 18
+  // characters and is the complete, correct explanation; a flat 25-character
+  // floor threw it out. In maths, working IS the explanation. So a short
+  // solution passes when it actually shows the arithmetic - numbers and an
+  // equals sign - and is still rejected when it is just an assertion.
+  const showsWorking = /=/.test(solution) && /[0-9]/.test(solution);
+  if (solution.length < 25 && !(showsWorking && solution.length >= 12)) {
+    issues.push("solution too short to explain anything");
+  }
   if (options.some((o) => o.toLowerCase() === solution.toLowerCase())) issues.push("solution is just the option text");
 
   // The app is bilingual and most of these students read Hindi first. A
@@ -81,7 +90,9 @@ function applyVerification(question, verification) {
     status: "under_review",
     flagReason: verification.matches
       ? `Low AI confidence (${verification.confidence})`
-      : `AI verification disagreed - AI suggests option ${verification.aiCorrectIndex}`,
+      : verification.aiSaid
+      ? `AI verification disagreed - it answered "${verification.aiSaid}"`
+      : `AI verification could not be completed${verification.error ? ": " + verification.error : ""}`,
     aiConfidenceScore: verification.confidence,
   };
 }

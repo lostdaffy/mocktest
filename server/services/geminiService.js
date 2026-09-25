@@ -421,6 +421,39 @@ ${avoidTexts.map((t, i) => `${i + 1}. ${t}`).join("\n")}`
 // plus 12 verification calls, so a single click blew the 15-a-minute limit
 // and everything after it failed with 429s. Same check, same independent
 // re-solve, one call.
+
+// Does the checker agree with the question's answer key?
+//
+// Compared by the TEXT of the answer, not its position. Asking for a
+// 0-based index and being handed a 1-based one ("option 4" for the answer
+// at index 3) is a coin-flip the model makes on its own, and it silently
+// turned correct questions into rejected ones - one in seven of the first
+// real batch. Text has no such ambiguity: 40 is 40 however the options are
+// numbered.
+//
+// The index is still accepted as a fallback, tried both ways round, for
+// answers whose text comes back reworded.
+function checkerAgrees(question, answer) {
+  const norm = (v) => String(v ?? "").trim().toLowerCase().replace(/\s+/g, " ").replace(/[.%,]+$/, "");
+  const options = (question.options || []).map(norm);
+  const keyed = options[question.correctIndex];
+
+  if (answer.answer !== undefined && answer.answer !== null) {
+    const said = norm(answer.answer);
+    if (said && options.includes(said)) return { agrees: said === keyed, saidText: String(answer.answer) };
+  }
+
+  const idx = Number(answer.correctIndex);
+  if (Number.isInteger(idx)) {
+    // 0-based as asked, or 1-based as models often reply.
+    if (idx === question.correctIndex) return { agrees: true, saidText: options[idx] };
+    if (idx - 1 === question.correctIndex) return { agrees: true, saidText: options[idx - 1] };
+    const at = idx >= 0 && idx <= 3 ? options[idx] : options[idx - 1];
+    return { agrees: false, saidText: at };
+  }
+
+  return { agrees: false, saidText: null };
+}
 async function verifyQuestions(questions) {
   if (!questions.length) return [];
 
@@ -450,7 +483,7 @@ async function verifyQuestions(questions) {
 ${list}
 
 Return ONLY a valid JSON array with one entry per question, in the same order, no extra text:
-[{ "q": 1, "correctIndex": <0-3>, "confidence": <0.0-1.0> }]`;
+[{ "q": 1, "answer": "<exact text of the correct option, copied>", "correctIndex": <0-3>, "confidence": <0.0-1.0> }]`;
 
   let answers = [];
   try {
@@ -459,20 +492,24 @@ Return ONLY a valid JSON array with one entry per question, in the same order, n
   } catch (err) {
     // Verification itself failed - flag everything rather than silently
     // auto-publishing unverified questions.
-    return questions.map(() => ({ matches: false, aiCorrectIndex: null, confidence: 0, error: err.message }));
+    return questions.map(() => ({ matches: false, aiSaid: null, confidence: 0, error: err.message }));
   }
 
   return questions.map((question, i) => {
     // Prefer the entry that names this question number; fall back to position.
     const answer = answers.find((a) => Number(a?.q) === i + 1) || answers[i];
-    if (!answer || answer.correctIndex === undefined || answer.correctIndex === null) {
-      return { matches: false, aiCorrectIndex: null, confidence: 0, error: "no verification returned for this question" };
+    const nothingBack =
+      !answer ||
+      ((answer.answer === undefined || answer.answer === null) &&
+        (answer.correctIndex === undefined || answer.correctIndex === null));
+    if (nothingBack) {
+      return { matches: false, aiSaid: null, confidence: 0, error: "no verification returned for this question" };
     }
-    const matches = Number(answer.correctIndex) === question.correctIndex;
+    const { agrees, saidText } = checkerAgrees(question, answer);
     return {
-      matches,
-      aiCorrectIndex: Number(answer.correctIndex),
-      confidence: answer.confidence ?? (matches ? 0.9 : 0.3),
+      matches: agrees,
+      aiSaid: saidText,
+      confidence: answer.confidence ?? (agrees ? 0.9 : 0.3),
     };
   });
 }
@@ -488,19 +525,19 @@ Options:
 3. ${question.options[3]}
 
 Return ONLY valid JSON in this shape, no extra text:
-{ "correctIndex": <0-3>, "confidence": <0.0-1.0> }`;
+{ "answer": "<exact text of the correct option, copied>", "correctIndex": <0-3>, "confidence": <0.0-1.0> }`;
 
   try {
     const result = await callGemini(prompt, { jsonMode: true });
-    const matches = result.correctIndex === question.correctIndex;
+    const { agrees, saidText } = checkerAgrees(question, result);
     return {
-      matches,
-      aiCorrectIndex: result.correctIndex,
-      confidence: result.confidence ?? (matches ? 0.9 : 0.3),
+      matches: agrees,
+      aiSaid: saidText,
+      confidence: result.confidence ?? (agrees ? 0.9 : 0.3),
     };
   } catch (err) {
     // If verification itself fails, don't silently auto-publish - flag it.
-    return { matches: false, aiCorrectIndex: null, confidence: 0, error: err.message };
+    return { matches: false, aiSaid: null, confidence: 0, error: err.message };
   }
 }
 
