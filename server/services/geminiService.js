@@ -478,12 +478,27 @@ async function verifyQuestions(questions) {
     )
     .join("\n\n");
 
-  const prompt = `Solve each multiple-choice question below independently. Think step by step for each one, then answer.
+  // The working has to be written out, not just thought about.
+  //
+  // The old prompt said "think step by step" and then asked for nothing but
+  // a JSON answer - which leaves the model no room to actually calculate, so
+  // it pattern-matches instead. On four number-theory questions with known
+  // answers it scored 1 of 4 that way, and 4 of 4 when made to show its
+  // steps first. Those wrong answers were consistent, not random: asking a
+  // second time produced the same mistakes, which is why a re-check would
+  // not have helped.
+  //
+  // This is the difference between a gate that catches bad questions and one
+  // that mostly flags good ones - 62 of the first 426 generated were held
+  // back as disputed, most of them correct.
+  const prompt = `Solve each multiple-choice question below independently.
+
+For EACH question, write out the actual working first - the steps, the arithmetic - and only then give the answer. Do not skip to the answer.
 
 ${list}
 
 Return ONLY a valid JSON array with one entry per question, in the same order, no extra text:
-[{ "q": 1, "answer": "<exact text of the correct option, copied>", "correctIndex": <0-3>, "confidence": <0.0-1.0> }]`;
+[{ "q": 1, "working": "<your steps, briefly>", "answer": "<exact text of the correct option, copied>", "correctIndex": <0-3>, "confidence": <0.0-1.0> }]`;
 
   let answers = [];
   try {
@@ -515,7 +530,9 @@ Return ONLY a valid JSON array with one entry per question, in the same order, n
 }
 
 async function verifyQuestion(question) {
-  const prompt = `Solve this multiple-choice question independently. Think step by step, then answer.
+  const prompt = `Solve this multiple-choice question independently.
+
+Write out the actual working first - the steps, the arithmetic - and only then give the answer. Do not skip to the answer.
 
 Question: ${question.text}
 Options:
@@ -525,7 +542,7 @@ Options:
 3. ${question.options[3]}
 
 Return ONLY valid JSON in this shape, no extra text:
-{ "answer": "<exact text of the correct option, copied>", "correctIndex": <0-3>, "confidence": <0.0-1.0> }`;
+{ "working": "<your steps, briefly>", "answer": "<exact text of the correct option, copied>", "correctIndex": <0-3>, "confidence": <0.0-1.0> }`;
 
   try {
     const result = await callGemini(prompt, { jsonMode: true });
