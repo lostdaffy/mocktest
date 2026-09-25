@@ -42,7 +42,7 @@ const APPLY = process.argv.includes("--apply");
 
   for (const name of mongoose.modelNames()) {
     const Model = mongoose.model(name);
-    const declared = Model.schema.indexes().map(([keys]) => JSON.stringify(keys));
+    const declared = Model.schema.indexes().map(([keys, options]) => ({ key: JSON.stringify(keys), options }));
 
     let existing = [];
     try {
@@ -50,12 +50,32 @@ const APPLY = process.argv.includes("--apply");
     } catch (_) {
       // collection doesn't exist yet - everything is "missing", which is fine
     }
-    const existingKeys = existing.filter((i) => i.name !== "_id_").map((i) => JSON.stringify(i.key));
+    const live = existing.filter((i) => i.name !== "_id_");
+    const existingKeys = live.map((i) => JSON.stringify(i.key));
 
-    const missing = declared.filter((d) => !existingKeys.includes(d));
-    const obsolete = existingKeys.filter((e) => !declared.includes(e));
+    const missing = declared.filter((d) => !existingKeys.includes(d.key)).map((d) => d.key);
+    const obsolete = existingKeys.filter((e) => !declared.some((d) => d.key === e));
 
-    if (!missing.length && !obsolete.length) {
+    // Same fields, different rules. This is the one that hides: an index that
+    // is unique but not sparse still looks present and still enforces
+    // uniqueness, so nothing complains - right up until a second document
+    // without that field is rejected for a duplicate it doesn't have.
+    // Comparing keys alone reported these as "up to date", which is how a
+    // real mismatch on users.phone sat unnoticed.
+    const wrongOptions = [];
+    for (const d of declared) {
+      const found = live.find((i) => JSON.stringify(i.key) === d.key);
+      if (!found) continue;
+      for (const opt of ["unique", "sparse", "expireAfterSeconds", "partialFilterExpression"]) {
+        const want = d.options?.[opt] ?? false;
+        const have = found[opt] ?? false;
+        if (JSON.stringify(want) !== JSON.stringify(have)) {
+          wrongOptions.push(`${d.key}  ${opt}: database has ${JSON.stringify(have)}, model wants ${JSON.stringify(want)}`);
+        }
+      }
+    }
+
+    if (!missing.length && !obsolete.length && !wrongOptions.length) {
       console.log(`  ${name.padEnd(16)} up to date (${existingKeys.length} index${existingKeys.length === 1 ? "" : "es"})`);
       continue;
     }
@@ -63,6 +83,7 @@ const APPLY = process.argv.includes("--apply");
     console.log(`  ${name}`);
     missing.forEach((m) => console.log(`      missing   ${m}`));
     obsolete.forEach((o) => console.log(`      obsolete  ${o}`));
+    wrongOptions.forEach((w) => console.log(`      wrong     ${w}`));
 
     if (!APPLY) continue;
 
