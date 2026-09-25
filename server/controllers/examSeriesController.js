@@ -1,6 +1,7 @@
 const Test = require("../models/Test");
 const Question = require("../models/Question");
 const ExamPattern = require("../models/ExamPattern");
+const Subject = require("../models/Subject");
 const { createVerifiedQuestions, qualityNote } = require("../services/questionFactory");
 
 // How much of every mock is made of REAL previous-year questions. The rest
@@ -397,6 +398,32 @@ async function generatePracticeTest(req, res) {
     // "advanced" maps to hard-difficulty questions (hardest we generate)
     const genDifficulty = difficulty === "advanced" ? "hard" : difficulty;
 
+    // Which exams do these questions belong to?
+    //
+    // They used to be tagged examType: ["PRACTICE"], which is not an exam.
+    // Nothing ever matched it, so a question generated here could never be
+    // preferred for an SSC student, never be picked for an SSC mock, and
+    // only ever arrive through the shared-bank fallback. The whole point of
+    // one bank serving nine exams was being thrown away at the moment of
+    // writing each question.
+    //
+    // The catalog already knows: it is the chapter's own exam tags. One
+    // Percentage question, generated once, now counts for every exam that
+    // asks for Percentage.
+    const subjectDoc = await Subject.findOne({
+      $or: [{ name: subject }, { aliases: subject }],
+    }).lean();
+    const chapterDoc = (subjectDoc?.chapters || []).find((c) => c.name === chapter);
+
+    let examTags = chapterDoc?.exams?.length ? chapterDoc.exams : null;
+    if (!examTags) {
+      // Chapter not in the catalog, or not tagged to any exam yet. An
+      // untagged chapter is shown to every exam, so its questions belong to
+      // every exam too - same rule, applied in the one other place it matters.
+      const active = await ExamPattern.find({ isActive: true }).select(`examType`).lean();
+      examTags = active.map((e) => e.examType);
+    }
+
     // ONE Gemini call for the whole test (not one per topic) — this keeps us
     // well under the 15 requests/minute free-tier limit. We pass all the
     // chapter's topics into a single prompt so the test still covers them.
@@ -407,10 +434,16 @@ async function generatePracticeTest(req, res) {
     try {
       const built = await createVerifiedQuestions({
         needed: 12,
-        tag: { examStage: "PRACTICE", chapter },
+        // examType here OVERRIDES what the generator stamped on each
+        // question - tags are applied after generation. examStage is gone:
+        // the Question schema has no such field, so it was being dropped
+        // silently and only looked like it was doing something.
+        tag: { chapter, examType: examTags },
         generateParams: {
           examType: "PRACTICE",
-          examDisplayName: `${subject} - ${chapter} practice`,
+          // Tell the model who this is for, so a chapter shared by SSC CGL
+          // and Agniveer is not written at graduate level by default.
+          examDisplayName: `${subject} - ${chapter}, for ${examTags.join(", ")}`,
           subject,
           topic: topicsForPrompt, // all topics of the chapter in one call
           difficulty: genDifficulty,

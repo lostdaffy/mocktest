@@ -374,17 +374,33 @@ ${avoidTexts.map((t, i) => `${i + 1}. ${t}`).join("\n")}`
     "optionsHi": ["A-hi", "B-hi", "C-hi", "D-hi"],
     "correctIndex": 0,
     "solution": "short English solution",
-    "solutionHi": "short Hindi solution"
+    "solutionHi": "short Hindi solution",
+    "topic": "which ONE of the listed topics this question belongs to"
   }
 ]`;
 
   const questions = await callGemini(prompt, { jsonMode: true });
-  return questions.map((q) => ({
+
+  // A chapter usually covers several topics, and all of them go into one
+  // prompt so a test still spans the chapter. What must NOT happen is
+  // stamping that joined string onto every question: a question tagged
+  // "Simple Interest, Compound Interest" matches neither topic, so its
+  // chapter stays empty on screen however many questions are generated for
+  // it. Ten of the catalog's chapters have more than one topic.
+  //
+  // The model is asked which topic each question belongs to. Anything it
+  // returns that is not one of the topics we asked for is discarded and the
+  // topics are handed out in turn instead - a wrong-but-real topic is
+  // recoverable, an unmatchable one is not.
+  const choices = (syllabusTopics || []).filter(Boolean);
+  const fallback = (i) => (choices.length ? choices[i % choices.length] : topic);
+
+  return questions.map((q, i) => ({
     ...q,
     examType: [examType],
     examStage: examType, // strict isolation: this question belongs to this exam only
     subject,
-    topic,
+    topic: choices.includes(q.topic) ? q.topic : fallback(i),
     // In exam mode we don't force a difficulty label (mixed like real exam)
     difficulty: examMode ? "exam" : difficulty,
     source: "ai_generated",
