@@ -26,10 +26,38 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
   let flagged = 0;
   let duplicates = 0;
 
+  // What this topic has already been asked, so the model can be told not to
+  // ask it again.
+  //
+  // Every call used to start blind. Generating Percentage at medium and
+  // then at hard produced the same "price of sugar rises 20%" and "spends
+  // 75% of his income" questions in both - same numbers, same answer,
+  // reworded just enough that the exact-text duplicate check waved them
+  // through. A student doing both tests meets the same question twice,
+  // which is repetition, not practice.
+  //
+  // Capped: the model needs to know what to avoid, not read the whole bank.
+  const topicFilter = generateParams.syllabusTopics?.length
+    ? { $in: generateParams.syllabusTopics }
+    : generateParams.topic;
+  const alreadyAsked = (
+    await Question.find({ subject: generateParams.subject, topic: topicFilter })
+      .select("text")
+      .sort({ createdAt: -1 })
+      .limit(40)
+      .lean()
+  ).map((q) => q.text);
+
   for (let round = 0; round < rounds && accepted.length < needed; round++) {
     const remaining = needed - accepted.length;
 
-    const raw = await generateQuestions({ ...generateParams, count: remaining });
+    const raw = await generateQuestions({
+      ...generateParams,
+      count: remaining,
+      // Plus anything accepted earlier in this run, so later rounds do not
+      // repeat the rounds before them either.
+      avoidTexts: [...alreadyAsked, ...accepted.map((q) => q.text)].slice(0, 60),
+    });
     if (!raw.length) break;
 
     for (const q of raw) Object.assign(q, tag);
