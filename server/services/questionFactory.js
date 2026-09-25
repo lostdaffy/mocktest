@@ -1,6 +1,6 @@
 const Question = require("../models/Question");
 const { generateQuestions } = require("./geminiService");
-const { runValidationPipelineBatch, questionKey } = require("./validationPipeline");
+const { runValidationPipelineBatch, questionKey, looksLikeRepeat } = require("./validationPipeline");
 
 /**
  * Builds a set of questions that are actually fit to put in front of a
@@ -40,13 +40,17 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
   const topicFilter = generateParams.syllabusTopics?.length
     ? { $in: generateParams.syllabusTopics }
     : generateParams.topic;
-  const alreadyAsked = (
+  // The whole pool is loaded, because telling the model what to avoid and
+  // checking what it sent back are two different jobs: the prompt only needs
+  // a reminder, the repeat check needs everything.
+  const bankTexts = (
     await Question.find({ subject: generateParams.subject, topic: topicFilter })
       .select("text")
       .sort({ createdAt: -1 })
-      .limit(40)
+      .limit(300)
       .lean()
   ).map((q) => q.text);
+  const alreadyAsked = bankTexts.slice(0, 40);
 
   for (let round = 0; round < rounds && accepted.length < needed; round++) {
     const remaining = needed - accepted.length;
@@ -88,11 +92,36 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
 
     for (const q of candidates) {
       const key = q.textKey || questionKey(q.text);
-      if (acceptedKeys.has(key) || seenBefore.has(key)) {
+      const exactRepeat = acceptedKeys.has(key) || seenBefore.has(key);
+
+      // Told not to repeat itself, the model rewords instead: the same 20%
+      // sugar question with a "householder" in place of the "housewife".
+      // Exact text never catches those.
+      const reworded = exactRepeat
+        ? { repeat: false }
+        : looksLikeRepeat(q.text, [...bankTexts, ...accepted.map((a) => a.text)]);
+
+      if (exactRepeat || reworded.repeat) {
         duplicates++;
+        // Out of circulation, not deleted. Left published it would still be
+        // handed to a student by chapter practice, which samples the whole
+        // bank - the test it was rejected from is not the only way out.
+        await Question.updateOne(
+          { _id: q._id },
+          {
+            $set: {
+              status: "under_review",
+              flagReason: reworded.repeat
+                ? `Already asked in different words: "${String(reworded.of).slice(0, 80)}"`
+                : "Duplicate of a question already in the bank",
+            },
+          }
+        );
         continue;
       }
+
       acceptedKeys.add(key);
+      bankTexts.push(q.text);
       accepted.push(q);
       if (accepted.length === needed) break;
     }

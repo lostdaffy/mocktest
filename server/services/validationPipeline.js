@@ -10,6 +10,74 @@ function questionKey(text) {
     .trim();
 }
 
+// Words that carry no meaning for telling two questions apart. Kept small
+// on purpose - the job is to drop grammar, not vocabulary.
+const STOPWORDS = new Set([
+  "the", "a", "an", "of", "is", "are", "was", "were", "be", "been", "to", "in", "on", "at", "by", "for",
+  "with", "and", "or", "if", "then", "than", "that", "this", "these", "those", "it", "its", "his", "her",
+  "he", "she", "they", "them", "their", "what", "which", "who", "how", "much", "many", "find", "value",
+  "must", "can", "will", "would", "should", "does", "do", "did", "has", "have", "had", "from", "so",
+  "as", "but", "not", "no", "yes", "there", "here", "when", "where", "why", "per", "each", "every",
+]);
+
+// The numbers a question is built on, in order. Two questions asking the
+// same thing about the same figures share this exactly: "increases by 20%"
+// is "20" whether a housewife or a householder is doing the increasing.
+function numberSignature(text) {
+  return (String(text || "").match(/[0-9]+(?:\.[0-9]+)?/g) || []).sort().join("|");
+}
+
+function contentWords(text) {
+  return new Set(
+    String(text || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9ऀ-ॿ]+/g, " ")
+      .split(" ")
+      .filter((w) => w.length > 2 && !STOPWORDS.has(w))
+  );
+}
+
+function overlap(a, b) {
+  if (!a.size || !b.size) return 0;
+  let shared = 0;
+  for (const w of a) if (b.has(w)) shared++;
+  return shared / (a.size + b.size - shared);
+}
+
+// How alike two questions may be before the second one is a repeat.
+//
+// Measured against the first 63 real questions: sweeping this from 0.55 to
+// 0.65 catches the same 10 repeats every time, and 0.7 starts missing one.
+// That flat stretch is the gap between a rewording and a different
+// question, so 0.65 sits inside it rather than on an edge.
+const REPEAT_SIMILARITY = 0.65;
+
+/**
+ * Is this question one the bank has already asked, just worded differently?
+ *
+ * Comparing exact text was not enough. Told not to repeat itself, the model
+ * obliges by changing a word: "must a housewife reduce her consumption"
+ * becomes "must a householder reduce the consumption" - same 20%, same
+ * answer, a different string. Five of one chapter's thirty-seven questions
+ * had a twin like that, and every one of them was published and reachable
+ * by a student.
+ *
+ * Two things have to line up: the same numbers, and most of the same
+ * meaningful words. Either alone is too blunt - plenty of honest questions
+ * share "20%", and plenty share vocabulary while asking something else.
+ */
+function looksLikeRepeat(text, existingTexts = []) {
+  const signature = numberSignature(text);
+  const words = contentWords(text);
+
+  for (const other of existingTexts) {
+    if (!other) continue;
+    if (numberSignature(other) !== signature) continue;
+    if (overlap(words, contentWords(other)) >= REPEAT_SIMILARITY) return { repeat: true, of: other };
+  }
+  return { repeat: false, of: null };
+}
+
 // Layer 1: cheap, instant rule-based checks. No AI call needed.
 //
 // These are deliberately strict. A student practising for a real exam is
@@ -135,6 +203,8 @@ async function runValidationPipeline(question) {
 
 module.exports = {
   ruleBasedCheck,
+  looksLikeRepeat,
+  numberSignature,
   runValidationPipeline,
   runValidationPipelineBatch,
   shuffleOptions,
