@@ -237,6 +237,19 @@ async function catalogHealth(req, res) {
   const problems = [];
   const usedSubjects = new Set();
 
+  // No exam patterns at all means no mock can be built for anybody, and
+  // nothing else on this screen would say so plainly - every subject would
+  // just look unused. It has happened once: the collection was found empty
+  // when it had held five patterns minutes earlier.
+  if (!patterns.length) {
+    problems.push({
+      kind: "no_exam_patterns",
+      severity: "high",
+      detail: "There are no exam patterns. No mock test can be generated for any student.",
+      fix: "Restore them from a backup (scripts/restoreDb.js) or add them in Exam Patterns.",
+    });
+  }
+
   for (const pattern of patterns) {
     for (const section of pattern.sections || []) {
       for (const name of sectionSubjectNames(section)) {
@@ -301,7 +314,11 @@ async function catalogHealth(req, res) {
   const chapterTopics = new Set();
   for (const subj of subjects) {
     for (const ch of subj.chapters || []) {
-      (ch.topics && ch.topics.length ? ch.topics : [ch.name]).forEach((t) => chapterTopics.add(t));
+      // Both the chapter name and its topic tags count as practisable: a
+      // syllabus entry may name either, and both lead a student to the
+      // same chapter.
+      chapterTopics.add(ch.name);
+      (ch.topics || []).forEach((t) => chapterTopics.add(t));
     }
   }
   for (const pattern of patterns) {

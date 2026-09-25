@@ -183,6 +183,24 @@ not traded for speed: fewer questions is the accepted outcome, filler is not.
 
 ---
 
+## Environment variables that must be set in production
+
+| Variable | Value | What happens without it |
+| --- | --- | --- |
+| `NODE_ENV` | `production` | Real exception messages are attached to replies that go to students, and Express skips its production optimisations. The server now warns about this in its log on startup. |
+| `MONGO_URI` | Atlas connection string | Refuses to start |
+| `JWT_SECRET` | 32+ random characters | Refuses to start |
+| `ALLOWED_ORIGINS` | `https://rankveer.com` | Falls back to rankveer.com and www.rankveer.com. Set it only if the admin panel moves to another domain. |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | the `rzp_live_` pair | Payments stay off and the app shows "coming soon" instead of a buy button |
+| `RAZORPAY_WEBHOOK_SECRET` | from the Razorpay dashboard | Webhook signatures can't be checked |
+| `EMAIL_USER` / `EMAIL_APP_PASSWORD` | Gmail app password | Password reset emails fail silently |
+| `GEMINI_API_KEY` | from Google AI Studio | Question generation fails |
+
+The server prints a warning at startup for each of these it can detect, and
+refuses to start at all without the first three.
+
+---
+
 ## Deploying
 
 1. `git push` — Render builds from the repo.

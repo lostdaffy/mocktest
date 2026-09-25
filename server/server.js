@@ -59,6 +59,18 @@ if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
   );
 }
 
+// Render sets RENDER=true on every deploy. If we are running there and
+// NODE_ENV was never set, the app is in development mode in production:
+// Express skips its production optimisations, and the error handler
+// attaches the real exception message to replies that go to students.
+// It was live like this and nothing said so.
+if (process.env.RENDER && process.env.NODE_ENV !== "production") {
+  console.warn(
+    "⚠️  NODE_ENV is not \"production\" on a deployed server. " +
+      "Internal error messages are being sent to clients. Set NODE_ENV=production."
+  );
+}
+
 const app = express();
 
 // Render (and most PaaS hosts) sit in front of the app as a reverse proxy,
@@ -70,37 +82,68 @@ const app = express();
 // additional proxies/CDNs later.
 app.set("trust proxy", 1);
 
-// CORS allowlist, driven by the ALLOWED_ORIGINS env var (comma-separated,
-// e.g. "https://rankveer.com,https://admin.rankveer.com").
+// Security headers. Deliberately hand-written rather than pulling in a
+// package: this is a JSON API, so only a handful of headers actually do
+// anything for it, and each one below is here for a stated reason.
 //
-// Left UNSET, this stays wide open exactly as before - that's deliberate, so
-// deploying this change can't knock the admin panel offline before the real
-// domains exist. Set the variable in Render once the domains are live and
-// browser access is locked to your own sites.
-//
-// Requests with NO Origin header are always allowed. That is not a hole:
-// native mobile apps, server-to-server calls and the Razorpay webhook don't
-// send one, and CORS is a browser-enforced policy in the first place - it
-// protects users from other *websites* calling this API with their
-// credentials, it was never what stops a direct (curl/Postman) request.
-// Actual authorisation is the JWT + adminOnly middleware on each route.
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+// The server was answering every request with "X-Powered-By: Express",
+// which tells an attacker what to look up known exploits for and buys us
+// nothing in return.
+app.disable("x-powered-by");
+
+app.use((req, res, next) => {
+  // Don't let a browser second-guess our Content-Type and run a JSON
+  // response as if it were a script.
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  // Nothing here is ever meant to be displayed inside someone else's page.
+  res.setHeader("X-Frame-Options", "DENY");
+  // Never leak the URL a request came from - those can carry ids.
+  res.setHeader("Referrer-Policy", "no-referrer");
+  // Once a browser has seen this, it refuses to talk to us over plain HTTP
+  // again - so a student on cafe wifi cannot be downgraded and listened to.
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  next();
+});
+
+// CORS allowlist. ALLOWED_ORIGINS (comma-separated) overrides the default.
+// The sites this API is actually for. Used when ALLOWED_ORIGINS is not set,
+// so the safe behaviour is the DEFAULT rather than something that has to be
+// remembered. This used to fall back to allowing every website, which was
+// the right call while the domains didn't exist yet - but the domains are
+// live now, and a deployment that forgets one environment variable should
+// not quietly reopen the API to the whole web.
+const DEFAULT_ORIGINS = ["https://rankveer.com", "https://www.rankveer.com"];
+
+const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
 
-if (allowedOrigins.length === 0) {
+const allowedOrigins = configuredOrigins.length ? configuredOrigins : DEFAULT_ORIGINS;
+
+if (!configuredOrigins.length) {
   console.warn(
-    "⚠️  ALLOWED_ORIGINS is not set - CORS is open to every website. " +
-      "Set it (e.g. https://rankveer.com,https://admin.rankveer.com) once your domains are live."
+    `⚠️  ALLOWED_ORIGINS is not set - falling back to ${DEFAULT_ORIGINS.join(", ")}. ` +
+      "Set it in the environment if the admin panel is served from anywhere else."
   );
 }
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.length === 0) return callback(null, true);
+      // No Origin header at all: native mobile apps, server-to-server calls
+      // and the Razorpay webhook. CORS is a browser policy - it protects a
+      // user from OTHER websites spending their credentials, and was never
+      // what stops a direct curl request. Authorisation is the JWT and the
+      // adminOnly middleware on each route.
+      if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      // Local development, never in production.
+      if (process.env.NODE_ENV !== "production" && /^http:\/\/localhost(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
+
       return callback(new Error(`Blocked by CORS: ${origin} is not an allowed origin`));
     },
     credentials: true,

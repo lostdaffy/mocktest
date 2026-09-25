@@ -12,9 +12,7 @@
     "indexes": "node scripts/syncIndexes.js",
     "audit:questions": "node scripts/auditQuestions.js",
     "rebuild:practice": "node scripts/rebuildPracticeTests.js",
-    "generate:questions": "node scripts/generateQuestions.js",
-    "seed:patterns": "node scripts/seedExamPatterns.js",
-    "seed:subjects": "node scripts/seedSubjects.js"
+    "generate:questions": "node scripts/generateQuestions.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
