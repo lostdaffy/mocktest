@@ -119,7 +119,7 @@ export default function LiveExams() {
     setCreating(true);
     try {
       await api.post("/live-exams", { examType, scheduledAt: toIstIso(scheduledAt), title: title.trim() || undefined });
-      toast.success("Live exam draft ban gaya - ab questions add karo");
+      toast.success("Live exam draft created — add its questions next");
       setTitle("");
       setScheduledAt("");
       setShowCreate(false);
@@ -172,7 +172,7 @@ export default function LiveExams() {
         title: rescheduleForm.title,
         scheduledAt: toIstIso(rescheduleForm.scheduledAt),
       });
-      toast.success("Update ho gaya");
+      toast.success("Updated");
       setReschedulingId(null);
       load();
     } catch (err) {
@@ -195,14 +195,14 @@ export default function LiveExams() {
   async function cancelExam(liveExamId) {
     const ok = await toast.confirm({
       title: "Ye live exam cancel karein?",
-      message: "Students ko ab ye nahi dikhega. Draft mein wapas nahi jayega, lekin data safe rahega.",
-      confirmLabel: "Cancel karo",
+      message: "Students will no longer see this. It cannot be returned to draft, but nothing is deleted.",
+      confirmLabel: "Cancel exam",
       danger: true,
     });
     if (!ok) return;
     try {
       await api.patch(`/live-exams/${liveExamId}/cancel`);
-      toast.success("Live exam cancel ho gaya");
+      toast.success("Live exam cancelled");
       load();
     } catch (err) {
       toast.error(err.response?.data?.message || "Cancel failed");
@@ -212,14 +212,14 @@ export default function LiveExams() {
   async function deleteExam(liveExamId) {
     const ok = await toast.confirm({
       title: "Permanently delete karein?",
-      message: "Ye live exam aur iske saare questions delete ho jayenge. Ye undo nahi ho sakta.",
+      message: "This live exam and all of its questions will be deleted. This cannot be undone.",
       confirmLabel: "Delete permanently",
       danger: true,
     });
     if (!ok) return;
     try {
       await api.delete(`/live-exams/${liveExamId}`);
-      toast.success("Live exam delete ho gaya");
+      toast.success("Live exam deleted");
       setReviewExam(null);
       load();
     } catch (err) {
@@ -242,7 +242,7 @@ export default function LiveExams() {
   async function removeQuestion(liveExamId, questionId) {
     const ok = await toast.confirm({
       title: "Ye question hataayein?",
-      message: "Question permanently delete ho jayega.",
+      message: "This question will be permanently deleted.",
       confirmLabel: "Remove",
       danger: true,
     });
@@ -259,7 +259,7 @@ export default function LiveExams() {
   async function updateQuestion(questionId, updates) {
     try {
       await api.put(`/questions/${questionId}`, updates);
-      toast.success("Question update ho gaya");
+      toast.success("Question updated");
       openReview(reviewExam._id);
     } catch (err) {
       toast.error(err.response?.data?.message || "Update failed");
@@ -296,8 +296,8 @@ export default function LiveExams() {
         }
       />
       <p className="text-slate -mt-4 mb-6">
-        Har live exam ka apna question set hota hai, seedha isi ke liye generate kiya gaya — koi purana Mock Tests
-        series test assign nahi karna padta. Draft banao, questions add/edit/delete karo, phir schedule karo.
+        Every live exam has its own set of questions, generated for it alone — no test from the Mock Series is
+        reused here. Create a draft, add or edit its questions, then schedule it.
       </p>
 
       {showCreate && (
@@ -740,7 +740,7 @@ function ReviewModal({ exam, onClose, onRemoveQuestion, onUpdateQuestion, editab
               </div>
             )
           )}
-          {exam.questions.length === 0 && <Empty text="Abhi tak koi question add nahi hua." />}
+          {exam.questions.length === 0 && <Empty text="No questions added yet." />}
         </div>
       </div>
     </div>
@@ -767,7 +767,7 @@ function ResultsModal({ exam, attempts, loading, onClose }) {
           {loading ? (
             <p className="text-slate-soft">Loading...</p>
           ) : attempts.length === 0 ? (
-            <Empty text="Koi student ne ye live exam attempt nahi kiya." />
+            <Empty text="No student has attempted this live exam." />
           ) : (
             attempts.map((a) => (
               <div key={a.attemptId} className="flex items-center justify-between border border-border-soft rounded-xl p-3">

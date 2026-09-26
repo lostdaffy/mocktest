@@ -399,7 +399,10 @@ async function signup(req, res) {
         email,
         passwordHash,
         authProvider: "password",
-        preferredLanguage: preferredLanguage || "hi",
+        // Anything the client sends that is not a language we support is
+        // ignored rather than passed to the model, which would throw a
+        // validation error and turn a typo into a 500 on signup.
+        preferredLanguage: ["hi", "en"].includes(preferredLanguage) ? preferredLanguage : "hi",
         examGoals: examGoals || [],
         referralCode: myReferralCode,
         referredBy,

@@ -118,7 +118,7 @@ async function generateExamMock(req, res) {
     const { examStage } = req.params;
     const pattern = await ExamPattern.findOne({ examType: examStage, isActive: true });
     if (!pattern) {
-      return res.status(404).json({ message: `${examStage} ka exam pattern nahi mila. Pehle pattern banao.` });
+      return res.status(404).json({ message: `No exam pattern found for ${examStage}. Create the pattern first.` });
     }
 
     // Create the draft mock UPFRONT and empty, so that even if generation
@@ -243,7 +243,7 @@ async function generateExamMock(req, res) {
       // Nothing generated - clean up the empty mock
       await Test.findByIdAndDelete(test._id);
       return res.status(400).json({
-        message: "Koi question generate nahi ho paya (rate limit ya API issue). Thodi der baad try karo.",
+        message: "No questions could be generated (rate limit or API issue). Try again in a minute.",
       });
     }
 
@@ -252,7 +252,7 @@ async function generateExamMock(req, res) {
       (flaggedTotal ? ` (${flaggedTotal} question jaanch mein fail ya repeat nikle - review queue mein hain, mock mein nahi.)` : "");
 
     res.status(201).json({
-      message: `Mock #${test.seriesNumber} ban gaya — ${finalCount} questions (${pyqUsed} purane paper se, ${finalCount - pyqUsed} naye).${note} Review karke publish karo (100 zaroori).`,
+      message: `Mock #${test.seriesNumber} created — ${finalCount} questions (${pyqUsed} from past papers, ${finalCount - pyqUsed} new).${note} Review and publish (100 required).`,
       test: { _id: test._id, title: test.title, questionCount: finalCount },
     });
   } catch (err) {
@@ -281,7 +281,7 @@ async function publishMock(req, res) {
   const MIN_QUESTIONS = 100;
   if (test.questions.length < MIN_QUESTIONS) {
     return res.status(400).json({
-      message: `Ye mock abhi live nahi ho sakta — isme sirf ${test.questions.length} questions hain, kam se kam ${MIN_QUESTIONS} chahiye. Aur questions generate karo phir publish karo.`,
+      message: `This mock cannot go live yet — it has ${test.questions.length} questions and needs at least ${MIN_QUESTIONS}. Generate more, then publish.`,
       currentCount: test.questions.length,
       required: MIN_QUESTIONS,
     });
@@ -291,14 +291,14 @@ async function publishMock(req, res) {
   test.isFree = !!isFree;
   await test.save();
 
-  res.json({ message: "Mock live ho gaya", test });
+  res.json({ message: "Mock is live", test });
 }
 
 // PATCH /api/exam-series/mock/:testId/archive (admin) -> hide a bad mock from students
 async function archiveMock(req, res) {
   const test = await Test.findByIdAndUpdate(req.params.testId, { publishStatus: "archived" }, { new: true });
   if (!test) return res.status(404).json({ message: "Mock not found" });
-  res.json({ message: "Mock hide ho gaya", test });
+  res.json({ message: "Mock hidden", test });
 }
 
 // DELETE /api/exam-series/mock/:testId (admin) -> permanently delete a mock and its questions
@@ -392,7 +392,7 @@ async function listSubjectsForAdmin(req, res) {
 async function generatePracticeTest(req, res) {
   try {
     const { subject, chapter, topics, difficulty = "easy" } = req.body;
-    if (!subject || !chapter) return res.status(400).json({ message: "subject aur chapter chahiye" });
+    if (!subject || !chapter) return res.status(400).json({ message: "subject and chapter are required" });
 
     const topicList = topics && topics.length ? topics : [chapter];
     // "advanced" maps to hard-difficulty questions (hardest we generate)
@@ -459,7 +459,7 @@ async function generatePracticeTest(req, res) {
 
     if (allQuestionIds.length === 0) {
       return res.status(400).json({
-        message: "Koi question generate nahi hua (rate limit ya API issue). 1 minute ruk ke try karo.",
+        message: "No questions were generated (rate limit or API issue). Wait a minute and try again.",
       });
     }
 
@@ -484,7 +484,7 @@ async function generatePracticeTest(req, res) {
     });
 
     res.status(201).json({
-      message: `${chapter} ka ${difficulty} test ban gaya (${allQuestionIds.length} questions)${qualityNote(quality)}. Review karke publish karo.`,
+      message: `${chapter} ${difficulty} test created — ${allQuestionIds.length} questions${qualityNote(quality)}. Review and publish.`,
       test: { _id: test._id, title: test.title, questionCount: allQuestionIds.length },
     });
   } catch (err) {
@@ -555,7 +555,7 @@ async function addQuestionsToMock(req, res) {
     const test = await Test.findById(req.params.testId).populate("questions", "subject");
     if (!test) return res.status(404).json({ message: "Mock not found" });
     if (test.publishStatus === "published") {
-      return res.status(400).json({ message: "Published mock mein questions add nahi kar sakte. Pehle archive karo." });
+      return res.status(400).json({ message: "Cannot add questions to a published mock. Archive it first." });
     }
 
     const pattern = await ExamPattern.findOne({ examType: test.examStage });
@@ -571,7 +571,7 @@ async function addQuestionsToMock(req, res) {
 
       if (roomLeft <= 0) {
         return res.status(400).json({
-          message: `${subject} section pura ho chuka hai (${sectionDef.questionCount}/${sectionDef.questionCount}). Asli exam mein bhi itne hi aate hain. Dusra section choose karo.`,
+          message: `The ${subject} section is already full (${sectionDef.questionCount}/${sectionDef.questionCount}) — that is how many the real exam asks. Choose another section.`,
         });
       }
 
@@ -628,7 +628,7 @@ async function createEmptyMock(req, res) {
   try {
     const { examStage } = req.params;
     const pattern = await ExamPattern.findOne({ examType: examStage, isActive: true });
-    if (!pattern) return res.status(404).json({ message: `${examStage} ka pattern nahi mila` });
+    if (!pattern) return res.status(404).json({ message: `No pattern found for ${examStage}` });
 
     const lastMock = await Test.findOne({ examStage, type: "full_mock" }).sort({ seriesNumber: -1 });
     const nextNumber = (lastMock?.seriesNumber || 0) + 1;

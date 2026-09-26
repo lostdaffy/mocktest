@@ -186,7 +186,7 @@ async function addQuestionsToLiveExam(req, res) {
         : ` No real PYQs found yet for ${subject} - upload some in PYQ Bank for closer style-matching.`;
 
     res.json({
-      message: `${newIds.length} questions add ho gaye${sectionNote}${qualityNote(built)}. Total ${test.questions.length} questions.${groundingNote}`,
+      message: `${newIds.length} questions added${sectionNote}${qualityNote(built)}. ${test.questions.length} in total.${groundingNote}`,
       added: newIds.length,
       totalCount: test.questions.length,
       groundedInRealPyqs: pyqExamples.length > 0,

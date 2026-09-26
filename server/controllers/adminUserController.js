@@ -138,7 +138,7 @@ async function adminResetPassword(req, res) {
   try {
     const { newPassword } = req.body;
     if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({ message: "Naya password kam se kam 6 characters ka hona chahiye" });
+      return res.status(400).json({ message: "The new password must be at least 6 characters" });
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
@@ -146,7 +146,7 @@ async function adminResetPassword(req, res) {
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.json({ message: `Password reset ho gaya ${user.name} (${user.phone}) ke liye`, user });
+    res.json({ message: `Password reset for ${user.name} (${user.phone})`, user });
   } catch (err) {
     res.status(500).json({ message: "Reset failed", error: err.message });
   }
@@ -210,7 +210,7 @@ async function manageSubscription(req, res) {
         console.error("Manual subscription log failed (user was still updated):", subErr.message);
       }
 
-      return res.json({ message: `${user.name} ka subscription ${action === "grant" ? "activate" : "extend"} ho gaya`, user });
+      return res.json({ message: `Subscription ${action === "grant" ? "activated" : "extended"} for ${user.name}`, user });
     }
 
     res.status(400).json({ message: "Invalid action - use grant, extend, or revoke" });
@@ -300,7 +300,7 @@ async function unlockUser(req, res) {
     { new: true }
   ).select("name phone");
   if (!user) return res.status(404).json({ message: "User not found" });
-  res.json({ message: `${user.name} ka account unlock ho gaya`, user });
+  res.json({ message: `${user.name}'s account is unlocked`, user });
 }
 
 // PATCH /api/admin/users/:id/logout
@@ -324,7 +324,7 @@ async function updateUserProfile(req, res) {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     if (name !== undefined) {
-      if (!String(name).trim()) return res.status(400).json({ message: "Naam khaali nahi ho sakta" });
+      if (!String(name).trim()) return res.status(400).json({ message: "Name cannot be empty" });
       user.name = String(name).trim();
     }
 
@@ -332,10 +332,10 @@ async function updateUserProfile(req, res) {
       const clean = String(email).trim().toLowerCase();
       if (clean) {
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
-          return res.status(400).json({ message: "Email format valid nahi hai" });
+          return res.status(400).json({ message: "That email address is not valid" });
         }
         const taken = await User.findOne({ email: clean, _id: { $ne: user._id } }).select("_id");
-        if (taken) return res.status(409).json({ message: "Ye email kisi aur account mein use ho raha hai" });
+        if (taken) return res.status(409).json({ message: "That email is already used by another account" });
         user.email = clean;
       } else {
         user.email = undefined; // clearing it is allowed; unset keeps the sparse index happy
@@ -345,9 +345,9 @@ async function updateUserProfile(req, res) {
     if (Array.isArray(examGoals)) user.examGoals = examGoals.filter(Boolean);
 
     await user.save();
-    res.json({ message: "Profile update ho gaya", user: { _id: user._id, name: user.name, email: user.email, examGoals: user.examGoals } });
+    res.json({ message: "Profile updated", user: { _id: user._id, name: user.name, email: user.email, examGoals: user.examGoals } });
   } catch (err) {
-    if (err.code === 11000) return res.status(409).json({ message: "Ye email kisi aur account mein use ho raha hai" });
+    if (err.code === 11000) return res.status(409).json({ message: "That email is already used by another account" });
     res.status(500).json({ message: "Update failed", error: err.message });
   }
 }

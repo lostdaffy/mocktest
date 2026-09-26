@@ -712,7 +712,7 @@ export default function Users() {
           <div className="bg-surface rounded-lg p-6 w-full max-w-sm">
             <h3 className="font-semibold text-ink mb-1">Manage Subscription</h3>
             <p className="text-sm text-slate mb-4">
-              {subTarget.name} ({subTarget.phone || subTarget.email}) — abhi{" "}
+              {subTarget.name} ({subTarget.phone || subTarget.email}) — currently{" "}
               {subTarget.subscriptionStatus === "active" ? "Premium" : "Free"}
             </p>
 

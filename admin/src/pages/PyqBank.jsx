@@ -89,7 +89,7 @@ export default function PyqBank() {
       setShift("");
       loadPapers();
     } catch (err) {
-      setUploadMsg({ type: "error", text: err.response?.data?.message || "Upload fail hua" });
+      setUploadMsg({ type: "error", text: err.response?.data?.message || "Upload failed" });
     } finally {
       setUploading(false);
     }
@@ -378,7 +378,7 @@ function ReviewModal({ testId, onClose, onChanged }) {
       onChanged();
       onClose();
     } catch (err) {
-      setPublishError(err.response?.data?.message || "Publish fail hua");
+      setPublishError(err.response?.data?.message || "Publish failed");
     } finally {
       setPublishing(false);
     }

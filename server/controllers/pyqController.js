@@ -16,7 +16,7 @@ async function uploadPyqPdf(req, res) {
 
     const pattern = await ExamPattern.findOne({ examType: examStage, isActive: true });
     if (!pattern) {
-      return res.status(404).json({ message: `${examStage} ka exam pattern nahi mila. Pehle pattern banao.` });
+      return res.status(404).json({ message: `No exam pattern found for ${examStage}. Create the pattern first.` });
     }
 
     const extracted = await extractQuestionsFromPDF({
@@ -29,7 +29,7 @@ async function uploadPyqPdf(req, res) {
 
     if (extracted.length === 0) {
       return res.status(400).json({
-        message: "Is PDF se koi question extract nahi ho paya. PDF clear hai ya nahi check karo, ya text-based PDF try karo.",
+        message: "No questions could be read from this PDF. Check that it is legible, or try a text-based PDF.",
       });
     }
 
@@ -137,12 +137,12 @@ async function publishPyqPaper(req, res) {
   const unanswered = test.questions.filter((q) => q.correctIndex === null || q.correctIndex === undefined);
   if (unanswered.length > 0) {
     return res.status(400).json({
-      message: `${unanswered.length} question(s) mein abhi bhi answer key nahi hai. Review mein jaake bharo, phir publish karo.`,
+      message: `${unanswered.length} question(s) still have no answer key. Fill them in under Review, then publish.`,
       unansweredCount: unanswered.length,
     });
   }
   if (test.questions.length === 0) {
-    return res.status(400).json({ message: "Is paper mein koi question nahi bacha" });
+    return res.status(400).json({ message: "No questions are left in this paper" });
   }
 
   await Question.updateMany({ _id: { $in: test.questions.map((q) => q._id) } }, { status: "published" });

@@ -1,48 +1,59 @@
 const Question = require("../models/Question");
-const { generateQuestions } = require("./geminiService");
+const RejectedQuestion = require("../models/RejectedQuestion");
+const { generateQuestions, repairQuestion } = require("./geminiService");
 const { runValidationPipelineBatch, questionKey, looksLikeRepeat } = require("./validationPipeline");
 
+// How many extra to ask for each round. A round that asks for exactly what is
+// missing comes back short the moment anything is rejected, and the test ends
+// up with 10 questions instead of 12 - which is what used to happen, on 8 of
+// the first 43 tests, almost all of them at the hardest levels where rejection
+// is heaviest.
+const SURPLUS = 4;
+
+// Enough attempts that a hard topic still fills a test, few enough that a
+// genuinely broken request gives up instead of burning the day's API quota.
+const MAX_ROUNDS = 8;
+
 /**
- * Builds a set of questions that are actually fit to put in front of a
- * student, and returns only those.
+ * Builds a set of questions fit to put in front of a student, and returns
+ * exactly as many as were asked for.
  *
- * The rule this enforces: a question the AI itself couldn't confirm - wrong
- * answer key, low confidence, missing Hindi, a one-line "solution" - never
- * goes into a test. It is still SAVED, as "under_review", so the admin can
- * fix or reject it in the review queue; it just doesn't reach a student on
- * the way there. Before this, every generated question went straight into
- * the test and the verification result was effectively decorative.
+ * Two promises, in this order:
  *
- * Whatever gets held back is replaced by generating more, so a 100-question
- * mock is still 100 questions - the count is kept, the quality bar isn't
- * lowered to reach it.
+ *  1. Nothing doubtful reaches a student. A wrong answer key, a solution that
+ *     teaches nothing, a question already asked in other words - none of it
+ *     goes into a test.
+ *  2. The test is still full. Whatever is rejected is replaced, not skipped.
+ *
+ * What is rejected is REPAIRED where repair is honest, and otherwise deleted
+ * outright. A thin solution or missing Hindi is a gap to fill; a disputed
+ * answer key is not something to negotiate, so that question is thrown away
+ * and another generated. Nothing is parked in a review queue: a queue nobody
+ * works through is worse than no queue, and questions are not scarce.
+ *
+ * A one-line note about each deletion is kept (see models/RejectedQuestion) so
+ * that a gate which starts rejecting good work is visible instead of silent.
  */
 async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRounds }) {
-  if (needed <= 0) return { ids: [], verified: 0, flagged: 0, duplicates: 0 };
+  if (needed <= 0) return { ids: [], verified: 0, repaired: 0, discarded: 0, duplicates: 0, short: 0 };
 
-  const rounds = maxRounds || Math.ceil(needed / 6) + 2;
+  const rounds = maxRounds || MAX_ROUNDS;
   const accepted = [];
   const acceptedKeys = new Set();
-  let flagged = 0;
+  let repaired = 0;
+  let discarded = 0;
   let duplicates = 0;
 
-  // What this topic has already been asked, so the model can be told not to
-  // ask it again.
+  // Everything this topic has already been asked. Used two ways: the first
+  // forty go into the prompt as "don't ask these again", and the whole lot is
+  // what each new question is checked against.
   //
-  // Every call used to start blind. Generating Percentage at medium and
-  // then at hard produced the same "price of sugar rises 20%" and "spends
-  // 75% of his income" questions in both - same numbers, same answer,
-  // reworded just enough that the exact-text duplicate check waved them
-  // through. A student doing both tests meets the same question twice,
-  // which is repetition, not practice.
-  //
-  // Capped: the model needs to know what to avoid, not read the whole bank.
+  // Both are needed. Told not to repeat itself the model rewords instead -
+  // the same "price of sugar rises 20%" question with a householder in place
+  // of the housewife - so the reminder alone does not hold.
   const topicFilter = generateParams.syllabusTopics?.length
     ? { $in: generateParams.syllabusTopics }
     : generateParams.topic;
-  // The whole pool is loaded, because telling the model what to avoid and
-  // checking what it sent back are two different jobs: the prompt only needs
-  // a reminder, the repeat check needs everything.
   const bankTexts = (
     await Question.find({ subject: generateParams.subject, topic: topicFilter })
       .select("text")
@@ -52,95 +63,139 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
   ).map((q) => q.text);
   const alreadyAsked = bankTexts.slice(0, 40);
 
+  const drop = async (q, reason, detail, repairAttempted = false) => {
+    discarded++;
+    try {
+      await RejectedQuestion.create({
+        text: q.text,
+        subject: q.subject || generateParams.subject,
+        topic: q.topic || generateParams.topic,
+        chapter: tag.chapter,
+        difficulty: q.difficulty || generateParams.difficulty,
+        reason,
+        detail: String(detail || "").slice(0, 200),
+        repairAttempted,
+      });
+    } catch (_) {
+      // Losing the note must never cost us the question run.
+    }
+  };
+
   for (let round = 0; round < rounds && accepted.length < needed; round++) {
     const remaining = needed - accepted.length;
 
     const raw = await generateQuestions({
       ...generateParams,
-      count: remaining,
-      // Plus anything accepted earlier in this run, so later rounds do not
-      // repeat the rounds before them either.
+      count: remaining + SURPLUS,
       avoidTexts: [...alreadyAsked, ...accepted.map((q) => q.text)].slice(0, 60),
     });
     if (!raw.length) break;
 
     for (const q of raw) Object.assign(q, tag);
 
-    const validated = await runValidationPipelineBatch(raw);
+    let checked = await runValidationPipelineBatch(raw);
 
-    // Everything is saved - the flagged ones are exactly what the admin's
-    // review queue is for. Only the verified ones are handed back.
-    const saved = await Question.insertMany(validated);
-
-    const candidates = saved.filter((q) => q.status === "published");
-    flagged += saved.length - candidates.length;
-
-    // Has the bank seen this question before? A student meeting the same
-    // question in test #1 and test #3 is not practising, just repeating.
-    const keys = candidates.map((q) => q.textKey).filter(Boolean);
-    const seenBefore = keys.length
-      ? new Set(
-          (
-            await Question.find({
-              textKey: { $in: keys },
-              subject: generateParams.subject,
-              _id: { $nin: candidates.map((q) => q._id) },
-            }).select("textKey")
-          ).map((q) => q.textKey)
-        )
-      : new Set();
-
-    for (const q of candidates) {
-      const key = q.textKey || questionKey(q.text);
-      const exactRepeat = acceptedKeys.has(key) || seenBefore.has(key);
-
-      // Told not to repeat itself, the model rewords instead: the same 20%
-      // sugar question with a "householder" in place of the "housewife".
-      // Exact text never catches those.
-      const reworded = exactRepeat
-        ? { repeat: false }
-        : looksLikeRepeat(q.text, [...bankTexts, ...accepted.map((a) => a.text)]);
-
-      if (exactRepeat || reworded.repeat) {
-        duplicates++;
-        // Out of circulation, not deleted. Left published it would still be
-        // handed to a student by chapter practice, which samples the whole
-        // bank - the test it was rejected from is not the only way out.
-        await Question.updateOne(
-          { _id: q._id },
-          {
-            $set: {
-              status: "under_review",
-              flagReason: reworded.repeat
-                ? `Already asked in different words: "${String(reworded.of).slice(0, 80)}"`
-                : "Duplicate of a question already in the bank",
-            },
+    // ---- mend what can honestly be mended
+    const mendable = checked.filter(
+      (q) => q.status !== "published" && /Rule check failed/.test(q.flagReason || "") && isMendable(q.flagReason)
+    );
+    if (mendable.length) {
+      const attempts = await Promise.all(
+        mendable.map((q) => repairQuestion(q, (q.flagReason || "").replace("Rule check failed: ", "").split(", ")))
+      );
+      const mended = attempts.filter(Boolean);
+      if (mended.length) {
+        const rechecked = await runValidationPipelineBatch(mended);
+        const bySource = new Map(rechecked.map((q) => [q.text, q]));
+        checked = checked.map((q) => {
+          const better = bySource.get(q.text);
+          if (better && q.status !== "published" && better.status === "published") {
+            repaired++;
+            return better;
           }
-        );
+          return q;
+        });
+      }
+    }
+
+    // ---- everything still failing is gone for good
+    const keep = [];
+    for (const q of checked) {
+      if (q.status === "published") {
+        keep.push(q);
+        continue;
+      }
+      const why = /Rule check failed/.test(q.flagReason || "")
+        ? "rule"
+        : /verification/.test(q.flagReason || "")
+        ? "answer_disputed"
+        : "other";
+      await drop(q, why, q.flagReason, isMendable(q.flagReason));
+    }
+    if (!keep.length) continue;
+
+    // ---- and nothing already in the bank, however it is worded
+    const savedRound = [];
+    for (const q of keep) {
+      const key = q.textKey || questionKey(q.text);
+      if (acceptedKeys.has(key)) {
+        duplicates++;
+        await drop(q, "duplicate", "identical to another question in this batch");
+        continue;
+      }
+
+      const exactInBank = await Question.exists({ textKey: key, subject: generateParams.subject });
+      if (exactInBank) {
+        duplicates++;
+        await drop(q, "duplicate", "already in the bank");
+        continue;
+      }
+
+      const reworded = looksLikeRepeat(q.text, [...bankTexts, ...accepted.map((a) => a.text)]);
+      if (reworded.repeat) {
+        duplicates++;
+        await drop(q, "reworded", `already asked as: ${String(reworded.of).slice(0, 120)}`);
         continue;
       }
 
       acceptedKeys.add(key);
       bankTexts.push(q.text);
-      accepted.push(q);
-      if (accepted.length === needed) break;
+      savedRound.push(q);
+      if (accepted.length + savedRound.length === needed) break;
     }
+
+    // Only the survivors are ever written. The bank holds questions a student
+    // can be given, and nothing else.
+    if (savedRound.length) accepted.push(...(await Question.insertMany(savedRound)));
   }
 
   return {
     ids: accepted.map((q) => q._id),
     verified: accepted.length,
-    flagged,
+    repaired,
+    discarded,
     duplicates,
+    short: Math.max(0, needed - accepted.length),
   };
 }
 
-// One line for the admin: how many made it, and what was held back and why.
-function qualityNote({ verified, flagged, duplicates }) {
+// Missing Hindi or a thin solution is a gap in an otherwise sound question.
+// Anything about the answer, the options or the question itself is not.
+function isMendable(flagReason = "") {
+  const issues = String(flagReason).replace("Rule check failed: ", "");
+  const fixable = /solution too short|hindi/i.test(issues);
+  const fatal = /options|correctIndex|question text too short|solution is just the option/i.test(issues);
+  return fixable && !fatal;
+}
+
+// One line for the admin: how many made it, and what happened to the rest.
+function qualityNote({ verified, repaired, discarded, duplicates, short }) {
   const parts = [];
-  if (flagged) parts.push(`${flagged} question AI ki jaanch mein fail hue - review queue mein hain, test mein nahi gaye`);
-  if (duplicates) parts.push(`${duplicates} repeat nikle, hata diye`);
-  return parts.length ? ` (${parts.join("; ")})` : "";
+  if (repaired) parts.push(`${repaired} repaired`);
+  if (duplicates) parts.push(`${duplicates} repeats discarded`);
+  if (discarded - (duplicates || 0) > 0) parts.push(`${discarded - duplicates} failed the quality check and were discarded`);
+  if (short) parts.push(`${short} short of the target`);
+  return parts.length ? ` (${parts.join(", ")})` : "";
 }
 
 module.exports = { createVerifiedQuestions, qualityNote };

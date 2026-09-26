@@ -660,4 +660,63 @@ If a question has more or fewer than 4 options in the original, still return exa
   });
 }
 
-module.exports = { generateQuestions, verifyQuestion, verifyQuestions, callGemini, extractQuestionsFromPDF };
+
+/**
+ * Mends a question that is sound but incomplete, rather than throwing it away.
+ *
+ * Only the fixable failures come here: a solution too thin to teach anything,
+ * a missing Hindi translation. The question, its options and its answer key
+ * are handed back untouched and the model is told so - this is not a second
+ * chance to change the answer. Anything wrong with the ANSWER is not repaired
+ * at all; two opinions differing on which option is right is not something to
+ * paper over, and a fresh question costs less than a wrong one costs a student.
+ *
+ * Without this, a good question with a one-line solution was simply lost, and
+ * the test it belonged to came up short.
+ */
+async function repairQuestion(question, issues = []) {
+  const needsSolution = issues.some((i) => /solution/i.test(i));
+  const needsHindi = issues.some((i) => /hindi/i.test(i));
+  if (!needsSolution && !needsHindi) return null;
+
+  const asks = [];
+  if (needsSolution)
+    asks.push(
+      `- solution: a correct, step-by-step explanation in English. Show the working. Two to four short sentences or lines of arithmetic - enough that a student who got it wrong understands why.`
+    );
+  if (needsHindi)
+    asks.push(`- textHi, optionsHi (all four, in the SAME order), solutionHi: accurate Hindi for the question, the options and the solution.`);
+
+  const prompt = `This exam question is correct but incomplete. Fill in what is missing.
+
+Question: ${question.text}
+Options:
+0. ${question.options[0]}
+1. ${question.options[1]}
+2. ${question.options[2]}
+3. ${question.options[3]}
+Correct answer: option ${question.correctIndex} (${question.options[question.correctIndex]})
+
+Do NOT change the question, the options, or which option is correct. Only supply:
+${asks.join("\n")}
+
+Return ONLY valid JSON, no extra text:
+{ ${needsSolution ? '"solution": "...", ' : ""}${needsHindi ? '"textHi": "...", "optionsHi": ["..","..","..",".."], "solutionHi": "..."' : ""} }`;
+
+  try {
+    const fixed = await callGemini(prompt, { jsonMode: true });
+    const repaired = { ...question };
+    if (needsSolution && fixed.solution) repaired.solution = String(fixed.solution).trim();
+    if (needsHindi) {
+      if (fixed.textHi) repaired.textHi = String(fixed.textHi).trim();
+      if (Array.isArray(fixed.optionsHi) && fixed.optionsHi.length === 4) repaired.optionsHi = fixed.optionsHi.map(String);
+      if (fixed.solutionHi) repaired.solutionHi = String(fixed.solutionHi).trim();
+    }
+    return repaired;
+  } catch (err) {
+    // A failed repair is not an error worth stopping for - the caller drops
+    // the question and generates another.
+    return null;
+  }
+}
+module.exports = { generateQuestions, verifyQuestion, verifyQuestions, repairQuestion, callGemini, extractQuestionsFromPDF };
