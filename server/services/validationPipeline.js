@@ -145,6 +145,22 @@ function shuffleOptions(q) {
   };
 }
 
+// Turns whatever the API threw into one line a person can read.
+//
+// A quota error from Google arrives as about six hundred characters of
+// nested JSON, and it was being stored verbatim as the reason a question
+// was held back - so the review screen showed a wall of it above every
+// affected question. The detail belongs in the server log; the admin needs
+// to know whether to wait, top up, or look at the question.
+function readableFailure(error) {
+  const raw = String(error || "");
+  if (/429|RESOURCE_EXHAUSTED|quota/i.test(raw)) return "the day's AI quota is used up - try again tomorrow";
+  if (/503|overloaded|UNAVAILABLE/i.test(raw)) return "the AI was busy - try again in a minute";
+  if (/timeout|ETIMEDOUT|ECONNRESET/i.test(raw)) return "the AI did not respond in time";
+  if (/API key|401|403|PERMISSION/i.test(raw)) return "the AI rejected our API key";
+  if (!raw) return "no reason given";
+  return raw.replace(/\s+/g, " ").slice(0, 100);
+}
 // Turns one AI verification result into the question's final status.
 // Low-risk (AI agrees with high confidence) -> ready to use.
 // High-risk (AI disagrees or is unsure)     -> human review queue.
@@ -160,7 +176,7 @@ function applyVerification(question, verification) {
       ? `Low AI confidence (${verification.confidence})`
       : verification.aiSaid
       ? `AI verification disagreed - it answered "${verification.aiSaid}"`
-      : `AI verification could not be completed${verification.error ? ": " + verification.error : ""}`,
+      : `AI verification could not be completed - ${readableFailure(verification.error)}`,
     aiConfidenceScore: verification.confidence,
   };
 }

@@ -1,4 +1,5 @@
 const Question = require("../models/Question");
+const Test = require("../models/Test");
 const Report = require("../models/Report");
 const User = require("../models/User");
 const Subscription = require("../models/Subscription");
@@ -34,6 +35,12 @@ async function approveQuestion(req, res) {
 }
 
 // PATCH /api/questions/:id/reject (admin only)
+//
+// Rejecting used to change the question's status and nothing else. A test
+// holds its questions by id and serves them without looking at status, so a
+// question rejected here carried on being handed to students in every test
+// that already contained it. The admin had pressed Reject and been told it
+// was done.
 async function rejectQuestion(req, res) {
   const { reason } = req.body;
   const q = await Question.findByIdAndUpdate(
@@ -42,7 +49,30 @@ async function rejectQuestion(req, res) {
     { new: true }
   );
   if (!q) return res.status(404).json({ message: "Question not found" });
-  res.json({ message: "Question rejected", question: q });
+
+  // Out of every test that was using it.
+  const affected = await Test.find({ questions: q._id }).select(`title questions publishStatus`).lean();
+  if (affected.length) {
+    await Test.updateMany({ questions: q._id }, { $pull: { questions: q._id } });
+  }
+
+  // A test that is now short is worth saying out loud - it is live, a
+  // student can open it, and it has one question fewer than it claims.
+  const nowShort = affected
+    .map((t) => ({ title: t.title, left: t.questions.length - 1, live: t.publishStatus === `published` }))
+    .filter((t) => t.left < 12);
+
+  res.json({
+    message:
+      "Question rejected" +
+      (affected.length ? ` and removed from ${affected.length} test(s)` : "") +
+      (nowShort.length
+        ? `. Now short: ${nowShort.map((t) => t.title + " (" + t.left + ")").join(", ")} - regenerate to fill`
+        : ""),
+    question: q,
+    removedFromTests: affected.length,
+    testsNowShort: nowShort,
+  });
 }
 
 // POST /api/questions (admin manual add, or used internally after AI generation)
