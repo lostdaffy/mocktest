@@ -113,7 +113,7 @@ export default function LiveExams() {
   async function handleCreate(e) {
     e.preventDefault();
     if (!examType || !scheduledAt) {
-      toast.error("Exam aur date/time dono chuno");
+      toast.error("Choose both an exam and a date/time");
       return;
     }
     setCreating(true);

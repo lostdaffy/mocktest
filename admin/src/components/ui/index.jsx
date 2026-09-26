@@ -138,7 +138,7 @@ export function Badge({ children, tone = "neutral", dot = false, className }) {
    STAT CARD
 --------------------------------------------------------- */
 
-export function StatCard({ label, value, hint, icon: Icon, tone = "brand" }) {
+export function StatCard({ label, value, hint, icon: Icon, tone = "brand", loading = false }) {
   const toneClass = BADGE_TONES[tone] || BADGE_TONES.brand;
 
   return (
@@ -146,7 +146,15 @@ export function StatCard({ label, value, hint, icon: Icon, tone = "brand" }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[13px] font-medium text-slate">{label}</p>
-          <p className="font-display text-[28px] leading-tight font-extrabold text-ink mt-1">{value}</p>
+          {/* A pulsing bar, not a dash. A dash is also what a failed request
+              leaves behind, so the two were indistinguishable. */}
+          {loading ? (
+            <div className="h-[34px] mt-1 flex items-center">
+              <div className="h-5 w-16 rounded bg-slate-light animate-pulse" />
+            </div>
+          ) : (
+            <p className="font-display text-[28px] leading-tight font-extrabold text-ink mt-1">{value}</p>
+          )}
           {hint && <p className="text-xs text-slate-soft mt-1">{hint}</p>}
         </div>
         {Icon && (

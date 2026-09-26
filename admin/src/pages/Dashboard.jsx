@@ -21,19 +21,29 @@ import { PageHeader, StatCard, SectionTitle, Alert, Card } from "../components/u
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loadError, setLoadError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [slow, setSlow] = useState(false);
 
   useEffect(() => {
+    // The free hosting plan sleeps after fifteen minutes idle and takes
+    // 30-50 seconds to wake. Saying so beats a screen of blanks.
+    const sayItIsSlow = setTimeout(() => setSlow(true), 4000);
+
     async function load() {
       try {
         const res = await api.get("/questions/stats");
         setStats(res.data);
       } catch (err) {
         setLoadError(
-          "Couldn't connect to the backend — check that the server is running and VITE_API_URL is correct"
+          "Couldn't reach the server. It may still be waking up — reload in a few seconds. If this keeps happening, check that the backend is running."
         );
+      } finally {
+        clearTimeout(sayItIsSlow);
+        setLoading(false);
       }
     }
     load();
+    return () => clearTimeout(sayItIsSlow);
   }, []);
 
   return (
@@ -43,6 +53,12 @@ export default function Dashboard() {
         title="Dashboard"
         subtitle="A complete overview of your platform — revenue, students, and content health at a glance."
       />
+
+      {slow && loading && (
+        <div className="rv-card p-3 mb-6 text-sm text-slate">
+          Waking the server up — on the free hosting plan the first request of the day takes up to a minute.
+        </div>
+      )}
 
       {loadError && (
         <Alert tone="warn" className="mb-6">
@@ -85,6 +101,7 @@ export default function Dashboard() {
         <StatCard
           label="Active Subscribers"
           value={stats?.activeSubscribers ?? "—"}
+          loading={loading}
           hint="Currently premium"
           icon={RiVipCrownLine}
           tone="brand"
@@ -92,6 +109,7 @@ export default function Dashboard() {
         <StatCard
           label="Total Students"
           value={stats?.totalUsers ?? "—"}
+          loading={loading}
           hint="Registered users"
           icon={RiGroupLine}
           tone="info"
@@ -99,6 +117,7 @@ export default function Dashboard() {
         <StatCard
           label="Published Questions"
           value={stats?.publishedQuestions ?? "—"}
+          loading={loading}
           hint={`${stats?.totalQuestions ?? 0} total in bank`}
           icon={RiDatabase2Line}
           tone="success"
@@ -106,6 +125,7 @@ export default function Dashboard() {
         <StatCard
           label="Open Reports"
           value={stats?.openReports ?? "—"}
+          loading={loading}
           hint="Flagged by students"
           icon={RiFlag2Line}
           tone={stats?.openReports > 0 ? "danger" : "success"}

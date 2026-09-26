@@ -302,7 +302,7 @@ export default function Users() {
           <input
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Phone, name, ya email se search..."
+            placeholder="Search by phone, name or email..."
             className="rv-input !pl-10"
           />
         </div>
@@ -310,7 +310,7 @@ export default function Users() {
         <select
           value={subscription}
           onChange={(e) => setSubscription(e.target.value)}
-          className="rv-input text-sm"
+          className="rv-input text-sm !w-auto min-w-[150px]"
         >
           <option value="">All plans</option>
           <option value="premium">Premium</option>
@@ -322,7 +322,7 @@ export default function Users() {
         <select
           value={examGoal}
           onChange={(e) => setExamGoal(e.target.value)}
-          className="rv-input text-sm"
+          className="rv-input text-sm !w-auto min-w-[150px]"
         >
           <option value="">All exams</option>
           {Object.entries(EXAM_LABELS).map(([code, label]) => (
@@ -335,7 +335,7 @@ export default function Users() {
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="rv-input text-sm"
+          className="rv-input text-sm !w-auto min-w-[150px]"
         >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>

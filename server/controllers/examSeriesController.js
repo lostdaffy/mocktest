@@ -2,12 +2,17 @@ const Test = require("../models/Test");
 const Question = require("../models/Question");
 const ExamPattern = require("../models/ExamPattern");
 const Subject = require("../models/Subject");
+const RejectedQuestion = require("../models/RejectedQuestion");
 const { createVerifiedQuestions, qualityNote } = require("../services/questionFactory");
 
 // How much of every mock is made of REAL previous-year questions. The rest
 // is generated fresh. If the PYQ Bank doesn't have enough for a subject,
 // the shortfall is simply generated too - the mock is never left short.
 const PYQ_MIX_PERCENT = 50;
+
+// How many questions a chapter practice test holds. Named so that the
+// "is this test short?" checks and the generator cannot drift apart.
+const PRACTICE_TEST_SIZE = 12;
 
 // Pause between Gemini calls, to stay under the free tier's 15 requests/min.
 // Overridable only so the test harness (which stubs Gemini out entirely)
@@ -315,16 +320,113 @@ async function deleteMock(req, res) {
 
 // DELETE /api/exam-series/mock/:testId/question/:questionId (admin)
 // Remove a single bad question from a mock (and delete it).
+// Works for any test - a mock, a practice test, whatever holds questions.
+//
+// It used to delete the question from the bank outright. If another test was
+// also using it, that test kept an id pointing at nothing: populate quietly
+// drops it, so the other test simply became one question shorter with no
+// sign of why. The question is only deleted when this was the last test
+// holding it.
 async function removeQuestionFromMock(req, res) {
   const { testId, questionId } = req.params;
   const test = await Test.findById(testId);
-  if (!test) return res.status(404).json({ message: "Mock not found" });
+  if (!test) return res.status(404).json({ message: "Test not found" });
 
   test.questions = test.questions.filter((q) => String(q) !== String(questionId));
   await test.save();
-  await Question.findByIdAndDelete(questionId);
 
-  res.json({ message: "Question hata diya", remainingCount: test.questions.length });
+  const stillUsedBy = await Test.countDocuments({ questions: questionId });
+  let deleted = false;
+  if (stillUsedBy === 0) {
+    const q = await Question.findById(questionId);
+    if (q) {
+      await RejectedQuestion.create({
+        text: q.text, subject: q.subject, topic: q.topic, chapter: q.chapter, difficulty: q.difficulty,
+        reason: "removed_by_admin", detail: `removed from ${test.title}`,
+      }).catch(() => {});
+      await Question.findByIdAndDelete(questionId);
+      deleted = true;
+    }
+  }
+
+  const short = Math.max(0, PRACTICE_TEST_SIZE - test.questions.length);
+  res.json({
+    message:
+      "Question removed" +
+      (deleted ? " and deleted from the bank" : ` (kept - ${stillUsedBy} other test(s) use it)`) +
+      (short && test.type === "practice" ? `. This test is ${short} short - add replacements` : ""),
+    remainingCount: test.questions.length,
+    short,
+    deletedFromBank: deleted,
+  });
+}
+
+// POST /api/exam-series/practice/:testId/add-questions  { count }
+//
+// Refills a practice test after the admin has taken questions out of it.
+// Mocks and live exams already had this; practice tests - which are most of
+// the content - had no way back once a question was removed, so a test could
+// only ever shrink.
+//
+// The new questions go through the same gate as any other: verified,
+// repaired where repairable, and checked against everything the chapter has
+// already asked so a replacement is not a reworded copy of what is still in
+// the test.
+async function addQuestionsToPractice(req, res) {
+  const test = await Test.findById(req.params.testId);
+  if (!test) return res.status(404).json({ message: "Test not found" });
+  if (test.type !== "practice") {
+    return res.status(400).json({ message: "This is not a practice test" });
+  }
+  if (test.publishStatus === "published") {
+    return res.status(400).json({ message: "Unpublish this test before changing its questions" });
+  }
+
+  const wanted = Number(req.body?.count) || Math.max(0, PRACTICE_TEST_SIZE - test.questions.length);
+  if (wanted <= 0) {
+    return res.status(400).json({ message: `This test already has ${test.questions.length} questions` });
+  }
+
+  const chapter = test.topic;
+  const subjectDoc = await Subject.findOne({ $or: [{ name: test.subject }, { aliases: test.subject }] }).lean();
+  const chapterDoc = (subjectDoc?.chapters || []).find((c) => c.name === chapter);
+  const topicList = chapterDoc?.topics?.length ? chapterDoc.topics : [chapter];
+
+  let examTags = chapterDoc?.exams?.length ? chapterDoc.exams : null;
+  if (!examTags) {
+    const active = await ExamPattern.find({ isActive: true }).select(`examType`).lean();
+    examTags = active.map((e) => e.examType);
+  }
+
+  const level = test.difficultyLevel === "advanced" ? "hard" : test.difficultyLevel || "easy";
+
+  const built = await createVerifiedQuestions({
+    needed: wanted,
+    tag: { chapter, examType: examTags },
+    generateParams: {
+      examType: "PRACTICE",
+      examDisplayName: `${test.subject} - ${chapter}, for ${examTags.join(", ")}`,
+      subject: test.subject,
+      topic: topicList.join(", "),
+      difficulty: level,
+      syllabusTopics: topicList,
+    },
+  });
+
+  if (!built.ids.length) {
+    return res.status(400).json({
+      message: "No questions could be generated (rate limit or API issue). Try again in a minute.",
+    });
+  }
+
+  test.questions.push(...built.ids);
+  await test.save();
+
+  res.json({
+    message: `${built.ids.length} question(s) added${qualityNote(built)}. ${test.questions.length} in this test now.`,
+    added: built.ids.length,
+    total: test.questions.length,
+  });
 }
 
 // ========== SUBJECT-WISE PRACTICE (admin pre-built, adaptive levels) ==========
@@ -729,6 +831,7 @@ module.exports = {
   archiveMock,
   deleteMock,
   removeQuestionFromMock,
+  addQuestionsToPractice,
   listSubjectsForAdmin,
   generatePracticeTest,
   listPracticeTests,

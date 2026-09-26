@@ -9,6 +9,7 @@ const {
   archiveMock,
   deleteMock,
   removeQuestionFromMock,
+  addQuestionsToPractice,
   listSubjectsForAdmin,
   generatePracticeTest,
   listPracticeTests,
@@ -28,6 +29,7 @@ router.get("/mock/:testId/section-status", protect, adminOnly, asyncRoute(getMoc
 router.get("/subjects/list", protect, adminOnly, asyncRoute(listSubjectsForAdmin));
 router.post("/practice/generate", protect, adminOnly, asyncRoute(generatePracticeTest));
 router.patch("/practice/:testId/publish", protect, adminOnly, asyncRoute(publishPracticeTest));
+router.post("/practice/:testId/add-questions", protect, adminOnly, asyncRoute(addQuestionsToPractice));
 router.get("/practice/:subject/:chapter", protect, adminOnly, asyncRoute(listPracticeTests));
 router.get("/:examStage/mocks", protect, adminOnly, asyncRoute(listExamMocks));
 router.post("/:examStage/generate-mock", protect, adminOnly, asyncRoute(generateExamMock));

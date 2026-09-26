@@ -28,6 +28,7 @@ export default function PracticeSeries() {
 
   // Review modal: shows every question of a test so admin can check quality
   const [reviewTest, setReviewTest] = useState(null);
+  const [refilling, setRefilling] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
 
   async function openReview(testId) {
@@ -46,18 +47,38 @@ export default function PracticeSeries() {
   async function removeQuestion(testId, questionId) {
     const ok = await toast.confirm({
       title: "Remove this question?",
-      message: "It will be taken out of this test.",
+      message:
+        "It comes out of this test. If no other test is using it, it is deleted from the bank as well. Use \"Add replacements\" afterwards to bring the test back to 12.",
       confirmLabel: "Remove",
     });
     if (!ok) return;
     try {
-      await api.delete(`/exam-series/mock/${testId}/question/${questionId}`);
+      const res = await api.delete(`/exam-series/mock/${testId}/question/${questionId}`);
+      toast.success(res.data?.message || "Question removed");
       openReview(testId); // refresh the review
       setChapterTests((tests) =>
         tests.map((t) => (t._id === testId ? { ...t, questionCount: Math.max(0, (t.questionCount || 1) - 1) } : t))
       );
     } catch (err) {
-      toast.error("Couldn't remove the question");
+      toast.error(err.response?.data?.message || "Couldn't remove the question");
+    }
+  }
+
+  // Generate fresh questions for a test the admin has taken questions out of.
+  // They go through the same quality gate as any other, and are checked
+  // against what the chapter has already asked - so a replacement is never a
+  // reworded copy of a question still sitting in the test.
+  async function addReplacements(testId, missing) {
+    setRefilling(true);
+    try {
+      const res = await api.post(`/exam-series/practice/${testId}/add-questions`, { count: missing });
+      toast.success(res.data?.message || "Questions added");
+      openReview(testId);
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Couldn't add questions");
+    } finally {
+      setRefilling(false);
     }
   }
 
@@ -414,12 +435,28 @@ export default function PracticeSeries() {
                   <p className="text-xs text-slate-soft mt-0.5">
                     {reviewTest.questions?.length || 0} questions · <span className="capitalize">{reviewTest.difficultyLevel}</span> ·{" "}
                     {reviewTest.publishStatus}
+                    {(reviewTest.questions?.length || 0) < 12 && (
+                      <span className="text-warn font-medium">
+                        {" "}· {12 - (reviewTest.questions?.length || 0)} short
+                      </span>
+                    )}
                   </p>
                 )}
               </div>
-              <button onClick={() => setReviewTest(null)} className="text-slate-soft hover:text-slate text-2xl leading-none">
-                ×
-              </button>
+              <div className="flex items-center gap-2">
+                {reviewTest && (reviewTest.questions?.length || 0) < 12 && reviewTest.publishStatus !== "published" && (
+                  <button
+                    onClick={() => addReplacements(reviewTest._id, 12 - (reviewTest.questions?.length || 0))}
+                    disabled={refilling}
+                    className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium disabled:opacity-60"
+                  >
+                    {refilling ? "Adding..." : `+ Add ${12 - (reviewTest.questions?.length || 0)} replacement(s)`}
+                  </button>
+                )}
+                <button onClick={() => setReviewTest(null)} className="text-slate-soft hover:text-slate text-2xl leading-none">
+                  ×
+                </button>
+              </div>
             </div>
 
             <div className="p-5 overflow-y-auto flex-1">
