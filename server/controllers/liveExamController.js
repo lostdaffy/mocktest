@@ -58,12 +58,12 @@ async function createLiveExam(req, res) {
   try {
     const { examType, scheduledAt, title } = req.body;
     if (!examType || !scheduledAt) {
-      return res.status(400).json({ message: "Exam aur date/time dono chahiye" });
+      return res.status(400).json({ message: "Both the exam and a date and time are required" });
     }
     assertExplicitOffset(scheduledAt);
 
     const pattern = await ExamPattern.findOne({ examType, isActive: true });
-    if (!pattern) return res.status(404).json({ message: `${examType} ka exam pattern nahi mila` });
+    if (!pattern) return res.status(404).json({ message: `No exam pattern found for ${examType}` });
 
     const lastLive = await Test.findOne({ examStage: examType, type: "live" }).sort({ seriesNumber: -1 });
     const nextNumber = (lastLive?.seriesNumber || 0) + 1;
@@ -84,7 +84,7 @@ async function createLiveExam(req, res) {
       createdBy: "admin",
     });
 
-    res.status(201).json({ message: `Live Exam #${nextNumber} ban gaya (draft). Ab questions add karo.`, test });
+    res.status(201).json({ message: `Live Exam #${nextNumber} created as a draft. Add questions to it next.`, test });
   } catch (err) {
     res.status(err.status || 500).json({ message: err.message });
   }
@@ -136,7 +136,7 @@ async function addQuestionsToLiveExam(req, res) {
     const test = await Test.findOne({ _id: req.params.id, type: "live" }).populate("questions", "subject");
     if (!test) return res.status(404).json({ message: "Live exam not found" });
     if (test.publishStatus === "published") {
-      return res.status(400).json({ message: "Scheduled live exam mein questions add nahi kar sakte. Pehle cancel/unschedule karo." });
+      return res.status(400).json({ message: "A scheduled live exam cannot take new questions. Unschedule it first." });
     }
 
     const pattern = await ExamPattern.findOne({ examType: test.examType });
@@ -148,7 +148,7 @@ async function addQuestionsToLiveExam(req, res) {
       const roomLeft = sectionDef.questionCount - alreadyInSection;
       if (roomLeft <= 0) {
         return res.status(400).json({
-          message: `${subject} section pura ho chuka hai (${sectionDef.questionCount}/${sectionDef.questionCount}). Asli exam mein bhi itne hi aate hain. Dusra section choose karo.`,
+          message: `The ${subject} section is full (${sectionDef.questionCount}/${sectionDef.questionCount}) - that is how many the real exam has. Choose another section.`,
         });
       }
       count = Math.min(count, roomLeft);
@@ -205,14 +205,14 @@ async function removeQuestionFromLiveExam(req, res) {
   const test = await Test.findOne({ _id: id, type: "live" });
   if (!test) return res.status(404).json({ message: "Live exam not found" });
   if (test.publishStatus === "published") {
-    return res.status(400).json({ message: "Scheduled live exam se question hata nahi sakte. Pehle cancel/unschedule karo." });
+    return res.status(400).json({ message: "Questions cannot be removed from a scheduled live exam. Unschedule it first." });
   }
 
   test.questions = test.questions.filter((q) => String(q) !== String(questionId));
   await test.save();
   await Question.findByIdAndDelete(questionId);
 
-  res.json({ message: "Question hata diya", remainingCount: test.questions.length });
+  res.json({ message: "Question removed", remainingCount: test.questions.length });
 }
 
 // PATCH /api/live-exams/:id (admin) { scheduledAt?, title?, durationMinutes? }
@@ -223,7 +223,7 @@ async function updateLiveExam(req, res) {
   if (!test) return res.status(404).json({ message: "Live exam not found" });
 
   if (test.publishStatus === "published" && liveState(test) !== "upcoming") {
-    return res.status(400).json({ message: "Ye live exam already shuru ho chuka hai ya khatam ho chuka hai - ab reschedule nahi ho sakta." });
+    return res.status(400).json({ message: "This live exam has already started or finished - it cannot be rescheduled." });
   }
 
   const { scheduledAt, title, durationMinutes } = req.body;
@@ -235,7 +235,7 @@ async function updateLiveExam(req, res) {
   if (durationMinutes !== undefined) test.durationMinutes = durationMinutes;
 
   await test.save();
-  res.json({ message: "Live exam update ho gaya", test });
+  res.json({ message: "Live exam updated", test });
 }
 
 // PATCH /api/live-exams/:id/publish (admin) -> schedule it live for students
@@ -247,19 +247,19 @@ async function publishLiveExam(req, res) {
   const MIN_QUESTIONS = minQuestionsFor(pattern);
   if (test.questions.length < MIN_QUESTIONS) {
     return res.status(400).json({
-      message: `Ye live exam abhi schedule nahi ho sakta - isme sirf ${test.questions.length} questions hain, kam se kam ${MIN_QUESTIONS} chahiye.`,
+      message: `This live exam cannot be scheduled yet - it has ${test.questions.length} questions and needs at least ${MIN_QUESTIONS}.`,
       currentCount: test.questions.length,
       required: MIN_QUESTIONS,
     });
   }
   if (!test.scheduledAt || test.scheduledAt <= new Date()) {
-    return res.status(400).json({ message: "Schedule date/time bhavishya mein honi chahiye." });
+    return res.status(400).json({ message: "The scheduled date and time must be in the future." });
   }
 
   test.publishStatus = "published";
   await test.save();
 
-  res.json({ message: "Live exam schedule ho gaya - students ko dikhega", test });
+  res.json({ message: "Live exam scheduled - students can see it now", test });
 }
 
 // PATCH /api/live-exams/:id/cancel (admin) -> pull a scheduled/draft live
@@ -269,12 +269,12 @@ async function cancelLiveExam(req, res) {
   if (!test) return res.status(404).json({ message: "Live exam not found" });
 
   if (test.publishStatus === "published" && liveState(test) === "ongoing") {
-    return res.status(400).json({ message: "Ye live exam abhi chal raha hai - is waqt cancel nahi ho sakta." });
+    return res.status(400).json({ message: "This live exam is running right now - it cannot be cancelled mid-exam." });
   }
 
   test.publishStatus = "archived";
   await test.save();
-  res.json({ message: "Live exam cancel ho gaya", test });
+  res.json({ message: "Live exam cancelled", test });
 }
 
 // DELETE /api/live-exams/:id (admin) -> permanently delete a live exam and
@@ -287,7 +287,7 @@ async function deleteLiveExam(req, res) {
   const attemptCount = await Attempt.countDocuments({ test: test._id });
   if (attemptCount > 0) {
     return res.status(400).json({
-      message: `${attemptCount} student(s) ne ye live exam attempt kiya hai - permanently delete nahi ho sakta. Cancel karo iski jagah.`,
+      message: `${attemptCount} student(s) have attempted this live exam, so it cannot be deleted. Cancel it instead.`,
     });
   }
 

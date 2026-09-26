@@ -189,8 +189,11 @@ function applyVerification(question, verification) {
  * through the free tier's 15-a-minute limit on its own. Questions that fail
  * the rule check never reach the AI at all.
  */
-async function runValidationPipelineBatch(questions) {
-  const prepared = questions.map(shuffleOptions);
+async function runValidationPipelineBatch(questions, { reshuffle = true } = {}) {
+  // reshuffle: false when re-checking questions that are already in
+  // circulation. A saved answer is an option number, so moving the options
+  // under a student would rewrite the paper they already sat.
+  const prepared = reshuffle ? questions.map(shuffleOptions) : questions.map((q) => ({ ...q }));
   const ruleResults = prepared.map((q) => ({ question: q, rule: ruleBasedCheck(q) }));
   const needVerification = ruleResults.filter((r) => r.rule.passed).map((r) => r.question);
 

@@ -86,7 +86,7 @@ async function getMySubjects(req, res) {
 // PATCH /api/subjects/my -> update the student's selected subjects
 async function updateMySubjects(req, res) {
   const { subjects } = req.body; // array of subject names
-  if (!Array.isArray(subjects)) return res.status(400).json({ message: "subjects array chahiye" });
+  if (!Array.isArray(subjects)) return res.status(400).json({ message: "A subjects array is required" });
 
   const user = await User.findByIdAndUpdate(
     req.user._id,
@@ -102,13 +102,13 @@ async function updateMySubjects(req, res) {
 async function generateChapterTest(req, res) {
   try {
     const { subject, chapter } = req.body;
-    if (!subject || !chapter) return res.status(400).json({ message: "subject aur chapter chahiye" });
+    if (!subject || !chapter) return res.status(400).json({ message: "Both a subject and a chapter are required" });
 
     const subjectDoc = await Subject.findOne({ name: subject });
-    if (!subjectDoc) return res.status(404).json({ message: "Subject nahi mila" });
+    if (!subjectDoc) return res.status(404).json({ message: "Subject not found" });
 
     const chapterDoc = subjectDoc.chapters.find((c) => c.name === chapter);
-    if (!chapterDoc) return res.status(404).json({ message: "Chapter nahi mila" });
+    if (!chapterDoc) return res.status(404).json({ message: "Chapter not found" });
 
     const user = await User.findById(req.user._id);
     const prog = (user.chapterProgress || []).find((p) => p.subject === subject && p.chapter === chapter);
@@ -214,14 +214,19 @@ async function updateChapterMastery(userId, subject, chapter, accuracy) {
 // CTET subjects with no catalog entry, and Current Affairs questions that no
 // exam section could ever reach. This is the screen that would have caught
 // all three the same day.
+// A practice test holds twelve; a mock or a live exam holds whatever its
+// exam's pattern adds up to.
+const PRACTICE_TEST_SIZE = 12;
+
 async function catalogHealth(req, res) {
-  const [subjects, patterns, topicCounts] = await Promise.all([
+  const [subjects, patterns, topicCounts, liveTests] = await Promise.all([
     Subject.find({ isActive: true }).lean(),
     ExamPattern.find({ isActive: true }).lean(),
     Question.aggregate([
       { $match: { status: "published" } },
       { $group: { _id: "$topic", n: { $sum: 1 } } },
     ]),
+    Test.find({ publishStatus: "published" }).select("title type examStage questions").lean(),
   ]);
 
   const questionsByTopic = new Map(topicCounts.map((t) => [t._id, t.n]));
@@ -336,6 +341,24 @@ async function catalogHealth(req, res) {
         }
       }
     }
+  }
+
+  // A live test that is short. This is the only fault on this screen a
+  // student can feel today: they open a test billed as twelve questions and
+  // get ten, and their score is out of the wrong total.
+  const paperSize = new Map(
+    patterns.map((p) => [p.examType, (p.sections || []).reduce((n, sec) => n + (sec.questionCount || 0), 0)])
+  );
+  for (const t of liveTests) {
+    const want = t.type === "practice" ? PRACTICE_TEST_SIZE : paperSize.get(t.examStage);
+    const have = (t.questions || []).length;
+    if (!want || have >= want) continue;
+    problems.push({
+      kind: "test_short",
+      severity: "high",
+      detail: `"${t.title}" is live with ${have} of ${want} questions.`,
+      fix: `Unpublish it, add ${want - have} question(s), then publish it again.`,
+    });
   }
 
   const order = { high: 0, medium: 1, low: 2 };

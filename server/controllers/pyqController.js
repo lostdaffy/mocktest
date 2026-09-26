@@ -57,9 +57,9 @@ async function uploadPyqPdf(req, res) {
     });
 
     const parts = [`${questionDocs.length} questions extract hue.`];
-    if (missingAnswer > 0) parts.push(`${missingAnswer} mein answer key nahi mili.`);
-    if (mismatchCount > 0) parts.push(`${mismatchCount} mein PDF ka answer aur AI ka independent solve match nahi hua.`);
-    if (missingAnswer === 0 && mismatchCount === 0) parts.push("Sab verified hain - bas ek nazar daal ke publish kar sakte ho.");
+    if (missingAnswer > 0) parts.push(`${missingAnswer} have no answer key in the paper.`);
+    if (mismatchCount > 0) parts.push(`${mismatchCount} where the paper's answer and the independent solve disagree.`);
+    if (missingAnswer === 0 && mismatchCount === 0) parts.push("All verified - give them a look and publish.");
 
     res.status(201).json({
       message: parts.join(" "),
@@ -149,7 +149,7 @@ async function publishPyqPaper(req, res) {
   test.publishStatus = "published";
   await test.save();
 
-  res.json({ message: "PYQ paper published - students ko ab dikhega", test });
+  res.json({ message: "Paper published - students can see it now", test });
 }
 
 // PATCH /api/pyq/paper/:testId/archive (admin) -> hide from students without deleting

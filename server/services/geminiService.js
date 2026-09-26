@@ -157,7 +157,7 @@ async function callGeminiNow(parts, { jsonMode = true, maxRetries = 4 } = {}) {
         await sleep(2000);
         continue;
       }
-      throw new Error("Gemini ne baar-baar invalid JSON diya. Dobara try karo.");
+      throw new Error("Gemini kept returning invalid JSON. Try again.");
     }
 
     const errText = await res.text();
@@ -682,16 +682,16 @@ If a question has more or fewer than 4 options in the original, still return exa
   const questions = await callGeminiRaw(parts, { jsonMode: true, maxRetries: 3 });
 
   if (!Array.isArray(questions)) {
-    throw new Error("Gemini PDF se questions extract nahi kar paaya. Try a clearer/smaller PDF.");
+    throw new Error("No questions could be read out of that PDF. Try a clearer or smaller one.");
   }
 
   return questions.map((q) => {
     const confidence = q.confidence || (Number.isInteger(q.correctIndex) ? "verified" : "no_key");
     const flagReason =
       confidence === "mismatch"
-        ? "PDF answer key aur AI ke independent solve mein farak hai - verify karo"
+        ? "The paper's answer key and the independent solve disagree - check this one"
         : confidence === "no_key"
-        ? "PDF mein answer key nahi mili - AI ka suggestion hai, confirm karo"
+        ? "No answer key in the paper - this is a suggestion, please confirm it"
         : undefined;
 
     return {

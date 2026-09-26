@@ -14,6 +14,15 @@ const PYQ_MIX_PERCENT = 50;
 // "is this test short?" checks and the generator cannot drift apart.
 const PRACTICE_TEST_SIZE = 12;
 
+// How many questions a full mock of a given exam must hold: whatever its
+// pattern's sections add up to. Read from the pattern rather than fixed in
+// code, so adding an exam with a 150-question paper stays an admin job.
+async function fullMockSize(examStage) {
+  const pattern = await ExamPattern.findOne({ examType: examStage }).lean();
+  const total = (pattern?.sections || []).reduce((n, sec) => n + (sec.questionCount || 0), 0);
+  return total || 100;
+}
+
 // Pause between Gemini calls, to stay under the free tier's 15 requests/min.
 // Overridable only so the test harness (which stubs Gemini out entirely)
 // doesn't have to sit through the waits.
@@ -147,7 +156,9 @@ async function generateExamMock(req, res) {
 
     const allQuestionIds = [];
     let hadFailure = false;
-    let flaggedTotal = 0;
+    // What the quality gate did across every batch. Counted properly so the
+    // admin is told the truth about the mock they are about to review.
+    const tally = { verified: 0, repaired: 0, discarded: 0, duplicates: 0, short: 0 };
     const syllabusOffsets = new Map(); // per subject, so each batch moves along the syllabus
 
     // Helper: generate questions in small chunks (max 12 per call for quality &
@@ -164,8 +175,8 @@ async function generateExamMock(req, res) {
         syllabusOffsets.set(section.subject, offset + (topics.length || 1));
         try {
           // Only questions that pass the rule checks AND the AI's own
-          // re-solve come back here. Anything doubtful is saved to the
-          // review queue instead of being put in front of a student.
+          // re-solve come back here. Anything doubtful is mended if it can be
+          // and deleted if it cannot - nothing doubtful is kept.
           const built = await createVerifiedQuestions({
             needed: thisBatch,
             tag: { examStage },
@@ -179,13 +190,13 @@ async function generateExamMock(req, res) {
               syllabusTopics: topics,
             },
           });
-          flaggedTotal += built.flagged + built.duplicates;
+          for (const k of Object.keys(tally)) tally[k] += built[k] || 0;
           allQuestionIds.push(...built.ids);
           // Save progress to the mock after each successful batch
           test.questions = allQuestionIds;
           await test.save();
         } catch (err) {
-          console.log(`Batch fail hua (${section.subject}/${difficulty}): ${err.message}. Skipping, baaki continue.`);
+          console.log(`Batch failed (${section.subject}/${difficulty}): ${err.message}. Skipping it and carrying on.`);
           hadFailure = true;
         }
         remaining -= thisBatch;
@@ -252,12 +263,17 @@ async function generateExamMock(req, res) {
       });
     }
 
+    // What a full paper of this exam is, so the count means something.
+    const paperSize = (pattern.sections || []).reduce((n, sec) => n + (sec.questionCount || 0), 0) || finalCount;
+
     const note =
-      (hadFailure ? ` (Kuch batches rate limit ki wajah se skip hue — "Add Questions" se baaki pure karo.)` : "") +
-      (flaggedTotal ? ` (${flaggedTotal} question jaanch mein fail ya repeat nikle - review queue mein hain, mock mein nahi.)` : "");
+      qualityNote(tally) +
+      (hadFailure
+        ? ` (Some batches were skipped because of the rate limit - use "Add questions" to finish the rest.)`
+        : "");
 
     res.status(201).json({
-      message: `Mock #${test.seriesNumber} created — ${finalCount} questions (${pyqUsed} from past papers, ${finalCount - pyqUsed} new).${note} Review and publish (100 required).`,
+      message: `Mock #${test.seriesNumber} created — ${finalCount} of ${paperSize} questions (${pyqUsed} from past papers, ${finalCount - pyqUsed} new).${note} Review, then publish once it is full.`,
       test: { _id: test._id, title: test.title, questionCount: finalCount },
     });
   } catch (err) {
@@ -280,15 +296,17 @@ async function publishMock(req, res) {
   const test = await Test.findById(req.params.testId);
   if (!test) return res.status(404).json({ message: "Mock not found" });
 
-  // Quality gate: a mock must have enough questions before it can go live.
-  // This prevents publishing half-baked mocks (e.g. if generation stopped early
-  // due to rate limits). Adjust MIN_QUESTIONS if your exam needs fewer/more.
-  const MIN_QUESTIONS = 100;
-  if (test.questions.length < MIN_QUESTIONS) {
+  // A mock goes live holding what the real paper holds. Generation gets cut
+  // short by rate limits often enough that this is the last thing standing
+  // between a half-built mock and a student's exam-day practice.
+  const required = await fullMockSize(test.examStage);
+  if (test.questions.length < required) {
+    const short = required - test.questions.length;
     return res.status(400).json({
-      message: `This mock cannot go live yet — it has ${test.questions.length} questions and needs at least ${MIN_QUESTIONS}. Generate more, then publish.`,
+      message: `This mock has ${test.questions.length} of ${required} questions. Add ${short} more before publishing.`,
       currentCount: test.questions.length,
-      required: MIN_QUESTIONS,
+      required,
+      short,
     });
   }
 
@@ -749,7 +767,7 @@ async function createEmptyMock(req, res) {
       createdBy: "admin",
     });
 
-    res.status(201).json({ message: `Khali Mock #${nextNumber} ban gaya. Ab questions add karo.`, test });
+    res.status(201).json({ message: `Empty Mock #${nextNumber} created. Add questions to it next.`, test });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -760,7 +778,7 @@ async function createEmptyMock(req, res) {
 async function getExamSections(req, res) {
   const { examStage } = req.params;
   const pattern = await ExamPattern.findOne({ examType: examStage, isActive: true });
-  if (!pattern) return res.status(404).json({ message: "Is exam ka pattern nahi mila" });
+  if (!pattern) return res.status(404).json({ message: "No pattern found for this exam" });
 
   res.json({
     examStage,
@@ -809,17 +827,38 @@ async function publishPracticeTest(req, res) {
   const test = await Test.findById(req.params.testId);
   if (!test) return res.status(404).json({ message: "Practice test not found" });
 
-  const MIN = 5;
-  if (test.questions.length < MIN) {
+  // Full, or not at all. A student who opens a 10-question test sitting next
+  // to a 12-question one has been short-changed, and "Add questions" closes
+  // the gap in one click - so there is no reason to let a short one out.
+  if (test.questions.length < PRACTICE_TEST_SIZE) {
+    const short = PRACTICE_TEST_SIZE - test.questions.length;
     return res.status(400).json({
-      message: `Kam se kam ${MIN} questions chahiye publish ke liye. Abhi ${test.questions.length} hain.`,
+      message: `This test has ${test.questions.length} of ${PRACTICE_TEST_SIZE} questions. Add ${short} more before publishing.`,
+      short,
     });
   }
 
   test.publishStatus = "published";
   test.isFree = !!isFree;
   await test.save();
-  res.json({ message: "Practice test live ho gaya", test });
+  res.json({ message: "Practice test is live", test });
+}
+
+// Back to draft, so a published test can be corrected. Questions are not
+// touched - only whether students can see it.
+async function unpublishPracticeTest(req, res) {
+  const test = await Test.findById(req.params.testId);
+  if (!test) return res.status(404).json({ message: "Practice test not found" });
+  if (test.type !== "practice") {
+    return res.status(400).json({ message: "This is not a practice test" });
+  }
+  if (test.publishStatus !== "published") {
+    return res.status(400).json({ message: "This test is not published" });
+  }
+
+  test.publishStatus = "draft";
+  await test.save();
+  res.json({ message: "Taken off the app - you can edit it now", test });
 }
 
 module.exports = {
@@ -840,4 +879,5 @@ module.exports = {
   getExamSections,
   getMockSectionStatus,
   publishPracticeTest,
+  unpublishPracticeTest,
 };

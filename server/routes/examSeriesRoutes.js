@@ -18,6 +18,7 @@ const {
   getExamSections,
   getMockSectionStatus,
   publishPracticeTest,
+  unpublishPracticeTest,
 } = require("../controllers/examSeriesController");
 const { protect, adminOnly } = require("../middleware/auth");
 const asyncRoute = require("../utils/asyncRoute");
@@ -29,6 +30,7 @@ router.get("/mock/:testId/section-status", protect, adminOnly, asyncRoute(getMoc
 router.get("/subjects/list", protect, adminOnly, asyncRoute(listSubjectsForAdmin));
 router.post("/practice/generate", protect, adminOnly, asyncRoute(generatePracticeTest));
 router.patch("/practice/:testId/publish", protect, adminOnly, asyncRoute(publishPracticeTest));
+router.patch("/practice/:testId/unpublish", protect, adminOnly, asyncRoute(unpublishPracticeTest));
 router.post("/practice/:testId/add-questions", protect, adminOnly, asyncRoute(addQuestionsToPractice));
 router.get("/practice/:subject/:chapter", protect, adminOnly, asyncRoute(listPracticeTests));
 router.get("/:examStage/mocks", protect, adminOnly, asyncRoute(listExamMocks));

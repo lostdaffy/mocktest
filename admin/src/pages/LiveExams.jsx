@@ -241,7 +241,7 @@ export default function LiveExams() {
 
   async function removeQuestion(liveExamId, questionId) {
     const ok = await toast.confirm({
-      title: "Ye question hataayein?",
+      title: "Remove this question?",
       message: "This question will be permanently deleted.",
       confirmLabel: "Remove",
       danger: true,
@@ -332,7 +332,7 @@ export default function LiveExams() {
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Auto-generated agar khali chhoda"
+                placeholder="Left blank, a title is generated"
                 className="rv-input w-full"
               />
             </div>

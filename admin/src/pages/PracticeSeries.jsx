@@ -4,6 +4,10 @@ import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 
 const LEVELS = ["easy", "medium", "hard", "advanced"];
+// A practice test holds this many questions. The server refuses to publish
+// one that holds fewer, so the buttons here refuse too - a student should
+// never open a test with a hole in it.
+const FULL_TEST = 12;
 // Badge colours for the level headings in the grouped test list.
 const LEVEL_BADGES = {
   easy: "bg-easy-bg text-easy",
@@ -148,6 +152,23 @@ export default function PracticeSeries() {
       setMessage("❌ " + (err.response?.data?.message || "Couldn't generate the test"));
     } finally {
       setGenBusy(null);
+    }
+  }
+
+  // Back to draft. Questions are untouched - this only decides whether
+  // students can see it. Needed because a published test is locked for
+  // editing, so without this a test that went out short would stay short.
+  async function unpublishTest(testId) {
+    try {
+      const res = await api.patch(`/exam-series/practice/${testId}/unpublish`);
+      toast.success(res.data?.message || "Taken off the app");
+      setChapterTests((tests) =>
+        tests.map((t) => (t._id === testId ? { ...t, publishStatus: "draft" } : t))
+      );
+      setReviewTest((r) => (r && r._id === testId ? { ...r, publishStatus: "draft" } : r));
+      load(selectedSubject.name, { silent: true });
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Couldn't take it off the app");
     }
   }
 
@@ -381,21 +402,39 @@ export default function PracticeSeries() {
                                       >
                                         👁 Review
                                       </button>
-                                      {t.publishStatus === "draft" && (
-                                        <>
+                                      {t.publishStatus === "draft" &&
+                                        (typeof t.questionCount === "number" && t.questionCount < FULL_TEST ? (
                                           <button
-                                            onClick={() => publishTest(t._id, true)}
-                                            className="px-3 py-1.5 rounded-lg bg-success-light0 hover:bg-success text-white text-xs font-medium"
+                                            onClick={() => openReview(t._id)}
+                                            className="px-3 py-1.5 rounded-lg bg-warn-light text-warn text-xs font-medium"
+                                            title={`A test goes out with all ${FULL_TEST} questions. Open it and add the missing ones.`}
                                           >
-                                            Publish FREE
+                                            Add {FULL_TEST - t.questionCount} to publish
                                           </button>
-                                          <button
-                                            onClick={() => publishTest(t._id, false)}
-                                            className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-xs font-medium"
-                                          >
-                                            Publish Premium
-                                          </button>
-                                        </>
+                                        ) : (
+                                          <>
+                                            <button
+                                              onClick={() => publishTest(t._id, true)}
+                                              className="px-3 py-1.5 rounded-lg bg-success-light0 hover:bg-success text-white text-xs font-medium"
+                                            >
+                                              Publish FREE
+                                            </button>
+                                            <button
+                                              onClick={() => publishTest(t._id, false)}
+                                              className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-xs font-medium"
+                                            >
+                                              Publish Premium
+                                            </button>
+                                          </>
+                                        ))}
+                                      {t.publishStatus === "published" && (
+                                        <button
+                                          onClick={() => unpublishTest(t._id)}
+                                          className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium"
+                                          title="Take it off the app so its questions can be changed"
+                                        >
+                                          Unpublish
+                                        </button>
                                       )}
                                       <button
                                         onClick={() => deleteTest(t._id)}
@@ -435,22 +474,30 @@ export default function PracticeSeries() {
                   <p className="text-xs text-slate-soft mt-0.5">
                     {reviewTest.questions?.length || 0} questions · <span className="capitalize">{reviewTest.difficultyLevel}</span> ·{" "}
                     {reviewTest.publishStatus}
-                    {(reviewTest.questions?.length || 0) < 12 && (
+                    {(reviewTest.questions?.length || 0) < FULL_TEST && (
                       <span className="text-warn font-medium">
-                        {" "}· {12 - (reviewTest.questions?.length || 0)} short
+                        {" "}· {FULL_TEST - (reviewTest.questions?.length || 0)} short
                       </span>
                     )}
                   </p>
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {reviewTest && (reviewTest.questions?.length || 0) < 12 && reviewTest.publishStatus !== "published" && (
+                {reviewTest && reviewTest.publishStatus === "published" && (
                   <button
-                    onClick={() => addReplacements(reviewTest._id, 12 - (reviewTest.questions?.length || 0))}
+                    onClick={() => unpublishTest(reviewTest._id)}
+                    className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-sm font-medium"
+                  >
+                    Unpublish to edit
+                  </button>
+                )}
+                {reviewTest && (reviewTest.questions?.length || 0) < FULL_TEST && reviewTest.publishStatus !== "published" && (
+                  <button
+                    onClick={() => addReplacements(reviewTest._id, FULL_TEST - (reviewTest.questions?.length || 0))}
                     disabled={refilling}
                     className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium disabled:opacity-60"
                   >
-                    {refilling ? "Adding..." : `+ Add ${12 - (reviewTest.questions?.length || 0)} replacement(s)`}
+                    {refilling ? "Adding..." : `+ Add ${FULL_TEST - (reviewTest.questions?.length || 0)} replacement(s)`}
                   </button>
                 )}
                 <button onClick={() => setReviewTest(null)} className="text-slate-soft hover:text-slate text-2xl leading-none">
@@ -511,6 +558,13 @@ export default function PracticeSeries() {
 
             {reviewTest && reviewTest.publishStatus === "draft" && (
               <div className="p-5 border-t border-border-soft flex gap-3">
+                {(reviewTest.questions?.length || 0) < FULL_TEST ? (
+                  <p className="flex-1 text-sm text-warn self-center">
+                    Add the last {FULL_TEST - (reviewTest.questions?.length || 0)} question
+                    {FULL_TEST - (reviewTest.questions?.length || 0) === 1 ? "" : "s"} before publishing - a test goes out full.
+                  </p>
+                ) : (
+                  <>
                 <button
                   onClick={() => {
                     publishTest(reviewTest._id, true);
@@ -529,6 +583,8 @@ export default function PracticeSeries() {
                 >
                   Publish Premium
                 </button>
+                  </>
+                )}
                 <button
                   onClick={() => setReviewTest(null)}
                   className="px-4 py-2.5 rounded-lg bg-slate-light hover:bg-border-strong text-slate text-sm font-medium"

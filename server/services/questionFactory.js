@@ -1,5 +1,7 @@
 const Question = require("../models/Question");
 const RejectedQuestion = require("../models/RejectedQuestion");
+const Test = require("../models/Test");
+const Attempt = require("../models/Attempt");
 const { generateQuestions, repairQuestion } = require("./geminiService");
 const { runValidationPipelineBatch, questionKey, looksLikeRepeat } = require("./validationPipeline");
 
@@ -179,6 +181,127 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
   };
 }
 
+/**
+ * Puts questions that are stuck in the review queue back through the same gate
+ * a new question goes through, and settles each one.
+ *
+ * The queue was the one place where the "nothing doubtful, nothing parked"
+ * rule did not hold. Questions generated before the gate was strict, and
+ * questions auto-flagged by student reports, piled up there - and clearing
+ * them meant the admin solving each one by hand.
+ *
+ * A question that passes goes live. One with a fixable gap - a thin solution,
+ * missing Hindi - is mended and then has to pass on its own merit. One that
+ * still fails leaves circulation:
+ *
+ *   - never attempted by anyone: deleted outright, with a one-line note,
+ *   - already attempted: kept but marked rejected, because deleting it would
+ *     blank out a question in a student's own past paper.
+ *
+ * Either way it is pulled from every test holding it, and any test left short
+ * is named so it can be topped up.
+ *
+ * The limit is deliberately small: each question costs an AI call, and the
+ * tier allows a few hundred a day. Run it again for the next batch.
+ */
+async function recheckQuestions({ limit = 20, subject, topic } = {}) {
+  const filter = { status: "under_review" };
+  if (subject) filter.subject = subject;
+  if (topic) filter.topic = topic;
+
+  const stale = await Question.find(filter).sort({ createdAt: 1 }).limit(limit).lean();
+  const out = { looked: stale.length, published: 0, repaired: 0, deleted: 0, keptForHistory: 0, testsNowShort: [] };
+  if (!stale.length) return out;
+
+  let checked = await runValidationPipelineBatch(stale, { reshuffle: false });
+
+  // ---- mend the ones with an honest gap, then judge them again
+  const mendable = checked.filter(
+    (q) => q.status !== "published" && /Rule check failed/.test(q.flagReason || "") && isMendable(q.flagReason)
+  );
+  if (mendable.length) {
+    const attempts = await Promise.all(
+      mendable.map((q) => repairQuestion(q, (q.flagReason || "").replace("Rule check failed: ", "").split(", ")))
+    );
+    const mended = attempts.filter(Boolean);
+    if (mended.length) {
+      // repairQuestion returns the question without its _id, so it is matched
+      // back by text - the repair never rewrites the question itself.
+      const rechecked = await runValidationPipelineBatch(mended, { reshuffle: false });
+      const byText = new Map(rechecked.map((q) => [q.text, q]));
+      checked = checked.map((q) => {
+        const better = byText.get(q.text);
+        if (better && q.status !== "published" && better.status === "published") {
+          out.repaired++;
+          return { ...better, _id: q._id, mended: true };
+        }
+        return q;
+      });
+    }
+  }
+
+  const shortened = new Map();
+
+  for (const q of checked) {
+    if (q.status === "published") {
+      const fields = { status: "published", aiConfidenceScore: q.aiConfidenceScore, flagReason: "" };
+      if (q.mended) {
+        fields.solution = q.solution;
+        fields.solutionHi = q.solutionHi;
+        fields.textHi = q.textHi;
+        fields.optionsHi = q.optionsHi;
+      }
+      await Question.updateOne({ _id: q._id }, { $set: fields });
+      out.published++;
+      continue;
+    }
+
+    // Out of every test that was holding it, before anything else - a test
+    // pointing at a question that is gone serves one fewer without saying so.
+    const holding = await Test.find({ questions: q._id }).select("title questions publishStatus").lean();
+    if (holding.length) {
+      await Test.updateMany({ questions: q._id }, { $pull: { questions: q._id } });
+      // Every test we pulled from is now one question light, whatever its
+      // size. Counting against a practice test's twelve meant a mock left at
+      // 99 of 100 was never mentioned.
+      for (const t of holding) {
+        shortened.set(String(t._id), {
+          title: t.title,
+          left: t.questions.length - 1,
+          live: t.publishStatus === "published",
+        });
+      }
+    }
+
+    const wasAttempted = await Attempt.exists({ "answers.question": q._id });
+    try {
+      await RejectedQuestion.create({
+        text: q.text,
+        subject: q.subject,
+        topic: q.topic,
+        chapter: q.chapter,
+        difficulty: q.difficulty,
+        reason: /Rule check failed/.test(q.flagReason || "") ? "rule" : "answer_disputed",
+        detail: String(q.flagReason || "").slice(0, 200),
+        repairAttempted: isMendable(q.flagReason),
+      });
+    } catch (_) {
+      // Losing the note must never cost us the clean-up.
+    }
+
+    if (wasAttempted) {
+      await Question.updateOne({ _id: q._id }, { $set: { status: "rejected", flagReason: q.flagReason } });
+      out.keptForHistory++;
+    } else {
+      await Question.deleteOne({ _id: q._id });
+      out.deleted++;
+    }
+  }
+
+  out.testsNowShort = [...shortened.values()];
+  return out;
+}
+
 // Missing Hindi or a thin solution is a gap in an otherwise sound question.
 // Anything about the answer, the options or the question itself is not.
 function isMendable(flagReason = "") {
@@ -198,4 +321,4 @@ function qualityNote({ verified, repaired, discarded, duplicates, short }) {
   return parts.length ? ` (${parts.join(", ")})` : "";
 }
 
-module.exports = { createVerifiedQuestions, qualityNote };
+module.exports = { createVerifiedQuestions, recheckQuestions, qualityNote };

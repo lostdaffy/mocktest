@@ -169,7 +169,7 @@ async function manageSubscription(req, res) {
       user.subscriptionStatus = "expired";
       user.subscriptionExpiresAt = new Date();
       await user.save();
-      return res.json({ message: `${user.name} ka subscription revoke kar diya`, user });
+      return res.json({ message: `${user.name}'s subscription has been revoked`, user });
     }
 
     if (action === "grant" || action === "extend") {
@@ -310,7 +310,7 @@ async function unlockUser(req, res) {
 async function forceLogout(req, res) {
   const user = await User.findByIdAndUpdate(req.params.id, { $unset: { activeSessionId: 1 } }, { new: true }).select("name phone");
   if (!user) return res.status(404).json({ message: "User not found" });
-  res.json({ message: `${user.name} ko sabhi devices se logout kar diya. Ab wo naye device pe login kar sakte hain.`, user });
+  res.json({ message: `${user.name} has been signed out of every device and can now sign in on a new one.`, user });
 }
 
 // PATCH /api/admin/users/:id/profile  { name, email, examGoals }
@@ -361,11 +361,11 @@ async function deleteUser(req, res) {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
     if (user.role === "admin") {
-      return res.status(403).json({ message: "Admin account delete nahi kiya ja sakta" });
+      return res.status(403).json({ message: "An admin account cannot be deleted" });
     }
 
     await deleteAccountData(user);
-    res.json({ message: `${user.name} (${user.phone}) ka account aur data delete ho gaya` });
+    res.json({ message: `The account and data for ${user.name} (${user.phone}) have been deleted` });
   } catch (err) {
     res.status(500).json({ message: "Delete failed", error: err.message });
   }

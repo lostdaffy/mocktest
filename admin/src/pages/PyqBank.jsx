@@ -156,7 +156,7 @@ export default function PyqBank() {
           </div>
           <div>
             <label className="block text-sm font-medium text-ink-soft mb-1.5">
-              Exam Date <span className="text-slate-soft">(optional, sirf year se zyada exact)</span>
+              Exam Date <span className="text-slate-soft">(optional, more exact than the year alone)</span>
             </label>
             <input
               type="date"

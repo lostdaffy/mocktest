@@ -26,6 +26,7 @@ export default function ManageQuestions() {
   const [counts, setCounts] = useState(null);
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState("");
+  const [rechecking, setRechecking] = useState(false);
 
   async function load(targetPage = page, targetStatus = status) {
     setLoading(true);
@@ -73,6 +74,28 @@ export default function ManageQuestions() {
       toast.error(err.response?.data?.message || "Couldn't update that question");
     } finally {
       setBusy("");
+    }
+  }
+
+  // Put the queue back through the gate that filled it. Whatever passes goes
+  // live, whatever can be mended is mended, and whatever still fails leaves
+  // circulation - so the queue empties without anyone solving 141 questions by
+  // hand. Twenty at a time, because each one costs an AI call.
+  async function recheckQueue() {
+    setRechecking(true);
+    try {
+      const res = await api.post("/questions/recheck", {
+        limit: 20,
+        subject: filters.subject || undefined,
+        topic: filters.topic || undefined,
+      });
+      toast.success(res.data?.message || "Re-checked");
+      load(1, status);
+      loadCounts();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "The re-check couldn't finish");
+    } finally {
+      setRechecking(false);
     }
   }
 
@@ -157,7 +180,18 @@ export default function ManageQuestions() {
         <button onClick={() => load(1)} className="rv-btn-secondary">
           Apply
         </button>
+        {status === "under_review" && total > 0 && (
+          <button onClick={recheckQueue} disabled={rechecking} className="rv-btn-primary disabled:opacity-60">
+            {rechecking ? "Re-checking..." : `Re-check next ${Math.min(20, total)}`}
+          </button>
+        )}
       </div>
+      {status === "under_review" && total > 0 && (
+        <p className="text-xs text-slate-soft -mt-4 mb-6">
+          Re-checking solves each question again: the sound ones go live, thin solutions and missing Hindi are
+          filled in, and the rest leave the bank. Twenty at a time.
+        </p>
+      )}
 
       {loading ? (
         <p className="text-slate-soft">Loading...</p>

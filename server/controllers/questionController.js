@@ -4,6 +4,7 @@ const Report = require("../models/Report");
 const User = require("../models/User");
 const Subscription = require("../models/Subscription");
 const { runValidationPipeline } = require("../services/validationPipeline");
+const { recheckQuestions } = require("../services/questionFactory");
 
 // GET /api/questions?examType=&subject=&topic=&status=  (admin/browse use)
 async function listQuestions(req, res) {
@@ -58,9 +59,13 @@ async function rejectQuestion(req, res) {
 
   // A test that is now short is worth saying out loud - it is live, a
   // student can open it, and it has one question fewer than it claims.
-  const nowShort = affected
-    .map((t) => ({ title: t.title, left: t.questions.length - 1, live: t.publishStatus === `published` }))
-    .filter((t) => t.left < 12);
+  // Every test we pulled from qualifies: comparing against a practice test's
+  // twelve hid a mock sitting at 99 of 100.
+  const nowShort = affected.map((t) => ({
+    title: t.title,
+    left: t.questions.length - 1,
+    live: t.publishStatus === `published`,
+  }));
 
   res.json({
     message:
@@ -73,6 +78,30 @@ async function rejectQuestion(req, res) {
     removedFromTests: affected.length,
     testsNowShort: nowShort,
   });
+}
+
+// POST /api/questions/recheck (admin) -> clear the review queue automatically
+//
+// The queue used to be cleared by hand, one question at a time, with the admin
+// solving each one to decide. The gate already knows how to make that
+// judgement, so it makes it.
+async function recheckReviewQueue(req, res) {
+  const limit = Math.min(Math.max(Number(req.body?.limit) || 20, 1), 50);
+  const { subject, topic } = req.body || {};
+
+  const r = await recheckQuestions({ limit, subject, topic });
+  if (!r.looked) return res.json({ message: "Nothing in the review queue", ...r });
+
+  const parts = [`Checked ${r.looked}`];
+  if (r.published) parts.push(`${r.published} published${r.repaired ? ` (${r.repaired} after a repair)` : ""}`);
+  if (r.deleted) parts.push(`${r.deleted} deleted`);
+  if (r.keptForHistory) parts.push(`${r.keptForHistory} marked rejected but kept, students had already answered them`);
+
+  const shortNote = r.testsNowShort.length
+    ? `. Now short: ${r.testsNowShort.map((t) => `${t.title} (${t.left})`).join(", ")} - add questions to fill them`
+    : "";
+
+  res.json({ message: parts.join(", ") + shortNote, ...r });
 }
 
 // POST /api/questions (admin manual add, or used internally after AI generation)
@@ -225,6 +254,7 @@ async function getStats(req, res) {
 }
 
 module.exports = {
+  recheckReviewQueue,
   listQuestions,
   approveQuestion,
   rejectQuestion,

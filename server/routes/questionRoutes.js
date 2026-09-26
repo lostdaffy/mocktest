@@ -13,6 +13,7 @@ const {
   listReports,
   resolveReport,
   getStats,
+  recheckReviewQueue,
 } = require("../controllers/questionController");
 const { protect, adminOnly } = require("../middleware/auth");
 const asyncRoute = require("../utils/asyncRoute");
@@ -24,6 +25,7 @@ router.get("/bookmarked", protect, asyncRoute(listBookmarked));
 
 // Admin routes - specific paths BEFORE "/:id" style so they don't get shadowed
 router.get("/stats", protect, adminOnly, asyncRoute(getStats));
+router.post("/recheck", protect, adminOnly, asyncRoute(recheckReviewQueue));
 router.get("/reports", protect, adminOnly, asyncRoute(listReports));
 router.patch("/reports/:id/resolve", protect, adminOnly, asyncRoute(resolveReport));
 router.get("/", protect, adminOnly, asyncRoute(listQuestions));
