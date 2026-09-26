@@ -214,11 +214,25 @@ function applyVerification(question, verification) {
  * through the free tier's 15-a-minute limit on its own. Questions that fail
  * the rule check never reach the AI at all.
  */
+// A numeric option is the same in every language. "11" has no Hindi
+// translation to be missing, and demanding one parked 22 sound Maths
+// questions in the review queue over options like "42.8%" and "14 2/3".
+// Copying across costs nothing and needs no model.
+function fillNeutralHindiOptions(q) {
+  const options = (q.options || []).map((o) => String(o ?? "").trim());
+  const optionsHi = (q.optionsHi || []).map((o) => String(o ?? "").trim());
+  const missing = optionsHi.length !== options.length || optionsHi.some((o) => !o);
+  if (!missing || !options.length || !options.every(isLanguageNeutral)) return q;
+  return { ...q, optionsHi: [...options] };
+}
+
 async function runValidationPipelineBatch(questions, { reshuffle = true } = {}) {
   // reshuffle: false when re-checking questions that are already in
   // circulation. A saved answer is an option number, so moving the options
   // under a student would rewrite the paper they already sat.
-  const prepared = reshuffle ? questions.map(shuffleOptions) : questions.map((q) => ({ ...q }));
+  const prepared = (reshuffle ? questions.map(shuffleOptions) : questions.map((q) => ({ ...q }))).map(
+    fillNeutralHindiOptions
+  );
   const ruleResults = prepared.map((q) => ({ question: q, rule: ruleBasedCheck(q) }));
   const needVerification = ruleResults.filter((r) => r.rule.passed).map((r) => r.question);
 
