@@ -306,7 +306,9 @@ async function recheckQuestions({ limit = 20, subject, topic } = {}) {
 // Anything about the answer, the options or the question itself is not.
 function isMendable(flagReason = "") {
   const issues = String(flagReason).replace("Rule check failed: ", "");
-  const fixable = /solution too short|hindi/i.test(issues);
+  // "must be written in Hindi" is a translation job, not a rethink: the
+  // question, its options and its answer all stay exactly as they are.
+  const fixable = /solution too short|hindi|romanised/i.test(issues);
   const fatal = /options|correctIndex|question text too short|solution is just the option/i.test(issues);
   return fixable && !fatal;
 }

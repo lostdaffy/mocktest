@@ -28,6 +28,8 @@ const fetch = require("node-fetch");
 // to an older model for a bigger allowance is not on this list - it would
 // buy throughput with wrong answer keys, and the gate would spend the
 // savings rejecting them.
+const { isHindiMedium } = require("../utils/language");
+
 const GEMINI_MODELS = (process.env.GEMINI_MODEL || "gemini-3.1-flash-lite,gemini-3.5-flash-lite")
   .split(",")
   .map((m) => m.trim())
@@ -379,6 +381,28 @@ ${syllabusLines.map((t, i) => `${i + 1}. ${t}`).join("\n")}
     ? `Generate exactly ${count} multiple-choice questions for subject "${subject}", exactly like real ${ctx.fullName} exam questions.`
     : `Generate exactly ${count} multiple-choice questions for subject "${subject}", topic "${topic}", difficulty "${difficulty}".`;
 
+  // In Hindi, the language IS the subject. A question about व्याकरण written
+  // in English, with options romanised as "Vyakti vachak", is not a Hindi
+  // question - it is a question about Hindi, which is a different thing and
+  // useless to someone sitting a Hindi paper.
+  const hindiMedium = isHindiMedium({ subject, topic, syllabusTopics });
+
+  const languageRules = hindiMedium
+    ? `LANGUAGE (this subject is taught and examined in Hindi):
+- Write the question, all four options and the solution in HINDI, in Devanagari script.
+- Never write the question in English. Never romanise Hindi words: write व्यक्तिवाचक, not "Vyakti vachak"; write स्वर, not "swar".
+- "text" and "textHi" both hold the Hindi question. "options" and "optionsHi" both hold the Hindi options. "solution" and "solutionHi" both hold the Hindi solution.
+- English may appear only where the real paper would use it - a proper noun, a year, a technical term in brackets.`
+    : `LANGUAGE:
+- Write the question, options and solution in English, and provide an accurate Hindi translation of each in the "Hi" fields.`;
+
+  // Formats where the options are labels rather than sentences. Left to
+  // itself the model returns three options, or none, and the whole batch is
+  // thrown away for a format fault rather than anything wrong with it - nine
+  // of twenty-one questions on the first Error Spotting test.
+  const shapeReminder = `- This holds for EVERY format, including "spot the error", "fill in the blank" and cloze questions: exactly 4 options and exactly 4 Hindi options, always.
+- Where the options are segment labels (A / B / C / D), still return all four as the four options, and repeat them as the four Hindi options.`;
+
   const prompt = `You are an expert question setter for ${ctx.fullName}.
 
 CRITICAL RULES ABOUT SCOPE (follow strictly):
@@ -392,11 +416,13 @@ ${syllabusBlock}${examplesBlock}${countLine}
 EXAM-REALISM RULES:
 ${difficultyInstruction}
 
+${languageRules}
+
 QUALITY RULES:
 - Each question has exactly 4 options, only ONE correct. Make wrong options plausible (not obviously wrong).
+${shapeReminder}
 - Questions must be factually accurate and unambiguous.
 - Solutions must be short, correct, step-by-step.
-- Provide accurate Hindi translation of question, options, and solution.
 
 EVERY QUESTION MUST BE AS GOOD AS THE FIRST:
 - The LAST question must take the same effort as the first one. Do not get shorter, vaguer or more generic as you go.
@@ -414,12 +440,12 @@ ${avoidTexts.map((t, i) => `${i + 1}. ${t}`).join("\n")}`
 
 [
   {
-    "text": "question in English",
+    "text": ${hindiMedium ? '"प्रश्न हिंदी में"' : '"question in English"'},
     "textHi": "question in Hindi",
-    "options": ["A", "B", "C", "D"],
-    "optionsHi": ["A-hi", "B-hi", "C-hi", "D-hi"],
+    "options": ${hindiMedium ? '["विकल्प 1", "विकल्प 2", "विकल्प 3", "विकल्प 4"]' : '["A", "B", "C", "D"]'},
+    "optionsHi": ${hindiMedium ? '["विकल्प 1", "विकल्प 2", "विकल्प 3", "विकल्प 4"]' : '["A-hi", "B-hi", "C-hi", "D-hi"]'},
     "correctIndex": 0,
-    "solution": "short English solution",
+    "solution": ${hindiMedium ? '"संक्षिप्त हल हिंदी में"' : '"short English solution"'},
     "solutionHi": "short Hindi solution",
     "topic": "which ONE of the listed topics this question belongs to"
   }

@@ -1,4 +1,5 @@
 const { verifyQuestions } = require("./geminiService");
+const { isHindiMedium, hasDevanagari, isLanguageNeutral } = require("../utils/language");
 
 // "What is 15% of 240?" and "what is 15 % of 240" are the same question.
 // Used both to spot repeats inside a batch and to catch a question the bank
@@ -119,6 +120,16 @@ function ruleBasedCheck(q) {
   if (!(q.textHi || "").trim()) issues.push("Hindi question missing");
   if (optionsHi.length !== 4 || optionsHi.some((o) => !o)) issues.push("Hindi options missing");
   if (!(q.solutionHi || "").trim()) issues.push("Hindi solution missing");
+
+  // ...and where the subject IS Hindi, a translation is not enough: the
+  // question itself has to be in Hindi. Ten of the first twelve व्याकरण
+  // questions were written in English and passed every check above, because
+  // every check above was satisfied by the translation sitting beside them.
+  if (isHindiMedium(q)) {
+    if (!hasDevanagari(text)) issues.push("question must be written in Hindi, not English");
+    const romanised = options.filter((o) => o && !isLanguageNeutral(o) && !hasDevanagari(o));
+    if (romanised.length) issues.push("options must be in Hindi, not romanised");
+  }
 
   return { passed: issues.length === 0, issues };
 }
