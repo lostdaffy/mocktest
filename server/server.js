@@ -5,6 +5,7 @@ const rateLimit = require("express-rate-limit");
 const jwt = require("jsonwebtoken");
 const connectDB = require("./config/db");
 const { paymentsEnabled } = require("./controllers/paymentController");
+const gemini = require("./services/geminiService");
 
 const authRoutes = require("./routes/authRoutes");
 const questionRoutes = require("./routes/questionRoutes");
@@ -68,6 +69,15 @@ if (process.env.RENDER && process.env.NODE_ENV !== "production") {
   console.warn(
     "⚠️  NODE_ENV is not \"production\" on a deployed server. " +
       "Internal error messages are being sent to clients. Set NODE_ENV=production."
+  );
+}
+
+// One model means one 500-request allowance, and generation stops dead when
+// it runs out. Two or more hand over to each other and the day continues.
+if (gemini.GEMINI_MODELS.length < 2) {
+  console.warn(
+    `⚠️  Only one AI model configured (${gemini.GEMINI_MODELS[0]}). Its daily allowance is 500 requests, and generation stops when that is gone. ` +
+      "Set GEMINI_MODEL to a comma-separated list, or unset it to use the built-in pair."
   );
 }
 
@@ -242,6 +252,21 @@ app.get("/api/health", (req, res) => {
     // So "did my deploy actually go live?" can be answered from a browser,
     // without reading Render's logs.
     version: require("./package.json").version,
+
+    // Which models questions are being written by, and which one is in use
+    // right now.
+    //
+    // This was a blind spot that cost a day: GEMINI_MODEL was set to a single
+    // model in the environment, which quietly overrode the two-model fallback,
+    // so when the first one's daily allowance ran out generation simply
+    // stopped - and there was no way to see the configuration from outside
+    // the server to know why.
+    ai: {
+      models: gemini.GEMINI_MODELS,
+      inUse: gemini.currentModel(),
+      fallbackAvailable: gemini.GEMINI_MODELS.length > 1,
+    },
+
     uptimeSeconds: Math.round(process.uptime()),
     time: new Date(),
   });
