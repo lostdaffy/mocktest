@@ -275,7 +275,9 @@ export default function Users() {
         }
       />
       <p className="text-slate -mt-4 mb-6">
-        {total.toLocaleString("en-IN")} total students. Filter, search, or manage the full list here.
+        {/* Saying "0 total students" while the list is still loading is worse
+            than saying nothing - it reads as a fact, and it is wrong. */}
+        {loading ? "Loading students..." : `${total.toLocaleString("en-IN")} total students. Filter, search, or manage the full list here.`}
       </p>
 
       {/* Stats cards */}

@@ -14,8 +14,35 @@
 
 const fetch = require("node-fetch");
 
-const GEMINI_MODEL = (process.env.GEMINI_MODEL || "gemini-3.1-flash-lite").trim();
-const BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+// The models to use, best first. Set GEMINI_MODEL to a comma-separated list
+// to override.
+//
+// The free tier allows 500 requests a day PER MODEL, and generating a full
+// question bank needs more than that - the day's allowance ran out partway
+// through and everything stopped until midnight. The quotas are separate
+// though, so when one model is spent the next one carries on: the same
+// day's work continues at the same quality instead of waiting.
+//
+// Both defaults were measured on six questions whose answers were worked out
+// by hand: 3.1-flash-lite and 3.5-flash-lite sit in the same tier. Dropping
+// to an older model for a bigger allowance is not on this list - it would
+// buy throughput with wrong answer keys, and the gate would spend the
+// savings rejecting them.
+const GEMINI_MODELS = (process.env.GEMINI_MODEL || "gemini-3.1-flash-lite,gemini-3.5-flash-lite")
+  .split(",")
+  .map((m) => m.trim())
+  .filter(Boolean);
+
+// Which one we are on. Moves forward only when a model's DAILY allowance is
+// gone, and never back - a model that is spent stays spent until tomorrow.
+let modelIndex = 0;
+const currentModel = () => GEMINI_MODELS[Math.min(modelIndex, GEMINI_MODELS.length - 1)];
+const urlFor = (model) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+// A 429 comes in two flavours and they need opposite responses: the
+// per-minute limit is worth waiting out, the per-day one never clears
+// before midnight and waiting on it just burns the rest of the run.
+const isDailyQuota = (errText) => /PerDay|per day/i.test(errText);
 
 // Small helper to pause execution (used for rate-limit backoff)
 function sleep(ms) {
@@ -103,7 +130,7 @@ async function callGeminiNow(parts, { jsonMode = true, maxRetries = 4 } = {}) {
 
   let attempt = 0;
   while (true) {
-    const res = await fetch(BASE_URL, {
+    const res = await fetch(urlFor(currentModel()), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -141,6 +168,25 @@ async function callGeminiNow(parts, { jsonMode = true, maxRetries = 4 } = {}) {
     //         common enough that not retrying it once cost a whole batch of
     //         rebuilt practice tests
     //   500/502/504 - transient errors on the way there
+    // The day's allowance for this model is gone. Waiting will not bring it
+    // back, so hand the work to the next model and carry on - the attempt
+    // counter is left alone, because this is not a failed attempt.
+    if (res.status === 429 && isDailyQuota(errText) && modelIndex < GEMINI_MODELS.length - 1) {
+      const spent = currentModel();
+      modelIndex++;
+      console.log(`${spent} has used its allowance for today - switching to ${currentModel()}.`);
+      continue;
+    }
+
+    // Every model's allowance is gone. Backing off does not help - the
+    // allowance returns at midnight, not in eighty seconds - and four
+    // rounds of waiting costs three minutes on every remaining call.
+    if (res.status === 429 && isDailyQuota(errText)) {
+      throw new Error(
+        `Every model has used its allowance for today (${GEMINI_MODELS.join(", ")}). Generation can continue tomorrow.`
+      );
+    }
+
     const RETRYABLE = [429, 500, 502, 503, 504];
     if (RETRYABLE.includes(res.status) && attempt < maxRetries) {
       attempt++;
@@ -154,7 +200,7 @@ async function callGeminiNow(parts, { jsonMode = true, maxRetries = 4 } = {}) {
       continue;
     }
 
-    throw new Error(`Gemini API error (${res.status}): ${errText}`);
+    throw new Error(`Gemini API error (${res.status}) from ${currentModel()}: ${errText}`);
   }
 }
 
@@ -434,7 +480,18 @@ ${avoidTexts.map((t, i) => `${i + 1}. ${t}`).join("\n")}`
 // The index is still accepted as a fallback, tried both ways round, for
 // answers whose text comes back reworded.
 function checkerAgrees(question, answer) {
-  const norm = (v) => String(v ?? "").trim().toLowerCase().replace(/\s+/g, " ").replace(/[.%,]+$/, "");
+  // Models answer in whatever shape they please. Some copy the option text
+  // back; some prefix it with the option number - "2. 6" for the 6 sitting
+  // at index 2. Both mean the same answer, and reading the second as a
+  // disagreement would reject correct questions by the hundred. Measured:
+  // two of the lite models answer that way every single time.
+  const norm = (v) =>
+    String(v ?? "")
+      .trim()
+      .replace(/^\s*[0-9]\s*[.):]\s*/, "")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .replace(/[.%,]+$/, "");
   const options = (question.options || []).map(norm);
   const keyed = options[question.correctIndex];
 
@@ -719,4 +776,15 @@ Return ONLY valid JSON, no extra text:
     return null;
   }
 }
-module.exports = { generateQuestions, verifyQuestion, verifyQuestions, repairQuestion, callGemini, extractQuestionsFromPDF };
+module.exports = {
+  generateQuestions,
+  verifyQuestion,
+  verifyQuestions,
+  repairQuestion,
+  callGemini,
+  extractQuestionsFromPDF,
+  // for the tests, and for a health screen that wants to say which model
+  // the day's questions are being written by
+  currentModel,
+  GEMINI_MODELS,
+};
