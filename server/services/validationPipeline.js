@@ -1,6 +1,6 @@
 const { verifyQuestions } = require("./geminiService");
 const { isHindiMedium, hasDevanagari, isLanguageNeutral } = require("../utils/language");
-const { isComprehension, refersToAPassage, carriesItsPassage } = require("../utils/comprehension");
+const { refersToAPassage, carriesItsPassage } = require("../utils/comprehension");
 
 // "What is 15% of 240?" and "what is 15 % of 240" are the same question.
 // Used both to spot repeats inside a batch and to catch a question the bank
@@ -138,7 +138,10 @@ function ruleBasedCheck(q) {
   // half a question. Every one of the first twelve Unseen Passage questions
   // read like that, and nine of twelve in अपठित गद्यांश - four options, a
   // correct index, a solution, and no passage anywhere.
-  if (isComprehension(q) || refersToAPassage(text)) {
+  // Judged by wording, not by chapter: CTET's comprehension chapters also
+  // carry teaching-method questions that mention passages in general, and
+  // those are answerable exactly as they stand.
+  if (refersToAPassage(text)) {
     if (!carriesItsPassage(text)) issues.push("refers to a passage the question does not contain");
   }
 

@@ -1,33 +1,46 @@
-// A comprehension question has to bring its passage with it.
+// A question that points at a particular passage has to bring that passage
+// with it.
 //
 // "According to the passage, why did the protagonist leave the village?" is
-// not a question - it is half of one. The student opens it and there is no
-// passage, no protagonist and no village. Every one of the twelve questions
-// in the first Unseen Passage test was like this, and nine of the twelve in
-// अपठित गद्यांश. They passed every check: four options, a correct index, a
-// solution, Hindi throughout. Nothing asked whether the question could
-// actually be answered.
+// half a question. The student opens it and there is no passage, no
+// protagonist and no village. Every one of the twelve questions in the first
+// Unseen Passage test read like that, and nine of twelve in अपठित गद्यांश -
+// four options, a correct index, a solution, and no passage anywhere.
 //
-// Reading Comprehension got it right on its own - each of its twelve carries
-// its passage inside the question text - which is the shape the other two
-// have to match.
+// What matters is DEFINITE reference. A pedagogy paper asks perfectly good
+// questions that mention passages in general:
+//
+//   "When A passage contains an unfamiliar idiom, what should a student
+//    rely on?"                                    - answerable, no passage needed
+//   "According to THE passage, why did he leave?" - unanswerable without one
+//
+// Judging by chapter instead of by wording threw away all of the first kind:
+// CTET's "Unseen Passage" chapter is half comprehension and half teaching
+// method, and 81 sound pedagogy questions were binned in one run before this
+// was fixed. So the chapter decides what to ASK the generator for; only the
+// wording decides what to refuse.
 
-// Chapters whose whole point is reading something and answering about it.
+// Chapters whose questions should carry a passage. Used for the prompt only.
 const COMPREHENSION = /unseen\s*passage|reading\s*comprehension|अपठित|गद्यांश|पद्यांश/i;
 
-// A question anywhere that leans on a passage it does not show. "the author
-// of 'Wings of Fire'" is a GK question and must not be caught, so "the
-// author" only counts when it is not followed by "of".
-const LEANS_ON_A_PASSAGE = [
-  /\bthe passage\b/i,
-  /\bthis passage\b/i,
+// Definite reference to a passage that should be right there.
+const POINTS_AT_A_PASSAGE = [
+  /\b(the|this|that|above|following|given)\s+passage\b/i,
   /\bin the text\b/i,
-  /\bparagraph\b/i,
   /\bthe narrator\b/i,
+  // "the author of 'Wings of Fire'" is a GK question about a book and must
+  // not be caught; "the tone of the author" must be.
   /\bthe author\b(?!\s+of\b)/i,
-  /गद्यांश/,
-  /अनुच्छेद/,
-  /पद्यांश/,
+  /\bthe\s+(first|second|third|fourth|last|above|following|given|opening|final)\s+paragraph\b/i,
+  // Hindi has no articles, so the postposition carries the definiteness:
+  // "गद्यांश के अनुसार", "गद्यांश में", "गद्यांश का शीर्षक" all point at one
+  // particular passage, while "गद्यांश पढ़ाते समय" is about teaching them.
+  // No \b on these: JavaScript word boundaries are defined on [A-Za-z0-9_],
+  // so they never match beside Devanagari and quietly let every Hindi one
+  // through - which is exactly what happened on the first attempt.
+  /गद्यांश\s*(के|में|का|की|से)/,
+  /अनुच्छेद\s*(के|में|का|की|से)/,
+  /पद्यांश\s*(के|में|का|की|से)/,
 ];
 
 // How long a question has to be before it can plausibly contain a passage.
@@ -35,10 +48,12 @@ const LEANS_ON_A_PASSAGE = [
 // 150 sits in the gap with room on both sides.
 const CARRIES_A_PASSAGE = 150;
 
+// For the prompt: should this chapter's questions be written self-contained?
 const isComprehension = ({ chapter, topic, subject } = {}) =>
   [chapter, topic, subject].some((s) => COMPREHENSION.test(String(s || "")));
 
-const refersToAPassage = (text) => LEANS_ON_A_PASSAGE.some((re) => re.test(String(text || "")));
+// For the gate: does this question point at a passage it should be showing?
+const refersToAPassage = (text) => POINTS_AT_A_PASSAGE.some((re) => re.test(String(text || "")));
 
 const carriesItsPassage = (text) => String(text || "").trim().length >= CARRIES_A_PASSAGE;
 
