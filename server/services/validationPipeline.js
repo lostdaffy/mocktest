@@ -1,5 +1,6 @@
 const { verifyQuestions } = require("./geminiService");
 const { isHindiMedium, hasDevanagari, isLanguageNeutral } = require("../utils/language");
+const { isComprehension, refersToAPassage, carriesItsPassage } = require("../utils/comprehension");
 
 // "What is 15% of 240?" and "what is 15 % of 240" are the same question.
 // Used both to spot repeats inside a batch and to catch a question the bank
@@ -129,6 +130,16 @@ function ruleBasedCheck(q) {
     if (!hasDevanagari(text)) issues.push("question must be written in Hindi, not English");
     const romanised = options.filter((o) => o && !isLanguageNeutral(o) && !hasDevanagari(o));
     if (romanised.length) issues.push("options must be in Hindi, not romanised");
+  }
+
+  // And the last thing nobody was checking: can it be answered at all?
+  //
+  // "According to the passage, why did the protagonist leave the village?" is
+  // half a question. Every one of the first twelve Unseen Passage questions
+  // read like that, and nine of twelve in अपठित गद्यांश - four options, a
+  // correct index, a solution, and no passage anywhere.
+  if (isComprehension(q) || refersToAPassage(text)) {
+    if (!carriesItsPassage(text)) issues.push("refers to a passage the question does not contain");
   }
 
   return { passed: issues.length === 0, issues };

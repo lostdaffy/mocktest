@@ -309,7 +309,7 @@ function isMendable(flagReason = "") {
   // "must be written in Hindi" is a translation job, not a rethink: the
   // question, its options and its answer all stay exactly as they are.
   const fixable = /solution too short|hindi|romanised/i.test(issues);
-  const fatal = /options|correctIndex|question text too short|solution is just the option/i.test(issues);
+  const fatal = /options|correctIndex|question text too short|solution is just the option|does not contain/i.test(issues);
   return fixable && !fatal;
 }
 

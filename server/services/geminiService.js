@@ -29,6 +29,7 @@ const fetch = require("node-fetch");
 // buy throughput with wrong answer keys, and the gate would spend the
 // savings rejecting them.
 const { isHindiMedium } = require("../utils/language");
+const { isComprehension } = require("../utils/comprehension");
 
 const GEMINI_MODELS = (process.env.GEMINI_MODEL || "gemini-3.1-flash-lite,gemini-3.5-flash-lite")
   .split(",")
@@ -387,6 +388,19 @@ ${syllabusLines.map((t, i) => `${i + 1}. ${t}`).join("\n")}
   // useless to someone sitting a Hindi paper.
   const hindiMedium = isHindiMedium({ subject, topic, syllabusTopics });
 
+  // A student sees one question at a time, so a comprehension question has to
+  // stand on its own. Asked for "unseen passage" questions without this, the
+  // model writes about a passage it never shows.
+  const comprehension = isComprehension({ topic, subject, chapter: topic });
+  const passageRules = comprehension
+    ? `
+COMPREHENSION - each question must stand alone:
+- Write the passage INSIDE the question text, then ask about it, so the question can be answered on its own.
+- Never refer to "the passage", "the author", "the narrator" or "the paragraph" without the passage being right there in the same question.
+- Give each question its OWN short passage of 2-3 sentences. Do not share one passage across questions - the student sees them one at a time.
+- Shape: <short passage> followed by the question about it.`
+    : "";
+
   const languageRules = hindiMedium
     ? `LANGUAGE (this subject is taught and examined in Hindi):
 - Write the question, all four options and the solution in HINDI, in Devanagari script.
@@ -416,7 +430,7 @@ ${syllabusBlock}${examplesBlock}${countLine}
 EXAM-REALISM RULES:
 ${difficultyInstruction}
 
-${languageRules}
+${languageRules}${passageRules}
 
 QUALITY RULES:
 - Each question has exactly 4 options, only ONE correct. Make wrong options plausible (not obviously wrong).
