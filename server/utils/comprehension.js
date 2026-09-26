@@ -24,14 +24,19 @@
 const COMPREHENSION = /unseen\s*passage|reading\s*comprehension|अपठित|गद्यांश|पद्यांश/i;
 
 // Definite reference to a passage that should be right there.
+//
+// Written as "THE <anything> passage/paragraph/text" rather than a list of
+// adjectives, because a list is always one word short: the first version
+// named first/second/last and then met "the CONCLUDING paragraph", and knew
+// "in the text" but not "BASED ON the text". Both were unanswerable and both
+// went through.
 const POINTS_AT_A_PASSAGE = [
-  /\b(the|this|that|above|following|given)\s+passage\b/i,
-  /\bin the text\b/i,
+  /\bthe\s+(\w+\s+){0,2}(passage|paragraph|text|extract)\b/i,
+  /\b(this|that|above|following|given)\s+(passage|paragraph|text|extract)\b/i,
   /\bthe narrator\b/i,
   // "the author of 'Wings of Fire'" is a GK question about a book and must
   // not be caught; "the tone of the author" must be.
   /\bthe author\b(?!\s+of\b)/i,
-  /\bthe\s+(first|second|third|fourth|last|above|following|given|opening|final)\s+paragraph\b/i,
   // Hindi has no articles, so the postposition carries the definiteness:
   // "गद्यांश के अनुसार", "गद्यांश में", "गद्यांश का शीर्षक" all point at one
   // particular passage, while "गद्यांश पढ़ाते समय" is about teaching them.
@@ -43,6 +48,18 @@ const POINTS_AT_A_PASSAGE = [
   /पद्यांश\s*(के|में|का|की|से)/,
 ];
 
+// An indefinite passage sets the frame for the whole sentence, and anything
+// definite after it refers back to that frame, not to something on the screen:
+//
+//   "When A PASSAGE is read to understand the gist of THE TEXT, this
+//    technique is called..."
+//
+// is a teaching question and answerable as it stands, even though "the text"
+// appears in it. Seven sound pedagogy questions were being refused over
+// exactly this before the frame was taken into account.
+const FRAMED_GENERICALLY =
+  /\b(a|an|any|every|each)\s+(unseen\s+|comprehension\s+|narrative\s+|given\s+)?(passage|extract|text)\b/i;
+
 // How long a question has to be before it can plausibly contain a passage.
 // The ones that work run 221-286 characters; the broken ones run 37-107.
 // 150 sits in the gap with room on both sides.
@@ -53,7 +70,11 @@ const isComprehension = ({ chapter, topic, subject } = {}) =>
   [chapter, topic, subject].some((s) => COMPREHENSION.test(String(s || "")));
 
 // For the gate: does this question point at a passage it should be showing?
-const refersToAPassage = (text) => POINTS_AT_A_PASSAGE.some((re) => re.test(String(text || "")));
+const refersToAPassage = (text) => {
+  const t = String(text || "");
+  if (FRAMED_GENERICALLY.test(t)) return false;
+  return POINTS_AT_A_PASSAGE.some((re) => re.test(t));
+};
 
 const carriesItsPassage = (text) => String(text || "").trim().length >= CARRIES_A_PASSAGE;
 
