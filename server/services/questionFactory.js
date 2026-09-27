@@ -266,6 +266,9 @@ async function recheckQuestions({ limit = 20, subject, topic } = {}) {
       // 99 of 100 was never mentioned.
       for (const t of holding) {
         shortened.set(String(t._id), {
+          // The id, so the caller can put a replacement in rather than only
+          // telling somebody the test is short.
+          _id: t._id,
           title: t.title,
           left: t.questions.length - 1,
           live: t.publishStatus === "published",

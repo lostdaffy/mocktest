@@ -4,6 +4,7 @@ const ExamPattern = require("../models/ExamPattern");
 const Subject = require("../models/Subject");
 const RejectedQuestion = require("../models/RejectedQuestion");
 const { createVerifiedQuestions, qualityNote } = require("../services/questionFactory");
+const { refillTest, refillTests, refillNote, targetSize } = require("../services/testTopUp");
 
 // How much of every mock is made of REAL previous-year questions. The rest
 // is generated fresh. If the PYQ Bank doesn't have enough for a subject,
@@ -367,15 +368,22 @@ async function removeQuestionFromMock(req, res) {
     }
   }
 
-  const short = Math.max(0, PRACTICE_TEST_SIZE - test.questions.length);
+  // ...and another takes its place, right now. Telling the admin the test is
+  // short and leaving it there is how a test ends up serving five questions.
+  const refilled = test.type === "practice" ? [await refillTest(test._id)] : [];
+  const after = await Test.findById(test._id).select("questions").lean();
+  const remaining = (after?.questions || test.questions).length;
+  const short = Math.max(0, PRACTICE_TEST_SIZE - remaining);
+
   res.json({
     message:
       "Question removed" +
       (deleted ? " and deleted from the bank" : ` (kept - ${stillUsedBy} other test(s) use it)`) +
-      (short && test.type === "practice" ? `. This test is ${short} short - add replacements` : ""),
-    remainingCount: test.questions.length,
+      refillNote(refilled),
+    remainingCount: remaining,
     short,
     deletedFromBank: deleted,
+    refilled,
   });
 }
 
@@ -844,6 +852,39 @@ async function publishPracticeTest(req, res) {
   res.json({ message: "Practice test is live", test });
 }
 
+// POST /api/exam-series/practice/fill-short (admin)
+//
+// Every practice test that is below its size, filled. Removal fills its own
+// hole now, so this is for the ones that went short before it did - the purge
+// of 127 untrustworthy answer keys left 26 live tests wanting.
+async function fillShortTests(req, res) {
+  const limit = Math.min(Math.max(Number(req.body?.limit) || 5, 1), 15);
+
+  const tests = await Test.find({ type: "practice" }).select("title questions publishStatus").lean();
+  const short = tests
+    .filter((t) => (t.questions || []).length < PRACTICE_TEST_SIZE)
+    .sort((a, b) => (a.questions || []).length - (b.questions || []).length);
+
+  if (!short.length) return res.json({ message: "Every practice test is full", filled: [], remaining: 0 });
+
+  // A few at a time: each replacement costs API calls, and the free tier
+  // allows about fifteen a minute.
+  const batch = short.slice(0, limit);
+  const filled = await refillTests(batch.map((t) => t._id));
+
+  const added = filled.reduce((n, r) => n + r.added, 0);
+  const done = filled.filter((r) => r.filled).length;
+  const remaining = short.length - done;
+
+  res.json({
+    message:
+      `${added} question(s) added across ${batch.length} test(s); ${done} now full` +
+      (remaining ? `. ${remaining} still short - run it again` : ". Every practice test is full"),
+    filled,
+    remaining,
+  });
+}
+
 // Back to draft, so a published test can be corrected. Questions are not
 // touched - only whether students can see it.
 async function unpublishPracticeTest(req, res) {
@@ -880,4 +921,5 @@ module.exports = {
   getMockSectionStatus,
   publishPracticeTest,
   unpublishPracticeTest,
+  fillShortTests,
 };

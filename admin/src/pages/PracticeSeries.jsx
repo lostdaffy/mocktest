@@ -33,6 +33,7 @@ export default function PracticeSeries() {
   // Review modal: shows every question of a test so admin can check quality
   const [reviewTest, setReviewTest] = useState(null);
   const [refilling, setRefilling] = useState(false);
+  const [fillingShort, setFillingShort] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
 
   async function openReview(testId) {
@@ -155,6 +156,23 @@ export default function PracticeSeries() {
     }
   }
 
+  // Every practice test that is below its size, filled. Removal fills its own
+  // hole now, so this is for the ones that went short before it did - the
+  // purge of 127 untrustworthy answer keys left 26 live tests wanting.
+  async function fillShort() {
+    setFillingShort(true);
+    try {
+      const res = await api.post("/exam-series/practice/fill-short", { limit: 5 });
+      toast.success(res.data?.message || "Filled");
+      load(selectedSubject?.name, { silent: true });
+      if (openChapter && selectedSubject) loadChapterTests(selectedSubject.name, openChapter.name);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Couldn’t fill the short tests");
+    } finally {
+      setFillingShort(false);
+    }
+  }
+
   // Back to draft. Questions are untouched - this only decides whether
   // students can see it. Needed because a published test is locked for
   // editing, so without this a test that went out short would stay short.
@@ -208,7 +226,9 @@ export default function PracticeSeries() {
   if (!selectedSubject) {
     return (
       <div>
-        <PageHeader
+        <FillShortBanner onFill={fillShort} busy={fillingShort} />
+
+      <PageHeader
           eyebrow="Content"
           title="Subject Practice"
           subtitle="Pick a subject to see its chapters, then build Easy/Medium/Hard/Advanced tests for each one."
@@ -596,6 +616,23 @@ export default function PracticeSeries() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+// A test that is short says so here, with the one button that fixes it.
+// Removal fills its own hole now, so this only ever holds the older ones -
+// the purge of 127 untrustworthy answer keys left 26 live tests wanting.
+function FillShortBanner({ onFill, busy }) {
+  return (
+    <div className="rv-card p-4 mb-6 flex items-center justify-between gap-4 flex-wrap border-l-4 border-l-warn">
+      <p className="text-sm text-ink-soft">
+        Any practice test holding fewer than 12 questions can be topped up from here. Replacements go through
+        the same quality gate and are checked against what the chapter has already asked, so one is never a
+        reworded copy of what is still in the test.
+      </p>
+      <button onClick={onFill} disabled={busy} className="rv-btn-primary disabled:opacity-60 shrink-0">
+        {busy ? "Filling..." : "Fill short tests"}
+      </button>
     </div>
   );
 }

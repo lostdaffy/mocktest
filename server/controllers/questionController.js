@@ -5,6 +5,7 @@ const User = require("../models/User");
 const Subscription = require("../models/Subscription");
 const { runValidationPipeline } = require("../services/validationPipeline");
 const { recheckQuestions } = require("../services/questionFactory");
+const { refillTests, refillNote } = require("../services/testTopUp");
 
 // GET /api/questions?examType=&subject=&topic=&status=  (admin/browse use)
 async function listQuestions(req, res) {
@@ -67,16 +68,20 @@ async function rejectQuestion(req, res) {
     live: t.publishStatus === `published`,
   }));
 
+  // ...and another takes its place. Saying "now short - regenerate to fill"
+  // and leaving it there is how 26 live tests ended up serving fewer
+  // questions than they promised.
+  const refilled = affected.length ? await refillTests(affected.map((t) => t._id)) : [];
+
   res.json({
     message:
       "Question rejected" +
       (affected.length ? ` and removed from ${affected.length} test(s)` : "") +
-      (nowShort.length
-        ? `. Now short: ${nowShort.map((t) => t.title + " (" + t.left + ")").join(", ")} - regenerate to fill`
-        : ""),
+      refillNote(refilled),
     question: q,
     removedFromTests: affected.length,
-    testsNowShort: nowShort,
+    testsNowShort: refilled.filter((r) => !r.filled).map((r) => ({ title: r.title, left: r.to, target: r.target })),
+    refilled,
   });
 }
 
@@ -92,16 +97,17 @@ async function recheckReviewQueue(req, res) {
   const r = await recheckQuestions({ limit, subject, topic });
   if (!r.looked) return res.json({ message: "Nothing in the review queue", ...r });
 
+  // Whatever left circulation leaves a hole; fill it before answering.
+  const refilled = r.testsNowShort.length
+    ? await refillTests(r.testsNowShort.map((t) => t._id).filter(Boolean))
+    : [];
+
   const parts = [`Checked ${r.looked}`];
   if (r.published) parts.push(`${r.published} published${r.repaired ? ` (${r.repaired} after a repair)` : ""}`);
   if (r.deleted) parts.push(`${r.deleted} deleted`);
   if (r.keptForHistory) parts.push(`${r.keptForHistory} marked rejected but kept, students had already answered them`);
 
-  const shortNote = r.testsNowShort.length
-    ? `. Now short: ${r.testsNowShort.map((t) => `${t.title} (${t.left})`).join(", ")} - add questions to fill them`
-    : "";
-
-  res.json({ message: parts.join(", ") + shortNote, ...r });
+  res.json({ message: parts.join(", ") + refillNote(refilled), ...r, refilled });
 }
 
 // POST /api/questions (admin manual add, or used internally after AI generation)
