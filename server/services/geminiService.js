@@ -23,15 +23,20 @@ const fetch = require("node-fetch");
 // though, so when one model is spent the next one carries on: the same
 // day's work continues at the same quality instead of waiting.
 //
-// Both defaults were measured on six questions whose answers were worked out
-// by hand: 3.1-flash-lite and 3.5-flash-lite sit in the same tier. Dropping
-// to an older model for a bigger allowance is not on this list - it would
-// buy throughput with wrong answer keys, and the gate would spend the
-// savings rejecting them.
+// Every model on this list was measured on the same six questions, worked out
+// by hand first: 3.1-flash-lite, 3.5-flash-lite and 3.8-flash each got 6 of 6.
+// They are here for their allowances, not their speed - the quotas are per
+// model, so three of them is 1500 requests a day instead of 1000, at no cost.
+//
+// What is deliberately NOT here: gemini-flash-lite-latest scored 5 of 6 (it
+// counts seven multiples of 30 between 100 and 300, where there are six), and
+// gemini-3.7-flash answers 503 every time it is asked. An older model with a
+// bigger allowance would buy throughput with wrong answer keys, and the gate
+// would spend the savings rejecting them.
 const { isHindiMedium } = require("../utils/language");
 const { isComprehension } = require("../utils/comprehension");
 
-const GEMINI_MODELS = (process.env.GEMINI_MODEL || "gemini-3.1-flash-lite,gemini-3.5-flash-lite")
+const GEMINI_MODELS = (process.env.GEMINI_MODEL || "gemini-3.1-flash-lite,gemini-3.5-flash-lite,gemini-3.8-flash")
   .split(",")
   .map((m) => m.trim())
   .filter(Boolean);
