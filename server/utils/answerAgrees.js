@@ -32,8 +32,26 @@ const singleNumber = (option) => {
 
 // Rounding is normal in these solutions - 16.3636... written as 16.36 - so a
 // small relative difference still counts as the same number.
-const TOLERANCE = 0.02;
-const same = (a, b) => Math.abs(a - b) <= TOLERANCE * Math.max(1, Math.abs(b));
+//
+// But it has to be smaller than the gap between the options, or the check
+// waves through the very thing it is for. A compound-interest question with
+// options 200 / 202 / 204 / 206 ticked 204 while its own solution ended on
+// 202, and a flat 2% allowed 4 either way, so the two looked like the same
+// number. The tolerance now shrinks to fit the options it is judging.
+const RELATIVE = 0.02;
+const GAP_SHARE = 0.4;
+
+const smallestGap = (options) => {
+  const sorted = [...new Set(options)].sort((a, b) => a - b);
+  let gap = Infinity;
+  for (let i = 1; i < sorted.length; i++) gap = Math.min(gap, sorted[i] - sorted[i - 1]);
+  return gap;
+};
+
+const same = (a, b, gap) => {
+  const allowed = Math.min(RELATIVE * Math.max(1, Math.abs(b)), GAP_SHARE * gap);
+  return Math.abs(a - b) <= allowed;
+};
 
 /**
  * False when the question's own solution never arrives at the answer it ticks.
@@ -49,7 +67,10 @@ function solutionReachesTheAnswer(q) {
   const working = numbersIn(q.solution);
   if (!working.length) return true;
 
-  return working.some((n) => same(n, marked));
+  const gap = smallestGap(options);
+  if (!isFinite(gap) || gap <= 0) return true;
+
+  return working.some((n) => same(n, marked, gap));
 }
 
 module.exports = { solutionReachesTheAnswer, numbersIn, singleNumber };
