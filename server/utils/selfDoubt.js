@@ -19,7 +19,13 @@
 
 const ARGUES_WITH_ITSELF = [
   /\bwait\b/i,
-  /\bre-?check/i,
+  // The whole family, not just "re-check". Naming one of them let this
+  // through, on a question whose solution reads "Rate = 8.07% ... however
+  // calculation based on common CGL set leads to 7%. Let's RE-VERIFY: ...
+  // 532/6588 = 8.07%. If we assume standard values, 7% is standard." - with
+  // 7% ticked and 8% sitting right there among the options.
+  /\bre-?(check|verify|calculat|examin|do)\b/i,
+  /if we assume standard/i,
   /\bcorrection\s*:/i,
   /\b(i made a|my) mistake\b/i,
   // Working out the real answer and then writing down an option instead.

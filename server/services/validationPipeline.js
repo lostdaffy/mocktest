@@ -2,6 +2,7 @@ const { verifyQuestions } = require("./geminiService");
 const { isHindiMedium, hasDevanagari, isLanguageNeutral } = require("../utils/language");
 const { refersToAPassage, carriesItsPassage } = require("../utils/comprehension");
 const { arguesWithItself } = require("../utils/selfDoubt");
+const { solutionReachesTheAnswer } = require("../utils/answerAgrees");
 
 // "What is 15% of 240?" and "what is 15 % of 240" are the same question.
 // Used both to spot repeats inside a batch and to catch a question the bank
@@ -121,6 +122,12 @@ function ruleBasedCheck(q) {
   // one of them worked the answer out correctly three times and then wrote
   // "Correction: Correct option is 40 if calc is wrong."
   if (arguesWithItself(solution)) issues.push("solution argues with itself, so the answer key cannot be trusted");
+
+  // The arithmetic check, and the surest of the lot: a solution that works
+  // the question out and ends on 60 km/h, next to a ticked option of 75.
+  if (!solutionReachesTheAnswer(q)) {
+    issues.push("the solution never arrives at the answer that is ticked");
+  }
 
   // The app is bilingual and most of these students read Hindi first. A
   // question without Hindi is half a question for them.
