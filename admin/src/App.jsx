@@ -14,6 +14,7 @@ import Reports from "./pages/Reports";
 import ExamSeries from "./pages/ExamSeries";
 import ExamMocks from "./pages/ExamMocks";
 import PracticeSeries from "./pages/PracticeSeries";
+import Generation from "./pages/Generation";
 import PyqBank from "./pages/PyqBank";
 import Coupons from "./pages/Coupons";
 import Sessions from "./pages/Sessions";
@@ -95,6 +96,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <ExamMocks />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/generation"
+              element={
+                <ProtectedRoute>
+                  <Generation />
                 </ProtectedRoute>
               }
             />

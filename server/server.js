@@ -308,6 +308,7 @@ app.use("/api/exam-series", examSeriesRoutes);
 app.use("/api/live-exams", liveExamRoutes);
 app.use("/api/pyq", pyqRoutes);
 app.use("/api/admin/coupons", couponRoutes);
+app.use("/api/generation", require("./routes/generationRoutes"));
 
 // Fallback error handler.
 //
@@ -339,6 +340,13 @@ async function start() {
   const { runLiveExamTick } = require("./jobs/liveExamScheduler");
   const tick = setInterval(runLiveExamTick, 30_000);
 
+  // The generation queue. Every few seconds it takes the next test that
+  // still has to be built. One at a time, because the free tier allows
+  // about fifteen requests a minute and one test costs several - and
+  // because "now building X" is only honest if there is one X.
+  const { runGenerationTick } = require("./jobs/generationWorker");
+  const genTick = setInterval(runGenerationTick, 5_000);
+
   // Render sends SIGTERM on every deploy and then kills the process. Without
   // this, requests in flight at that moment are cut off mid-answer - and the
   // worst possible moment for that is a student submitting a live exam.
@@ -349,6 +357,7 @@ async function start() {
     shuttingDown = true;
     console.log(`${signal} received - finishing in-flight requests, then shutting down...`);
     clearInterval(tick);
+    clearInterval(genTick);
 
     const forceExit = setTimeout(() => {
       console.error("Requests didn't finish in 10s - shutting down anyway.");

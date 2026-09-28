@@ -15,6 +15,7 @@ import {
   RiCoupon3Line,
   RiShieldKeyholeLine,
   RiCloseLine,
+  RiMagicLine,
 } from "@remixicon/react";
 
 // Grouped rather than one flat list of 11 - with this many destinations a
@@ -27,6 +28,7 @@ const NAV_GROUPS = [
   {
     label: "Content",
     items: [
+      { to: "/generation", label: "Generation", Icon: RiMagicLine },
       { to: "/exam-series", label: "Exam Mock Series", Icon: RiFileList3Line },
       { to: "/practice-series", label: "Subject Practice", Icon: RiBookOpenLine },
       { to: "/pyq-bank", label: "PYQ Bank", Icon: RiFilePaperLine },

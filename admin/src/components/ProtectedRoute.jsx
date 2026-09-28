@@ -8,6 +8,7 @@ import Sidebar from "./Sidebar";
 // Route -> page name, used for the topbar label so the admin always knows
 // where they are (especially on mobile, where the sidebar is hidden).
 const ROUTE_TITLES = [
+  ["/generation", "Generation"],
   ["/exam-series", "Exam Mock Series"],
   ["/practice-series", "Subject Practice"],
   ["/pyq-bank", "PYQ Bank"],

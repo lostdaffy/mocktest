@@ -128,12 +128,21 @@ async function listExamMocks(req, res) {
 // Generates a NEW mock test for a SPECIFIC exam. Questions are generated
 // exam-specifically (strict content isolation) and tagged with examStage so
 // they never mix with other exams.
-async function generateExamMock(req, res) {
-  try {
-    const { examStage } = req.params;
+/**
+ * Builds one mock for an exam and returns a line describing what was built.
+ *
+ * Separated from the HTTP handler because the generation queue needs to build
+ * mocks too, and two implementations of "assemble a paper from its pattern"
+ * would drift apart the first time one of them was fixed.
+ *
+ * Throws rather than returning an error shape: the caller decides whether
+ * that becomes a 500 or a failed job.
+ */
+async function buildMockForExam(examStage) {
+  {
     const pattern = await ExamPattern.findOne({ examType: examStage, isActive: true });
     if (!pattern) {
-      return res.status(404).json({ message: `No exam pattern found for ${examStage}. Create the pattern first.` });
+      throw new Error(`No exam pattern found for ${examStage}. Create the pattern first.`);
     }
 
     // Create the draft mock UPFRONT and empty, so that even if generation
@@ -259,9 +268,7 @@ async function generateExamMock(req, res) {
     if (finalCount === 0) {
       // Nothing generated - clean up the empty mock
       await Test.findByIdAndDelete(test._id);
-      return res.status(400).json({
-        message: "No questions could be generated (rate limit or API issue). Try again in a minute.",
-      });
+      throw new Error("No questions could be generated (rate limit or API issue). Try again in a minute.");
     }
 
     // What a full paper of this exam is, so the count means something.
@@ -273,13 +280,26 @@ async function generateExamMock(req, res) {
         ? ` (Some batches were skipped because of the rate limit - use "Add questions" to finish the rest.)`
         : "");
 
-    res.status(201).json({
+    return {
       message: `Mock #${test.seriesNumber} created — ${finalCount} of ${paperSize} questions (${pyqUsed} from past papers, ${finalCount - pyqUsed} new).${note} Review, then publish once it is full.`,
       test: { _id: test._id, title: test.title, questionCount: finalCount },
-    });
+      full: finalCount >= paperSize,
+    };
+  }
+}
+
+// POST /api/exam-series/:examStage/generate-mock (admin)
+async function generateExamMock(req, res) {
+  try {
+    const built = await buildMockForExam(req.params.examStage);
+    res.status(201).json(built);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Generation failed: " + err.message });
+    const notFound = /No exam pattern found/.test(err.message);
+    const nothingBuilt = /No questions could be generated/.test(err.message);
+    res
+      .status(notFound ? 404 : nothingBuilt ? 400 : 500)
+      .json({ message: notFound || nothingBuilt ? err.message : "Generation failed: " + err.message });
   }
 }
 
@@ -517,10 +537,20 @@ async function listSubjectsForAdmin(req, res) {
 // POST /api/exam-series/practice/generate (admin)
 // body: { subject, chapter, topics[], difficulty }
 // Generates an adaptive-level practice test for a chapter (easy/medium/hard/advanced).
-async function generatePracticeTest(req, res) {
-  try {
-    const { subject, chapter, topics, difficulty = "easy" } = req.body;
-    if (!subject || !chapter) return res.status(400).json({ message: "subject and chapter are required" });
+/**
+ * Builds one practice test and returns a line describing what was built.
+ *
+ * Separated from the HTTP handler so the generation queue can call it
+ * directly. Writing this a second time inside the worker is exactly how the
+ * worker ended up creating Test documents without examType - there is one
+ * implementation now, and it is this one.
+ *
+ * Throws rather than returning an error shape; the caller decides whether
+ * that is a 400 or a failed job.
+ */
+async function buildPracticeTest({ subject, chapter, topics, difficulty = "easy" }) {
+  {
+    if (!subject || !chapter) throw new Error("subject and chapter are required");
 
     const topicList = topics && topics.length ? topics : [chapter];
     // "advanced" maps to hard-difficulty questions (hardest we generate)
@@ -611,13 +641,22 @@ async function generatePracticeTest(req, res) {
       createdBy: "admin",
     });
 
-    res.status(201).json({
+    return {
       message: `${chapter} ${difficulty} test created — ${allQuestionIds.length} questions${qualityNote(quality)}. Review and publish.`,
       test: { _id: test._id, title: test.title, questionCount: allQuestionIds.length },
-    });
+    };
+  }
+}
+
+// POST /api/exam-series/practice/generate (admin)
+async function generatePracticeTest(req, res) {
+  try {
+    const built = await buildPracticeTest(req.body || {});
+    res.status(201).json(built);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Generation failed: " + err.message });
+    const bad = /are required|No questions were generated/.test(err.message);
+    res.status(bad ? 400 : 500).json({ message: bad ? err.message : "Generation failed: " + err.message });
   }
 }
 
@@ -903,6 +942,8 @@ async function unpublishPracticeTest(req, res) {
 }
 
 module.exports = {
+  buildMockForExam,
+  buildPracticeTest,
   listExams,
   listExamMocks,
   generateExamMock,
