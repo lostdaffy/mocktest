@@ -616,9 +616,7 @@ async function buildPracticeTest({ subject, chapter, topics, difficulty = "easy"
     }
 
     if (allQuestionIds.length === 0) {
-      return res.status(400).json({
-        message: "No questions were generated (rate limit or API issue). Wait a minute and try again.",
-      });
+      throw new Error("No questions were generated (rate limit or API issue). Wait a minute and try again.");
     }
 
     const lastTest = await Test.findOne({ type: "practice", subject, topic: chapter, difficultyLevel: difficulty }).sort({
