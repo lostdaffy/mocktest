@@ -381,6 +381,16 @@ export default function ResultScreen({
       ? "fitness"
       : "refresh";
 
+  // What the wrong answers actually cost. The score already has it taken
+  // off; without this the student only sees the number that is left, and
+  // cannot tell whether guessing paid off - which is the one thing that
+  // changes how they sit the next paper.
+  const negPerWrong =
+    attempt.negativeMarking ?? null;
+
+  const marksLost =
+    attempt.marksLost ?? null;
+
   const correctCount =
     attempt.correctCount || 0;
 
@@ -631,6 +641,27 @@ export default function ResultScreen({
           >
             TOTAL SCORE
           </Text>
+
+          {negPerWrong !== null &&
+            (marksLost > 0 ? (
+              <Text
+                style={
+                  styles.negativeNote
+                }
+              >
+                −{marksLost} for{" "}
+                {wrongCount} wrong (
+                {negPerWrong} each)
+              </Text>
+            ) : negPerWrong === 0 ? (
+              <Text
+                style={
+                  styles.noNegativeNote
+                }
+              >
+                No negative marking
+              </Text>
+            ) : null)}
         </View>
 
         {/* PROGRESS */}
@@ -1796,6 +1827,22 @@ const styles =
       fontWeight: "600",
       color: colors.slateSoft,
       marginLeft: 3,
+    },
+
+    negativeNote: {
+      fontSize: 11,
+      lineHeight: 15,
+      fontWeight: "700",
+      color: colors.danger,
+      marginTop: 6,
+    },
+
+    noNegativeNote: {
+      fontSize: 11,
+      lineHeight: 15,
+      fontWeight: "700",
+      color: colors.slateSoft,
+      marginTop: 6,
     },
 
     scoreLabel: {

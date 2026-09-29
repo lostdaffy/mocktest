@@ -573,13 +573,17 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
   const marksPerQ = test.marksPerQuestion || 1;
   const negMark = test.negativeMarking ?? 0.25;
   const totalMarks = test.questions.length * marksPerQ;
-  const score = correctCount * marksPerQ - wrongCount * negMark;
+  const marksLost = Number((wrongCount * negMark).toFixed(2));
+  const score = correctCount * marksPerQ - marksLost;
   const accuracy = correctCount + wrongCount > 0 ? Math.round((correctCount / (correctCount + wrongCount)) * 100) : 0;
 
   const attemptData = {
     answers: evaluatedAnswers,
     score,
     totalMarks,
+    negativeMarking: negMark,
+    marksPerQuestion: marksPerQ,
+    marksLost,
     correctCount,
     wrongCount,
     skippedCount,
@@ -648,7 +652,10 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
     levelUpdate = await updateChapterMastery(userId, test.subject, test.topic, accuracy);
   }
 
-  return { attempt, score, totalMarks, correctCount, wrongCount, skippedCount, accuracy, levelUpdate };
+  return {
+    attempt, score, totalMarks, correctCount, wrongCount, skippedCount, accuracy, levelUpdate,
+    negativeMarking: negMark, marksPerQuestion: marksPerQ, marksLost,
+  };
 }
 
 async function submitTest(req, res) {
@@ -676,6 +683,9 @@ async function submitTest(req, res) {
           wrongCount: attemptDoc.wrongCount,
           skippedCount: attemptDoc.skippedCount,
           accuracy: attemptDoc.accuracy,
+          negativeMarking: attemptDoc.negativeMarking,
+          marksPerQuestion: attemptDoc.marksPerQuestion,
+          marksLost: attemptDoc.marksLost,
           rank: attemptDoc.rank,
           percentile: attemptDoc.percentile,
           levelUpdate: null,
@@ -698,6 +708,9 @@ async function submitTest(req, res) {
       wrongCount: result.wrongCount,
       skippedCount: result.skippedCount,
       accuracy: result.accuracy,
+      negativeMarking: result.negativeMarking,
+      marksPerQuestion: result.marksPerQuestion,
+      marksLost: result.marksLost,
       rank: result.attempt.rank,
       percentile: result.attempt.percentile,
       levelUpdate: result.levelUpdate, // { newLevel, isCompleted } when a chapter test promoted the student

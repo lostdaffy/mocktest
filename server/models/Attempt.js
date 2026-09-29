@@ -17,6 +17,13 @@ const attemptSchema = new mongoose.Schema(
 
     score: { type: Number, default: 0 },
     totalMarks: { type: Number, default: 0 },
+
+    // What the negative marking actually cost, recorded at the moment of
+    // grading. Kept on the attempt rather than read from the test, because
+    // an exam pattern edited later must not quietly rewrite an old result.
+    negativeMarking: { type: Number, default: 0 },
+    marksPerQuestion: { type: Number, default: 1 },
+    marksLost: { type: Number, default: 0 },
     correctCount: { type: Number, default: 0 },
     wrongCount: { type: Number, default: 0 },
     skippedCount: { type: Number, default: 0 },
