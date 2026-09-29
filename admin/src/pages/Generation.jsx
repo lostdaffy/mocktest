@@ -3,6 +3,12 @@ import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 
+// Deliberately left empty for now - these go stale in weeks, so they are not
+// worth generating before launch. Named once, and used both for the count on
+// the button and for what the button actually queues, because a button that
+// promises 38 and queues 31 is a button nobody trusts again.
+const LEFT_ALONE = ["Current Affairs"];
+
 // The generation queue, made visible.
 //
 // Filling the bank used to mean holding a browser tab open and asking someone
@@ -18,7 +24,10 @@ export default function Generation() {
 
   async function load({ silent = false } = {}) {
     try {
-      const [s, g] = await Promise.all([api.get("/generation/status"), api.get("/generation/gaps")]);
+      const [s, g] = await Promise.all([
+        api.get("/generation/status"),
+        api.get("/generation/gaps", { params: { exclude: LEFT_ALONE.join(",") } }),
+      ]);
       setStatus(s.data);
       setGaps(g.data);
     } catch (err) {
@@ -108,7 +117,7 @@ export default function Generation() {
         <div className="flex flex-wrap gap-2 mt-5">
           <button
             onClick={() =>
-              act("enqueue", () => api.post("/generation/enqueue", { practice: true, mocks: false, exclude: ["Current Affairs"] }))
+              act("enqueue", () => api.post("/generation/enqueue", { practice: true, mocks: false, exclude: LEFT_ALONE }))
             }
             disabled={!!busy}
             className="rv-btn-primary disabled:opacity-60"
@@ -143,6 +152,11 @@ export default function Generation() {
               {busy === "retry" ? "Retrying..." : `Retry ${failed} failed`}
             </button>
           )}
+
+          <p className="w-full text-xs text-slate-soft mt-1">
+            {LEFT_ALONE.join(", ")} is left out on purpose — it goes stale too quickly to be worth
+            generating before launch.
+          </p>
 
           {waiting > 0 && (
             <button
