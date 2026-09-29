@@ -439,6 +439,7 @@ ${languageRules}${passageRules}
 
 QUALITY RULES:
 - Each question has exactly 4 options, only ONE correct. Make wrong options plausible (not obviously wrong).
+- All four options must be about the SAME LENGTH and the same level of detail. Do not let the correct one be the longest, the most careful or the most qualified - a student who does not know the answer must have nothing to go on. If the right answer needs a condition spelled out, give the wrong ones a condition too.
 ${shapeReminder}
 - Questions must be factually accurate and unambiguous.
 - Solutions must be short, correct, step-by-step.
