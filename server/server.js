@@ -344,8 +344,23 @@ async function start() {
   // still has to be built. One at a time, because the free tier allows
   // about fifteen requests a minute and one test costs several - and
   // because "now building X" is only honest if there is one X.
-  const { runGenerationTick } = require("./jobs/generationWorker");
+  const { runGenerationTick, reclaimStuckJobs, releaseCurrentJob } = require("./jobs/generationWorker");
+
+  // This instance stops whenever nobody is using the site, which can happen
+  // in the middle of a build. The job it was working on stays marked running
+  // and nothing ever picks it up again, so the queue stops dead. Any job
+  // still marked running at startup belongs to a process that is gone.
+  await reclaimStuckJobs({ all: true }).catch((err) =>
+    console.error("Could not reclaim interrupted generation jobs:", err.message)
+  );
+
   const genTick = setInterval(runGenerationTick, 5_000);
+
+  // A run is hours of work in a process the free plan stops as soon as
+  // nobody is visiting. See jobs/keepAwake.js - it only pings while the
+  // queue actually has something left to build.
+  const { startKeepAwake, stopKeepAwake } = require("./jobs/keepAwake");
+  if (startKeepAwake()) console.log("Keep-awake on while the generation queue has work.");
 
   // Render sends SIGTERM on every deploy and then kills the process. Without
   // this, requests in flight at that moment are cut off mid-answer - and the
@@ -358,6 +373,11 @@ async function start() {
     console.log(`${signal} received - finishing in-flight requests, then shutting down...`);
     clearInterval(tick);
     clearInterval(genTick);
+    stopKeepAwake();
+
+    // Hand back the test being built so it is queued again immediately,
+    // rather than waiting out the watchdog after the deploy.
+    await releaseCurrentJob().catch(() => {});
 
     const forceExit = setTimeout(() => {
       console.error("Requests didn't finish in 10s - shutting down anyway.");
