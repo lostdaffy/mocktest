@@ -15,6 +15,7 @@ const {
 } = require("../controllers/liveExamController");
 const { protect, adminOnly } = require("../middleware/auth");
 const asyncRoute = require("../utils/asyncRoute");
+const { addManualQuestionsToLive } = require("../controllers/manualMockController");
 
 // Admin-only: building and managing live exam papers, kept fully separate
 // from the Mock Tests series (server/routes/examSeriesRoutes.js).
@@ -26,6 +27,8 @@ router.delete("/:id", protect, adminOnly, asyncRoute(deleteLiveExam));
 router.get("/:id/section-status", protect, adminOnly, asyncRoute(getLiveExamSectionStatus));
 router.get("/:id/attempts", protect, adminOnly, asyncRoute(getLiveExamAttempts));
 router.post("/:id/add-questions", protect, adminOnly, asyncRoute(addQuestionsToLiveExam));
+// Questions a person wrote - typed in or from a spreadsheet.
+router.post("/:id/manual-questions", protect, adminOnly, asyncRoute(addManualQuestionsToLive));
 router.delete("/:id/question/:questionId", protect, adminOnly, asyncRoute(removeQuestionFromLiveExam));
 router.patch("/:id/publish", protect, adminOnly, asyncRoute(publishLiveExam));
 router.patch("/:id/cancel", protect, adminOnly, asyncRoute(cancelLiveExam));

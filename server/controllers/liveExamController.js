@@ -276,6 +276,8 @@ async function cancelLiveExam(req, res) {
 
   test.publishStatus = "archived";
   await test.save();
+  // Don't wait out the cache minute to stop serving a cancelled paper.
+  require("../utils/liveTestCache").forget(test._id);
   res.json({ message: "Live exam cancelled", test });
 }
 

@@ -258,10 +258,10 @@ async function getPracticeSeries(req, res) {
 
 // GET /api/tests/:id  -> full test with questions (without revealing correct answers)
 async function getTest(req, res) {
-  const test = await Test.findById(req.params.id).populate({
-    path: "questions",
-    select: "text textHi options optionsHi subject topic difficulty", // correctIndex & solution withheld until submit
-  });
+  // correctIndex & solution withheld until submit. A live paper is read once
+  // and shared by everyone opening it - see utils/liveTestCache.js.
+  const { testForStudent } = require("../utils/liveTestCache");
+  const test = await testForStudent(req.params.id);
   if (!test) return res.status(404).json({ message: "Test not found" });
 
   // PYQ: free-by-recency, not a usage counter - a paper from this year or
@@ -319,17 +319,41 @@ async function getTest(req, res) {
       });
     }
 
+    // The attempt is created BEFORE the free slot is charged, and the
+    // unique liveKey means exactly one of two simultaneous requests creates
+    // it. The other finds the winner's attempt and carries on as a resume -
+    // so a double tap neither makes a second attempt nor costs a second slot.
+    let createdNow = false;
+    if (!liveAttempt) {
+      try {
+        liveAttempt = await Attempt.create({
+          user: req.user._id,
+          test: test._id,
+          status: "in_progress",
+          answers: [],
+          liveKey: `${req.user._id}:${test._id}`,
+        });
+        createdNow = true;
+      } catch (err) {
+        if (err?.code !== 11000) throw err;
+        liveAttempt = await Attempt.findOne({ user: req.user._id, test: test._id });
+      }
+    }
+
     // Live exams: a genuine "N free tries, then subscribe" trial. Revisiting
     // a test the student already started (e.g. resuming, or reviewing after
     // submit) never counts again - only a genuinely NEW live exam uses up a
     // free slot.
-    if (!liveAttempt && !hasActiveSubscription(req.user)) {
+    if (createdNow && !hasActiveSubscription(req.user)) {
       const claimed = await User.findOneAndUpdate(
         { _id: req.user._id, "freeUsage.liveExamsUsed": { $lt: FREE_LIVE_EXAMS } },
         { $inc: { "freeUsage.liveExamsUsed": 1 } }
       );
 
       if (!claimed) {
+        // No slot left: take back the attempt this request just made, or
+        // it would sit in_progress and be graded as a blank paper at close.
+        await Attempt.deleteOne({ _id: liveAttempt._id });
         return res.status(402).json({
           message: `Aapke ${FREE_LIVE_EXAMS} free live exams khatam ho gaye. Unlimited live exams ke liye subscribe karo.`,
           code: "SUBSCRIPTION_REQUIRED",
@@ -343,9 +367,6 @@ async function getTest(req, res) {
     // taps submit leaves absolutely no trace, and nothing can ever
     // auto-finalize them when the shared window closes (see
     // server/jobs/liveExamScheduler.js).
-    if (!liveAttempt) {
-      liveAttempt = await Attempt.create({ user: req.user._id, test: test._id, status: "in_progress", answers: [] });
-    }
   }
 
   // Full mocks and practice tests use a per-test isFree flag the admin sets
@@ -491,6 +512,24 @@ async function createWeeklyRevision(req, res) {
 // result is scored identically to a manually-submitted one.
 async function finalizeAttempt(test, userId, answers, options = {}) {
   const { attemptDoc, autoSubmitted, integrityFlags, language } = options;
+
+  // Whoever claims the attempt grades it; anyone else - the second tap of a
+  // double submit, or the scheduler at the closing bell - waits for that
+  // result and returns it. A claim older than two minutes belongs to a
+  // process that died mid-grade and may be taken over.
+  if (attemptDoc) {
+    const staleBefore = new Date(Date.now() - 2 * 60 * 1000);
+    const claimed = await Attempt.findOneAndUpdate(
+      {
+        _id: attemptDoc._id,
+        status: "in_progress",
+        $or: [{ finalizingAt: null }, { finalizingAt: { $lt: staleBefore } }],
+      },
+      { $set: { finalizingAt: new Date() } }
+    );
+    if (!claimed) return waitForFinalized(attemptDoc._id);
+  }
+
   const answerMap = new Map((answers || []).map((a) => [String(a.questionId), a]));
 
   // Marks are added up per question rather than multiplied at the end,
@@ -571,7 +610,11 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
   // Fire-and-forget relative to the student: these counters feed admin
   // dashboards, not the result the student is waiting on, so a failure here
   // must never turn a successfully-graded attempt into an error.
-  if (questionOps.length > 0) {
+  // A live exam's question counters are added up once, after it closes
+  // (jobs/liveExamScheduler.js). Written per submission, every student in
+  // the room was queueing to update the same hundred documents at the
+  // closing bell - the one moment the server can least afford it.
+  if (questionOps.length > 0 && test.type !== "live") {
     try {
       await Question.bulkWrite(questionOps, { ordered: false });
     } catch (err) {
@@ -610,9 +653,12 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
 
   let attempt;
   if (attemptDoc) {
+    // updateOne, not save(): an autosave that touched the same document
+    // bumped its version, and save() then failed the whole submit with
+    // "No matching document found" - a 500 on a paper that was graded.
+    await Attempt.updateOne({ _id: attemptDoc._id }, { $set: attemptData, $unset: { finalizingAt: "" } });
     Object.assign(attemptDoc, attemptData);
     attempt = attemptDoc;
-    await attempt.save();
   } else {
     attempt = await Attempt.create({ user: userId, test: test._id, ...attemptData });
   }
@@ -666,7 +712,7 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
     attempt.rank = better + 1;
     const totalParticipants = await Attempt.countDocuments({ test: test._id, status: { $ne: "in_progress" } });
     attempt.percentile = totalParticipants > 0 ? Math.round(((totalParticipants - attempt.rank) / totalParticipants) * 100) : null;
-    await attempt.save();
+    await Attempt.updateOne({ _id: attempt._id }, { $set: { rank: attempt.rank, percentile: attempt.percentile } });
   }
 
   // Adaptive difficulty: if this was a chapter-practice test, update the
@@ -682,9 +728,41 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
   };
 }
 
+// Another request is grading this attempt (a double submit, or the
+// scheduler at the closing bell). Wait for its result rather than grade it
+// twice or fail - the student's phone gets the same answer either way.
+async function waitForFinalized(attemptId) {
+  for (let i = 0; i < 40; i++) {
+    const a = await Attempt.findById(attemptId);
+    if (a && a.status !== "in_progress") {
+      return {
+        attempt: a,
+        alreadyFinalized: true,
+        score: a.score,
+        totalMarks: a.totalMarks,
+        correctCount: a.correctCount,
+        wrongCount: a.wrongCount,
+        skippedCount: a.skippedCount,
+        accuracy: a.accuracy,
+        levelUpdate: null,
+        negativeMarking: a.negativeMarking,
+        marksPerQuestion: a.marksPerQuestion,
+        marksLost: a.marksLost,
+      };
+    }
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  const err = new Error("This paper is still being marked - open your results in a moment.");
+  err.status = 409;
+  throw err;
+}
+
 async function submitTest(req, res) {
   try {
-    const test = await Test.findById(req.params.id).populate("questions");
+    // Everyone submits a live paper in the same final seconds; it is read
+    // once for all of them rather than once each.
+    const { testForGrading } = require("../utils/liveTestCache");
+    const test = await testForGrading(req.params.id);
     if (!test) return res.status(404).json({ message: "Test not found" });
 
     const { answers, language, integrityFlags } = req.body;
@@ -741,7 +819,9 @@ async function submitTest(req, res) {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to submit test", error: err.message });
+    // A paper still being marked by another request says so (409) rather
+    // than claiming the submit failed.
+    res.status(err.status || 500).json({ message: err.status ? err.message : "Failed to submit test", error: err.message });
   }
 }
 
@@ -752,27 +832,29 @@ async function submitTest(req, res) {
 async function saveLiveProgress(req, res) {
   try {
     const { answers, integrityFlags } = req.body;
-    const attempt = await Attempt.findOne({ user: req.user._id, test: req.params.id, status: "in_progress" });
-    // Nothing to save against - either the student never entered (shouldn't
-    // happen, getTest creates it) or it's already been finalized. Either
-    // way, silently no-op rather than error - autosave must never interrupt
-    // the student.
-    if (!attempt) return res.json({ saved: false });
-
-    attempt.answers = (answers || []).map((a) => ({
-      question: a.questionId,
-      selectedIndex: a.selectedIndex ?? null,
-      isCorrect: false, // graded only at finalize time
-      timeTakenSeconds: a.timeTakenSeconds || 0,
-      markedForReview: a.markedForReview || false,
-    }));
+    // One atomic write, and only onto an attempt nobody has started
+    // grading. Read-then-save let an autosave that arrived a moment after
+    // grading overwrite the graded answers with ungraded ones.
+    const set = {
+      answers: (answers || []).map((a) => ({
+        question: a.questionId,
+        selectedIndex: a.selectedIndex ?? null,
+        isCorrect: false, // graded only at finalize time
+        timeTakenSeconds: a.timeTakenSeconds || 0,
+        markedForReview: a.markedForReview || false,
+      })),
+    };
     // Keep the integrity snapshot current too, so a straggler the scheduler
     // has to finalize (see server/jobs/liveExamScheduler.js) still carries
     // an accurate background-app count instead of whatever was true at entry.
-    if (integrityFlags) attempt.integrityFlags = integrityFlags;
-    await attempt.save();
-
-    res.json({ saved: true });
+    if (integrityFlags) set.integrityFlags = integrityFlags;
+    const r = await Attempt.updateOne(
+      { user: req.user._id, test: req.params.id, status: "in_progress", finalizingAt: null },
+      { $set: set }
+    );
+    // Nothing to save against - never entered, already graded, or being
+    // graded right now. Silently no-op: autosave must never interrupt.
+    res.json({ saved: r.modifiedCount > 0 || r.matchedCount > 0 });
   } catch (err) {
     // Same reasoning as above - autosave failing silently beats surfacing
     // an error mid-exam over something the student can't act on.

@@ -16,6 +16,7 @@ const User = require("../models/User");
 const { finalizeAttempt } = require("../controllers/testController");
 const { liveState } = require("../utils/liveExam");
 const { sendPushNotifications } = require("../services/pushService");
+const Question = require("../models/Question");
 
 const REMINDER_WINDOW_MS = 15 * 60 * 1000;
 
@@ -80,11 +81,63 @@ async function sendUpcomingReminders() {
   }
 }
 
+// A closed live exam's answers, added to its questions' counters in one
+// pass. Per-submission updates put the whole room in a queue for the same
+// hundred documents at the closing bell; this does the same arithmetic once,
+// after nobody is waiting on it. Runs only once every attempt is graded.
+async function rollUpLiveStats() {
+  const candidates = await Test.find({
+    type: "live",
+    publishStatus: "published",
+    statsRolledUpAt: { $exists: false },
+    scheduledAt: { $lt: new Date() },
+  }).select("_id scheduledAt durationMinutes");
+
+  for (const test of candidates) {
+    if (liveState(test) !== "ended") continue;
+    if (await Attempt.exists({ test: test._id, status: "in_progress" })) continue;
+
+    const perQuestion = await Attempt.aggregate([
+      { $match: { test: test._id } },
+      { $unwind: "$answers" },
+      { $match: { "answers.selectedIndex": { $ne: null } } },
+      {
+        $group: {
+          _id: "$answers.question",
+          attempted: { $sum: 1 },
+          correct: { $sum: { $cond: ["$answers.isCorrect", 1, 0] } },
+        },
+      },
+    ]);
+
+    if (perQuestion.length) {
+      await Question.bulkWrite(
+        perQuestion.map((r) => ({
+          updateOne: { filter: { _id: r._id }, update: { $inc: { timesAttempted: r.attempted, timesCorrect: r.correct } } },
+        })),
+        { ordered: false }
+      );
+      const ids = perQuestion.map((r) => r._id);
+      await Question.updateMany({ _id: { $in: ids }, timesAttempted: { $gt: 0 } }, [
+        { $set: { wrongAnswerRate: { $subtract: [1, { $divide: ["$timesCorrect", "$timesAttempted"] }] } } },
+      ]);
+      // Same rule as a practice submission: a published question most people
+      // get wrong goes back for a look.
+      await Question.updateMany(
+        { _id: { $in: ids }, status: "published", timesAttempted: { $gte: 20 }, wrongAnswerRate: { $gte: 0.8 } },
+        { $set: { status: "under_review", flagReason: "High wrong-answer rate - possible error or genuinely hard" } }
+      );
+    }
+    await Test.updateOne({ _id: test._id }, { $set: { statsRolledUpAt: new Date() } });
+  }
+}
+
 async function runLiveExamTick() {
   if (running) return; // don't overlap if a previous tick is still finishing
   running = true;
   try {
     await autoFinalizeEndedLiveExams();
+    await rollUpLiveStats();
     await sendUpcomingReminders();
   } catch (err) {
     console.error("liveExamScheduler: tick failed:", err.message);
@@ -93,4 +146,4 @@ async function runLiveExamTick() {
   }
 }
 
-module.exports = { runLiveExamTick };
+module.exports = { runLiveExamTick, rollUpLiveStats };

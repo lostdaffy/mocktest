@@ -46,6 +46,9 @@ const testSchema = new mongoose.Schema(
     // Set once the "starts in 15 minutes" push reminder has gone out, so the
     // scheduler tick never sends it twice.
     reminderSentAt: { type: Date },
+    // Set once a closed live exam's answers have been added to its
+    // questions' counters, so it is done exactly once.
+    statsRolledUpAt: { type: Date },
 
     // Access control
     isFree: { type: Boolean, default: false },

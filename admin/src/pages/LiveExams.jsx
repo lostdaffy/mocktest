@@ -13,6 +13,7 @@ import {
 import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
+import ManualQuestions from "../components/ManualQuestions";
 
 // <input type="datetime-local"> hands back a bare string like
 // "2026-08-24T14:30" with NO timezone attached. Sending that as-is caused a
@@ -59,6 +60,18 @@ export default function LiveExams() {
   const [addBusy, setAddBusy] = useState(false);
   const [sectionStatus, setSectionStatus] = useState(null);
   const [genMessage, setGenMessage] = useState("");
+  const [manualFor, setManualFor] = useState(null); // live exam a person is writing questions into
+
+  // A full paper is the exam's own size - 150 for CTET and UP Police, 80 for
+  // SSC GD. The list coloured an 80-question SSC GD paper as short because
+  // it was checked against a flat 100.
+  const paperSize = (type) =>
+    (patterns.find((x) => x.examType === type)?.sections || []).reduce((n, x) => n + (x.questionCount || 0), 0) || 100;
+
+  async function openManual(exam) {
+    await loadSections(exam.examType);
+    setManualFor(exam);
+  }
 
   // Reschedule state
   const [reschedulingId, setReschedulingId] = useState(null);
@@ -368,8 +381,8 @@ export default function LiveExams() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-ink">{exam.title}</p>
-                      <p className={`text-xs mt-0.5 ${exam.questionCount >= 100 ? "text-success" : "text-warn"}`}>
-                        {exam.questionCount} questions · {new Date(exam.scheduledAt).toLocaleString("en-IN")}
+                      <p className={`text-xs mt-0.5 ${exam.questionCount >= paperSize(exam.examType) ? "text-success" : "text-warn"}`}>
+                        {exam.questionCount} / {paperSize(exam.examType)} questions · {new Date(exam.scheduledAt).toLocaleString("en-IN")}
                       </p>
                     </div>
                     <div className="flex gap-2">
@@ -377,7 +390,14 @@ export default function LiveExams() {
                         onClick={() => openAddQuestions(exam)}
                         className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20"
                       >
-                        + Add Questions
+                        + AI questions
+                      </button>
+                      <button
+                        onClick={() => openManual(exam)}
+                        className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20"
+                        title="Type questions in, or upload a spreadsheet"
+                      >
+                        + Write / upload
                       </button>
                       <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
                         Review
@@ -598,6 +618,16 @@ export default function LiveExams() {
       )}
 
       {reviewLoading && <p className="text-slate-soft mt-4">Loading review...</p>}
+
+      {manualFor && (
+        <ManualQuestions
+          endpoint={`/live-exams/${manualFor._id}/manual-questions`}
+          sections={sections.map((x) => x.subject)}
+          title={manualFor.title}
+          onClose={() => setManualFor(null)}
+          onAdded={() => load()}
+        />
+      )}
 
       {reviewExam && (
         <ReviewModal

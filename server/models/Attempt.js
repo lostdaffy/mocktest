@@ -36,6 +36,18 @@ const attemptSchema = new mongoose.Schema(
     percentile: { type: Number },
 
     status: { type: String, enum: ["in_progress", "submitted", "auto_submitted"], default: "in_progress" },
+
+    // Live exams only: "<user>:<test>", unique. A slow phone sends "open
+    // exam" twice at once; both requests used to find no attempt and both
+    // created one - 62 duplicates in a load test of 340 students, each one
+    // counted in everybody's rank. The database now refuses the second.
+    liveKey: { type: String },
+
+    // Set by whichever request starts grading this attempt, so a double
+    // "submit" - or a submit racing the scheduler at the closing bell -
+    // grades it once. The loser waits for the winner's result instead of
+    // failing with a version conflict.
+    finalizingAt: { type: Date },
     submittedAt: { type: Date },
 
     // Basic live-exam integrity signal: how many times, and for how long,
@@ -62,6 +74,8 @@ attemptSchema.index({ test: 1, score: -1 }); // for fast leaderboard queries
 // list, every entry into a live exam - the single most frequent query in the
 // app once students are actually using it.
 attemptSchema.index({ user: 1, test: 1 });
+// Sparse: practice and mock attempts carry no liveKey and may repeat.
+attemptSchema.index({ liveKey: 1 }, { unique: true, sparse: true });
 
 // Their history, newest first: the analysis screen, the daily goal count and
 // the admin's per-student view all read it this way.
