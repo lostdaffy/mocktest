@@ -11,6 +11,7 @@ import {
 import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
+import ManualQuestions from "../components/ManualQuestions";
 
 export default function PyqBank() {
   const toast = useToast();
@@ -29,6 +30,29 @@ export default function PyqBank() {
   const [uploadMsg, setUploadMsg] = useState(null); // { type: 'success'|'error', text }
 
   const [reviewing, setReviewing] = useState(null); // testId being reviewed
+  const [writingInto, setWritingInto] = useState(null); // paper being typed in by hand
+  const [starting, setStarting] = useState(false);
+
+  // Sections of the chosen exam, so a typed-in question is filed under a
+  // section the paper really has.
+  const sectionNames = (patterns.find((x) => x.examType === examStage)?.sections || []).map((x) => x.subject);
+
+  // For a paper the extractor cannot read - a poor scan, a photo, a paper
+  // that exists only in print. Same year / shift / date as the upload above.
+  async function startByHand() {
+    if (!examStage || !year) return toast.error("Pick the exam and the year first");
+    setStarting(true);
+    try {
+      const res = await api.post("/pyq/paper", { examStage, year, shift, examDate, language });
+      toast.success(res.data.message);
+      await loadPapers();
+      setWritingInto(res.data.test);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Couldn't start the paper");
+    } finally {
+      setStarting(false);
+    }
+  }
 
   async function loadPatterns() {
     const res = await api.get("/exams");
@@ -122,7 +146,7 @@ export default function PyqBank() {
       <PageHeader
         eyebrow="Content"
         title="PYQ Bank"
-        subtitle="Upload real previous-year papers as PDFs — Gemini extracts genuine questions straight from the PDF (it doesn't invent anything). If an answer key is missing you'll fill it in during review; publishing is only possible once every question's answer is confirmed."
+        subtitle="Upload real previous-year papers as PDFs — Gemini extracts genuine questions straight from the PDF (it doesn't invent anything). A paper it can't read can be typed in or uploaded as a spreadsheet instead. If an answer key is missing you'll fill it in during review; publishing is only possible once every question's answer is confirmed."
       />
 
       <div className="rv-card p-6 mb-8">
@@ -214,6 +238,15 @@ export default function PyqBank() {
           >
             {uploading ? "Extracting..." : "Upload & Extract"}
           </button>
+          <button
+            type="button"
+            onClick={startByHand}
+            disabled={starting || uploading}
+            className="rv-btn-secondary disabled:opacity-60"
+            title="No PDF, or one the extractor can't read? Start the paper empty and type or paste its questions in."
+          >
+            {starting ? "Starting..." : "Type it in instead"}
+          </button>
         </form>
 
         {uploading && (
@@ -243,7 +276,13 @@ export default function PyqBank() {
         <>
           <PaperSection title={`📝 Draft / Needs Review (${drafts.length})`}>
             {drafts.map((p) => (
-              <PaperRow key={p._id} paper={p} onReview={() => setReviewing(p._id)} onDelete={() => deletePaper(p._id)} />
+              <PaperRow
+                key={p._id}
+                paper={p}
+                onReview={() => setReviewing(p._id)}
+                onWrite={() => setWritingInto(p)}
+                onDelete={() => deletePaper(p._id)}
+              />
             ))}
             {drafts.length === 0 && <Empty text="No draft papers." />}
           </PaperSection>
@@ -263,6 +302,16 @@ export default function PyqBank() {
             </PaperSection>
           )}
         </>
+      )}
+
+      {writingInto && (
+        <ManualQuestions
+          endpoint={`/pyq/paper/${writingInto._id}/manual-questions`}
+          sections={sectionNames}
+          title={writingInto.title}
+          onClose={() => setWritingInto(null)}
+          onAdded={() => loadPapers()}
+        />
       )}
 
       {reviewing && (
@@ -291,7 +340,7 @@ function Empty({ text }) {
   return <p className="text-slate-soft text-sm bg-surface border border-border-soft rounded-xl p-5">{text}</p>;
 }
 
-function PaperRow({ paper, onReview, onArchive, onDelete }) {
+function PaperRow({ paper, onReview, onWrite, onArchive, onDelete }) {
   return (
     <div className="rv-card p-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -318,6 +367,14 @@ function PaperRow({ paper, onReview, onArchive, onDelete }) {
         >
           <RiEyeLine size={14} /> Review
         </button>
+        {onWrite && (
+          <button
+            onClick={onWrite}
+            className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20"
+          >
+            + Write / upload
+          </button>
+        )}
         {onArchive && (
           <button onClick={onArchive} className="px-3 py-1.5 rounded-lg bg-warn-light text-warn text-sm font-medium hover:bg-warn-light">
             Hide

@@ -4,6 +4,7 @@ import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 import QuestionEditor from "../components/QuestionEditor";
+import ManualQuestions from "../components/ManualQuestions";
 
 export default function ExamMocks() {
   const toast = useToast();
@@ -20,6 +21,12 @@ export default function ExamMocks() {
   const [sections, setSections] = useState([]); // real sections of THIS exam
   const [addBusy, setAddBusy] = useState(false); // true while a batch is generating
   const [sectionStatus, setSectionStatus] = useState(null); // per-section progress for the open mock
+  const [manualFor, setManualFor] = useState(null); // mock a person is writing questions into
+
+  // A full paper is whatever this exam's pattern says - 80 for SSC GD, 150
+  // for CTET and UP Police - not a flat 100. The card said "80 / 100, needs
+  // more before it can be published" about a finished SSC GD mock.
+  const fullSize = sections.reduce((n, s) => n + (s.questionCount || 0), 0) || 100;
 
   async function loadSectionStatus(testId) {
     try {
@@ -217,8 +224,8 @@ export default function ExamMocks() {
                   <div>
                     <p className="font-semibold text-ink">{m.title}</p>
                     <p className={`text-xs mt-0.5 ${(m.questions?.length || 0) >= 100 ? "text-success" : "text-warn"}`}>
-                      {m.questions?.length || 0} / 100 questions
-                      {(m.questions?.length || 0) < 100 && " — needs more before it can be published"}
+                      {m.questions?.length || 0} / {fullSize} questions
+                      {(m.questions?.length || 0) < fullSize && " — needs more before it can be published"}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -230,7 +237,14 @@ export default function ExamMocks() {
                       }}
                       className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20"
                     >
-                      + Add Questions
+                      + AI questions
+                    </button>
+                    <button
+                      onClick={() => setManualFor(m)}
+                      className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20"
+                      title="Type questions in, or upload a spreadsheet - for a human-made mock"
+                    >
+                      + Write / upload
                     </button>
                     <button onClick={() => openReview(m._id)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
                       Review
@@ -361,6 +375,19 @@ export default function ExamMocks() {
           onDelete={deleteMock}
           onRemoveQuestion={removeQuestion}
           onEditQuestion={setEditingQuestion}
+        />
+      )}
+
+      {manualFor && (
+        <ManualQuestions
+          endpoint={`/exam-series/mock/${manualFor._id}/manual-questions`}
+          sections={sections.map((s) => s.subject)}
+          title={manualFor.title}
+          onClose={() => setManualFor(null)}
+          onAdded={() => {
+            load();
+            if (reviewMock?._id === manualFor._id) openReview(manualFor._id);
+          }}
         />
       )}
 

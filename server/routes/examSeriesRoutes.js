@@ -23,6 +23,7 @@ const {
 } = require("../controllers/examSeriesController");
 const { protect, adminOnly } = require("../middleware/auth");
 const asyncRoute = require("../utils/asyncRoute");
+const { addManualQuestionsToMock } = require("../controllers/manualMockController");
 
 // Exam mock series (admin-only content management)
 router.get("/exams", protect, adminOnly, asyncRoute(listExams));
@@ -40,6 +41,8 @@ router.post("/:examStage/generate-mock", protect, adminOnly, asyncRoute(generate
 router.post("/:examStage/create-empty-mock", protect, adminOnly, asyncRoute(createEmptyMock));
 router.get("/mock/:testId", protect, adminOnly, asyncRoute(getMockForReview));
 router.post("/mock/:testId/add-questions", protect, adminOnly, asyncRoute(addQuestionsToMock));
+// Questions a person wrote - a human-made mock. See controllers/manualMockController.js.
+router.post("/mock/:testId/manual-questions", protect, adminOnly, asyncRoute(addManualQuestionsToMock));
 router.patch("/mock/:testId/publish", protect, adminOnly, asyncRoute(publishMock));
 router.patch("/mock/:testId/archive", protect, adminOnly, asyncRoute(archiveMock));
 router.delete("/mock/:testId", protect, adminOnly, asyncRoute(deleteMock));

@@ -27,7 +27,9 @@ const questionSchema = new mongoose.Schema(
     difficulty: { type: String, enum: ["easy", "medium", "hard", "exam"], default: "medium" },
 
     // Source & PYQ metadata
-    source: { type: String, enum: ["ai_generated", "pyq"], required: true },
+    // "manual" is a question a person wrote - a human-made mock. Real past
+    // papers stay "pyq" whether they came from a PDF or were typed in.
+    source: { type: String, enum: ["ai_generated", "pyq", "manual"], required: true },
     pyqYear: { type: Number },
     pyqShift: { type: String },
     pyqExamName: { type: String }, // e.g. "SSC CGL Tier 1"

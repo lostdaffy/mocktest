@@ -2,6 +2,8 @@ const Test = require("../models/Test");
 const Question = require("../models/Question");
 const ExamPattern = require("../models/ExamPattern");
 const { extractQuestionsFromPDF } = require("../services/geminiService");
+const { addManualQuestions } = require("../services/manualQuestions");
+const { sectionRulesFrom } = require("../utils/marking");
 
 // POST /api/pyq/upload (admin only)
 // body: { examStage, subject, year, shift, examDate, language, pdfBase64 }
@@ -51,7 +53,12 @@ async function uploadPyqPdf(req, res) {
       examDate: examDate || undefined,
       pyqLanguage: language || "bilingual",
       questions: questionDocs.map((q) => q._id),
-      durationMinutes: Math.max(30, Math.round(questionDocs.length * 0.9)),
+      // A whole paper runs to the real exam's clock and marking; a single
+      // subject's questions keep the rough per-question allowance.
+      durationMinutes: subject ? Math.max(30, Math.round(questionDocs.length * 0.9)) : pattern.durationMinutes,
+      marksPerQuestion: pattern.marksPerQuestion,
+      negativeMarking: pattern.negativeMarking,
+      sectionRules: sectionRulesFrom(pattern),
       publishStatus: "draft",
       createdBy: "admin",
     });
@@ -170,7 +177,72 @@ async function deletePyqPaper(req, res) {
   res.json({ message: "Paper deleted" });
 }
 
+// POST /api/pyq/paper (admin) { examStage, year, shift?, examDate?, language?, title? }
+//
+// Starts an empty past paper to be filled by hand, for papers that exist only
+// on paper or as a scan the extractor cannot read. Timed and marked like the
+// real exam, from its pattern - a past paper is only practice if it is sat
+// the way it was set.
+async function createPyqPaper(req, res) {
+  const { examStage, year, shift, examDate, language, title } = req.body || {};
+  if (!examStage || !year) return res.status(400).json({ message: "The exam and the year are both required" });
+  const y = Number(year);
+  if (!Number.isInteger(y) || y < 1990 || y > new Date().getFullYear()) {
+    return res.status(400).json({ message: "That year does not look right" });
+  }
+
+  const pattern = await ExamPattern.findOne({ examType: examStage });
+  if (!pattern) return res.status(404).json({ message: `No exam pattern found for ${examStage}` });
+
+  const dateLabel = examDate ? new Date(examDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : String(y);
+  const test = await Test.create({
+    title: (title || "").trim() || `${pattern.displayName} PYQ - ${dateLabel}${shift ? ` (${shift})` : ""}`,
+    type: "pyq",
+    examType: examStage,
+    examStage,
+    pyqYear: y,
+    pyqShift: shift || undefined,
+    examDate: examDate || undefined,
+    pyqLanguage: language || "bilingual",
+    questions: [],
+    durationMinutes: pattern.durationMinutes,
+    marksPerQuestion: pattern.marksPerQuestion,
+    negativeMarking: pattern.negativeMarking,
+    sectionRules: sectionRulesFrom(pattern),
+    publishStatus: "draft",
+    createdBy: "admin",
+  });
+
+  res.status(201).json({ message: "Paper started as a draft. Add its questions next.", test });
+}
+
+// POST /api/pyq/paper/:testId/manual-questions (admin) { questions: [...], dryRun? }
+//
+// Questions typed or pasted into a past paper, in the paper's own order.
+// dryRun checks them and saves nothing, so a 100-row file can be corrected
+// before any of it lands.
+async function addManualQuestionsToPyq(req, res) {
+  const test = await Test.findOne({ _id: req.params.testId, type: "pyq" });
+  if (!test) return res.status(404).json({ message: "Past paper not found" });
+  try {
+    const result = await addManualQuestions(test._id, req.body?.questions, { dryRun: !!req.body?.dryRun, source: "pyq" });
+    res.status(result.dryRun ? 200 : 201).json({ ...result, message: summarise(result) });
+  } catch (err) {
+    res.status(err.status || 500).json({ message: err.message });
+  }
+}
+
+function summarise(r) {
+  const verb = r.dryRun ? "would be added" : "added";
+  const parts = [`${r.dryRun ? r.wouldAdd : r.added} of ${r.checked} ${verb}`];
+  if (r.rejected.length) parts.push(`${r.rejected.length} can't be saved`);
+  if (r.warned.length) parts.push(`${r.warned.length} worth a second look`);
+  return parts.join(", ") + ".";
+}
+
 module.exports = {
+  createPyqPaper,
+  addManualQuestionsToPyq,
   uploadPyqPdf,
   listPyqPapers,
   getPyqForReview,
