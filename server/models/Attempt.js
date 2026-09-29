@@ -24,6 +24,7 @@ const attemptSchema = new mongoose.Schema(
     negativeMarking: { type: Number, default: 0 },
     marksPerQuestion: { type: Number, default: 1 },
     marksLost: { type: Number, default: 0 },
+    marksEarned: { type: Number, default: 0 },
     correctCount: { type: Number, default: 0 },
     wrongCount: { type: Number, default: 0 },
     skippedCount: { type: Number, default: 0 },

@@ -1,4 +1,5 @@
 const Question = require("../models/Question");
+const { sectionRulesFrom } = require("../utils/marking");
 const ExamPattern = require("../models/ExamPattern");
 const Test = require("../models/Test");
 const User = require("../models/User");
@@ -119,6 +120,7 @@ async function generateFullMock(examType) {
     durationMinutes: pattern.durationMinutes,
     marksPerQuestion: pattern.marksPerQuestion,
     negativeMarking: pattern.negativeMarking,
+    sectionRules: sectionRulesFrom(pattern),
     createdBy: "system_auto",
   });
 

@@ -1,4 +1,5 @@
 const Test = require("../models/Test");
+const { sectionRulesFrom } = require("../utils/marking");
 const Question = require("../models/Question");
 const ExamPattern = require("../models/ExamPattern");
 const Subject = require("../models/Subject");
@@ -160,6 +161,7 @@ async function buildMockForExam(examStage) {
       durationMinutes: pattern.durationMinutes,
       marksPerQuestion: pattern.marksPerQuestion,
       negativeMarking: pattern.negativeMarking,
+      sectionRules: sectionRulesFrom(pattern),
       publishStatus: "draft",
       createdBy: "admin",
     });
@@ -808,6 +810,7 @@ async function createEmptyMock(req, res) {
       durationMinutes: pattern.durationMinutes,
       marksPerQuestion: pattern.marksPerQuestion,
       negativeMarking: pattern.negativeMarking,
+      sectionRules: sectionRulesFrom(pattern),
       publishStatus: "draft",
       createdBy: "admin",
     });

@@ -1,4 +1,5 @@
 const Test = require("../models/Test");
+const { sectionRulesFrom } = require("../utils/marking");
 const Question = require("../models/Question");
 const Attempt = require("../models/Attempt");
 const ExamPattern = require("../models/ExamPattern");
@@ -78,6 +79,7 @@ async function createLiveExam(req, res) {
       durationMinutes: pattern.durationMinutes,
       marksPerQuestion: pattern.marksPerQuestion,
       negativeMarking: pattern.negativeMarking,
+      sectionRules: sectionRulesFrom(pattern),
       scheduledAt: new Date(scheduledAt),
       liveStatus: "upcoming",
       publishStatus: "draft",

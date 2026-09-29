@@ -7,6 +7,10 @@ const emptySection = () => ({
   subject: "",
   sources: [],
   questionCount: 25,
+  // null means "marked like the rest of the paper", which is true of nine
+  // of the ten exams. Only SSC MTS differs, and only because the real paper
+  // does: no penalty in Session-I, a full mark in Session-II.
+  negativeMarking: null,
   difficultyMix: { easy: 30, medium: 50, hard: 20 },
   syllabus: [],
 });
@@ -95,6 +99,7 @@ export default function ExamPatterns() {
         subject: s.subject,
         sources: s.sources || [],
         questionCount: s.questionCount,
+        negativeMarking: s.negativeMarking ?? null,
         difficultyMix: { easy: 30, medium: 50, hard: 20, ...(s.difficultyMix || {}) },
         syllabus: (s.syllabus || []).map((t) =>
           typeof t === "string" ? t : t.subTopics?.length ? `${t.topic}: ${t.subTopics.join(", ")}` : t.topic
@@ -344,6 +349,18 @@ export default function ExamPatterns() {
                         onChange={(e) => updateSection(idx, "questionCount", Number(e.target.value))}
                         className="w-28 rv-input !py-1.5 text-sm"
                       />
+                      <input
+                        type="number"
+                        step="0.25"
+                        min="0"
+                        placeholder={`−${form.negativeMarking}`}
+                        title="Negative marking for this section only. Leave blank to mark it like the rest of the paper."
+                        value={s.negativeMarking ?? ""}
+                        onChange={(e) =>
+                          updateSection(idx, "negativeMarking", e.target.value === "" ? null : Number(e.target.value))
+                        }
+                        className="w-24 rv-input !py-1.5 text-sm"
+                      />
                       <button
                         type="button"
                         onClick={() => removeSection(idx)}
@@ -363,6 +380,11 @@ export default function ExamPatterns() {
                         }
                         className="w-full rv-input !py-1.5 text-sm"
                       />
+                      <p className="text-xs text-slate-soft mt-1">
+                        Leave the small number box blank unless this section is marked differently from the rest of
+                        the paper — SSC MTS deducts nothing in Session-I and a full mark in Session-II, and it is the
+                        only one of the ten that does.
+                      </p>
                       <p className="text-xs text-slate-soft mt-1">
                         Extra subjects this one section is built from. SSC&apos;s General Awareness is GK + Science +
                         Current Affairs together; leave blank if the section is just {s.subject || "one subject"}.
@@ -471,6 +493,13 @@ export default function ExamPatterns() {
 
 function PatternCard({ p, editing, archived, onEdit, onArchive, onRestore, onDelete }) {
   const questions = (p.sections || []).reduce((sum, s) => sum + (s.questionCount || 0), 0);
+
+  // "−1/wrong" would be a lie about SSC MTS, where half the paper deducts
+  // nothing at all. Only quote one rate when one rate is true.
+  const sectionRates = new Set(
+    (p.sections || []).map((s) => (s.negativeMarking == null ? p.negativeMarking ?? 0 : s.negativeMarking))
+  );
+  const markedAlike = sectionRates.size <= 1;
   return (
     <div className={`rv-card p-6 ${editing ? "border-brand" : ""} ${archived ? "opacity-70" : ""}`}>
       <div className="flex items-start justify-between gap-3">
@@ -495,7 +524,11 @@ function PatternCard({ p, editing, archived, onEdit, onArchive, onRestore, onDel
 
       <p className="text-sm text-slate">
         {p.durationMinutes} min · {questions} questions · {(p.sections || []).length} sections
-        {p.negativeMarking ? ` · −${p.negativeMarking}/wrong` : " · no negative marking"}
+        {!markedAlike
+          ? ` · −${[...sectionRates].sort((a, b) => a - b).join(" / −")} per wrong, by section`
+          : p.negativeMarking
+          ? ` · −${p.negativeMarking}/wrong`
+          : " · no negative marking"}
       </p>
 
       <div className="flex flex-wrap gap-1.5 mt-3">

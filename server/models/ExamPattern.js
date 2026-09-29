@@ -45,6 +45,14 @@ const examPatternSchema = new mongoose.Schema(
         sources: [{ type: String }],
 
         questionCount: { type: Number, required: true },
+
+        // Set these only where a section really differs from the rest of the
+        // paper. SSC MTS is the reason they exist: Session-I carries no
+        // penalty while Session-II deducts a full mark, so one number for
+        // the whole exam punished a wrong answer the real paper lets you
+        // guess freely. Left null, the exam's own rate and marks apply.
+        negativeMarking: { type: Number, default: null },
+        marksPerQuestion: { type: Number, default: null },
         // The official syllabus for this section of this post's paper. The
         // generator is told to ask ONLY from these and to spread questions
         // across them instead of hammering one topic.

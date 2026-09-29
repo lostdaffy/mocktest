@@ -493,6 +493,13 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
   const { attemptDoc, autoSubmitted, integrityFlags, language } = options;
   const answerMap = new Map((answers || []).map((a) => [String(a.questionId), a]));
 
+  // Marks are added up per question rather than multiplied at the end,
+  // because a section can carry its own rate - SSC MTS deducts nothing in
+  // Session-I and a full mark in Session-II. See server/utils/marking.js.
+  const { rateFor, marksFor, uniformRate } = require("../utils/marking");
+  let marksEarned = 0;
+  let marksLost = 0;
+
   let correctCount = 0;
   let wrongCount = 0;
   let skippedCount = 0;
@@ -519,8 +526,10 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
     } else if (selectedIndex === q.correctIndex) {
       isCorrect = true;
       correctCount++;
+      marksEarned += marksFor(test, q.subject);
     } else {
       wrongCount++;
+      marksLost += rateFor(test, q.subject);
     }
 
     evaluatedAnswers.push({
@@ -571,10 +580,13 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
   }
 
   const marksPerQ = test.marksPerQuestion || 1;
-  const negMark = test.negativeMarking ?? 0.25;
-  const totalMarks = test.questions.length * marksPerQ;
-  const marksLost = Number((wrongCount * negMark).toFixed(2));
-  const score = correctCount * marksPerQ - marksLost;
+  // The rate to show on the result. Null where the paper's sections are not
+  // marked alike, because "0.5 each" is only honest when every wrong answer
+  // really did cost 0.5.
+  const negMark = uniformRate(test);
+  const totalMarks = test.questions.reduce((sum, q) => sum + marksFor(test, q.subject), 0);
+  marksLost = Number(marksLost.toFixed(2));
+  const score = Number((marksEarned - marksLost).toFixed(2));
   const accuracy = correctCount + wrongCount > 0 ? Math.round((correctCount / (correctCount + wrongCount)) * 100) : 0;
 
   const attemptData = {
@@ -584,6 +596,7 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
     negativeMarking: negMark,
     marksPerQuestion: marksPerQ,
     marksLost,
+    marksEarned,
     correctCount,
     wrongCount,
     skippedCount,

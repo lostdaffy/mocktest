@@ -19,6 +19,19 @@ const testSchema = new mongoose.Schema(
     marksPerQuestion: { type: Number, default: 1 },
     negativeMarking: { type: Number, default: 0.25 },
 
+    // Copied from the exam pattern when the paper is built, for the exams
+    // whose sections are not marked alike - see server/utils/marking.js.
+    // A snapshot on purpose: the pattern may be edited later, and a paper
+    // already sat must stay marked the way it was sat.
+    sectionRules: [
+      {
+        subject: { type: String },
+        sources: [{ type: String }],
+        negativeMarking: { type: Number, default: null },
+        marksPerQuestion: { type: Number, default: null },
+      },
+    ],
+
     // PYQ specific
     pyqYear: { type: Number },
     pyqShift: { type: String },

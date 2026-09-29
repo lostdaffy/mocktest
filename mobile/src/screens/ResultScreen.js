@@ -391,6 +391,9 @@ export default function ResultScreen({
   const marksLost =
     attempt.marksLost ?? null;
 
+  // An attempt graded before any of this existed has neither figure. It
+  // shows nothing at all rather than a confident zero.
+
   const correctCount =
     attempt.correctCount || 0;
 
@@ -642,26 +645,27 @@ export default function ResultScreen({
             TOTAL SCORE
           </Text>
 
-          {negPerWrong !== null &&
-            (marksLost > 0 ? (
-              <Text
-                style={
-                  styles.negativeNote
-                }
-              >
-                −{marksLost} for{" "}
-                {wrongCount} wrong (
-                {negPerWrong} each)
-              </Text>
-            ) : negPerWrong === 0 ? (
-              <Text
-                style={
-                  styles.noNegativeNote
-                }
-              >
-                No negative marking
-              </Text>
-            ) : null)}
+          {marksLost > 0 ? (
+            <Text
+              style={
+                styles.negativeNote
+              }
+            >
+              −{marksLost} for{" "}
+              {wrongCount} wrong
+              {negPerWrong !== null
+                ? ` (${negPerWrong} each)`
+                : " (varies by section)"}
+            </Text>
+          ) : negPerWrong === 0 ? (
+            <Text
+              style={
+                styles.noNegativeNote
+              }
+            >
+              No negative marking
+            </Text>
+          ) : null}
         </View>
 
         {/* PROGRESS */}
