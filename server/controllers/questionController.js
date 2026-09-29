@@ -190,7 +190,15 @@ async function updateQuestion(req, res) {
     }
     const q = await Question.findByIdAndUpdate(req.params.id, updates, { new: true });
     if (!q) return res.status(404).json({ message: "Question not found" });
-    res.json({ question: q });
+
+    // An edited question skips the quality gate, deliberately - an admin
+    // looking straight at it should be able to overrule a rule. But the
+    // commonest hand-edit is changing which option is correct, and that is
+    // the one mistake re-reading never catches: the solution still works
+    // through to the old answer. So the save goes through and the checks
+    // come back with it.
+    const { checkEditedQuestion } = require("../utils/questionWarnings");
+    res.json({ question: q, warnings: checkEditedQuestion(q) });
   } catch (err) {
     res.status(500).json({ message: "Update failed", error: err.message });
   }

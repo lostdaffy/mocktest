@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
+import QuestionEditor from "../components/QuestionEditor";
 
 export default function ExamMocks() {
   const toast = useToast();
@@ -13,6 +14,7 @@ export default function ExamMocks() {
   const [genMessage, setGenMessage] = useState("");
   const [reviewMock, setReviewMock] = useState(null); // full mock being reviewed
   const [reviewLoading, setReviewLoading] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState(null);
   const [addingTo, setAddingTo] = useState(null); // mock id we're adding questions to
   const [addForm, setAddForm] = useState({ subject: "", count: 10 });
   const [sections, setSections] = useState([]); // real sections of THIS exam
@@ -98,6 +100,8 @@ export default function ExamMocks() {
   }
 
   async function openReview(testId) {
+    // Called again after an edit to pull the corrected question back in,
+    // so the modal never shows the version that was just fixed.
     setReviewLoading(true);
     try {
       const res = await api.get(`/exam-series/mock/${testId}`);
@@ -356,6 +360,17 @@ export default function ExamMocks() {
           onPublish={publish}
           onDelete={deleteMock}
           onRemoveQuestion={removeQuestion}
+          onEditQuestion={setEditingQuestion}
+        />
+      )}
+
+      {editingQuestion && (
+        <QuestionEditor
+          question={editingQuestion}
+          canApprove
+          note="This question lives in the shared bank, so the fix applies everywhere it is used."
+          onClose={() => setEditingQuestion(null)}
+          onSaved={() => openReview(reviewMock._id)}
         />
       )}
     </div>
@@ -406,7 +421,7 @@ function MockRow({ mock, onReview, onPublish, onArchive, onDelete, published }) 
   );
 }
 
-function ReviewModal({ mock, onClose, onPublish, onDelete, onRemoveQuestion }) {
+function ReviewModal({ mock, onClose, onPublish, onDelete, onRemoveQuestion, onEditQuestion }) {
   const isDraft = mock.publishStatus === "draft";
   return (
     <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -428,12 +443,22 @@ function ReviewModal({ mock, onClose, onPublish, onDelete, onRemoveQuestion }) {
                 <p className="font-medium text-ink text-sm">
                   {idx + 1}. {q.text}
                 </p>
-                <button
-                  onClick={() => onRemoveQuestion(mock._id, q._id)}
-                  className="text-danger text-xs whitespace-nowrap hover:underline"
-                >
-                  Remove
-                </button>
+                <div className="flex gap-3 shrink-0">
+                  {/* Fixing beats removing: a removed question has to be paid
+                      for again, and most of them are one digit out. */}
+                  <button
+                    onClick={() => onEditQuestion(q)}
+                    className="text-brand text-xs whitespace-nowrap hover:underline"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => onRemoveQuestion(mock._id, q._id)}
+                    className="text-danger text-xs whitespace-nowrap hover:underline"
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-1 mt-2">
                 {q.options.map((opt, i) => (

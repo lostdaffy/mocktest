@@ -3,6 +3,7 @@ import { RiCheckLine, RiCloseLine, RiEdit2Line, RiDeleteBin6Line, RiAlertLine } 
 import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
+import QuestionEditor from "../components/QuestionEditor";
 
 const PAGE_SIZE = 20;
 
@@ -115,19 +116,6 @@ export default function ManageQuestions() {
       toast.success("Question deleted");
     } catch (err) {
       toast.error("Delete failed");
-    }
-  }
-
-  async function handleSaveEdit({ approve } = {}) {
-    try {
-      await api.put(`/questions/${editing._id}`, editing);
-      if (approve) await api.patch(`/questions/${editing._id}/approve`);
-      toast.success(approve ? "Fixed and approved" : "Question saved");
-      setEditing(null);
-      load();
-      loadCounts();
-    } catch (err) {
-      toast.error("Save failed: " + (err.response?.data?.message || err.message));
     }
   }
 
@@ -298,87 +286,18 @@ export default function ManageQuestions() {
         </div>
       )}
 
-      {/* Fix a question, then approve it in the same step */}
+      {/* The same editor the mock review modal opens - one implementation,
+          so a fix made in one place is a fix made in both. */}
       {editing && (
-        <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-surface rounded-lg w-full max-w-2xl max-h-[88vh] flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b border-border-soft">
-              <h3 className="font-semibold text-ink">Fix question</h3>
-              <button onClick={() => setEditing(null)} className="text-slate-soft hover:text-slate text-2xl leading-none">
-                ×
-              </button>
-            </div>
-
-            <div className="p-5 overflow-y-auto flex-1 space-y-4">
-              {editing.flagReason && (
-                <p className="text-xs bg-warn-light text-warn rounded-lg px-3 py-2">{editing.flagReason}</p>
-              )}
-
-              <Field label="Question (English)" value={editing.text} onChange={(v) => setEditing({ ...editing, text: v })} textarea />
-              <Field label="Question (Hindi)" value={editing.textHi || ""} onChange={(v) => setEditing({ ...editing, textHi: v })} textarea />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {(editing.options || []).map((opt, i) => (
-                  <Field
-                    key={i}
-                    label={`Option ${String.fromCharCode(65 + i)}${i === editing.correctIndex ? " (correct)" : ""}`}
-                    value={opt}
-                    onChange={(v) => {
-                      const options = [...editing.options];
-                      options[i] = v;
-                      setEditing({ ...editing, options });
-                    }}
-                  />
-                ))}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-ink-soft mb-1.5">Correct option</label>
-                <select
-                  value={editing.correctIndex ?? 0}
-                  onChange={(e) => setEditing({ ...editing, correctIndex: Number(e.target.value) })}
-                  className="rv-input"
-                >
-                  {[0, 1, 2, 3].map((i) => (
-                    <option key={i} value={i}>
-                      {String.fromCharCode(65 + i)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {(editing.optionsHi || ["", "", "", ""]).map((opt, i) => (
-                  <Field
-                    key={i}
-                    label={`Hindi option ${String.fromCharCode(65 + i)}`}
-                    value={opt}
-                    onChange={(v) => {
-                      const optionsHi = [...(editing.optionsHi || ["", "", "", ""])];
-                      optionsHi[i] = v;
-                      setEditing({ ...editing, optionsHi });
-                    }}
-                  />
-                ))}
-              </div>
-
-              <Field label="Solution (English)" value={editing.solution || ""} onChange={(v) => setEditing({ ...editing, solution: v })} textarea />
-              <Field label="Solution (Hindi)" value={editing.solutionHi || ""} onChange={(v) => setEditing({ ...editing, solutionHi: v })} textarea />
-            </div>
-
-            <div className="p-5 border-t border-border-soft flex gap-3">
-              <button onClick={() => handleSaveEdit({ approve: true })} className="flex-1 rv-btn-primary">
-                Save & approve
-              </button>
-              <button onClick={() => handleSaveEdit()} className="rv-btn-secondary">
-                Save only
-              </button>
-              <button onClick={() => setEditing(null)} className="px-4 py-2 rounded-lg bg-slate-light text-slate text-sm font-medium">
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+        <QuestionEditor
+          question={editing}
+          canApprove
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            load();
+            loadCounts();
+          }}
+        />
       )}
     </div>
   );
@@ -394,19 +313,6 @@ function Stat({ label, value, tone }) {
     <div className={`rounded-xl px-4 py-3 ${tones[tone] || tones.muted}`}>
       <p className="text-xl font-bold leading-tight">{(value ?? 0).toLocaleString("en-IN")}</p>
       <p className="text-xs">{label}</p>
-    </div>
-  );
-}
-
-function Field({ label, value, onChange, textarea }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-ink-soft mb-1.5">{label}</label>
-      {textarea ? (
-        <textarea rows={2} value={value} onChange={(e) => onChange(e.target.value)} className="rv-input !py-2" />
-      ) : (
-        <input value={value} onChange={(e) => onChange(e.target.value)} className="rv-input" />
-      )}
     </div>
   );
 }
