@@ -605,32 +605,43 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
   }
 
   // Update user's per-topic accuracy stats (drives "Aaj Ka Test" + weak topic detection)
-  const user = await User.findById(userId);
-  for (const key in topicUpdates) {
-    const upd = topicUpdates[key];
-    if (upd.attempted === 0) continue;
-    let stat = user.topicStats.find((t) => t.subject === upd.subject && t.topic === upd.topic);
-    if (!stat) {
-      stat = { subject: upd.subject, topic: upd.topic, examType: test.examType, attempted: 0, correct: 0, accuracy: 0 };
-      user.topicStats.push(stat);
+  //
+  // Wrapped for the same reason as the question counters above: the attempt
+  // is already saved and graded by this point, so nothing in here may turn a
+  // finished paper into an error. An account created under an older schema
+  // can fail today's validation on save, and the student was shown "Failed
+  // to submit test" on a paper that had actually been marked - then locked
+  // out of a live exam they had supposedly not submitted.
+  try {
+    const user = await User.findById(userId);
+    for (const key in topicUpdates) {
+      const upd = topicUpdates[key];
+      if (upd.attempted === 0) continue;
+      let stat = user.topicStats.find((t) => t.subject === upd.subject && t.topic === upd.topic);
+      if (!stat) {
+        stat = { subject: upd.subject, topic: upd.topic, examType: test.examType, attempted: 0, correct: 0, accuracy: 0 };
+        user.topicStats.push(stat);
+      }
+      stat.attempted += upd.attempted;
+      stat.correct += upd.correct;
+      stat.accuracy = Math.round((stat.correct / stat.attempted) * 100);
+      stat.lastAttemptedAt = new Date();
     }
-    stat.attempted += upd.attempted;
-    stat.correct += upd.correct;
-    stat.accuracy = Math.round((stat.correct / stat.attempted) * 100);
-    stat.lastAttemptedAt = new Date();
+    // Streak update. Days are counted in IST, not in the server's timezone -
+    // a student finishing a test at 11pm in India was otherwise credited to
+    // the next day and their streak looked broken the following evening.
+    const todayIST = istDayKey(new Date());
+    const lastActiveIST = user.lastActiveDate ? istDayKey(user.lastActiveDate) : null;
+    if (lastActiveIST !== todayIST) {
+      const yesterdayIST = istDayKey(new Date(Date.now() - 86400000));
+      user.streakCount = lastActiveIST === yesterdayIST ? (user.streakCount || 0) + 1 : 1;
+      user.lastActiveDate = new Date();
+      if (user.streakCount > (user.bestStreak || 0)) user.bestStreak = user.streakCount;
+    }
+    await user.save();
+  } catch (err) {
+    console.error("Post-grading user update failed (attempt still graded):", err.message);
   }
-  // Streak update. Days are counted in IST, not in the server's timezone -
-  // a student finishing a test at 11pm in India was otherwise credited to
-  // the next day and their streak looked broken the following evening.
-  const todayIST = istDayKey(new Date());
-  const lastActiveIST = user.lastActiveDate ? istDayKey(user.lastActiveDate) : null;
-  if (lastActiveIST !== todayIST) {
-    const yesterdayIST = istDayKey(new Date(Date.now() - 86400000));
-    user.streakCount = lastActiveIST === yesterdayIST ? (user.streakCount || 0) + 1 : 1;
-    user.lastActiveDate = new Date();
-    if (user.streakCount > (user.bestStreak || 0)) user.bestStreak = user.streakCount;
-  }
-  await user.save();
 
   // Live exam rank calculation (if applicable). Excludes still-in-progress
   // attempts - once a live exam creates an Attempt at entry (not just at
