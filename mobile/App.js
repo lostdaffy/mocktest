@@ -164,9 +164,23 @@ function AppStack() {
   );
 }
 
+// The splash only showed while the saved login was being read, which on a
+// warm phone takes a fraction of a second - so the brand screen flashed and
+// was gone before anyone could see it. This is a floor, not a delay added
+// on top: a slow start still waits exactly as long as it needs to, a fast
+// one just doesn't cut the splash off mid-animation. 2.2s is one full
+// pulse of the logo.
+const MIN_SPLASH_MS = 2200;
+
 function RootNavigator() {
   const { user, loading } = useAuth();
   const [requiredUpdate, setRequiredUpdate] = useState(null);
+  const [splashFloorPassed, setSplashFloorPassed] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSplashFloorPassed(true), MIN_SPLASH_MS);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Deliberately NOT awaited before showing the app. The backend can take
   // ~50s to wake from a cold start, and the check fails open anyway, so
@@ -187,7 +201,7 @@ function RootNavigator() {
     return <ForceUpdateScreen {...requiredUpdate} />;
   }
 
-  if (loading) {
+  if (loading || !splashFloorPassed) {
     return <SplashScreen />;
   }
 

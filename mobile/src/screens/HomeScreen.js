@@ -51,6 +51,7 @@ const RANKVEER_LOGO = require(
 const HOME_CAROUSEL_DATA = [
   {
     id: "mock-tests",
+    image: require("../../assets/carousel/mock-tests.webp"),
     title: "Mock Tests",
     description:
       "Practice with full-length papers designed like the real exam.",
@@ -65,6 +66,7 @@ const HOME_CAROUSEL_DATA = [
 
   {
     id: "subject-practice",
+    image: require("../../assets/carousel/subject-practice.webp"),
     title: "Subject Practice",
     description:
       "Strengthen every subject with focused chapter-wise practice.",
@@ -93,6 +95,7 @@ const HOME_CAROUSEL_DATA = [
 
   {
     id: "live-exams",
+    image: require("../../assets/carousel/live-exams.webp"),
     title: "Live Exams",
     description:
       "Compete with other aspirants and test your real exam readiness.",
@@ -107,6 +110,7 @@ const HOME_CAROUSEL_DATA = [
 
   {
     id: "analytics",
+    image: require("../../assets/carousel/analysis.webp"),
     title: "Track Your Performance",
     description:
       "Understand your strengths, weaknesses and improve faster.",
@@ -119,6 +123,12 @@ const HOME_CAROUSEL_DATA = [
     action: "Analysis",
   },
 ];
+
+const CAROUSEL_SLIDES = HOME_CAROUSEL_DATA.filter((slide) => slide.image);
+
+// The banners are ~2.7:1. One height for every slide, so the carousel does
+// not jump as it turns.
+const BANNER_RATIO = 2.72;
 
 /* =========================================================
    HOME SCREEN
@@ -1370,7 +1380,7 @@ function HomeCarousel({
           (currentIndex) => {
             const nextIndex =
               currentIndex ===
-                HOME_CAROUSEL_DATA.length -
+                CAROUSEL_SLIDES.length -
                   1
                 ? 0
                 : currentIndex + 1;
@@ -1407,7 +1417,7 @@ function HomeCarousel({
     if (
       index >= 0 &&
       index <
-        HOME_CAROUSEL_DATA.length
+        CAROUSEL_SLIDES.length
     ) {
       setActiveIndex(index);
     }
@@ -1445,7 +1455,7 @@ function HomeCarousel({
           handleSlideChange
         }
       >
-        {HOME_CAROUSEL_DATA.map(
+        {CAROUSEL_SLIDES.map(
           (item) => (
             <TouchableOpacity
               key={item.id}
@@ -1466,7 +1476,7 @@ function HomeCarousel({
       </ScrollView>
 
       <View style={styles.dots}>
-        {HOME_CAROUSEL_DATA.map(
+        {CAROUSEL_SLIDES.map(
           (item, index) => (
             <View
               key={item.id}
@@ -1492,6 +1502,27 @@ function HomeCarouselSlide({
   item,
   slideWidth,
 }) {
+  if (item.image) {
+    return (
+      <View
+        style={[
+          styles.carouselBanner,
+          {
+            width: slideWidth,
+            height: slideWidth / BANNER_RATIO,
+          },
+        ]}
+      >
+        <Image
+          source={item.image}
+          style={styles.carouselBannerImage}
+          resizeMode="cover"
+          accessibilityLabel={item.title}
+        />
+      </View>
+    );
+  }
+
   return (
     <View
       style={[
@@ -2117,6 +2148,17 @@ const styles =
 
     carouselWrapper: {
       width: "100%",
+    },
+
+    carouselBanner: {
+      borderRadius: 20,
+      overflow: "hidden",
+      backgroundColor: "#F2F3FF",
+    },
+
+    carouselBannerImage: {
+      width: "100%",
+      height: "100%",
     },
 
     carouselCard: {

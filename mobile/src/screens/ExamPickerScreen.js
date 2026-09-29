@@ -13,7 +13,9 @@ import {
   FlatList,
   ActivityIndicator,
   useColorScheme,
+  Image,
 } from "react-native";
+import { examLogo } from "../utils/examLogos";
 
 import {
   useFocusEffect,
@@ -67,6 +69,18 @@ const EXAM_META = {
 
   CTET: {
     icon: "person-outline",
+  },
+
+  SSC_GD: {
+    icon: "shield-outline",
+  },
+
+  UPSSSC_PET: {
+    icon: "clipboard-outline",
+  },
+
+  AGNIVEER_GD: {
+    icon: "flag-outline",
   },
 };
 
@@ -852,23 +866,39 @@ function FeaturedExamCard({
           },
         ]}
       >
-        <View
-          style={[
-            styles.featuredIcon,
-            {
-              backgroundColor:
-                colors.brand,
-            },
-          ]}
-        >
-          <Ionicons
-            name={
-              meta.icon
-            }
-            size={25}
-            color="#FFFFFF"
-          />
-        </View>
+        {examLogo(exam.examType) ? (
+          <View
+            style={[
+              styles.featuredIcon,
+              styles.logoBox,
+            ]}
+          >
+            <Image
+              source={examLogo(exam.examType)}
+              style={styles.logoImage}
+              resizeMode="contain"
+              accessibilityLabel={exam.displayName || exam.examType}
+            />
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.featuredIcon,
+              {
+                backgroundColor:
+                  colors.brand,
+              },
+            ]}
+          >
+            <Ionicons
+              name={
+                meta.icon
+              }
+              size={25}
+              color="#FFFFFF"
+            />
+          </View>
+        )}
       </View>
 
 
@@ -1084,23 +1114,39 @@ function ExamCard({
           },
         ]}
       >
-        <View
-          style={[
-            styles.examIcon,
-            {
-              backgroundColor:
-                colors.brand,
-            },
-          ]}
-        >
-          <Ionicons
-            name={
-              meta.icon
-            }
-            size={21}
-            color="#FFFFFF"
-          />
-        </View>
+        {examLogo(item.examType) ? (
+          <View
+            style={[
+              styles.examIcon,
+              styles.logoBox,
+            ]}
+          >
+            <Image
+              source={examLogo(item.examType)}
+              style={styles.logoImage}
+              resizeMode="contain"
+              accessibilityLabel={item.displayName || item.examType}
+            />
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.examIcon,
+              {
+                backgroundColor:
+                  colors.brand,
+              },
+            ]}
+          >
+            <Ionicons
+              name={
+                meta.icon
+              }
+              size={21}
+              color="#FFFFFF"
+            />
+          </View>
+        )}
       </View>
 
 
@@ -1979,6 +2025,18 @@ const styles =
 
       justifyContent:
         "center",
+    },
+
+    logoBox: {
+      backgroundColor: "#FFFFFF",
+      borderWidth: 1,
+      borderColor: "rgba(15, 23, 42, 0.08)",
+      padding: 4,
+    },
+
+    logoImage: {
+      width: "100%",
+      height: "100%",
     },
 
     examIcon: {

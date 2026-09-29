@@ -11,7 +11,9 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  Image,
 } from "react-native";
+import { examLogo } from "../utils/examLogos";
 
 import {
   useFocusEffect,
@@ -591,28 +593,39 @@ function ExamCard({
 
       {/* Exam icon */}
 
-      <LinearGradient
-        colors={
-          meta.grad
-        }
-        start={{
-          x: 0,
-          y: 0,
-        }}
-        end={{
-          x: 1,
-          y: 1,
-        }}
-        style={
-          styles.examIcon
-        }
-      >
-        <Ionicons
-          name={meta.icon}
-          size={21}
-          color="#FFFFFF"
-        />
-      </LinearGradient>
+      {examLogo(item.examType) ? (
+        <View style={[styles.examIcon, styles.logoBox]}>
+          <Image
+            source={examLogo(item.examType)}
+            style={styles.logoImage}
+            resizeMode="contain"
+            accessibilityLabel={item.displayName || item.examType}
+          />
+        </View>
+      ) : (
+        <LinearGradient
+          colors={
+            meta.grad
+          }
+          start={{
+            x: 0,
+            y: 0,
+          }}
+          end={{
+            x: 1,
+            y: 1,
+          }}
+          style={
+            styles.examIcon
+          }
+        >
+          <Ionicons
+            name={meta.icon}
+            size={21}
+            color="#FFFFFF"
+          />
+        </LinearGradient>
+      )}
 
       {/* Content */}
 
@@ -1234,6 +1247,18 @@ const styles =
       bottom: 12,
       width: 3,
       borderRadius: 2,
+    },
+
+    logoBox: {
+      backgroundColor: "#FFFFFF",
+      borderWidth: 1,
+      borderColor: "rgba(15, 23, 42, 0.08)",
+      padding: 4,
+    },
+
+    logoImage: {
+      width: "100%",
+      height: "100%",
     },
 
     examIcon: {
