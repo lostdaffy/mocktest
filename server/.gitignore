@@ -50,3 +50,9 @@ Thumbs.db
 # These hold real user data - phone numbers, emails, password hashes and
 # payment records. They must never enter git history, public repo or not.
 backups/
+
+# ---- Test run output ----
+# Written by the suites in tests/ as they run; never worth committing.
+tests/gen-calls.jsonl
+tests/captured.jsonl
+tests/tmp-*.js

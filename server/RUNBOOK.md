@@ -203,13 +203,79 @@ refuses to start at all without the first three.
 
 ## Deploying
 
-1. `git push` — Render builds from the repo.
-2. Watch Render's log for `Server running on port ...` and `MongoDB connected`.
-3. Check `/api/health` shows the new `version`.
+**Render's auto-deploy is off.** A `git push` alone changes nothing that is live.
+
+0. `npm test` — every suite, against a throwaway database, AI stubbed out. See
+   `tests/run-all.js`.
+1. `git push`.
+2. Render dashboard → the service → **Manual Deploy → Deploy latest commit**.
+   Check the deploy row shows your commit message — deploying before the push has
+   landed ships the previous code, and it looks like success.
+3. Watch Render's log for `Server running on port ...` and `MongoDB connected`.
+4. `/api/health` → `uptimeSeconds` is small again.
 
 On every deploy Render sends SIGTERM. The server stops taking new requests, lets the
 ones already running finish (10 seconds maximum), closes MongoDB, then exits — so a
-deploy in the middle of a live exam doesn't cut anyone off.
+deploy in the middle of a live exam doesn't cut anyone off. A generation job that
+was running is handed back to the queue and picks up where it stopped.
+
+**Don't deploy while the generation queue is building a mock** unless you must: the
+batch in progress is thrown away along with the AI allowance already spent on it.
+The Generation page shows whether anything is running.
+
+## Deploying the admin panel
+
+The panel is static files on HostGB (cPanel), not on Render.
+
+1. `cd admin && npm run build` → `admin/dist/`.
+2. cPanel → File Manager → `public_html/admin/assets/` → upload the new
+   `index-*.js` and `index-*.css` from `dist/assets/`. **One file per upload** —
+   choosing two at once has dropped one silently.
+3. Then `public_html/admin/` → tick **Overwrite existing files** → upload
+   `dist/index.html`. The box is off by default, and without it the old
+   `index.html` is kept silently and the old panel goes on loading.
+4. Open https://rankveer.com/admin and hard-refresh. `curl
+   https://rankveer.com/admin/index.html` should name the new `index-*.js`.
+
+Order matters: assets first, `index.html` last, so the page never points at a file
+that isn't there yet.
+
+---
+
+## The generation queue
+
+Admin → **Generation**. It builds whatever the catalog is missing — practice tests
+(chapter × level) and one mock per exam — one job at a time, on the server. The page
+can be closed; the queue keeps going.
+
+- **The Gemini free allowance runs out.** The queue then pauses itself and says so.
+  It resets at **12:30 PM IST**; press **Resume** after that. Nothing is lost — a
+  mock that stopped part way is finished from where it stopped, not started again.
+- **Only a full paper counts as a mock built.** A short one is listed as
+  *Unfinished* with how far it has got, and stays a gap until it is full.
+- A job that failed shows why. **Retry failed** puts them back.
+- The instance is kept awake while the queue has work (`jobs/keepAwake.js`), and
+  only then.
+
+## Live exams under load
+
+Tested with 340 students arriving together (`live-load-test` in the test suite):
+double taps, double submits, autosave bursts and the closing bell are all handled
+— one attempt per student, one free slot charged, ranks over the real field.
+
+**Capacity is the hosting, not the code.** On the free Render instance (0.1 CPU,
+512 MB) and the free Atlas cluster, a few hundred students submitting in the same
+seconds will wait several seconds each. For a large advertised live exam, move the
+service to a paid instance for that day — it is a plan change on Render, not a code
+change.
+
+## Admin accounts
+
+Each team member gets their own: they sign up in the app like a student, then an
+existing admin opens them in **Users** and presses **Make admin**. Removing access is
+the same button. Nobody can remove their own access, so the panel can't be left
+with no admin. `node scripts/createFirstAdmin.js` recreates the very first admin
+from `FIRST_ADMIN_PHONE` / `FIRST_ADMIN_PASSWORD` if it is ever lost.
 
 ---
 

@@ -543,6 +543,37 @@ export default function Users() {
                     >
                       Manage plan
                     </button>
+                    {/* One admin account per team member, rather than one
+                        shared password - see setUserRole on the server. */}
+                    <button
+                      onClick={async () => {
+                        const makeAdmin = detail.user.role !== "admin";
+                        const ok = await toast.confirm({
+                          title: makeAdmin ? `Make ${detail.user.name} an admin?` : `Remove ${detail.user.name}'s admin access?`,
+                          message: makeAdmin
+                            ? "They will be able to do everything you can in this panel - publish tests, change exams, manage users. Only do this for your own team."
+                            : "They will be signed out of the panel on their next click. Their student account stays.",
+                          confirmLabel: makeAdmin ? "Make admin" : "Remove access",
+                          danger: !makeAdmin,
+                        });
+                        if (!ok) return;
+                        setActionBusy("role");
+                        try {
+                          const res = await api.patch(`/admin/users/${detailId}/role`, { role: makeAdmin ? "admin" : "student" });
+                          toast.success(res.data.message);
+                          await openDetail(detailId);
+                          load(page);
+                        } catch (err) {
+                          toast.error(err.response?.data?.message || "Couldn't change access");
+                        } finally {
+                          setActionBusy("");
+                        }
+                      }}
+                      disabled={!!actionBusy}
+                      className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium disabled:opacity-50"
+                    >
+                      {actionBusy === "role" ? "Saving..." : detail.user.role === "admin" ? "Remove admin access" : "Make admin"}
+                    </button>
                     {detail.user.role !== "admin" && (
                       <button
                         onClick={deleteUserAccount}

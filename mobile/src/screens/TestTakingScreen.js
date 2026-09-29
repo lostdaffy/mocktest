@@ -33,6 +33,26 @@ import {
   shadow,
 } from "../theme/theme";
 
+// Retries a submit that failed for a reason that passes: no response at
+// all, a server error, or "still being marked" (409). A 4xx that means
+// "no" - not your attempt, subscription needed - is not retried.
+async function submitWithRetry(send, tries = 4) {
+  let lastError;
+  for (let i = 0; i < tries; i++) {
+    try {
+      return await send();
+    } catch (err) {
+      lastError = err;
+      const status = err.response?.status;
+      const passing = !status || status >= 500 || status === 409 || status === 429;
+      if (!passing || i === tries - 1) break;
+      const wait = 1500 * 2 ** i + Math.floor(Math.random() * 1000);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+  throw lastError;
+}
+
 /* =========================================================
    HELPERS
 ========================================================= */
@@ -502,11 +522,22 @@ export default function TestTakingScreen({
      LIVE EXAM AUTOSAVE
   ======================================================= */
 
+  // The latest answers, read when the autosave fires - not captured when it
+  // was scheduled. buildAnswersPayload changes on every answer, and while it
+  // was a dependency of the effect below, every answer tore the 20-second
+  // timer down and started it again: a student answering faster than one
+  // question every 20 seconds was never autosaved at all, and if their phone
+  // dropped out the paper was graded from nothing when the exam closed.
+  const buildAnswersRef = useRef(buildAnswersPayload);
+  useEffect(() => {
+    buildAnswersRef.current = buildAnswersPayload;
+  }, [buildAnswersPayload]);
+
   useEffect(() => {
     if (!test || test.type !== "live")
       return;
 
-    const timer = setInterval(() => {
+    const save = () => {
       if (submittingRef.current) return;
 
       api
@@ -514,7 +545,7 @@ export default function TestTakingScreen({
           `/tests/${testId}/progress`,
           {
             answers:
-              buildAnswersPayload(),
+              buildAnswersRef.current(),
             integrityFlags: {
               backgroundCount:
                 backgroundCountRef.current,
@@ -526,11 +557,23 @@ export default function TestTakingScreen({
         .catch(() => {
           // Autosave failing silently beats interrupting the student mid-exam.
         });
-    }, 20000);
+    };
 
-    return () =>
-      clearInterval(timer);
-  }, [test, testId, buildAnswersPayload]);
+    // Everyone opens a live paper in the same second, so every phone would
+    // autosave in the same second, every 20 seconds, for the whole exam.
+    // Each starts at a random point in the first 20 seconds instead, which
+    // spreads the room evenly across the interval.
+    let timer = null;
+    const firstSave = setTimeout(() => {
+      save();
+      timer = setInterval(save, 20000);
+    }, Math.floor(Math.random() * 20000));
+
+    return () => {
+      clearTimeout(firstSave);
+      if (timer) clearInterval(timer);
+    };
+  }, [test, testId]);
 
   /* =======================================================
      QUESTION STOPWATCH
@@ -1058,11 +1101,20 @@ export default function TestTakingScreen({
             },
           };
 
-          const res =
-            await api.post(
-              `/tests/${testId}/submit`,
-              payload
-            );
+          // At the closing bell every phone submits at once, and a busy
+          // server answers some of them with a 502/503 or not at all. That
+          // used to put "Submit failed" in front of a student whose paper
+          // was fine. A refusal that says "try again" is tried again, a few
+          // times, spaced out and staggered so the retries don't arrive as
+          // a second wave. Grading is idempotent on the server, so a retry
+          // after a submit that did land simply returns that result.
+          const res = await submitWithRetry(
+            () =>
+              api.post(
+                `/tests/${testId}/submit`,
+                payload
+              )
+          );
 
           navigation.replace(
             "Result",

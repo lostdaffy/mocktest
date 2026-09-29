@@ -219,157 +219,200 @@ async function manageSubscription(req, res) {
   }
 }
 
-
-// GET /api/admin/users/:id -> everything support needs about ONE account,
-// in one call: who they are, what state the account is in, what they paid,
-// and what they've actually been doing. Built for the "a user says X isn't
-// working" conversation, where hunting through four screens loses time.
-async function getUserDetail(req, res) {
-  try {
-    // The three auth fields are select:false on the schema (they must never
-    // leak to students) - support genuinely needs them, so ask explicitly.
-    const user = await User.findById(req.params.id).select("+failedLoginAttempts +lockUntil +activeSessionId +passwordHash");
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    const now = new Date();
-    const [subscriptions, attemptCount, recentAttempts, reportCount, referrer, referredCount] = await Promise.all([
-      Subscription.find({ user: user._id }).sort({ createdAt: -1 }).limit(10).lean(),
-      Attempt.countDocuments({ user: user._id }),
-      Attempt.find({ user: user._id })
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .populate("test", "title type examStage")
-        .select("test score totalMarks correctCount wrongCount skippedCount accuracy status rank submittedAt createdAt")
-        .lean(),
-      Report.countDocuments({ reportedBy: user._id }),
-      user.referredBy ? User.findById(user.referredBy).select("name phone").lean() : null,
-      User.countDocuments({ referredBy: user._id }),
-    ]);
-
-    const lockedUntil = user.lockUntil && user.lockUntil > now ? user.lockUntil : null;
-    const expiresAt = user.subscriptionExpiresAt;
-
-    res.json({
-      user: {
-        _id: user._id,
-        name: user.name,
-        phone: user.phone,
-        email: user.email,
-        role: user.role,
-        examGoals: user.examGoals,
-        preferredLanguage: user.preferredLanguage,
-        streakCount: user.streakCount,
-        lastActiveDate: user.lastActiveDate,
-        createdAt: user.createdAt,
-        subscriptionStatus: user.subscriptionStatus,
-        subscriptionPlan: user.subscriptionPlan,
-        subscriptionExpiresAt: expiresAt,
-        daysLeft: expiresAt ? Math.ceil((new Date(expiresAt) - now) / 86400000) : null,
-        freeUsage: user.freeUsage,
-        referralCode: user.referralCode,
-        referralCredits: user.referralCredits,
-        referredBy: referrer ? { name: referrer.name, phone: referrer.phone } : null,
-        referredCount,
-      },
-      // Each flag is a specific "this is why they're stuck" answer.
-      flags: {
-        locked: !!lockedUntil,
-        lockedUntil,
-        lockMinutesLeft: lockedUntil ? Math.ceil((lockedUntil - now) / 60000) : 0,
-        failedLoginAttempts: user.failedLoginAttempts || 0,
-        hasEmail: !!user.email, // no email = "forgot password" can't work for them
-        hasPassword: !!user.passwordHash, // legacy Google account, can only get in via email reset
-        loggedInSomewhere: !!user.activeSessionId, // single-device: a stale session logs them out elsewhere
-        hasPushToken: !!user.pushToken,
-      },
-      activity: { attemptCount, recentAttempts, reportCount },
-      subscriptions,
-    });
-  } catch (err) {
-    res.status(500).json({ message: "Couldn't load the user", error: err.message });
-  }
-}
-
-// PATCH /api/admin/users/:id/unlock
-// Clears the login lockout after the "I'm typing the right password and it
-// says wait 15 minutes" call, without touching their password.
-async function unlockUser(req, res) {
-  const user = await User.findByIdAndUpdate(
-    req.params.id,
-    { $set: { failedLoginAttempts: 0 }, $unset: { lockUntil: 1 } },
-    { new: true }
-  ).select("name phone");
-  if (!user) return res.status(404).json({ message: "User not found" });
-  res.json({ message: `${user.name}'s account is unlocked`, user });
-}
-
-// PATCH /api/admin/users/:id/logout
-// Ends the session on whatever device holds it. This is the fix for "I
-// changed my phone and it says I'm logged in somewhere else" - only one
-// device can be signed in at a time (see middleware/auth.js).
-async function forceLogout(req, res) {
-  const user = await User.findByIdAndUpdate(req.params.id, { $unset: { activeSessionId: 1 } }, { new: true }).select("name phone");
-  if (!user) return res.status(404).json({ message: "User not found" });
-  res.json({ message: `${user.name} has been signed out of every device and can now sign in on a new one.`, user });
-}
-
-// PATCH /api/admin/users/:id/profile  { name, email, examGoals }
-// Support-side corrections. The email matters most: a student who typed it
-// wrong at signup can never receive a password-reset code until it's fixed,
-// and they can't fix it themselves without logging in first.
-async function updateUserProfile(req, res) {
-  try {
-    const { name, email, examGoals } = req.body;
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    if (name !== undefined) {
-      if (!String(name).trim()) return res.status(400).json({ message: "Name cannot be empty" });
-      user.name = String(name).trim();
-    }
-
-    if (email !== undefined) {
-      const clean = String(email).trim().toLowerCase();
-      if (clean) {
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
-          return res.status(400).json({ message: "That email address is not valid" });
-        }
-        const taken = await User.findOne({ email: clean, _id: { $ne: user._id } }).select("_id");
-        if (taken) return res.status(409).json({ message: "That email is already used by another account" });
-        user.email = clean;
-      } else {
-        user.email = undefined; // clearing it is allowed; unset keeps the sparse index happy
-      }
-    }
-
-    if (Array.isArray(examGoals)) user.examGoals = examGoals.filter(Boolean);
-
-    await user.save();
-    res.json({ message: "Profile updated", user: { _id: user._id, name: user.name, email: user.email, examGoals: user.examGoals } });
-  } catch (err) {
-    if (err.code === 11000) return res.status(409).json({ message: "That email is already used by another account" });
-    res.status(500).json({ message: "Update failed", error: err.message });
-  }
-}
-
-// DELETE /api/admin/users/:id
-// For the deletion requests that arrive by email (rankveer.com/delete-account
-// promises this route for people who can't sign in). Runs the exact same
-// deletion the app's own button runs - see services/accountDeletion.js.
-async function deleteUser(req, res) {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    if (user.role === "admin") {
-      return res.status(403).json({ message: "An admin account cannot be deleted" });
-    }
-
-    await deleteAccountData(user);
-    res.json({ message: `The account and data for ${user.name} (${user.phone}) have been deleted` });
-  } catch (err) {
-    res.status(500).json({ message: "Delete failed", error: err.message });
-  }
-}
+
+// GET /api/admin/users/:id -> everything support needs about ONE account,
+// in one call: who they are, what state the account is in, what they paid,
+// and what they've actually been doing. Built for the "a user says X isn't
+// working" conversation, where hunting through four screens loses time.
+async function getUserDetail(req, res) {
+  try {
+    // The three auth fields are select:false on the schema (they must never
+    // leak to students) - support genuinely needs them, so ask explicitly.
+    const user = await User.findById(req.params.id).select("+failedLoginAttempts +lockUntil +activeSessionId +passwordHash");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const now = new Date();
+    const [subscriptions, attemptCount, recentAttempts, reportCount, referrer, referredCount] = await Promise.all([
+      Subscription.find({ user: user._id }).sort({ createdAt: -1 }).limit(10).lean(),
+      Attempt.countDocuments({ user: user._id }),
+      Attempt.find({ user: user._id })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .populate("test", "title type examStage")
+        .select("test score totalMarks correctCount wrongCount skippedCount accuracy status rank submittedAt createdAt")
+        .lean(),
+      Report.countDocuments({ reportedBy: user._id }),
+      user.referredBy ? User.findById(user.referredBy).select("name phone").lean() : null,
+      User.countDocuments({ referredBy: user._id }),
+    ]);
+
+    const lockedUntil = user.lockUntil && user.lockUntil > now ? user.lockUntil : null;
+    const expiresAt = user.subscriptionExpiresAt;
+
+    res.json({
+      user: {
+        _id: user._id,
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        role: user.role,
+        examGoals: user.examGoals,
+        preferredLanguage: user.preferredLanguage,
+        streakCount: user.streakCount,
+        lastActiveDate: user.lastActiveDate,
+        createdAt: user.createdAt,
+        subscriptionStatus: user.subscriptionStatus,
+        subscriptionPlan: user.subscriptionPlan,
+        subscriptionExpiresAt: expiresAt,
+        daysLeft: expiresAt ? Math.ceil((new Date(expiresAt) - now) / 86400000) : null,
+        freeUsage: user.freeUsage,
+        referralCode: user.referralCode,
+        referralCredits: user.referralCredits,
+        referredBy: referrer ? { name: referrer.name, phone: referrer.phone } : null,
+        referredCount,
+      },
+      // Each flag is a specific "this is why they're stuck" answer.
+      flags: {
+        locked: !!lockedUntil,
+        lockedUntil,
+        lockMinutesLeft: lockedUntil ? Math.ceil((lockedUntil - now) / 60000) : 0,
+        failedLoginAttempts: user.failedLoginAttempts || 0,
+        hasEmail: !!user.email, // no email = "forgot password" can't work for them
+        hasPassword: !!user.passwordHash, // legacy Google account, can only get in via email reset
+        loggedInSomewhere: !!user.activeSessionId, // single-device: a stale session logs them out elsewhere
+        hasPushToken: !!user.pushToken,
+      },
+      activity: { attemptCount, recentAttempts, reportCount },
+      subscriptions,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Couldn't load the user", error: err.message });
+  }
+}
+
+// PATCH /api/admin/users/:id/unlock
+// Clears the login lockout after the "I'm typing the right password and it
+// says wait 15 minutes" call, without touching their password.
+async function unlockUser(req, res) {
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { $set: { failedLoginAttempts: 0 }, $unset: { lockUntil: 1 } },
+    { new: true }
+  ).select("name phone");
+  if (!user) return res.status(404).json({ message: "User not found" });
+  res.json({ message: `${user.name}'s account is unlocked`, user });
+}
+
+// PATCH /api/admin/users/:id/logout
+// Ends the session on whatever device holds it. This is the fix for "I
+// changed my phone and it says I'm logged in somewhere else" - only one
+// device can be signed in at a time (see middleware/auth.js).
+async function forceLogout(req, res) {
+  const user = await User.findByIdAndUpdate(req.params.id, { $unset: { activeSessionId: 1 } }, { new: true }).select("name phone");
+  if (!user) return res.status(404).json({ message: "User not found" });
+  res.json({ message: `${user.name} has been signed out of every device and can now sign in on a new one.`, user });
+}
+
+// PATCH /api/admin/users/:id/profile  { name, email, examGoals }
+// Support-side corrections. The email matters most: a student who typed it
+// wrong at signup can never receive a password-reset code until it's fixed,
+// and they can't fix it themselves without logging in first.
+async function updateUserProfile(req, res) {
+  try {
+    const { name, email, examGoals } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (name !== undefined) {
+      if (!String(name).trim()) return res.status(400).json({ message: "Name cannot be empty" });
+      user.name = String(name).trim();
+    }
+
+    if (email !== undefined) {
+      const clean = String(email).trim().toLowerCase();
+      if (clean) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
+          return res.status(400).json({ message: "That email address is not valid" });
+        }
+        const taken = await User.findOne({ email: clean, _id: { $ne: user._id } }).select("_id");
+        if (taken) return res.status(409).json({ message: "That email is already used by another account" });
+        user.email = clean;
+      } else {
+        user.email = undefined; // clearing it is allowed; unset keeps the sparse index happy
+      }
+    }
+
+    if (Array.isArray(examGoals)) user.examGoals = examGoals.filter(Boolean);
+
+    await user.save();
+    res.json({ message: "Profile updated", user: { _id: user._id, name: user.name, email: user.email, examGoals: user.examGoals } });
+  } catch (err) {
+    if (err.code === 11000) return res.status(409).json({ message: "That email is already used by another account" });
+    res.status(500).json({ message: "Update failed", error: err.message });
+  }
+}
+
+// DELETE /api/admin/users/:id
+// For the deletion requests that arrive by email (rankveer.com/delete-account
+// promises this route for people who can't sign in). Runs the exact same
+// deletion the app's own button runs - see services/accountDeletion.js.
+// PATCH /api/admin/users/:id/role (admin) { role: "admin" | "student" }
+//
+// The panel is run by a team, and there was exactly one admin account - made
+// once from environment variables by a script. Everyone sharing that one
+// password means nobody can tell who published what, and one person leaving
+// means changing it for all of them. So each member gets their own: they sign
+// up in the app like anyone else, and an admin promotes them here.
+//
+// Two things are refused, because either locks the panel: taking away your
+// own access, and removing the last admin there is.
+async function setUserRole(req, res) {
+  const { role } = req.body || {};
+  if (!["admin", "student"].includes(role)) {
+    return res.status(400).json({ message: 'Role must be "admin" or "student"' });
+  }
+  const user = await User.findById(req.params.id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+  if (user.role === role) return res.json({ message: `${user.name} is already ${role === "admin" ? "an admin" : "a student"}`, role });
+
+  if (role === "student") {
+    if (String(user._id) === String(req.user._id)) {
+      return res.status(400).json({ message: "You can't remove your own admin access. Ask another admin to do it." });
+    }
+    if ((await User.countDocuments({ role: "admin" })) <= 1) {
+      return res.status(400).json({ message: "This is the only admin. Make someone else an admin first." });
+    }
+  }
+
+  // updateOne, not save(): an account made under an older schema can fail
+  // today's validation on save, and a role change must not depend on that.
+  // protect() reads the role from the database on every request, so this
+  // takes effect on the very next click - no need to log them out.
+  await User.updateOne({ _id: user._id }, { $set: { role } });
+  console.log(`Role change: ${req.user.phone} set ${user.phone} (${user.name}) to ${role}`);
+  res.json({
+    message:
+      role === "admin"
+        ? `${user.name} is now an admin. They sign in to the panel with their own phone number and password.`
+        : `${user.name} no longer has admin access.`,
+    role,
+  });
+}
+
+async function deleteUser(req, res) {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (user.role === "admin") {
+      return res.status(403).json({ message: "An admin account cannot be deleted" });
+    }
+
+    await deleteAccountData(user);
+    res.json({ message: `The account and data for ${user.name} (${user.phone}) have been deleted` });
+  } catch (err) {
+    res.status(500).json({ message: "Delete failed", error: err.message });
+  }
+}
 
 module.exports = {
   searchUsers,
@@ -382,4 +425,5 @@ module.exports = {
   forceLogout,
   updateUserProfile,
   deleteUser,
+  setUserRole,
 };

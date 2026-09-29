@@ -11,6 +11,7 @@ const {
   forceLogout,
   updateUserProfile,
   deleteUser,
+  setUserRole,
 } = require("../controllers/adminUserController");
 const { protect, adminOnly } = require("../middleware/auth");
 const asyncRoute = require("../utils/asyncRoute");
@@ -27,5 +28,6 @@ router.patch("/:id/unlock", protect, adminOnly, asyncRoute(unlockUser)); // clea
 router.patch("/:id/logout", protect, adminOnly, asyncRoute(forceLogout)); // free a stuck single-device session
 router.patch("/:id/profile", protect, adminOnly, asyncRoute(updateUserProfile)); // fix a wrong email/name
 router.delete("/:id", protect, adminOnly, asyncRoute(deleteUser)); // deletion requested by email
+router.patch("/:id/role", protect, adminOnly, asyncRoute(setUserRole)); // one admin account per team member
 
 module.exports = router;
