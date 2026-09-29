@@ -180,7 +180,24 @@ export default function Generation() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <Stat label="Practice tests built" value={status ? `${status.coverage.practice.built} / ${status.coverage.practice.possible}` : "—"} />
-        <Stat label="Mocks built" value={status ? `${status.coverage.mocks.built} across ${status.coverage.mocks.exams} exams` : "—"} />
+        <Stat
+          label="Mocks built"
+          value={
+            status
+              ? `${status.coverage.mocks.examsCovered ?? status.coverage.mocks.built} of ${status.coverage.mocks.exams} exams`
+              : "—"
+          }
+          // Only a full paper counts. A mock stopped part way by the day's
+          // allowance is listed here, and building mocks finishes it rather
+          // than starting another.
+          hint={
+            status?.coverage?.mocks?.unfinished?.length
+              ? `Unfinished: ${status.coverage.mocks.unfinished
+                  .map((u) => `${u.examType.replace(/_/g, " ")} ${u.have}/${u.of}`)
+                  .join(", ")}`
+              : undefined
+          }
+        />
         <Stat
           label="Writing with"
           value={status?.ai?.inUse || "—"}

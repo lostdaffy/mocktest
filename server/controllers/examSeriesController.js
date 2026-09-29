@@ -140,18 +140,39 @@ async function listExamMocks(req, res) {
  * that becomes a 500 or a failed job.
  */
 async function buildMockForExam(examStage) {
-  {
-    const pattern = await ExamPattern.findOne({ examType: examStage, isActive: true });
-    if (!pattern) {
-      throw new Error(`No exam pattern found for ${examStage}. Create the pattern first.`);
-    }
+  const pattern = await ExamPattern.findOne({ examType: examStage, isActive: true });
+  if (!pattern) {
+    throw new Error(`No exam pattern found for ${examStage}. Create the pattern first.`);
+  }
 
-    // Create the draft mock UPFRONT and empty, so that even if generation
-    // partially fails (rate limits), whatever we generate is saved to a real
-    // mock the admin can top up later via "Add Questions".
+  // What a full paper of this exam is - 80 for SSC GD, 150 for CTET.
+  const paperSize = (pattern.sections || []).reduce((n, sec) => n + (sec.questionCount || 0), 0);
+  const sectionIndexOf = (subject) =>
+    pattern.sections.findIndex((sec) => sec.subject === subject || (sec.sources || []).includes(subject));
+
+  // Finish what is already started rather than starting another. A run that
+  // ran out of allowance, or was cut off by a deploy, leaves a draft behind;
+  // the next run used to create Mock #2 beside it and leave #1 short for
+  // ever. Only drafts are touched - nothing a student can see.
+  const drafts = await Test.find({ examStage, type: "full_mock", publishStatus: "draft" }).sort({ seriesNumber: 1 });
+  const unfinished = drafts.filter((d) => d.questions.length < paperSize);
+  const partial = unfinished.filter((d) => d.questions.length > 0).sort((a, b) => b.questions.length - a.questions.length);
+  const empties = unfinished.filter((d) => d.questions.length === 0);
+
+  let test = partial[0] || empties[0] || null;
+  const resumed = !!test;
+
+  // An empty draft holds nothing and cannot have been sat - drafts are never
+  // shown to students - so the spares are removed rather than left in the
+  // list as "Mock #3 (0 questions)".
+  for (const e of empties) {
+    if (!test || String(e._id) !== String(test._id)) await Test.deleteOne({ _id: e._id });
+  }
+
+  if (!test) {
     const lastMock = await Test.findOne({ examStage, type: "full_mock" }).sort({ seriesNumber: -1 });
     const nextNumber = (lastMock?.seriesNumber || 0) + 1;
-    const test = await Test.create({
+    test = await Test.create({
       title: `${pattern.displayName} - Mock #${nextNumber}`,
       type: "full_mock",
       examType: examStage,
@@ -165,129 +186,163 @@ async function buildMockForExam(examStage) {
       publishStatus: "draft",
       createdBy: "admin",
     });
-
-    const allQuestionIds = [];
-    let hadFailure = false;
-    // What the quality gate did across every batch. Counted properly so the
-    // admin is told the truth about the mock they are about to review.
-    const tally = { verified: 0, repaired: 0, discarded: 0, duplicates: 0, short: 0 };
-    const syllabusOffsets = new Map(); // per subject, so each batch moves along the syllabus
-
-    // Helper: generate questions in small chunks (max 12 per call for quality &
-    // valid JSON), with a short pause between calls so we stay under Gemini's
-    // free-tier limit of 15 requests/minute. If a batch fails, we skip it and
-    // keep going instead of losing the whole mock.
-    async function generateInChunks(section, difficulty, totalCount) {
-      const CHUNK = 12;
-      let remaining = totalCount;
-      while (remaining > 0) {
-        const thisBatch = Math.min(CHUNK, remaining);
-        const offset = syllabusOffsets.get(section.subject) || 0;
-        const topics = syllabusSlice(section.syllabus, offset);
-        syllabusOffsets.set(section.subject, offset + (topics.length || 1));
-        try {
-          // Only questions that pass the rule checks AND the AI's own
-          // re-solve come back here. Anything doubtful is mended if it can be
-          // and deleted if it cannot - nothing doubtful is kept.
-          const built = await createVerifiedQuestions({
-            needed: thisBatch,
-            tag: { examStage },
-            generateParams: {
-              examType: examStage,
-              examDisplayName: pattern.displayName,
-              subject: section.subject,
-              topic: section.subject,
-              difficulty,
-              examLevel: pattern.examLevel,
-              syllabusTopics: topics,
-            },
-          });
-          for (const k of Object.keys(tally)) tally[k] += built[k] || 0;
-          allQuestionIds.push(...built.ids);
-          // Save progress to the mock after each successful batch
-          test.questions = allQuestionIds;
-          await test.save();
-        } catch (err) {
-          console.log(`Batch failed (${section.subject}/${difficulty}): ${err.message}. Skipping it and carrying on.`);
-          hadFailure = true;
-        }
-        remaining -= thisBatch;
-        // Pause ~5s between calls -> at most ~12 calls/min, safely under the 15 limit
-        await new Promise((r) => setTimeout(r, GEMINI_PAUSE_MS));
-      }
-    }
-
-    // Each section is half REAL previous-year questions and half freshly
-    // generated ones, so a mock feels like the actual paper instead of an
-    // entirely invented one. The PYQ half comes from papers the admin has
-    // already reviewed and published in the PYQ Bank - that feature itself
-    // is untouched, these questions are only referenced here as well.
-    let pyqUsed = 0;
-
-    for (const section of pattern.sections) {
-      const sectionStart = allQuestionIds.length;
-
-      const pyqWanted = Math.round((section.questionCount * PYQ_MIX_PERCENT) / 100);
-      const pyqIds = await pickPyqQuestions(examStage, section.subject, pyqWanted, allQuestionIds);
-      if (pyqIds.length > 0) {
-        allQuestionIds.push(...pyqIds);
-        pyqUsed += pyqIds.length;
-        test.questions = allQuestionIds;
-        await test.save();
-      }
-
-      // Whatever the PYQ bank couldn't supply is generated instead, so a
-      // thin bank just means a more AI-heavy mock, never a short one.
-      const aiNeeded = Math.max(0, section.questionCount - pyqIds.length);
-      const easy = Math.round((aiNeeded * (section.difficultyMix?.easy ?? 30)) / 100);
-      const medium = Math.round((aiNeeded * (section.difficultyMix?.medium ?? 50)) / 100);
-      const perDifficulty = {
-        easy,
-        medium,
-        hard: Math.max(0, aiNeeded - easy - medium), // takes the rounding, so the section lands on its exact count
-      };
-
-      for (const [difficulty, count] of Object.entries(perDifficulty)) {
-        if (count <= 0) continue;
-        await generateInChunks(section, difficulty, count);
-      }
-
-      // Shuffle within the section, otherwise every real question sits at
-      // the top of its subject and the mock reads in two obvious halves.
-      const sectionIds = allQuestionIds.slice(sectionStart);
-      for (let i = sectionIds.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [sectionIds[i], sectionIds[j]] = [sectionIds[j], sectionIds[i]];
-      }
-      allQuestionIds.splice(sectionStart, sectionIds.length, ...sectionIds);
-      test.questions = allQuestionIds;
-      await test.save();
-    }
-
-    // The mock was already created upfront and saved progressively. Just report.
-    const finalCount = test.questions.length;
-
-    if (finalCount === 0) {
-      // Nothing generated - clean up the empty mock
-      await Test.findByIdAndDelete(test._id);
-      throw new Error("No questions could be generated (rate limit or API issue). Try again in a minute.");
-    }
-
-    // What a full paper of this exam is, so the count means something.
-    const paperSize = (pattern.sections || []).reduce((n, sec) => n + (sec.questionCount || 0), 0) || finalCount;
-
-    const note =
-      qualityNote(tally) +
-      (hadFailure
-        ? ` (Some batches were skipped because of the rate limit - use "Add questions" to finish the rest.)`
-        : "");
-
-    return {
-      message: `Mock #${test.seriesNumber} created — ${finalCount} of ${paperSize} questions (${pyqUsed} from past papers, ${finalCount - pyqUsed} new).${note} Review, then publish once it is full.`,
-      test: { _id: test._id, title: test.title, questionCount: finalCount },
-      full: finalCount >= paperSize,
-    };
   }
+
+  // The paper is kept as one bucket per section, in the pattern's order, so a
+  // resumed section's new questions land inside that section rather than
+  // tacked onto the end of the paper.
+  const buckets = pattern.sections.map(() => []);
+  const strays = [];
+  const pyqInSection = pattern.sections.map(() => 0);
+  if (test.questions.length) {
+    const have = await Question.find({ _id: { $in: test.questions } }).select("subject source").lean();
+    const byId = new Map(have.map((q) => [String(q._id), q]));
+    for (const id of test.questions) {
+      const q = byId.get(String(id));
+      if (!q) continue; // deleted from the bank since - drop the dangling id
+      const k = sectionIndexOf(q.subject);
+      if (k < 0) strays.push(q._id);
+      else {
+        buckets[k].push(q._id);
+        if (q.source === "pyq") pyqInSection[k] += 1;
+      }
+    }
+  }
+  const startedWith = buckets.reduce((n, b) => n + b.length, 0);
+  const flatten = () => [...buckets.flat(), ...strays];
+  const saveProgress = async () => {
+    // updateOne, not save(): a mock created under an older schema fails
+    // whole-document validation, and this only ever changes one field.
+    await Test.updateOne({ _id: test._id }, { $set: { questions: flatten() } });
+  };
+
+  let hadFailure = false;
+  // Once every model has used its allowance there is nothing to gain from
+  // trying the remaining batches - each one fails the same way, five seconds
+  // apart. Stop, and say so, so the queue can pause instead of calling a
+  // 9-question mock done.
+  let allowanceGone = false;
+  const tally = { verified: 0, repaired: 0, discarded: 0, duplicates: 0, short: 0 };
+  const syllabusOffsets = new Map(); // per subject, so each batch moves along the syllabus
+  const everyId = () => flatten();
+
+  // Small chunks (max 12 per call for quality and valid JSON), paused between
+  // calls to stay under the free tier's per-minute limit. A batch that fails
+  // for a passing reason is skipped and the rest carry on.
+  async function generateInChunks(k, section, difficulty, totalCount) {
+    const CHUNK = 12;
+    let remaining = totalCount;
+    while (remaining > 0 && !allowanceGone) {
+      const thisBatch = Math.min(CHUNK, remaining);
+      const offset = syllabusOffsets.get(section.subject) || 0;
+      const topics = syllabusSlice(section.syllabus, offset);
+      syllabusOffsets.set(section.subject, offset + (topics.length || 1));
+      try {
+        // Only questions that pass the rule checks AND the AI's own re-solve
+        // come back here. Anything doubtful is mended if it can be and
+        // deleted if it cannot - nothing doubtful is kept.
+        const built = await createVerifiedQuestions({
+          needed: thisBatch,
+          tag: { examStage },
+          generateParams: {
+            examType: examStage,
+            examDisplayName: pattern.displayName,
+            subject: section.subject,
+            topic: section.subject,
+            difficulty,
+            examLevel: pattern.examLevel,
+            syllabusTopics: topics,
+          },
+        });
+        for (const key of Object.keys(tally)) tally[key] += built[key] || 0;
+        buckets[k].push(...built.ids);
+        await saveProgress();
+      } catch (err) {
+        hadFailure = true;
+        if (/every model has used its allowance|PerDay|per day|quota exceeded/i.test(err.message || "")) {
+          allowanceGone = true;
+          console.log(`Mock ${examStage}: the day's allowance is gone at ${everyId().length} of ${paperSize} - stopping, to finish from here tomorrow.`);
+          break;
+        }
+        console.log(`Batch failed (${section.subject}/${difficulty}): ${err.message}. Skipping it and carrying on.`);
+      }
+      remaining -= thisBatch;
+      await new Promise((r) => setTimeout(r, GEMINI_PAUSE_MS));
+    }
+  }
+
+  // Each section is part real previous-year questions and part freshly
+  // generated, so a mock feels like the actual paper. Only what a section is
+  // still SHORT of is fetched - on a resumed mock, that is the remainder.
+  let pyqUsed = pyqInSection.reduce((n, x) => n + x, 0);
+
+  for (let k = 0; k < pattern.sections.length && !allowanceGone; k++) {
+    const section = pattern.sections[k];
+    const shortBy = Math.max(0, section.questionCount - buckets[k].length);
+    if (shortBy === 0) continue;
+
+    const pyqTarget = Math.round((section.questionCount * PYQ_MIX_PERCENT) / 100);
+    const pyqWanted = Math.min(shortBy, Math.max(0, pyqTarget - pyqInSection[k]));
+    const pyqIds = pyqWanted > 0 ? await pickPyqQuestions(examStage, section.subject, pyqWanted, everyId()) : [];
+    if (pyqIds.length > 0) {
+      buckets[k].push(...pyqIds);
+      pyqUsed += pyqIds.length;
+      await saveProgress();
+    }
+
+    // Whatever the PYQ bank couldn't supply is generated instead, so a thin
+    // bank means a more AI-heavy mock, never a short one.
+    const aiNeeded = Math.max(0, section.questionCount - buckets[k].length);
+    const easy = Math.round((aiNeeded * (section.difficultyMix?.easy ?? 30)) / 100);
+    const medium = Math.round((aiNeeded * (section.difficultyMix?.medium ?? 50)) / 100);
+    const perDifficulty = {
+      easy,
+      medium,
+      hard: Math.max(0, aiNeeded - easy - medium), // takes the rounding, so the section lands on its exact count
+    };
+    for (const [difficulty, count] of Object.entries(perDifficulty)) {
+      if (count <= 0 || allowanceGone) continue;
+      await generateInChunks(k, section, difficulty, count);
+    }
+
+    // Shuffle within the section, otherwise every real question sits at the
+    // top of its subject and the mock reads in two obvious halves.
+    const b = buckets[k];
+    for (let x = b.length - 1; x > 0; x--) {
+      const y = Math.floor(Math.random() * (x + 1));
+      [b[x], b[y]] = [b[y], b[x]];
+    }
+    await saveProgress();
+  }
+
+  const finalCount = flatten().length;
+  const added = finalCount - startedWith;
+
+  if (finalCount === 0) {
+    await Test.deleteOne({ _id: test._id });
+    if (allowanceGone) {
+      throw new Error("Every model has used its allowance for today - nothing could be generated for this mock yet.");
+    }
+    throw new Error("No questions could be generated (rate limit or API issue). Try again in a minute.");
+  }
+
+  const note =
+    qualityNote(tally) +
+    (allowanceGone
+      ? " (Stopped when the day's AI allowance ran out - it will be finished from here, not started again.)"
+      : hadFailure
+      ? ' (Some batches were skipped because of the rate limit - it will be finished from here on the next run.)'
+      : "");
+
+  const verb = resumed ? `continued (+${added})` : "created";
+  return {
+    message: `Mock #${test.seriesNumber} ${verb} — ${finalCount} of ${paperSize} questions (${pyqUsed} from past papers, ${finalCount - pyqUsed} new).${note} Review, then publish once it is full.`,
+    test: { _id: test._id, title: test.title, questionCount: finalCount },
+    full: finalCount >= paperSize,
+    allowanceGone,
+    have: finalCount,
+    paperSize,
+  };
 }
 
 // POST /api/exam-series/:examStage/generate-mock (admin)

@@ -27,8 +27,13 @@ async function findGaps({ includeSubjects, excludeSubjects = [], mocksPerExam = 
     tests.filter((t) => t.type === "practice").map((t) => `${t.topic}|${t.difficultyLevel}`)
   );
 
+  // Only a FULL mock fills the gap. Counting every mock document meant SSC
+  // CHSL at 9 of 100 - and an empty one left by an interrupted run - both
+  // counted as built, so the missing 91 questions never showed up anywhere.
+  // A short draft stays a gap, and building it resumes that same draft.
   const mockCount = {};
   tests.filter((t) => t.type === "full_mock").forEach((t) => {
+    if ((t.questions || []).length < paperSizeOf(patterns, t.examStage)) return;
     mockCount[t.examStage] = (mockCount[t.examStage] || 0) + 1;
   });
 
@@ -77,12 +82,17 @@ async function findGaps({ includeSubjects, excludeSubjects = [], mocksPerExam = 
   return { practice, mocks, short, levels: LEVELS };
 }
 
+function paperSizeOf(patterns, examType) {
+  const p = patterns.find((x) => x.examType === examType);
+  return (p?.sections || []).reduce((n, s) => n + (s.questionCount || 0), 0) || 1;
+}
+
 /** A count of what exists against what could exist, for the panel's header. */
 async function coverage() {
   const [subjects, patterns, tests] = await Promise.all([
     Subject.find({ isActive: true }).lean(),
     ExamPattern.find({ isActive: true }).lean(),
-    Test.find({}).select("type topic difficultyLevel examStage").lean(),
+    Test.find({}).select("type topic difficultyLevel examStage questions").lean(),
   ]);
 
   const havePractice = new Set(
@@ -101,11 +111,19 @@ async function coverage() {
     }
   }
 
-  const mocksBuilt = tests.filter((t) => t.type === "full_mock").length;
+  // "10 of 10 built" was true of documents and false of papers. Full ones
+  // are counted as built; short ones are reported separately so the panel
+  // can say which exams still need finishing.
+  const mockDocs = tests.filter((t) => t.type === "full_mock");
+  const fullMocks = mockDocs.filter((t) => (t.questions || []).length >= paperSizeOf(patterns, t.examStage));
+  const unfinished = mockDocs
+    .filter((t) => (t.questions || []).length < paperSizeOf(patterns, t.examStage))
+    .map((t) => ({ examType: t.examStage, have: (t.questions || []).length, of: paperSizeOf(patterns, t.examStage) }));
+  const examsWithAFullMock = new Set(fullMocks.map((t) => t.examStage)).size;
 
   return {
     practice: { built, possible },
-    mocks: { built: mocksBuilt, exams: patterns.length },
+    mocks: { built: fullMocks.length, exams: patterns.length, examsCovered: examsWithAFullMock, unfinished },
   };
 }
 

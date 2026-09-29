@@ -56,7 +56,21 @@ async function runMockJob(job) {
   // came back, so there is one implementation of "build a mock", not two.
   const { buildMockForExam } = require("../controllers/examSeriesController");
   const built = await buildMockForExam(job.examType);
-  return built.message;
+  if (built.full) return built.message;
+
+  // A short mock is not done. SSC CHSL was marked done at 9 of 100 and
+  // dropped out of sight, because this returned whatever came back. The
+  // builder now picks up the same draft where it stopped, so sending the job
+  // round again finishes that mock instead of starting another.
+  const where = `${built.test.title} is ${built.have} of ${built.paperSize}`;
+  if (built.allowanceGone) {
+    // Worded so isDailyAllowanceGone matches: the queue pauses, and the job
+    // goes back in without spending an attempt.
+    throw new Error(`Every model has used its allowance for today - ${where}; it will be finished from there.`);
+  }
+  // Worded so isWorthRetrying matches: a few batches were refused for a
+  // passing reason, and another go usually closes the gap.
+  throw new Error(`${where} so far - try again in a minute to finish it.`);
 }
 
 /**
