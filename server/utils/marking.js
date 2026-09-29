@@ -61,7 +61,28 @@ function sectionRulesFrom(pattern) {
     sources: s.sources || [],
     negativeMarking: s.negativeMarking ?? null,
     marksPerQuestion: s.marksPerQuestion ?? null,
+    durationMinutes: s.durationMinutes ?? null,
   }));
 }
 
-module.exports = { rateFor, marksFor, uniformRate, sectionRulesFrom, sectionCovers, DEFAULT_RATE };
+/**
+ * True when this paper locks each section to its own clock.
+ *
+ * All-or-nothing on purpose: a paper where only some sections are timed has
+ * no sensible reading, so it is treated as a single-clock paper and the
+ * admin sees the sections it still has to fill in.
+ */
+function hasSectionalTiming(test) {
+  const rules = test?.sectionRules || [];
+  return rules.length > 0 && rules.every((r) => r.durationMinutes > 0);
+}
+
+module.exports = {
+  rateFor,
+  marksFor,
+  uniformRate,
+  sectionRulesFrom,
+  sectionCovers,
+  hasSectionalTiming,
+  DEFAULT_RATE,
+};

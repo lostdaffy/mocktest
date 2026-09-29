@@ -29,6 +29,7 @@ const testSchema = new mongoose.Schema(
         sources: [{ type: String }],
         negativeMarking: { type: Number, default: null },
         marksPerQuestion: { type: Number, default: null },
+        durationMinutes: { type: Number, default: null },
       },
     ],
 

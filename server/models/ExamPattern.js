@@ -53,6 +53,13 @@ const examPatternSchema = new mongoose.Schema(
         // guess freely. Left null, the exam's own rate and marks apply.
         negativeMarking: { type: Number, default: null },
         marksPerQuestion: { type: Number, default: null },
+
+        // Minutes this section alone is given, for the exams that lock a
+        // section when its time is up. IBPS PO Prelims is three 20-minute
+        // papers in a row, not one 60-minute paper - you cannot return to
+        // English once you have moved on. Left null, the paper runs on one
+        // clock, which is true of the other nine.
+        durationMinutes: { type: Number, default: null },
         // The official syllabus for this section of this post's paper. The
         // generator is told to ask ONLY from these and to spread questions
         // across them instead of hammering one topic.

@@ -11,6 +11,11 @@ const emptySection = () => ({
   // of the ten exams. Only SSC MTS differs, and only because the real paper
   // does: no penalty in Session-I, a full mark in Session-II.
   negativeMarking: null,
+  // Minutes for this section alone, for a paper that locks a section when
+  // its time is up. IBPS PO Prelims is the only one of the ten: three
+  // 20-minute papers in a row, no going back. Blank means one clock for the
+  // whole paper.
+  durationMinutes: null,
   difficultyMix: { easy: 30, medium: 50, hard: 20 },
   syllabus: [],
 });
@@ -100,6 +105,7 @@ export default function ExamPatterns() {
         sources: s.sources || [],
         questionCount: s.questionCount,
         negativeMarking: s.negativeMarking ?? null,
+        durationMinutes: s.durationMinutes ?? null,
         difficultyMix: { easy: 30, medium: 50, hard: 20, ...(s.difficultyMix || {}) },
         syllabus: (s.syllabus || []).map((t) =>
           typeof t === "string" ? t : t.subTopics?.length ? `${t.topic}: ${t.subTopics.join(", ")}` : t.topic
@@ -361,6 +367,17 @@ export default function ExamPatterns() {
                         }
                         className="w-24 rv-input !py-1.5 text-sm"
                       />
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="min"
+                        title="Minutes for this section alone. Leave blank unless the exam locks each section to its own clock."
+                        value={s.durationMinutes ?? ""}
+                        onChange={(e) =>
+                          updateSection(idx, "durationMinutes", e.target.value === "" ? null : Number(e.target.value))
+                        }
+                        className="w-20 rv-input !py-1.5 text-sm"
+                      />
                       <button
                         type="button"
                         onClick={() => removeSection(idx)}
@@ -381,9 +398,10 @@ export default function ExamPatterns() {
                         className="w-full rv-input !py-1.5 text-sm"
                       />
                       <p className="text-xs text-slate-soft mt-1">
-                        Leave the small number box blank unless this section is marked differently from the rest of
-                        the paper — SSC MTS deducts nothing in Session-I and a full mark in Session-II, and it is the
-                        only one of the ten that does.
+                        Leave the two small boxes blank unless this section really differs: the first is its own
+                        negative marking (SSC MTS deducts nothing in Session-I and a full mark in Session-II), the
+                        second is its own time limit (IBPS PO Prelims is three 20-minute papers in a row, with no
+                        going back). Set the time on every section or none — half-timed makes no sense.
                       </p>
                       <p className="text-xs text-slate-soft mt-1">
                         Extra subjects this one section is built from. SSC&apos;s General Awareness is GK + Science +

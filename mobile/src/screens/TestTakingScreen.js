@@ -348,6 +348,9 @@ export default function TestTakingScreen({
 
   useEffect(() => {
     if (!test) return;
+    // The sectional clock above owns the countdown for the papers that have
+    // one, and submits when the LAST section closes rather than the first.
+    if (sectionTiming) return;
 
     // Live exams run on the shared server deadline, recomputed fresh from
     // absolute time every tick - immune to setInterval being throttled
@@ -611,6 +614,49 @@ export default function TestTakingScreen({
     );
   }, [test]);
 
+  /*
+    SECTIONAL TIMING
+
+    IBPS PO Prelims is not a 60-minute paper you spend as you like. It is
+    three 20-minute papers in a row - English, Quantitative, Reasoning - and
+    once a section's 20 minutes are gone you cannot go back to it. Timing IS
+    that exam; candidates fail it on time management rather than on knowing
+    less, so a single 60-minute clock trains the wrong habit entirely.
+
+    Null unless the paper carries a duration for EVERY section, which is
+    true of exactly one of the ten. Everything below is inert otherwise and
+    the original single clock runs untouched.
+  */
+  const sectionTiming = useMemo(() => {
+    const rules = test?.sectionRules || [];
+    if (!rules.length || !sections.length) return null;
+
+    const withClocks = sections.map((section) => {
+      const rule = rules.find(
+        (r) =>
+          r.subject === section.subject ||
+          (r.sources || []).includes(section.subject)
+      );
+      return rule?.durationMinutes > 0
+        ? { ...section, minutes: rule.durationMinutes }
+        : null;
+    });
+    // All or nothing: a paper where only some sections are timed has no
+    // sensible reading, so it runs on one clock like everything else.
+    if (withClocks.some((x) => !x)) return null;
+
+    let elapsed = 0;
+    return withClocks.map((section) => {
+      elapsed += section.minutes * 60;
+      return { ...section, closesAtSec: elapsed };
+    });
+  }, [test, sections]);
+
+  // When the paper began, in local ms. For a live exam the shared deadline
+  // fixes it for everyone; otherwise it is the moment this student opened it.
+  const examStartMsRef = useRef(null);
+  const [activeSectionIdx, setActiveSectionIdx] = useState(0);
+
   const currentSection =
     useMemo(() => {
       if (!test) return null;
@@ -625,6 +671,57 @@ export default function TestTakingScreen({
       currentIdx,
       test,
     ]);
+
+  useEffect(() => {
+    if (!sectionTiming || !test) return;
+
+    if (examStartMsRef.current === null) {
+      const total = sectionTiming[sectionTiming.length - 1].closesAtSec * 1000;
+      // A live paper's sections hang off the shared deadline so everyone
+      // changes section at the same moment, not at their own start.
+      examStartMsRef.current =
+        test.type === "live" && liveEndsAtMsRef.current
+          ? liveEndsAtMsRef.current - total
+          : Date.now();
+    }
+
+    const tick = () => {
+      const now =
+        test.type === "live"
+          ? Date.now() + serverTimeOffsetMsRef.current
+          : Date.now();
+      const elapsed = Math.floor((now - examStartMsRef.current) / 1000);
+
+      const idx = sectionTiming.findIndex((sec) => elapsed < sec.closesAtSec);
+
+      if (idx === -1) {
+        setSecondsLeft(0);
+        if (handleSubmitRef.current) handleSubmitRef.current(true);
+        return true;
+      }
+
+      setSecondsLeft(sectionTiming[idx].closesAtSec - elapsed);
+      setActiveSectionIdx(idx);
+      return false;
+    };
+
+    if (tick()) return;
+    const timer = setInterval(() => {
+      if (tick()) clearInterval(timer);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [sectionTiming, test]);
+
+  // A closed section is closed: move the student on rather than leaving them
+  // looking at questions they can no longer answer.
+  useEffect(() => {
+    if (!sectionTiming) return;
+    const section = sectionTiming[activeSectionIdx];
+    if (!section) return;
+    if (!section.indices.includes(currentIdx)) {
+      setCurrentIdx(section.startIdx);
+    }
+  }, [activeSectionIdx, sectionTiming]);
 
   /* =======================================================
      TIME TRACKING
@@ -708,6 +805,16 @@ export default function TestTakingScreen({
         recordTimeSpent(
           currentQuestion._id
         );
+      }
+
+      // Jumping into a section whose time has gone - or one that has not
+      // opened yet - is the whole thing sectional timing exists to prevent.
+      if (sectionTiming) {
+        const open = sectionTiming[activeSectionIdx];
+        if (open && !open.indices.includes(index)) {
+          setPaletteVisible(false);
+          return;
+        }
       }
 
       setCurrentIdx(index);
