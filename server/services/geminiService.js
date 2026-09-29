@@ -473,21 +473,42 @@ ${avoidTexts.map((t, i) => `${i + 1}. ${t}`).join("\n")}`
 
   const questions = await callGemini(prompt, { jsonMode: true });
 
-  // A chapter usually covers several topics, and all of them go into one
-  // prompt so a test still spans the chapter. What must NOT happen is
-  // stamping that joined string onto every question: a question tagged
-  // "Simple Interest, Compound Interest" matches neither topic, so its
-  // chapter stays empty on screen however many questions are generated for
-  // it. Ten of the catalog's chapters have more than one topic.
-  //
-  // The model is asked which topic each question belongs to. Anything it
-  // returns that is not one of the topics we asked for is discarded and the
-  // topics are handed out in turn instead - a wrong-but-real topic is
-  // recoverable, an unmatchable one is not.
-  const choices = (syllabusTopics || []).filter(Boolean);
+  return tagGenerated(questions, { examType, subject, topic, difficulty, examMode, syllabusTopics });
+}
+
+/**
+ * Stamps the tags every generated question must carry.
+ *
+ * Its own function because the test stub replaces generateQuestions whole:
+ * written inline, the stub had to re-implement this to be useful, and the
+ * copy it made carried the same fault - comparing the model's string answer
+ * against an array of syllabus OBJECTS, which is false every time. So the
+ * model's own choice was always discarded and the object itself was written
+ * into the question, where mongoose turned it into 330 characters of its own
+ * inspect output. topicStats is keyed on subject|topic, so weak-topic
+ * detection and every recommendation built on it were being fed that.
+ *
+ * A chapter usually covers several topics and all of them go into one
+ * prompt, so a test still spans the chapter. What must NOT happen is
+ * stamping that joined string onto every question: a question tagged
+ * "Simple Interest, Compound Interest" matches neither topic, and its
+ * chapter stays empty on screen however many questions are generated for it.
+ *
+ * The model is asked which topic each question belongs to. Anything it
+ * returns that is not one of the topics we asked for is discarded and the
+ * topics are handed out in turn instead - a wrong-but-real topic is
+ * recoverable, an unmatchable one is not.
+ */
+function tagGenerated(questions, { examType, subject, topic, difficulty, examMode, syllabusTopics }) {
+  // Names only. A syllabus topic may be a plain string or { topic, subTopics },
+  // and only the name ever belongs on a question.
+  const choices = (syllabusTopics || [])
+    .map((t) => (typeof t === "string" ? t : t?.topic))
+    .map((t) => String(t || "").trim())
+    .filter(Boolean);
   const fallback = (i) => (choices.length ? choices[i % choices.length] : topic);
 
-  return questions.map((q, i) => ({
+  return (questions || []).map((q, i) => ({
     ...q,
     examType: [examType],
     examStage: examType, // strict isolation: this question belongs to this exam only
@@ -824,6 +845,9 @@ Return ONLY valid JSON, no extra text:
 }
 module.exports = {
   generateQuestions,
+  // Exported so the test stub tags questions the same way the real
+  // generator does, instead of keeping its own copy of the rule.
+  tagGenerated,
   verifyQuestion,
   verifyQuestions,
   repairQuestion,
