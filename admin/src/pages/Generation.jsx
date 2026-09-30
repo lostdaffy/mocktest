@@ -21,6 +21,9 @@ export default function Generation() {
   const [gaps, setGaps] = useState(null);
   const [busy, setBusy] = useState("");
   const timer = useRef(null);
+  // Server clock minus this computer's, so a countdown is right even when the
+  // admin's laptop clock is a few minutes out.
+  const clockOffset = useRef(0);
 
   async function load({ silent = false } = {}) {
     try {
@@ -28,6 +31,7 @@ export default function Generation() {
         api.get("/generation/status"),
         api.get("/generation/gaps", { params: { exclude: LEFT_ALONE.join(",") } }),
       ]);
+      if (s.data.serverTime) clockOffset.current = new Date(s.data.serverTime).getTime() - Date.now();
       setStatus(s.data);
       setGaps(g.data);
     } catch (err) {
@@ -72,27 +76,28 @@ export default function Generation() {
         subtitle="Queue up everything the catalog is missing and watch it build. The queue runs on the server, so you can close this page and it carries on."
       />
 
-      {status?.paused && (
-        <div className="rv-card p-4 mb-6 border-l-4 border-l-warn">
-          <p className="font-medium text-ink">
-            {status.pausedBy === "worker" ? "The queue stopped itself" : "Paused"}
-          </p>
-          <p className="text-sm text-slate-soft mt-1">{status.pausedReason}</p>
-          <button
-            onClick={() => act("resume", () => api.post("/generation/resume"))}
-            disabled={!!busy}
-            className="rv-btn-primary mt-3 disabled:opacity-60"
-          >
-            {busy === "resume" ? "Resuming..." : "Resume"}
-          </button>
-        </div>
+      {status && (
+        <QueueStatus
+          status={status}
+          now={Date.now() + clockOffset.current}
+          busy={busy}
+          onResume={() => act("resume", () => api.post("/generation/resume"))}
+        />
       )}
 
       <div className="rv-card p-5 mb-6">
         <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
           <div>
             <p className="font-semibold text-ink">
-              {running ? "Building now" : waiting ? "Waiting to start" : total ? "Nothing left to build" : "Queue is empty"}
+              {running
+                ? "Building now"
+                : waiting && status?.paused
+                ? "Stopped"
+                : waiting
+                ? "Starting in a moment"
+                : total
+                ? "Nothing left to build"
+                : "Queue is empty"}
             </p>
             <p className="text-sm text-slate-soft mt-0.5">
               {running ? running.label : waiting ? `${waiting} job(s) queued` : " "}
@@ -243,6 +248,118 @@ export default function Generation() {
       )}
     </div>
   );
+}
+
+// What the queue is doing and what happens next, in words.
+//
+// It used to say "The queue stopped itself" and offer a Resume button. Someone
+// pressed it at 11:49, before the AI's daily limit had reset at 12:30, and the
+// queue stopped again straight away - the page never said when it would be
+// able to carry on, or that it would do so by itself.
+function QueueStatus({ status, now, busy, onResume }) {
+  const waitingJobs = status.waiting || [];
+  const queued = status.counts?.queued || 0;
+  const running = status.current;
+  const forAllowance = status.paused && status.resumeAfter;
+
+  let tone = "info";
+  let title;
+  let body;
+  let action = null;
+
+  if (forAllowance) {
+    const at = new Date(status.resumeAfter);
+    const minutes = Math.ceil((at.getTime() - now) / 60000);
+    const when = at.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit" });
+    tone = "warn";
+    title = "Waiting for the AI's daily limit to reset";
+    body =
+      minutes > 0 ? (
+        <>
+          The free AI limit for today is used up. The queue starts again <b>by itself at {when}</b> —{" "}
+          <b>{formatWait(minutes)}</b> from now. Nothing needs doing; you can close this page.
+        </>
+      ) : (
+        <>The limit has reset. The queue is starting again by itself — give it a minute.</>
+      );
+    action = (
+      <button
+        onClick={onResume}
+        disabled={!!busy}
+        className="text-sm text-slate-soft hover:text-ink underline disabled:opacity-60"
+        title="Only useful if the limit has already reset. Before then it will simply stop again."
+      >
+        {busy === "resume" ? "Trying..." : "Try now anyway"}
+      </button>
+    );
+  } else if (status.paused && status.pausedBy === "worker") {
+    tone = "warn";
+    title = "The queue stopped itself";
+    body = <>{status.pausedReason || "It hit a problem it could not get past on its own."}</>;
+    action = (
+      <button onClick={onResume} disabled={!!busy} className="rv-btn-primary disabled:opacity-60">
+        {busy === "resume" ? "Resuming..." : "Resume"}
+      </button>
+    );
+  } else if (status.paused) {
+    tone = "warn";
+    title = "Paused by an admin";
+    body = queued
+      ? <>{queued} job(s) are waiting. Nothing is built until someone presses Resume.</>
+      : <>Nothing is waiting. Resume before queueing more, or queueing will resume it for you.</>;
+    action = (
+      <button onClick={onResume} disabled={!!busy} className="rv-btn-primary disabled:opacity-60">
+        {busy === "resume" ? "Resuming..." : "Resume"}
+      </button>
+    );
+  } else if (running) {
+    tone = "ok";
+    title = "Building";
+    body = <>{running.label}{queued ? ` — then ${queued} more.` : " — the last one."}</>;
+  } else if (queued) {
+    tone = "ok";
+    title = "Starting";
+    body = <>{queued} job(s) waiting; the next one starts within a few seconds.</>;
+  } else {
+    return null;
+  }
+
+  const border = { warn: "border-l-warn", ok: "border-l-success", info: "border-l-brand" }[tone];
+
+  return (
+    <div className={`rv-card p-4 mb-6 border-l-4 ${border}`}>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="min-w-0">
+          <p className="font-semibold text-ink">{title}</p>
+          <p className="text-sm text-slate mt-1">{body}</p>
+        </div>
+        {action}
+      </div>
+
+      {waitingJobs.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-border-soft">
+          <p className="text-xs font-medium text-slate-soft mb-1.5">
+            {forAllowance || status.paused ? "Waiting" : "Next up"} ({queued})
+          </p>
+          <ol className="text-sm text-ink-soft space-y-0.5 list-decimal list-inside">
+            {waitingJobs.map((j) => (
+              <li key={j._id}>{j.label}</li>
+            ))}
+          </ol>
+          {queued > waitingJobs.length && (
+            <p className="text-xs text-slate-soft mt-1">…and {queued - waitingJobs.length} more</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function formatWait(minutes) {
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m ? `${h} h ${m} min` : `${h} h`;
 }
 
 function Stat({ label, value, hint }) {

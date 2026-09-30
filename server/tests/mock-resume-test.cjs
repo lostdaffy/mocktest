@@ -120,9 +120,71 @@ const callsFor = (level) =>
   const gaps = await api("GET", "/generation/gaps", { token });
   check("...and it is still a gap to fill", gaps.json.totals.mocks === 1, `${gaps.json.totals.mocks} mock gap(s)`);
 
-  // ---- the next day
+  // ---- what the panel is told while it waits
+  // "Paused" alone left the team guessing: somebody pressed Resume at 11:49,
+  // before the allowance had reset, and the queue simply stopped again.
+  st = await api("GET", "/generation/status", { token });
+  const resumeAt = st.json.resumeAfter ? new Date(st.json.resumeAfter) : null;
+  check("the panel is told when the queue will start again",
+    resumeAt && resumeAt > new Date(), st.json.resumeAfter);
+  check("...which is just after the next reset, midnight in California",
+    resumeAt && Math.abs(resumeAt - new Date(st.json.nextAllowanceReset) - 5 * 60 * 1000) < 1000,
+    `${st.json.nextAllowanceReset} -> ${st.json.resumeAfter}`);
+  check("...and the reason names that time instead of a fixed '12:30'",
+    /starts again by itself at \d{1,2}:\d{2}\s?(am|pm) IST/i.test(st.json.pausedReason || ""), st.json.pausedReason);
+  check("...and what is waiting, by name",
+    (st.json.waiting || []).some((w) => /SSC CHSL/.test(w.label)), JSON.stringify((st.json.waiting || []).map((w) => w.label)));
+
+  const keepAwake = require(path.join(SERVER, "jobs/keepAwake"));
+  // fetch is swapped only for the length of one ping - this suite's own
+  // requests go through fetch too, and must still reach the server.
+  const pingsNow = async () => {
+    const realFetch = global.fetch;
+    let n = 0;
+    global.fetch = async () => { n++; return { ok: true }; };
+    process.env.RENDER_EXTERNAL_URL = "https://example.invalid";
+    try { await keepAwake.pingIfBuilding(); } finally {
+      global.fetch = realFetch;
+      delete process.env.RENDER_EXTERNAL_URL;
+    }
+    return n;
+  };
+  check("the server keeps itself awake while it waits, so it can start again by itself", (await pingsNow()) === 1);
+
+  // A pause made by the code before it kept a start time - the one live on
+  // the day this shipped - must get one, or it waits for a person for ever.
+  const realResume = (await db.collection("queuestates").findOne({ key: "generation" })).resumeAfter;
+  await db.collection("queuestates").updateOne({ key: "generation" },
+    { $unset: { resumeAfter: "" }, $set: { pausedReason: "The day's AI allowance is spent. The queue will carry on when you resume it." } });
+  for (let i = 0; i < 20; i++) {
+    if ((await db.collection("queuestates").findOne({ key: "generation" })).resumeAfter) break;
+    await sleep(500);
+  }
+  const backfilled = await db.collection("queuestates").findOne({ key: "generation" });
+  check("an older allowance pause with no start time is given one",
+    backfilled.resumeAfter && Math.abs(backfilled.resumeAfter - realResume) < 60 * 1000 && /by itself/.test(backfilled.pausedReason),
+    `${backfilled.resumeAfter?.toISOString?.()} · ${backfilled.pausedReason}`);
+
+  // ---- the next day: the allowance is back, and nobody presses anything
   await api("PATCH", `/exams/${patternId}`, { token, body: { examLevel: "fresh allowance" } });
+  await db.collection("queuestates").updateOne({ key: "generation" }, { $set: { resumeAfter: new Date(Date.now() - 1000) } });
+  for (let i = 0; i < 30; i++) {
+    const s1 = await api("GET", "/generation/status", { token });
+    if (!s1.json.paused) break;
+    await sleep(500);
+  }
+  st = await api("GET", "/generation/status", { token });
+  check("once the reset has passed, the queue starts again by itself", st.json.paused === false, st.json.pausedReason);
+  check("...and forgets the timer", !(await db.collection("queuestates").findOne({ key: "generation" })).resumeAfter);
+
+  // ...whereas a pause by a person waits for a person.
+  await api("POST", "/generation/pause", { token });
+  const pausedPings = await pingsNow();
+  check("a pause by the admin does not keep the server awake", pausedPings === 0, `${pausedPings} pings`);
+  const adminPause = await api("GET", "/generation/status", { token });
+  check("...and has no start time, because a person decides", adminPause.json.resumeAfter === null, String(adminPause.json.resumeAfter));
   await api("POST", "/generation/resume", { token });
+
   for (let i = 0; i < 60; i++) {
     const s2 = await api("GET", "/generation/status", { token });
     if (s2.json.counts.running === 0 && s2.json.counts.queued === 0) break;

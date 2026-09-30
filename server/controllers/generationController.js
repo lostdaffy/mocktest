@@ -2,6 +2,7 @@ const GenerationJob = require("../models/GenerationJob");
 const QueueState = require("../models/QueueState");
 const { findGaps, coverage } = require("../services/generationGaps");
 const { GEMINI_MODELS, currentModel } = require("../services/geminiService");
+const { nextAllowanceReset } = require("../utils/aiAllowance");
 
 // GET /api/generation/status (admin)
 //
@@ -19,6 +20,14 @@ async function queueStatus(req, res) {
   const by = { queued: 0, running: 0, done: 0, failed: 0, cancelled: 0 };
   counts.forEach((c) => (by[c._id] = c.n));
   const total = by.queued + by.running + by.done + by.failed;
+
+  // What is waiting, in the order it will be built, so the panel can say
+  // "4 waiting: SSC MTS mock, SSC CHSL mock..." rather than just "4".
+  const waiting = await GenerationJob.find({ status: "queued" })
+    .sort({ queuedAt: 1 })
+    .limit(12)
+    .select("label kind queuedAt")
+    .lean();
 
   const recentDone = await GenerationJob.find({ status: "done" })
     .sort({ finishedAt: -1 })
@@ -38,6 +47,12 @@ async function queueStatus(req, res) {
     pausedReason: state.pausedReason,
     pausedBy: state.pausedBy,
     pausedAt: state.pausedAt,
+    // When a queue stopped by the allowance starts again on its own; null
+    // for a pause by the admin, which waits for a person.
+    resumeAfter: state.paused && state.pausedBy === "worker" ? state.resumeAfter || null : null,
+    nextAllowanceReset: nextAllowanceReset(),
+    serverTime: new Date(),
+    waiting,
     coverage: cover,
     ai: { models: GEMINI_MODELS, inUse: currentModel() },
   });
@@ -97,7 +112,10 @@ async function enqueue(req, res) {
 
   // Queueing work implies wanting it done: an admin who presses this after a
   // pause should not have to press resume as well.
-  await QueueState.updateOne({ key: "generation" }, { $set: { paused: false, pausedReason: "", pausedBy: "admin" } });
+  await QueueState.updateOne(
+    { key: "generation" },
+    { $set: { paused: false, pausedReason: "", pausedBy: "admin" }, $unset: { resumeAfter: "" } }
+  );
 
   res.status(201).json({
     message:
@@ -114,14 +132,17 @@ async function enqueue(req, res) {
 async function pause(req, res) {
   await QueueState.updateOne(
     { key: "generation" },
-    { $set: { paused: true, pausedBy: "admin", pausedAt: new Date(), pausedReason: "Paused by the admin" } }
+    { $set: { paused: true, pausedBy: "admin", pausedAt: new Date(), pausedReason: "Paused by the admin" }, $unset: { resumeAfter: "" } }
   );
   const waiting = await GenerationJob.countDocuments({ status: "queued" });
   res.json({ message: `Paused. ${waiting} job(s) are still waiting and will carry on when you resume.`, paused: true });
 }
 
 async function resume(req, res) {
-  await QueueState.updateOne({ key: "generation" }, { $set: { paused: false, pausedReason: "", pausedBy: "admin" } });
+  await QueueState.updateOne(
+    { key: "generation" },
+    { $set: { paused: false, pausedReason: "", pausedBy: "admin" }, $unset: { resumeAfter: "" } }
+  );
   const waiting = await GenerationJob.countDocuments({ status: "queued" });
   res.json({ message: waiting ? `Resumed - ${waiting} job(s) to go.` : "Resumed. Nothing is waiting.", paused: false });
 }
@@ -132,7 +153,7 @@ async function retryFailed(req, res) {
     { status: "failed" },
     { $set: { status: "queued", attempts: 0, lastError: "", startedAt: null, finishedAt: null } }
   );
-  await QueueState.updateOne({ key: "generation" }, { $set: { paused: false, pausedReason: "" } });
+  await QueueState.updateOne({ key: "generation" }, { $set: { paused: false, pausedReason: "" }, $unset: { resumeAfter: "" } });
   res.json({ message: `${r.modifiedCount} failed job(s) put back in the queue.`, requeued: r.modifiedCount });
 }
 

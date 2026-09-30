@@ -1,5 +1,6 @@
 const GenerationJob = require("../models/GenerationJob");
 const QueueState = require("../models/QueueState");
+const { resumeTime, istTime } = require("../utils/aiAllowance");
 
 // One job at a time, on purpose.
 //
@@ -134,6 +135,30 @@ async function runGenerationTick() {
   if (running) return;
 
   const state = await QueueState.get();
+
+  // A pause for the allowance made before the queue kept a start time - the
+  // one live when this was deployed, for instance. Give it the time it would
+  // have had, so it too starts again by itself.
+  if (state.paused && state.pausedBy === "worker" && !state.resumeAfter && /allowance/i.test(state.pausedReason || "")) {
+    const at = resumeTime(state.pausedAt || new Date());
+    await QueueState.updateOne(
+      { key: "generation" },
+      { $set: { resumeAfter: at, pausedReason: `The day's AI allowance is used up. The queue starts again by itself at ${istTime(at)} IST.` } }
+    );
+    return;
+  }
+
+  // Stopped for the allowance and the allowance is back: carry on. Nobody
+  // should have to be at the panel at half past twelve to press a button.
+  if (state.paused && state.pausedBy === "worker" && state.resumeAfter && state.resumeAfter <= new Date()) {
+    await QueueState.updateOne(
+      { key: "generation" },
+      { $set: { paused: false, pausedReason: "" }, $unset: { resumeAfter: "" } }
+    );
+    console.log("Generation: the AI allowance has reset - carrying on by itself.");
+    return; // the next tick picks up a job
+  }
+
   if (state.paused) return;
 
   const job = await GenerationJob.findOneAndUpdate(
@@ -170,7 +195,8 @@ async function runGenerationTick() {
             paused: true,
             pausedBy: "worker",
             pausedAt: new Date(),
-            pausedReason: "The day's AI allowance is spent. The queue will carry on when you resume it - the allowance resets at 12:30 PM IST.",
+            resumeAfter: resumeTime(),
+            pausedReason: `The day's AI allowance is used up. The queue starts again by itself at ${istTime(resumeTime())} IST.`,
           },
         }
       );
