@@ -32,19 +32,18 @@ This page builds whatever is missing:
 Press the button and leave. It runs on the server; you can close the page.
 
 **The daily AI limit.** The AI is on a free plan with a daily limit. When it runs
-out, the queue stops and the top of this page says **when it will start again —
-by itself**, with a countdown and the list of what is waiting. The limit resets at
-**12:30 PM IST** from April to October and **1:30 PM IST** from November to March;
-the page always shows the right time. You don't need to press anything. Nothing is
-lost: a mock that stopped half-way is finished from where it stopped.
-
-**Try now anyway** only helps if the limit has already reset — before then the
-queue simply stops again.
+out, the queue stops and the top of this page says **why, and from what time you
+can resume** — with a countdown and the list of what is waiting. The limit resets
+at **12:30 PM IST** from April to October and **1:30 PM IST** from November to
+March; the page always shows the right time. **Press Resume after that time.**
+Pressing it earlier won't help — the queue just stops again. Nothing is lost: a
+mock that stopped half-way is finished from where it stopped.
 
 | At the top of the page | Meaning |
 | --- | --- |
 | Building — *SSC MTS mock…* | working; the list shows what's next |
-| Waiting for the AI's daily limit to reset | nothing to do — it restarts itself at the time shown |
+| Stopped — the AI's daily limit is used up | wait for the time shown, then **Resume** |
+| Ready to resume | the limit has reset — press **Resume** |
 | Paused by an admin | someone pressed Pause; it waits for **Resume** |
 | The queue stopped itself | it hit something it can't get past alone — read the reason, then **Resume** |
 

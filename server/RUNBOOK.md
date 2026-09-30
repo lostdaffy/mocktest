@@ -248,14 +248,13 @@ Admin → **Generation**. It builds whatever the catalog is missing — practice
 (chapter × level) and one mock per exam — one job at a time, on the server. The page
 can be closed; the queue keeps going.
 
-- **The Gemini free allowance runs out.** The queue stops, records when it will
-  start again (`QueueState.resumeAfter` — five minutes after midnight in California,
-  so 12:35 PM IST in summer, 1:35 PM IST in winter; `utils/aiAllowance.js`), and
-  starts again **by itself** at that time. The panel shows the time and a
-  countdown. The instance keeps itself awake while it waits, or it could not wake
-  up to do it. A pause pressed by an admin has no start time and waits for Resume.
-  Nothing is lost — a mock that stopped part way is finished from where it
-  stopped, not started again.
+- **The Gemini free allowance runs out.** The queue stops and records from when a
+  Resume will work (`QueueState.resumableAfter` — five minutes after midnight in
+  California, so 12:35 PM IST in summer, 1:35 PM IST in winter;
+  `utils/aiAllowance.js`). The panel shows that time and a countdown. **It does
+  not start itself** — the team presses Resume; that was their choice. Nothing is
+  lost — a mock that stopped part way is finished from where it stopped, not
+  started again.
 - **Only a full paper counts as a mock built.** A short one is listed as
   *Unfinished* with how far it has got, and stays a gap until it is full.
 - A job that failed shows why. **Retry failed** puts them back.

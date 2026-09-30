@@ -254,13 +254,13 @@ export default function Generation() {
 //
 // It used to say "The queue stopped itself" and offer a Resume button. Someone
 // pressed it at 11:49, before the AI's daily limit had reset at 12:30, and the
-// queue stopped again straight away - the page never said when it would be
-// able to carry on, or that it would do so by itself.
+// queue stopped again straight away - the page never said from when a Resume
+// would work. The team resumes the queue themselves; this tells them when.
 function QueueStatus({ status, now, busy, onResume }) {
   const waitingJobs = status.waiting || [];
   const queued = status.counts?.queued || 0;
   const running = status.current;
-  const forAllowance = status.paused && status.resumeAfter;
+  const forAllowance = status.paused && status.resumableAfter;
 
   let tone = "info";
   let title;
@@ -268,28 +268,31 @@ function QueueStatus({ status, now, busy, onResume }) {
   let action = null;
 
   if (forAllowance) {
-    const at = new Date(status.resumeAfter);
+    // The team resumes the queue themselves; this only says why it stopped
+    // and from when a Resume will do anything.
+    const at = new Date(status.resumableAfter);
     const minutes = Math.ceil((at.getTime() - now) / 60000);
     const when = at.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit" });
-    tone = "warn";
-    title = "Waiting for the AI's daily limit to reset";
-    body =
-      minutes > 0 ? (
-        <>
-          The free AI limit for today is used up. The queue starts again <b>by itself at {when}</b> —{" "}
-          <b>{formatWait(minutes)}</b> from now. Nothing needs doing; you can close this page.
-        </>
-      ) : (
-        <>The limit has reset. The queue is starting again by itself — give it a minute.</>
-      );
+    const ready = minutes <= 0;
+    tone = ready ? "ok" : "warn";
+    title = ready ? "Ready to resume" : "Stopped — the AI's daily limit is used up";
+    body = ready ? (
+      <>
+        The daily limit reset at {when}. <b>Press Resume</b> to carry on — {queued} job(s) waiting.
+      </>
+    ) : (
+      <>
+        You can resume <b>after {when}</b> — <b>{formatWait(minutes)}</b> from now. Pressing Resume before then
+        won't help: the queue will just stop again.
+      </>
+    );
     action = (
       <button
         onClick={onResume}
         disabled={!!busy}
-        className="text-sm text-slate-soft hover:text-ink underline disabled:opacity-60"
-        title="Only useful if the limit has already reset. Before then it will simply stop again."
+        className={`${ready ? "rv-btn-primary" : "rv-btn-secondary"} disabled:opacity-60`}
       >
-        {busy === "resume" ? "Trying..." : "Try now anyway"}
+        {busy === "resume" ? "Resuming..." : ready ? "Resume" : `Resume (after ${when})`}
       </button>
     );
   } else if (status.paused && status.pausedBy === "worker") {
