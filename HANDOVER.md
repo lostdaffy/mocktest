@@ -72,10 +72,13 @@ client's call:
 
 From `mobile/`:
 
-1. Raise `expo.version` in `app.json` (it is `1.0.0`; this release is a good
-   `1.1.0`). The Android build number increments on its own (`autoIncrement`).
-2. `eas build -p android --profile production`
-3. `eas submit -p android --profile production`, or upload the `.aab` in Play Console.
+1. Raise `expo.version` in `app.json` (1.1.0 is the current release). The Android
+   build number increments on its own (`autoIncrement`).
+2. `eas build -p android --profile production` — check it reports the new version.
+3. Upload the `.aab` in Play Console → Production → Create new release. (`eas submit`
+   needs a Google service-account key that has not been set up yet — see
+   *Not working yet* below.) **Never pick an older build from the list** — it ships
+   the old app.
 4. Once it is live on Play, set `APP_LATEST_VERSION=1.1.0` on Render. To force every
    old install to update, also set `APP_MIN_VERSION=1.1.0` — RUNBOOK → *Emergency*.
 
@@ -89,6 +92,29 @@ From `mobile/`:
 Section-by-section timing (IBPS PO Prelims) is built into the exam screen but **off**
 until IBPS's sections are given their minutes in Exam Patterns. It should be switched
 on only after it has been seen working on a phone.
+
+---
+
+## Not working yet: push notifications on Android
+
+The app asks for notification permission and the server sends a "live exam starts
+in 15 minutes" reminder — but **no Android phone has ever received one.** The app
+has no Firebase configuration (`google-services.json`, `android.googleServicesFile`
+in `app.json`), and without it an Android build cannot get a push token, so the
+server has no address to send to. It fails silently, which is why it went unnoticed.
+
+To turn it on (needs the client's Google account):
+
+1. Firebase console → new project → add an Android app with package
+   `com.satya.smarttestengine` → download `google-services.json` into `mobile/`.
+2. In `mobile/app.json`, under `expo.android`, add
+   `"googleServicesFile": "./google-services.json"`.
+3. Firebase → Project settings → Service accounts → generate a private key (JSON).
+   `eas credentials` → Android → production → **Google Service Account → FCM V1** →
+   upload it. The same kind of key, given Play Console release access, also lets
+   `eas submit` upload builds without the manual step.
+4. A new app build (`eas build -p android --profile production`) and release.
+5. Check: schedule a live exam 20 minutes ahead, wait for the reminder on a phone.
 
 ---
 
