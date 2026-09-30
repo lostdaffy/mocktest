@@ -19,9 +19,10 @@ const queueStateSchema = new mongoose.Schema(
     // Who stopped it: the admin, or the worker running out of allowance.
     pausedBy: { type: String, enum: ["admin", "worker"], default: "admin" },
     // Set when the worker stopped because the day's AI allowance ran out:
-    // the moment it will start again by itself. A pause by the admin has
-    // none - that one waits for a person.
-    resumeAfter: Date,
+    // the earliest a Resume will do anything. Shown on the panel so nobody
+    // presses it at 11:49 and watches it stop again. The queue does NOT start
+    // itself at this time - the team resumes it.
+    resumableAfter: Date,
   },
   { timestamps: true }
 );

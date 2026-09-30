@@ -47,9 +47,9 @@ async function queueStatus(req, res) {
     pausedReason: state.pausedReason,
     pausedBy: state.pausedBy,
     pausedAt: state.pausedAt,
-    // When a queue stopped by the allowance starts again on its own; null
-    // for a pause by the admin, which waits for a person.
-    resumeAfter: state.paused && state.pausedBy === "worker" ? state.resumeAfter || null : null,
+    // The earliest a Resume will do anything, for a queue stopped by the
+    // allowance; null otherwise. The queue never starts itself.
+    resumableAfter: state.paused && state.pausedBy === "worker" ? state.resumableAfter || null : null,
     nextAllowanceReset: nextAllowanceReset(),
     serverTime: new Date(),
     waiting,
@@ -114,7 +114,7 @@ async function enqueue(req, res) {
   // pause should not have to press resume as well.
   await QueueState.updateOne(
     { key: "generation" },
-    { $set: { paused: false, pausedReason: "", pausedBy: "admin" }, $unset: { resumeAfter: "" } }
+    { $set: { paused: false, pausedReason: "", pausedBy: "admin" }, $unset: { resumableAfter: "", resumeAfter: "" } }
   );
 
   res.status(201).json({
@@ -132,7 +132,7 @@ async function enqueue(req, res) {
 async function pause(req, res) {
   await QueueState.updateOne(
     { key: "generation" },
-    { $set: { paused: true, pausedBy: "admin", pausedAt: new Date(), pausedReason: "Paused by the admin" }, $unset: { resumeAfter: "" } }
+    { $set: { paused: true, pausedBy: "admin", pausedAt: new Date(), pausedReason: "Paused by the admin" }, $unset: { resumableAfter: "", resumeAfter: "" } }
   );
   const waiting = await GenerationJob.countDocuments({ status: "queued" });
   res.json({ message: `Paused. ${waiting} job(s) are still waiting and will carry on when you resume.`, paused: true });
@@ -141,7 +141,7 @@ async function pause(req, res) {
 async function resume(req, res) {
   await QueueState.updateOne(
     { key: "generation" },
-    { $set: { paused: false, pausedReason: "", pausedBy: "admin" }, $unset: { resumeAfter: "" } }
+    { $set: { paused: false, pausedReason: "", pausedBy: "admin" }, $unset: { resumableAfter: "", resumeAfter: "" } }
   );
   const waiting = await GenerationJob.countDocuments({ status: "queued" });
   res.json({ message: waiting ? `Resumed - ${waiting} job(s) to go.` : "Resumed. Nothing is waiting.", paused: false });
@@ -153,7 +153,7 @@ async function retryFailed(req, res) {
     { status: "failed" },
     { $set: { status: "queued", attempts: 0, lastError: "", startedAt: null, finishedAt: null } }
   );
-  await QueueState.updateOne({ key: "generation" }, { $set: { paused: false, pausedReason: "" }, $unset: { resumeAfter: "" } });
+  await QueueState.updateOne({ key: "generation" }, { $set: { paused: false, pausedReason: "" }, $unset: { resumableAfter: "", resumeAfter: "" } });
   res.json({ message: `${r.modifiedCount} failed job(s) put back in the queue.`, requeued: r.modifiedCount });
 }
 

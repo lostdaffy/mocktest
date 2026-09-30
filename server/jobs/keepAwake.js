@@ -26,11 +26,9 @@ async function thereIsWorkLeft() {
   const GenerationJob = require("../models/GenerationJob");
   const QueueState = require("../models/QueueState");
   const state = await QueueState.get();
-  // Waiting for the allowance counts as work left: asleep at half past
-  // twelve, the server could not start the queue again by itself. A pause
-  // by the admin does not - that one is a person's decision to stop.
-  const waitingForAllowance = state.paused && state.pausedBy === "worker" && !!state.resumeAfter;
-  if (state.paused && !waitingForAllowance) return false;
+  // A paused queue - whoever paused it, whatever the reason - waits for a
+  // person to press Resume, and Resume wakes the server by itself.
+  if (state.paused) return false;
   return (await GenerationJob.countDocuments({ status: { $in: ["queued", "running"] } })) > 0;
 }
 

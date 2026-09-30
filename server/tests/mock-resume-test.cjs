@@ -124,14 +124,14 @@ const callsFor = (level) =>
   // "Paused" alone left the team guessing: somebody pressed Resume at 11:49,
   // before the allowance had reset, and the queue simply stopped again.
   st = await api("GET", "/generation/status", { token });
-  const resumeAt = st.json.resumeAfter ? new Date(st.json.resumeAfter) : null;
-  check("the panel is told when the queue will start again",
-    resumeAt && resumeAt > new Date(), st.json.resumeAfter);
+  const resumeAt = st.json.resumableAfter ? new Date(st.json.resumableAfter) : null;
+  check("the panel is told from when a Resume will work",
+    resumeAt && resumeAt > new Date(), st.json.resumableAfter);
   check("...which is just after the next reset, midnight in California",
     resumeAt && Math.abs(resumeAt - new Date(st.json.nextAllowanceReset) - 5 * 60 * 1000) < 1000,
-    `${st.json.nextAllowanceReset} -> ${st.json.resumeAfter}`);
+    `${st.json.nextAllowanceReset} -> ${st.json.resumableAfter}`);
   check("...and the reason names that time instead of a fixed '12:30'",
-    /starts again by itself at \d{1,2}:\d{2}\s?(am|pm) IST/i.test(st.json.pausedReason || ""), st.json.pausedReason);
+    /resume after \d{1,2}:\d{2}\s?(am|pm) IST/i.test(st.json.pausedReason || ""), st.json.pausedReason);
   check("...and what is waiting, by name",
     (st.json.waiting || []).some((w) => /SSC CHSL/.test(w.label)), JSON.stringify((st.json.waiting || []).map((w) => w.label)));
 
@@ -149,41 +149,37 @@ const callsFor = (level) =>
     }
     return n;
   };
-  check("the server keeps itself awake while it waits, so it can start again by itself", (await pingsNow()) === 1);
+  check("a paused queue does not keep the server awake - a person resumes it", (await pingsNow()) === 0);
 
   // A pause made by the code before it kept a start time - the one live on
   // the day this shipped - must get one, or it waits for a person for ever.
-  const realResume = (await db.collection("queuestates").findOne({ key: "generation" })).resumeAfter;
+  const realResume = (await db.collection("queuestates").findOne({ key: "generation" })).resumableAfter;
   await db.collection("queuestates").updateOne({ key: "generation" },
-    { $unset: { resumeAfter: "" }, $set: { pausedReason: "The day's AI allowance is spent. The queue will carry on when you resume it." } });
+    { $unset: { resumableAfter: "" }, $set: { pausedReason: "The day's AI allowance is spent. The queue will carry on when you resume it." } });
   for (let i = 0; i < 20; i++) {
-    if ((await db.collection("queuestates").findOne({ key: "generation" })).resumeAfter) break;
+    if ((await db.collection("queuestates").findOne({ key: "generation" })).resumableAfter) break;
     await sleep(500);
   }
   const backfilled = await db.collection("queuestates").findOne({ key: "generation" });
-  check("an older allowance pause with no start time is given one",
-    backfilled.resumeAfter && Math.abs(backfilled.resumeAfter - realResume) < 60 * 1000 && /by itself/.test(backfilled.pausedReason),
-    `${backfilled.resumeAfter?.toISOString?.()} · ${backfilled.pausedReason}`);
+  check("an older allowance pause with no time is given one",
+    backfilled.resumableAfter && Math.abs(backfilled.resumableAfter - realResume) < 60 * 1000 && /resume after/.test(backfilled.pausedReason),
+    `${backfilled.resumableAfter?.toISOString?.()} · ${backfilled.pausedReason}`);
 
-  // ---- the next day: the allowance is back, and nobody presses anything
+  // ---- the next day: the reset has passed
   await api("PATCH", `/exams/${patternId}`, { token, body: { examLevel: "fresh allowance" } });
-  await db.collection("queuestates").updateOne({ key: "generation" }, { $set: { resumeAfter: new Date(Date.now() - 1000) } });
-  for (let i = 0; i < 30; i++) {
-    const s1 = await api("GET", "/generation/status", { token });
-    if (!s1.json.paused) break;
-    await sleep(500);
-  }
+  await db.collection("queuestates").updateOne({ key: "generation" }, { $set: { resumableAfter: new Date(Date.now() - 1000) } });
+  await sleep(7000); // more than one worker tick
   st = await api("GET", "/generation/status", { token });
-  check("once the reset has passed, the queue starts again by itself", st.json.paused === false, st.json.pausedReason);
-  check("...and forgets the timer", !(await db.collection("queuestates").findOne({ key: "generation" })).resumeAfter);
+  check("the queue does NOT start by itself once the reset has passed - the team resumes it",
+    st.json.paused === true, st.json.pausedReason);
 
-  // ...whereas a pause by a person waits for a person.
+  // ...whereas a pause by a person has no time at all.
   await api("POST", "/generation/pause", { token });
-  const pausedPings = await pingsNow();
-  check("a pause by the admin does not keep the server awake", pausedPings === 0, `${pausedPings} pings`);
   const adminPause = await api("GET", "/generation/status", { token });
-  check("...and has no start time, because a person decides", adminPause.json.resumeAfter === null, String(adminPause.json.resumeAfter));
+  check("a pause by the admin has no resume time", adminPause.json.resumableAfter === null, String(adminPause.json.resumableAfter));
+
   await api("POST", "/generation/resume", { token });
+  check("pressing Resume clears the time", !(await db.collection("queuestates").findOne({ key: "generation" })).resumableAfter);
 
   for (let i = 0; i < 60; i++) {
     const s2 = await api("GET", "/generation/status", { token });

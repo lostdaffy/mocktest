@@ -40,7 +40,7 @@ function nextAllowanceReset(now = new Date()) {
 // seconds can still be counted against the old day.
 const AFTER_RESET_MS = 5 * 60 * 1000;
 
-/** When a queue stopped by a spent allowance should start again. */
+/** The earliest a queue stopped by a spent allowance can usefully resume. */
 function resumeTime(now = new Date()) {
   return new Date(nextAllowanceReset(now).getTime() + AFTER_RESET_MS);
 }
