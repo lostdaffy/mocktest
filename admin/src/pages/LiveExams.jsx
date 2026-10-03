@@ -495,7 +495,7 @@ export default function LiveExams() {
                               <span className="text-xs text-slate w-28">{s.subject}</span>
                               <div className="flex-1 h-2 bg-slate-light rounded-full overflow-hidden">
                                 <div
-                                  className={`h-2 rounded-full ${s.isFull ? "bg-success-light0" : "bg-brand"}`}
+                                  className={`h-2 rounded-full ${s.isFull ? "bg-success" : "bg-brand"}`}
                                   style={{ width: `${Math.min(100, (s.have / s.required) * 100)}%` }}
                                 ></div>
                               </div>

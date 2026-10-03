@@ -519,7 +519,7 @@ export default function PracticeSeries() {
                       </button>
                     ) : (
                       <>
-                        <button onClick={() => publishTest(t._id, true)} className={`${btn} bg-success-light0 hover:bg-success text-white`}>
+                        <button onClick={() => publishTest(t._id, true)} className={`${btn} bg-success hover:opacity-90 text-white`}>
                           Publish FREE
                         </button>
                         <button onClick={() => publishTest(t._id, false)} className={`${btn} bg-brand hover:bg-brand-dark text-white`}>
@@ -654,7 +654,7 @@ export default function PracticeSeries() {
                     publishTest(reviewTest._id, true);
                     setReviewTest(null);
                   }}
-                  className="flex-1 px-4 py-2.5 rounded-lg bg-success-light0 hover:bg-success text-white text-sm font-medium"
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-success hover:opacity-90 text-white text-sm font-medium"
                 >
                   Publish FREE
                 </button>
