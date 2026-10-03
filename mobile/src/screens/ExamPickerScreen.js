@@ -16,6 +16,7 @@ import {
   Image,
 } from "react-native";
 import { examLogo } from "../utils/examLogos";
+import OfficialSources from "../components/OfficialSources";
 
 import {
   useFocusEffect,
@@ -308,6 +309,15 @@ export default function ExamPickerScreen({
             spacing.xxl +
             insets.bottom,
         }}
+
+        ListFooterComponent={
+          <OfficialSources
+            style={{
+              marginHorizontal: spacing.lg,
+              marginTop: spacing.xl,
+            }}
+          />
+        }
 
 
         /* =================================================

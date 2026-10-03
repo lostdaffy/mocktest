@@ -15,6 +15,7 @@ import {
 } from "react-native";
 
 import AppAlert from "../components/AppAlert";
+import OfficialSources from "../components/OfficialSources";
 
 import { Ionicons } from "@expo/vector-icons";
 
@@ -1214,6 +1215,9 @@ export default function ProfileScreen({
               }
             />
           </TouchableOpacity>
+
+          {/* Not a government app, and where the official word is - Play policy */}
+          <OfficialSources style={{ marginTop: spacing.lg }} />
 
           {/* =================================================
               SECURITY

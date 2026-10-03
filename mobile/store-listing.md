@@ -4,7 +4,9 @@
 
 Mock tests, live exams & practice for SSC, Railway, Bank, CTET & UP Police
 
-## Full description (2867/4000)
+## Full description (3676/4000)
+
+⚠️ NOT A GOVERNMENT APP: RankVeer is an independent, private exam-preparation app. It does not represent, and is not affiliated with, any government entity or recruitment body. For official notifications, syllabus, dates and results, always use the official websites listed below.
 
 RankVeer helps you prepare for government exams with full-length mock tests, live exams with an all-India rank, and chapter-wise practice — in Hindi and English.
 
@@ -66,6 +68,19 @@ START FREE
 • 3 live exams free
 • Topic-wise practice tests — always free
 Subscribe for unlimited mocks and live exams.
+
+━━━━━━━━━━━━━━━━━━━━
+OFFICIAL SOURCES
+━━━━━━━━━━━━━━━━━━━━
+Exam patterns and syllabus in this app follow the official notices published by:
+• Staff Selection Commission (SSC): https://ssc.gov.in
+• Railway Recruitment Boards (RRB): https://www.rrbapply.gov.in
+• Indian Railways: https://indianrailways.gov.in
+• IBPS: https://www.ibps.in
+• CTET (CBSE): https://ctet.nic.in
+• UP Police Recruitment and Promotion Board: https://uppbpb.gov.in
+• UPSSSC: https://upsssc.gov.in
+• Indian Army (Agniveer): https://joinindianarmy.nic.in
 
 हिंदी में: RankVeer पर SSC, रेलवे, बैंक, CTET, UP पुलिस, UPSSSC PET और अग्निवीर की तैयारी करें — असली परीक्षा के पैटर्न पर फुल-लेंथ मॉक टेस्ट, ऑल-इंडिया रैंक वाले लाइव एग्ज़ाम, और हिंदी-अंग्रेज़ी में अध्याय-वार प्रैक्टिस।
 

@@ -14,7 +14,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // (the registrar's nameserver change is stuck). Nothing else blocks the
 // switch - flip this one line once https://api.rankveer.com/api/health
 // responds, then rebuild.
-const API_URL = "https://mocktest-6gci.onrender.com/api";
+// EXPO_PUBLIC_API_URL lets a local dev server point elsewhere; release builds never set it.
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "https://mocktest-6gci.onrender.com/api";
 
 const api = axios.create({ baseURL: API_URL });
 

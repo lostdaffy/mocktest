@@ -14,6 +14,7 @@ import {
   Image,
 } from "react-native";
 import { examLogo } from "../utils/examLogos";
+import OfficialSources from "../components/OfficialSources";
 
 import {
   useFocusEffect,
@@ -264,6 +265,14 @@ export default function PyqExamPickerScreen({
             insets.bottom +
             10,
         }}
+        ListFooterComponent={
+          <OfficialSources
+            style={{
+              marginHorizontal: spacing.lg,
+              marginTop: spacing.xl,
+            }}
+          />
+        }
         ListHeaderComponent={
           <>
             {/* =================================================

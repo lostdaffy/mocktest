@@ -17,6 +17,14 @@
       "port": 4176
     },
     {
+      "name": "mobile-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "start", "--web", "--port", "8081"],
+      "cwd": "mobile",
+      "port": 8081,
+      "env": { "EXPO_PUBLIC_API_URL": "http://127.0.0.1:5056/api", "CI": "1", "BROWSER": "none" }
+    },
+    {
       "name": "website-build",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "preview"],
