@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
@@ -21,9 +22,13 @@ export default function PracticeSeries() {
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Navigation: null = subject grid, else = selected subject's chapters
-  const [selectedSubject, setSelectedSubject] = useState(null);
-  const [openChapter, setOpenChapter] = useState(null);
+  // Three screens - subjects, a subject's chapters, one chapter's tests - kept
+  // in the URL (?subject=&chapter=) so the browser's Back button walks back
+  // through them and a page can be reloaded or shared where it stands.
+  const [params, setParams] = useSearchParams();
+  const selectedSubject = subjects.find((s) => s.name === params.get("subject")) || null;
+  const openChapter = selectedSubject?.chapters.find((c) => c.name === params.get("chapter")) || null;
+  const [chapterSearch, setChapterSearch] = useState("");
   const [chapterTests, setChapterTests] = useState([]);
   const [testsLoading, setTestsLoading] = useState(false);
 
@@ -79,7 +84,8 @@ export default function PracticeSeries() {
       const res = await api.post(`/exam-series/practice/${testId}/add-questions`, { count: missing });
       toast.success(res.data?.message || "Questions added");
       openReview(testId);
-      load();
+      load({ silent: true });
+      if (openChapter) loadChapterTests(selectedSubject.name, openChapter.name);
     } catch (err) {
       toast.error(err.response?.data?.message || "Couldn't add questions");
     } finally {
@@ -90,16 +96,11 @@ export default function PracticeSeries() {
   // silent: refresh the counts in the background without blanking the page.
   // Every publish/delete used to trigger a full "Loading..." re-render of
   // the whole subject list, which is what made the screen feel slow.
-  async function load(keepSubjectName, { silent = false } = {}) {
+  async function load({ silent = false } = {}) {
     if (!silent) setLoading(true);
     try {
       const res = await api.get("/exam-series/subjects/list");
       setSubjects(res.data.subjects);
-      const name = keepSubjectName || selectedSubject?.name;
-      if (name) {
-        const updated = res.data.subjects.find((s) => s.name === name);
-        if (updated) setSelectedSubject(updated);
-      }
     } catch (err) {
       if (!silent) setMessage("Couldn't load subjects. Is the backend running?");
     } finally {
@@ -126,15 +127,33 @@ export default function PracticeSeries() {
     }
   }
 
-  function openChapterPanel(chapter) {
-    if (openChapter?.name === chapter.name) {
-      setOpenChapter(null);
+  // Opening a chapter's page (or landing on one from a reload) fetches its tests.
+  const subjectName = selectedSubject?.name;
+  const chapterName = openChapter?.name;
+  useEffect(() => {
+    if (!subjectName || !chapterName) {
       setChapterTests([]);
       return;
     }
-    setOpenChapter(chapter);
-    loadChapterTests(selectedSubject.name, chapter.name);
+    loadChapterTests(subjectName, chapterName);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subjectName, chapterName]);
+
+  function goSubject(name) {
+    setMessage("");
+    setChapterSearch("");
+    setParams({ subject: name });
   }
+  function goChapter(name) {
+    setMessage("");
+    setParams({ subject: selectedSubject.name, chapter: name });
+  }
+
+  const visibleChapters = useMemo(() => {
+    const q = chapterSearch.trim().toLowerCase();
+    const list = selectedSubject?.chapters || [];
+    return q ? list.filter((c) => c.name.toLowerCase().includes(q)) : list;
+  }, [selectedSubject, chapterSearch]);
 
   async function generate(chapter, difficulty) {
     setGenBusy(`${chapter.name}-${difficulty}`);
@@ -148,7 +167,7 @@ export default function PracticeSeries() {
       });
       setMessage("✅ " + res.data.message);
       loadChapterTests(selectedSubject.name, chapter.name);
-      load(selectedSubject.name, { silent: true });
+      load({ silent: true });
     } catch (err) {
       setMessage("❌ " + (err.response?.data?.message || "Couldn't generate the test"));
     } finally {
@@ -164,7 +183,7 @@ export default function PracticeSeries() {
     try {
       const res = await api.post("/exam-series/practice/fill-short", { limit: 5 });
       toast.success(res.data?.message || "Filled");
-      load(selectedSubject?.name, { silent: true });
+      load({ silent: true });
       if (openChapter && selectedSubject) loadChapterTests(selectedSubject.name, openChapter.name);
     } catch (err) {
       toast.error(err.response?.data?.message || "Couldn’t fill the short tests");
@@ -184,7 +203,7 @@ export default function PracticeSeries() {
         tests.map((t) => (t._id === testId ? { ...t, publishStatus: "draft" } : t))
       );
       setReviewTest((r) => (r && r._id === testId ? { ...r, publishStatus: "draft" } : r));
-      load(selectedSubject.name, { silent: true });
+      load({ silent: true });
     } catch (err) {
       toast.error(err.response?.data?.message || "Couldn't take it off the app");
     }
@@ -198,7 +217,7 @@ export default function PracticeSeries() {
       setChapterTests((tests) =>
         tests.map((t) => (t._id === testId ? { ...t, publishStatus: "published", isFree: !!isFree } : t))
       );
-      load(selectedSubject.name, { silent: true });
+      load({ silent: true });
     } catch (err) {
       toast.error("Publish failed: " + (err.response?.data?.message || ""));
     }
@@ -216,7 +235,7 @@ export default function PracticeSeries() {
       await api.delete(`/exam-series/mock/${testId}`);
       toast.success("Test deleted");
       setChapterTests((tests) => tests.filter((t) => t._id !== testId));
-      load(selectedSubject.name, { silent: true });
+      load({ silent: true });
     } catch (err) {
       toast.error("Delete failed");
     }
@@ -257,7 +276,7 @@ export default function PracticeSeries() {
               return (
                 <button
                   key={subj._id}
-                  onClick={() => setSelectedSubject(subj)}
+                  onClick={() => goSubject(subj.name)}
                   className="rv-card p-6 text-left hover:border-brand hover:shadow-card transition-all group"
                 >
                   <div className="flex items-center gap-3 mb-3">
@@ -282,27 +301,104 @@ export default function PracticeSeries() {
     );
   }
 
-  // ---------- VIEW 2: Chapters of the selected subject ----------
+  // ---------- VIEW 2: A subject's chapters, as square cards ----------
+  // A subject holds up to 20-odd chapters. As rows with the tests opening
+  // inline, the page ran on for screens; cards keep a whole subject in view,
+  // and a chapter's tests get a page of their own.
+  if (!openChapter) {
+    return (
+      <div>
+        <PageHeader
+          backTo="/practice-series"
+          backLabel="All subjects"
+          eyebrow="Subject Practice"
+          title={`${selectedSubject.icon || "📘"} ${selectedSubject.name}`}
+          subtitle="Open a chapter to see its tests and build new ones. Each chapter has 4 levels: Easy → Advanced."
+          actions={
+            <input
+              value={chapterSearch}
+              onChange={(e) => setChapterSearch(e.target.value)}
+              placeholder="Search chapters..."
+              className="rv-input w-56"
+            />
+          }
+        />
+
+        {message && (
+          <div className="mb-6 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3">{message}</div>
+        )}
+
+        {visibleChapters.length === 0 ? (
+          <p className="text-sm text-slate-soft">No chapter matches “{chapterSearch}”.</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {visibleChapters.map((ch) => {
+              const number = selectedSubject.chapters.indexOf(ch) + 1;
+              return (
+                <button
+                  key={ch.name}
+                  onClick={() => goChapter(ch.name)}
+                  className="rv-card aspect-square p-4 flex flex-col text-left hover:border-brand hover:shadow-card transition-all group"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="w-8 h-8 rounded-lg bg-brand-light text-brand text-xs font-bold flex items-center justify-center">
+                      {String(number).padStart(2, "0")}
+                    </span>
+                    {ch.draftTests > 0 && (
+                      <span className="text-[11px] font-medium text-warn bg-warn-light px-1.5 py-0.5 rounded">
+                        {ch.draftTests} draft
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="mt-3 font-semibold text-ink leading-snug line-clamp-3 group-hover:text-brand transition-colors">
+                    {ch.name}
+                  </p>
+                  <p className="text-xs text-slate-soft mt-1">
+                    {ch.publishedTests || 0} published
+                    {(ch.topics?.length || 0) > 0 && ` · ${ch.topics.length} topics`}
+                  </p>
+
+                  {/* One cell per level, so a gap (no Hard test yet) shows at a glance */}
+                  <div className="mt-auto grid grid-cols-4 gap-1">
+                    {LEVELS.map((level) => {
+                      const c = ch.levels?.[level] || { published: 0, draft: 0 };
+                      const total = c.published + c.draft;
+                      return (
+                        <span
+                          key={level}
+                          title={`${level}: ${c.published} published, ${c.draft} draft`}
+                          className={`text-[10px] font-semibold text-center rounded py-1 capitalize ${
+                            total ? LEVEL_BADGES[level] : "bg-slate-light text-slate-soft"
+                          }`}
+                        >
+                          {level.slice(0, 1)} {total}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ---------- VIEW 3: One chapter's tests, level by level ----------
+  const ch = openChapter;
   return (
     <div>
-      <button
-        onClick={() => {
-          setSelectedSubject(null);
-          setOpenChapter(null);
-          setMessage("");
-        }}
-        className="text-sm text-brand hover:underline mb-3"
-      >
-        ← All Subjects
-      </button>
-
-      <div className="flex items-center gap-3 mb-1">
-        <span className="text-3xl">{selectedSubject.icon || "📘"}</span>
-        <h1 className="font-display text-2xl font-bold text-ink">{selectedSubject.name}</h1>
-      </div>
-      <p className="text-slate mb-6">
-        Click a chapter to see its tests and build new ones. Each chapter has 4 levels: Easy → Advanced.
-      </p>
+      <PageHeader
+        backTo={`/practice-series?subject=${encodeURIComponent(selectedSubject.name)}`}
+        backLabel={`${selectedSubject.name} chapters`}
+        eyebrow={selectedSubject.name}
+        title={ch.name}
+        subtitle={`${ch.publishedTests || 0} published${ch.draftTests > 0 ? ` · ${ch.draftTests} draft` : ""}${
+          (ch.topics?.length || 0) > 0 ? ` · topics: ${ch.topics.join(", ")}` : ""
+        }`}
+      />
 
       {message && (
         <div className="mb-6 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3">{message}</div>
@@ -315,47 +411,7 @@ export default function PracticeSeries() {
         </div>
       )}
 
-      <div className="space-y-3">
-        {selectedSubject.chapters.map((ch) => {
-          const isOpen = openChapter?.name === ch.name;
-          return (
-            <div key={ch.name} className="rv-card overflow-hidden">
-              <button
-                onClick={() => openChapterPanel(ch)}
-                className="w-full p-5 flex items-center justify-between hover:bg-slate-light transition-colors text-left"
-              >
                 <div>
-                  <p className="font-semibold text-ink">{ch.name}</p>
-                  <p className="text-xs text-slate-soft mt-0.5">
-                    {ch.publishedTests || 0} published
-                    {ch.draftTests > 0 && ` · ${ch.draftTests} draft`}
-                    {(ch.topics?.length || 0) > 0 && ` · ${ch.topics.length} topics`}
-                  </p>
-                  {ch.levels && (
-                    <div className="flex gap-1.5 mt-2 flex-wrap">
-                      {LEVELS.map((level) => {
-                        const c = ch.levels[level] || { published: 0, draft: 0 };
-                        const total = c.published + c.draft;
-                        return (
-                          <span
-                            key={level}
-                            className={`text-[11px] px-1.5 py-0.5 rounded capitalize ${
-                              total ? LEVEL_BADGES[level] : "bg-slate-light text-slate-soft"
-                            }`}
-                            title={`${c.published} published, ${c.draft} draft`}
-                          >
-                            {level} {total}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-                <span className="text-slate-soft">{isOpen ? "▲" : "▼"}</span>
-              </button>
-
-              {isOpen && (
-                <div className="border-t border-border-soft p-5 bg-slate-light">
                   {testsLoading ? (
                     <p className="text-sm text-slate-soft">Loading tests...</p>
                   ) : (
@@ -477,11 +533,6 @@ export default function PracticeSeries() {
                     💡 Keep the first 2 tests in each chapter <b>FREE</b>, the rest <b>Premium</b>.
                   </p>
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
 
       {/* Review modal - check every question before publishing */}
       {(reviewTest || reviewLoading) && (
