@@ -388,6 +388,11 @@ export default function PracticeSeries() {
 
   // ---------- VIEW 3: One chapter's tests, level by level ----------
   const ch = openChapter;
+  const openLevel = LEVELS.includes(params.get("level")) ? params.get("level") : "easy";
+  const levelTests = chapterTests.filter((t) => t.difficultyLevel === openLevel);
+  function goLevel(level) {
+    setParams({ subject: selectedSubject.name, chapter: ch.name, level }, { replace: true });
+  }
   return (
     <div>
       <PageHeader
@@ -411,128 +416,131 @@ export default function PracticeSeries() {
         </div>
       )}
 
-                <div>
-                  {testsLoading ? (
-                    <p className="text-sm text-slate-soft">Loading tests...</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {/* One block per level, in the order students climb them,
-                          instead of one list with all four mixed together. */}
-                      {LEVELS.map((level) => {
-                        const levelTests = chapterTests.filter((t) => t.difficultyLevel === level);
-                        const busy = genBusy === `${ch.name}-${level}`;
-                        return (
-                          <div key={level} className="bg-surface border border-border rounded-xl overflow-hidden">
-                            <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-border-soft">
-                              <div className="flex items-center gap-2">
-                                <span className={`text-xs font-semibold px-2 py-0.5 rounded capitalize ${LEVEL_BADGES[level]}`}>
-                                  {level}
-                                </span>
-                                <span className="text-xs text-slate-soft">
-                                  {levelTests.length} test{levelTests.length === 1 ? "" : "s"}
-                                  {levelTests.filter((t) => t.publishStatus === "published").length > 0 &&
-                                    ` · ${levelTests.filter((t) => t.publishStatus === "published").length} published`}
-                                </span>
-                              </div>
-                              <button
-                                onClick={() => generate(ch, level)}
-                                disabled={!!genBusy}
-                                className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-xs font-medium disabled:opacity-50 inline-flex items-center gap-2"
-                              >
-                                {busy ? (
-                                  <>
-                                    <span className="inline-block w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-                                    Building...
-                                  </>
-                                ) : (
-                                  "+ Build test"
-                                )}
-                              </button>
-                            </div>
+      {/* The four levels as cards - pick one, its tests open below as cards.
+          A busy chapter holds 10+ tests a level; listing all four levels at
+          once ran to several screens. */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {LEVELS.map((level) => {
+          const levelTests = chapterTests.filter((t) => t.difficultyLevel === level);
+          const published = levelTests.filter((t) => t.publishStatus === "published").length;
+          const active = level === openLevel;
+          return (
+            <button
+              key={level}
+              onClick={() => goLevel(level)}
+              className={`rv-card p-4 text-left transition-all ${
+                active ? "border-brand ring-2 ring-brand/40" : "hover:border-brand"
+              }`}
+            >
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded capitalize ${LEVEL_BADGES[level]}`}>{level}</span>
+              <p className="font-display text-2xl font-extrabold text-ink mt-3">
+                {testsLoading ? "…" : levelTests.length}
+                <span className="text-sm font-medium text-slate-soft"> test{levelTests.length === 1 ? "" : "s"}</span>
+              </p>
+              <p className="text-xs text-slate-soft mt-0.5">
+                {published} published{levelTests.length - published > 0 && ` · ${levelTests.length - published} draft`}
+              </p>
+            </button>
+          );
+        })}
+      </div>
 
-                            {levelTests.length === 0 ? (
-                              <p className="text-xs text-slate-soft px-4 py-3">No {level} test yet.</p>
-                            ) : (
-                              <div className="divide-y divide-border-soft">
-                                {levelTests.map((t) => (
-                                  <div key={t._id} className="px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-                                    <div className="min-w-0">
-                                      <p className="font-medium text-ink text-sm">{t.title}</p>
-                                      <p className="text-xs text-slate-soft">
-                                        {typeof t.questionCount === "number" && `${t.questionCount} questions · `}
-                                        <span className={t.publishStatus === "published" ? "text-success" : "text-warn"}>
-                                          {t.publishStatus}
-                                        </span>
-                                        {t.publishStatus === "published" && (
-                                          <span className={t.isFree ? "text-success" : "text-brand"}>
-                                            {" "}
-                                            · {t.isFree ? "FREE" : "Premium"}
-                                          </span>
-                                        )}
-                                      </p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <button
-                                        onClick={() => openReview(t._id)}
-                                        className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium"
-                                      >
-                                        👁 Review
-                                      </button>
-                                      {t.publishStatus === "draft" &&
-                                        (typeof t.questionCount === "number" && t.questionCount < FULL_TEST ? (
-                                          <button
-                                            onClick={() => openReview(t._id)}
-                                            className="px-3 py-1.5 rounded-lg bg-warn-light text-warn text-xs font-medium"
-                                            title={`A test goes out with all ${FULL_TEST} questions. Open it and add the missing ones.`}
-                                          >
-                                            Add {FULL_TEST - t.questionCount} to publish
-                                          </button>
-                                        ) : (
-                                          <>
-                                            <button
-                                              onClick={() => publishTest(t._id, true)}
-                                              className="px-3 py-1.5 rounded-lg bg-success-light0 hover:bg-success text-white text-xs font-medium"
-                                            >
-                                              Publish FREE
-                                            </button>
-                                            <button
-                                              onClick={() => publishTest(t._id, false)}
-                                              className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-xs font-medium"
-                                            >
-                                              Publish Premium
-                                            </button>
-                                          </>
-                                        ))}
-                                      {t.publishStatus === "published" && (
-                                        <button
-                                          onClick={() => unpublishTest(t._id)}
-                                          className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium"
-                                          title="Take it off the app so its questions can be changed"
-                                        >
-                                          Unpublish
-                                        </button>
-                                      )}
-                                      <button
-                                        onClick={() => deleteTest(t._id)}
-                                        className="px-3 py-1.5 rounded-lg bg-danger-light hover:opacity-80 text-danger text-xs font-medium"
-                                      >
-                                        Delete
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <h2 className="font-display text-lg font-bold text-ink capitalize">{openLevel} tests</h2>
+        <button
+          onClick={() => generate(ch, openLevel)}
+          disabled={!!genBusy}
+          className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-xs font-medium disabled:opacity-50 inline-flex items-center gap-2"
+        >
+          {genBusy === `${ch.name}-${openLevel}` ? (
+            <>
+              <span className="inline-block w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+              Building...
+            </>
+          ) : (
+            `+ Build ${openLevel} test`
+          )}
+        </button>
+      </div>
 
-                  <p className="text-xs text-slate-soft mt-4">
-                    💡 Keep the first 2 tests in each chapter <b>FREE</b>, the rest <b>Premium</b>.
-                  </p>
+      {testsLoading ? (
+        <p className="text-sm text-slate-soft">Loading tests...</p>
+      ) : levelTests.length === 0 ? (
+        <p className="text-sm text-slate-soft">No {openLevel} test yet.</p>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {levelTests.map((t, i) => {
+            const short = typeof t.questionCount === "number" && t.questionCount < FULL_TEST;
+            const btn = "px-2 py-1.5 rounded-lg text-[11px] font-medium text-center";
+            return (
+              <div key={t._id} className="rv-card aspect-square p-4 flex flex-col">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-brand-light text-brand text-xs font-bold flex items-center justify-center">
+                    #{i + 1}
+                  </span>
+                  <span
+                    className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${
+                      t.publishStatus === "published"
+                        ? t.isFree
+                          ? "bg-success-light text-success"
+                          : "bg-brand-light text-brand"
+                        : "bg-warn-light text-warn"
+                    }`}
+                  >
+                    {t.publishStatus === "published" ? (t.isFree ? "FREE" : "Premium") : "Draft"}
+                  </span>
                 </div>
+
+                <p className="mt-3 font-semibold text-ink text-sm leading-snug line-clamp-2">{t.title}</p>
+                <p className={`text-xs mt-1 ${short ? "text-warn" : "text-slate-soft"}`}>
+                  {typeof t.questionCount === "number" ? `${t.questionCount} / ${FULL_TEST} questions` : ""}
+                </p>
+
+                <div className="mt-auto grid grid-cols-2 gap-1.5">
+                  <button onClick={() => openReview(t._id)} className={`${btn} bg-slate-light hover:bg-border-strong text-ink-soft`}>
+                    👁 Review
+                  </button>
+                  <button onClick={() => deleteTest(t._id)} className={`${btn} bg-danger-light hover:opacity-80 text-danger`}>
+                    Delete
+                  </button>
+                  {t.publishStatus === "draft" &&
+                    (short ? (
+                      <button
+                        onClick={() => openReview(t._id)}
+                        className={`${btn} col-span-2 bg-warn-light text-warn`}
+                        title={`A test goes out with all ${FULL_TEST} questions. Open it and add the missing ones.`}
+                      >
+                        Add {FULL_TEST - t.questionCount} to publish
+                      </button>
+                    ) : (
+                      <>
+                        <button onClick={() => publishTest(t._id, true)} className={`${btn} bg-success-light0 hover:bg-success text-white`}>
+                          Publish FREE
+                        </button>
+                        <button onClick={() => publishTest(t._id, false)} className={`${btn} bg-brand hover:bg-brand-dark text-white`}>
+                          Premium
+                        </button>
+                      </>
+                    ))}
+                  {t.publishStatus === "published" && (
+                    <button
+                      onClick={() => unpublishTest(t._id)}
+                      className={`${btn} col-span-2 bg-slate-light hover:bg-border-strong text-ink-soft`}
+                      title="Take it off the app so its questions can be changed"
+                    >
+                      Unpublish
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <p className="text-xs text-slate-soft mt-6">
+        💡 Keep the first 2 tests in each chapter <b>FREE</b>, the rest <b>Premium</b>.
+      </p>
 
       {/* Review modal - check every question before publishing */}
       {(reviewTest || reviewLoading) && (
