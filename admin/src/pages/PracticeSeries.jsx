@@ -389,7 +389,12 @@ export default function PracticeSeries() {
   // ---------- VIEW 3: One chapter's tests, level by level ----------
   const ch = openChapter;
   const openLevel = LEVELS.includes(params.get("level")) ? params.get("level") : "easy";
-  const levelTests = chapterTests.filter((t) => t.difficultyLevel === openLevel);
+  // Tests arrive newest first; show them in the order they were built,
+  // "… - Easy #1" first, so the card number matches the title.
+  const testNumber = (t) => Number((t.title || "").match(/#(\d+)\s*$/)?.[1]) || 0;
+  const levelTests = chapterTests
+    .filter((t) => t.difficultyLevel === openLevel)
+    .sort((x, y) => testNumber(x) - testNumber(y));
   function goLevel(level) {
     setParams({ subject: selectedSubject.name, chapter: ch.name, level }, { replace: true });
   }
@@ -476,7 +481,7 @@ export default function PracticeSeries() {
               <div key={t._id} className="rv-card aspect-square p-4 flex flex-col">
                 <div className="flex items-center justify-between gap-2">
                   <span className="w-8 h-8 rounded-lg bg-brand-light text-brand text-xs font-bold flex items-center justify-center">
-                    #{i + 1}
+                    #{testNumber(t) || i + 1}
                   </span>
                   <span
                     className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${
