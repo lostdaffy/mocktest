@@ -63,6 +63,9 @@ async function generationParamsFor(test, subjectName) {
       topic: topicList.join(", "),
       difficulty: level,
       syllabusTopics: topicList,
+      // A Data Interpretation or figure chapter is written by the visual
+      // generator - see services/visualGenerator.js.
+      ...(chapterDoc?.visual ? { visualKind: chapterDoc.visual } : {}),
     },
   };
 }
@@ -115,7 +118,11 @@ async function refillTest(testId, { max } = {}) {
       // test written before a schema field existed would throw and take the
       // other twenty-five in the batch down with it. Adding questions has no
       // business caring whether an old test remembers its durationMinutes.
-      await Test.updateOne({ _id: test._id }, { $push: { questions: { $each: built.ids } } });
+      await Test.updateOne(
+        { _id: test._id },
+        // A chart or figure question makes it a test older apps cannot show.
+        { $push: { questions: { $each: built.ids } }, ...(generateParams.visualKind ? { $set: { hasVisuals: true } } : {}) }
+      );
       added += built.ids.length;
     }
     if (built.ids.length < ask) break;

@@ -75,7 +75,7 @@ async function runMockJob(job) {
   // section from its pattern; the worker only has to call it and record what
   // came back, so there is one implementation of "build a mock", not two.
   const { buildMockForExam } = require("../controllers/examSeriesController");
-  const built = await buildMockForExam(job.examType);
+  const built = await buildMockForExam(job.examType, { vacancyId: job.vacancy });
   if (built.full) return built.message;
 
   // A short mock is not done. SSC CHSL was marked done at 9 of 100 and

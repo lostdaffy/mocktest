@@ -87,4 +87,54 @@ const publish = (q) => ({ ...q, status: "published", aiConfidenceScore: 1 });
 pipeline.runValidationPipelineBatch = async (questions) => questions.map(publish);
 pipeline.runValidationPipeline = async (question) => publish(question);
 
+// Chart and figure questions. The model is faked, but everything after it -
+// the chart/figure normalising and the answer cross-check - is the real code:
+// each call also returns one question whose marked answer is wrong, which the
+// real check must throw out.
+const visualGen = require(path.join(SERVER, "services/visualGenerator"));
+const visuals = require(path.join(SERVER, "services/visuals"));
+let v = 0;
+visualGen.generateVisualQuestions = async (params) => {
+  const { kind, count } = params;
+  fs.appendFileSync(CALLS, JSON.stringify({ visual: kind, subject: params.subject, count, syllabusTopics: params.syllabusTopics || [] }) + "\n");
+  let raw;
+  if (kind === "chart") {
+    v += 1;
+    const base = 10 * v;
+    raw = {
+      chart: { type: "bar", title: `Sales ${v}`, unit: "lakh", categories: ["2019", "2020", "2021"], series: [{ name: "A", values: [base, base + 10, base + 20] }] },
+      questions: [
+        ...Array.from({ length: count }, (_, i) => ({
+          text: `Chart ${v} q${i + 1}: what is the total of A across the three years?`,
+          textHi: "हिंदी", options: [`${3 * base + 30 + i}`, `${3 * base + 30}`, `${3 * base + 31 + i}`, `${3 * base + 50 + i}`],
+          optionsHi: ["1", "2", "3", "4"], correctIndex: 1, formula: `sum("A")`,
+          solution: `${base} + ${base + 10} + ${base + 20} = ${3 * base + 30}`, solutionHi: "हल",
+        })).map((q, i) => (i === 0 ? { ...q, options: [`${3 * base + 30}`, `${3 * base + 29}`, `${3 * base + 31}`, `${3 * base + 50}`], correctIndex: 0 } : q)),
+        // Wrong on purpose: the chart says 30 for 2020 minus 2019 is 10.
+        { text: `Chart ${v}: by how much did A grow from 2019 to 2020?`, textHi: "हिंदी", options: ["5", "10", "15", "20"], optionsHi: ["5", "10", "15", "20"], correctIndex: 0, formula: `v("A","2020") - v("A","2019")`, solution: "10 - 5 = 5", solutionHi: "हल" },
+      ],
+    };
+  } else {
+    const qs = [];
+    for (let i = 0; i <= count; i++) {
+      v += 1;
+      const p1 = { elements: [{ shape: "arrow", row: 1, col: 1, fill: "black", rotate: 0 }, { shape: "circle", row: 3, col: (v % 3) + 1 === 1 ? 2 : 3, fill: "white" }] };
+      const p2 = visuals.rotatePanel(p1, 90, 3);
+      const p3 = visuals.rotatePanel(p2, 90, 3);
+      const answer = visuals.rotatePanel(p3, 90, 3);
+      const options = [answer, visuals.mirrorPanel(p3, 3), p3, visuals.waterPanel(p3, 3)];
+      qs.push({
+        text: `Figure ${v}: which answer figure comes next in the series?`,
+        textHi: "श्रृंखला में अगली आकृति कौन सी है?",
+        // The last one is marked wrong on purpose; the rule gives option A.
+        correctIndex: i === count ? 2 : 0,
+        solution: "Each figure turns 90 degrees clockwise.", solutionHi: "हर आकृति 90 अंश घूमती है।",
+        figure: { layout: "series", grid: 3, rule: { type: "rotate", by: 90 }, question: [p1, p2, p3], options },
+      });
+    }
+    raw = { questions: qs };
+  }
+  return visualGen.buildVisualQuestions(kind, raw, params).questions.slice(0, count);
+};
+
 console.log("[stub] Gemini generation stubbed");

@@ -1,4 +1,8 @@
 const Question = require("../models/Question");
+// Tests made up on the spot from the bank (the daily test, topic tests, the
+// revision test) never carry chart or figure questions: a DI question belongs
+// with its set, and a figure only works once its picture is in. Those come
+// through built tests, which the admin reviews.
 const { sectionRulesFrom } = require("../utils/marking");
 const ExamPattern = require("../models/ExamPattern");
 const Test = require("../models/Test");
@@ -30,7 +34,7 @@ async function pickQuestionsForSection({ examType, subject, subjects, count, dif
           examType: examType,
           subject: subjectMatch,
           difficulty: bucket.difficulty,
-          status: "published",
+          status: "published", "visual.kind": { $nin: ["chart", "figure"] },
           _id: { $nin: excludeIds },
         },
       },
@@ -48,7 +52,7 @@ async function pickQuestionsForSection({ examType, subject, subjects, count, dif
         $match: {
           examType: examType,
           subject: subjectMatch,
-          status: "published",
+          status: "published", "visual.kind": { $nin: ["chart", "figure"] },
           _id: { $nin: [...excludeIds, ...alreadyIds] },
         },
       },
@@ -72,7 +76,7 @@ async function pickQuestionsForSection({ examType, subject, subjects, count, dif
       {
         $match: {
           subject: subjectMatch,
-          status: "published",
+          status: "published", "visual.kind": { $nin: ["chart", "figure"] },
           _id: { $nin: [...excludeIds, ...alreadyIds] },
         },
       },
@@ -108,7 +112,7 @@ async function generateFullMock(examType) {
     throw new Error(
       // Shown to a student, so it says what THEY can do - not what the
       // admin should run on the server.
-      `Is exam ke questions abhi taiyaar ho rahe hain. Thodi der baad dobara try karo.`
+      `Questions for this exam are still being prepared. Please try again later.`
     );
   }
 
@@ -132,12 +136,12 @@ async function generateFullMock(examType) {
  */
 async function generateTopicTest({ examType, subject, topic, count = 15 }) {
   const questions = await Question.aggregate([
-    { $match: { examType, subject, topic, status: "published" } },
+    { $match: { examType, subject, topic, status: "published", "visual.kind": { $nin: ["chart", "figure"] } } },
     { $sample: { size: count } },
   ]);
 
   if (questions.length === 0) {
-    throw new Error(`${topic} ke questions abhi taiyaar ho rahe hain. Thodi der baad dobara try karo.`);
+    throw new Error(`${topic} questions are still being prepared. Please try again later.`);
   }
 
   const test = await Test.create({
@@ -201,7 +205,7 @@ async function generatePersonalizedDailyTest(userId) {
   const existing = await Test.findOne({
     generatedForUser: userId,
     type: "revision",
-    title: "Aaj Ka Test",
+    title: "Today's Test",
     createdAt: { $gte: todayStart },
   });
   if (existing) return existing;
@@ -223,7 +227,7 @@ async function generatePersonalizedDailyTest(userId) {
   if (weakTopics.length > 0) {
     for (const wt of weakTopics) {
       const qs = await Question.aggregate([
-        { $match: { examType, subject: wt.subject, topic: wt.topic, status: "published", _id: { $nin: seenIds } } },
+        { $match: { examType, subject: wt.subject, topic: wt.topic, status: "published", "visual.kind": { $nin: ["chart", "figure"] }, _id: { $nin: seenIds } } },
         { $sample: { size: 10 } },
       ]);
       questions = questions.concat(qs);
@@ -235,7 +239,7 @@ async function generatePersonalizedDailyTest(userId) {
   if (questions.length < DAILY_TEST_SIZE) {
     const alreadyIds = questions.map((q) => q._id);
     const filler = await Question.aggregate([
-      { $match: { examType, status: "published", _id: { $nin: [...seenIds, ...alreadyIds] } } },
+      { $match: { examType, status: "published", "visual.kind": { $nin: ["chart", "figure"] }, _id: { $nin: [...seenIds, ...alreadyIds] } } },
       { $sample: { size: DAILY_TEST_SIZE - questions.length } },
     ]);
     questions = questions.concat(filler);
@@ -246,7 +250,7 @@ async function generatePersonalizedDailyTest(userId) {
   if (questions.length < DAILY_TEST_SIZE) {
     const alreadyIds = questions.map((q) => String(q._id));
     const revision = await Question.aggregate([
-      { $match: { examType, status: "published", _id: { $nin: questions.map((q) => q._id) } } },
+      { $match: { examType, status: "published", "visual.kind": { $nin: ["chart", "figure"] }, _id: { $nin: questions.map((q) => q._id) } } },
       { $sample: { size: DAILY_TEST_SIZE - questions.length } },
     ]);
     questions = questions.concat(revision.filter((q) => !alreadyIds.includes(String(q._id))));
@@ -254,12 +258,12 @@ async function generatePersonalizedDailyTest(userId) {
 
   if (questions.length === 0) {
     throw new Error(
-      `Aaj ka test abhi taiyaar ho raha hai. Thodi der baad dobara try karo.`
+      `Today's test is still being prepared. Please try again later.`
     );
   }
 
   const test = await Test.create({
-    title: "Aaj Ka Test",
+    title: "Today's Test",
     type: "revision",
     examType,
     questions: questions.map((q) => q._id),
@@ -275,9 +279,9 @@ async function generatePersonalizedDailyTest(userId) {
  */
 async function generateWeeklyRevisionTest(userId, wrongQuestionIds) {
   if (!wrongQuestionIds || wrongQuestionIds.length === 0) {
-    throw new Error("Revision ke liye abhi koi galat ya bookmark kiya hua question nahi hai. Pehle kuch test do.");
+    throw new Error("You have no wrong or bookmarked questions to revise yet. Take a few tests first.");
   }
-  const questions = await Question.find({ _id: { $in: wrongQuestionIds }, status: "published" }).limit(25);
+  const questions = await Question.find({ _id: { $in: wrongQuestionIds }, status: "published", "visual.kind": { $nin: ["chart", "figure"] } }).limit(25);
 
   const test = await Test.create({
     title: "Weekly Weak-Topic Revision",

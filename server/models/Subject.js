@@ -52,6 +52,14 @@ const subjectSchema = new mongoose.Schema(
         // field keep showing up rather than silently disappearing.
         exams: [{ type: String }],
 
+        // A chapter whose questions need a picture: "chart" for Data
+        // Interpretation (the app draws the chart from stored numbers),
+        // "figure" for non-verbal reasoning (an image is uploaded per
+        // question). Its tests are then built by the visual generator, and a
+        // mock whose syllabus names the chapter gets a set of them. Empty for
+        // every ordinary chapter.
+        visual: { type: String, enum: ["", "chart", "figure"], default: "" },
+
         displayOrder: { type: Number, default: 0 },
       },
     ],

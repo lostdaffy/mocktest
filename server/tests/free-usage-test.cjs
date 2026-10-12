@@ -69,8 +69,8 @@ async function api(method, p, { body, token } = {}) {
   // ---- bank empty
   let r = await api("POST", "/tests/generate/full-mock", { body: { examType: "AGNIVEER" }, token });
   check("an empty question bank doesn't 500", r.status === 400, String(r.status));
-  check("the student is told to come back later, in their own language",
-    /taiyaar ho rahe hain/.test(r.json.message || ""), r.json.message);
+  check("the student is told to come back later, in plain words",
+    /still being prepared/.test(r.json.message || ""), r.json.message);
   check("no mention of npm, scripts or the admin's chores",
     !/npm|script|admin|published/i.test(r.json.message || ""), r.json.message);
   check("...and that failed try cost them nothing", (await used()) === 0, `used ${await used()}`);

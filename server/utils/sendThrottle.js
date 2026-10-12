@@ -59,9 +59,9 @@ async function releaseSend(key) {
 function throttleMessage(result) {
   if (result.reason === "daily") {
     const hours = Math.ceil(result.retryAfterSec / 3600);
-    return `Aaj ke liye limit poori ho gayi. ${hours} ghante baad dobara try karo.`;
+    return `You have reached today's limit. Please try again in ${hours} hour${hours === 1 ? "" : "s"}.`;
   }
-  return `Thoda ruko - ${result.retryAfterSec} second baad dobara try karo.`;
+  return `Please wait ${result.retryAfterSec} seconds and try again.`;
 }
 
 module.exports = { claimSend, releaseSend, throttleMessage };

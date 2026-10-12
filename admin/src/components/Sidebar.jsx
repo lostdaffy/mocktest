@@ -17,6 +17,8 @@ import {
   RiCloseLine,
   RiMagicLine,
   RiCalendarCheckLine,
+  RiImageLine,
+  RiMegaphoneLine,
 } from "@remixicon/react";
 
 // Grouped rather than one flat list of 11 - with this many destinations a
@@ -33,6 +35,7 @@ const NAV_GROUPS = [
       { to: "/exam-series", label: "Exam Mock Series", Icon: RiFileList3Line },
       { to: "/practice-series", label: "Subject Practice", Icon: RiBookOpenLine },
       { to: "/daily-quiz", label: "Daily GK Quiz", Icon: RiCalendarCheckLine },
+      { to: "/images-pending", label: "Images pending", Icon: RiImageLine },
       { to: "/pyq-bank", label: "PYQ Bank", Icon: RiFilePaperLine },
       { to: "/questions", label: "Question Review", Icon: RiQuestionnaireLine },
     ],
@@ -40,6 +43,7 @@ const NAV_GROUPS = [
   {
     label: "Exams",
     items: [
+      { to: "/vacancies", label: "Vacancies", Icon: RiMegaphoneLine },
       { to: "/live-exams", label: "Live Exams", Icon: RiBroadcastLine },
       { to: "/exam-patterns", label: "Exam Patterns", Icon: RiLayoutGridLine },
       { to: "/subjects", label: "Subjects", Icon: RiFolderLine },

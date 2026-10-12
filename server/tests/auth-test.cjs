@@ -89,7 +89,7 @@ function lastCode(ch, to) {
   for (let i = 1; i <= 4; i++) {
     r = await api("POST", "/auth/signup", { name: "S", phone: P1, password: "secret123", email: E1, otp: "000000" });
   }
-  check("wrong OTP shows tries left", r.status === 400 && /1 try baaki/.test(r.json.message), r.json.message);
+  check("wrong OTP shows tries left", r.status === 400 && /1 attempt\(s\) left/.test(r.json.message), r.json.message);
   r = await api("POST", "/auth/signup", { name: "S", phone: P1, password: "secret123", email: E1, otp: "000000" });
   check("5th wrong OTP discards the code", r.status === 400 && r.json.code === "OTP_ATTEMPTS_EXCEEDED");
   r = await api("POST", "/auth/signup", { name: "S", phone: P1, password: "secret123", email: E1, otp: code1 });
@@ -129,15 +129,15 @@ function lastCode(ch, to) {
   r = await api("POST", "/auth/login", { phone: P1, password: "secret123" });
   check("password login works", r.status === 200);
   for (let i = 1; i <= 6; i++) r = await api("POST", "/auth/login", { phone: P1, password: "wrong!" });
-  check("first 6 wrong tries give nothing away", r.status === 401 && !/try baaki/.test(r.json.message), r.json.message);
+  check("first 6 wrong tries give nothing away", r.status === 401 && !/attempt\(s\) left/.test(r.json.message), r.json.message);
   r = await api("POST", "/auth/login", { phone: P1, password: "wrong!" });
-  check("7th wrong password starts the countdown", r.status === 401 && /3 try baaki/.test(r.json.message), r.json.message);
-  check("...and says how long the lock will be", /24 ghante/.test(r.json.message), r.json.message);
+  check("7th wrong password starts the countdown", r.status === 401 && /3 attempt\(s\) left/.test(r.json.message), r.json.message);
+  check("...and says how long the lock will be", /24 hours/.test(r.json.message), r.json.message);
   r = await api("POST", "/auth/login", { phone: P1, password: "wrong!" });
-  check("8th says 2 try baaki", r.status === 401 && /2 try baaki/.test(r.json.message), r.json.message);
+  check("8th says 2 attempts left", r.status === 401 && /2 attempt\(s\) left/.test(r.json.message), r.json.message);
   r = await api("POST", "/auth/login", { phone: P1, password: "wrong!" });
   r = await api("POST", "/auth/login", { phone: P1, password: "wrong!" });
-  check("10th wrong password locks the account for a day", r.status === 423 && r.json.code === "ACCOUNT_LOCKED" && /24 ghante/.test(r.json.message), r.json.message);
+  check("10th wrong password locks the account for a day", r.status === 423 && r.json.code === "ACCOUNT_LOCKED" && /24 hours/.test(r.json.message), r.json.message);
   check("lock really is 24 hours", r.json.retryAfterSec === 24 * 60 * 60, `${r.json.retryAfterSec}s`);
   r = await api("POST", "/auth/login", { phone: P1, password: "secret123" });
   check("correct password refused while locked", r.status === 423);
@@ -147,7 +147,7 @@ function lastCode(ch, to) {
   const u1 = await db.collection("users").findOne({ phone: P1 });
   check("login works after lock expires and counters reset", r.status === 200 && !u1.failedLoginAttempts && !u1.lockUntil);
   r = await api("POST", "/auth/login", { phone: "9999999999", password: "whatever" });
-  check("unknown number gets the same generic error", r.status === 401 && /galat/.test(r.json.message));
+  check("unknown number gets the same generic error", r.status === 401 && /Wrong phone number or password/.test(r.json.message));
 
   // ---- forgot password by EMAIL
   const smsCount = () => (fs.readFileSync(CAPTURED, "utf8").match(/"ch":"sms"/g) || []).length;

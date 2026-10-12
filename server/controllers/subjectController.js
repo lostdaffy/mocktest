@@ -126,7 +126,8 @@ async function generateChapterTest(req, res) {
     // do this. The bank is shared on purpose, so fall back to the rest of
     // it rather than show an empty screen.
     const examGoals = user.examGoals || [];
-    const base = { topic: { $in: topics }, difficulty: questionDifficulty, status: "published" };
+    // Charts and figures stay out of these on-the-spot tests, as in testGenerator.
+    const base = { topic: { $in: topics }, difficulty: questionDifficulty, status: "published", "visual.kind": { $nin: ["chart", "figure"] } };
 
     let questions = [];
     if (examGoals.length) {
@@ -146,7 +147,7 @@ async function generateChapterTest(req, res) {
 
     if (questions.length === 0) {
       return res.status(400).json({
-        message: `${chapter} ke ${level} level ke questions abhi taiyaar ho rahe hain. Thodi der baad try karo.`,
+        message: `${chapter} questions at the ${level} level are still being prepared. Please try again later.`,
       });
     }
 

@@ -14,6 +14,7 @@ import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 import ManualQuestions from "../components/ManualQuestions";
+import QuestionVisual from "../components/QuestionVisual";
 
 // <input type="datetime-local"> hands back a bare string like
 // "2026-08-24T14:30" with NO timezone attached. Sending that as-is caused a
@@ -207,7 +208,7 @@ export default function LiveExams() {
 
   async function cancelExam(liveExamId) {
     const ok = await toast.confirm({
-      title: "Ye live exam cancel karein?",
+      title: "Cancel this live exam?",
       message: "Students will no longer see this. It cannot be returned to draft, but nothing is deleted.",
       confirmLabel: "Cancel exam",
       danger: true,
@@ -224,7 +225,7 @@ export default function LiveExams() {
 
   async function deleteExam(liveExamId) {
     const ok = await toast.confirm({
-      title: "Permanently delete karein?",
+      title: "Delete permanently?",
       message: "This live exam and all of its questions will be deleted. This cannot be undone.",
       confirmLabel: "Delete permanently",
       danger: true,
@@ -735,9 +736,12 @@ function ReviewModal({ exam, onClose, onRemoveQuestion, onUpdateQuestion, editab
             ) : (
               <div key={q._id} className="border border-border-soft rounded-xl p-4">
                 <div className="flex justify-between items-start gap-2">
-                  <p className="font-medium text-ink text-sm">
-                    {idx + 1}. {q.text}
-                  </p>
+                  <div className="min-w-0">
+                    <p className="font-medium text-ink text-sm">
+                      {idx + 1}. {q.text}
+                    </p>
+                    <QuestionVisual q={q} className="mt-2" />
+                  </div>
                   {editable && (
                     <div className="flex gap-2 shrink-0">
                       <button onClick={() => setEditingId(q._id)} className="text-slate-soft hover:text-brand" title="Edit">

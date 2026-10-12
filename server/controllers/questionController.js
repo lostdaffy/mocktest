@@ -207,6 +207,7 @@ async function updateQuestion(req, res) {
 // DELETE /api/questions/:id (admin)
 async function deleteQuestion(req, res) {
   const q = await Question.findByIdAndDelete(req.params.id);
+  if (q) await require("../models/QuestionImage").deleteMany({ question: q._id });
   if (!q) return res.status(404).json({ message: "Question not found" });
   res.json({ message: "Question deleted" });
 }

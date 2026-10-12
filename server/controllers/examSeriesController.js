@@ -4,6 +4,9 @@ const Question = require("../models/Question");
 const ExamPattern = require("../models/ExamPattern");
 const Subject = require("../models/Subject");
 const RejectedQuestion = require("../models/RejectedQuestion");
+const Vacancy = require("../models/Vacancy");
+const QuestionImage = require("../models/QuestionImage");
+const { imagesPendingIn, hasVisuals, pendingImagesMessage } = require("../services/visuals");
 const { createVerifiedQuestions, qualityNote } = require("../services/questionFactory");
 const { refillTest, refillTests, refillNote, targetSize } = require("../services/testTopUp");
 
@@ -139,11 +142,26 @@ async function listExamMocks(req, res) {
  * Throws rather than returning an error shape: the caller decides whether
  * that becomes a 500 or a failed job.
  */
-async function buildMockForExam(examStage) {
+async function buildMockForExam(examStage, { vacancyId } = {}) {
   const pattern = await ExamPattern.findOne({ examType: examStage, isActive: true });
   if (!pattern) {
     throw new Error(`No exam pattern found for ${examStage}. Create the pattern first.`);
   }
+
+  // A mock for one recruitment notice follows that notice's syllabus where
+  // it gives one, section by section, and is numbered in its own series.
+  let vacancy = null;
+  if (vacancyId) {
+    vacancy = await Vacancy.findById(vacancyId).lean();
+    if (!vacancy) throw new Error("That vacancy no longer exists.");
+    if (vacancy.examType !== examStage) throw new Error(`That vacancy follows ${vacancy.examType}, not ${examStage}.`);
+  }
+  const series = { vacancy: vacancy ? vacancy._id : null };
+  const syllabusOf = (section) => {
+    const own = (vacancy?.syllabus || []).find((s) => String(s.subject).toLowerCase() === String(section.subject).toLowerCase());
+    return own?.topics?.length ? own.topics : section.syllabus;
+  };
+  const visualPlan = await visualChaptersFor(pattern, syllabusOf);
 
   // What a full paper of this exam is - 80 for SSC GD, 150 for CTET.
   const paperSize = (pattern.sections || []).reduce((n, sec) => n + (sec.questionCount || 0), 0);
@@ -154,7 +172,7 @@ async function buildMockForExam(examStage) {
   // ran out of allowance, or was cut off by a deploy, leaves a draft behind;
   // the next run used to create Mock #2 beside it and leave #1 short for
   // ever. Only drafts are touched - nothing a student can see.
-  const drafts = await Test.find({ examStage, type: "full_mock", publishStatus: "draft" }).sort({ seriesNumber: 1 });
+  const drafts = await Test.find({ examStage, type: "full_mock", publishStatus: "draft", ...series }).sort({ seriesNumber: 1 });
   const unfinished = drafts.filter((d) => d.questions.length < paperSize);
   const partial = unfinished.filter((d) => d.questions.length > 0).sort((a, b) => b.questions.length - a.questions.length);
   const empties = unfinished.filter((d) => d.questions.length === 0);
@@ -170,10 +188,11 @@ async function buildMockForExam(examStage) {
   }
 
   if (!test) {
-    const lastMock = await Test.findOne({ examStage, type: "full_mock" }).sort({ seriesNumber: -1 });
+    const lastMock = await Test.findOne({ examStage, type: "full_mock", ...series }).sort({ seriesNumber: -1 });
     const nextNumber = (lastMock?.seriesNumber || 0) + 1;
     test = await Test.create({
-      title: `${pattern.displayName} - Mock #${nextNumber}`,
+      title: `${vacancy ? vacancy.seriesName : pattern.displayName} - Mock #${nextNumber}`,
+      ...(vacancy ? { vacancy: vacancy._id } : {}),
       type: "full_mock",
       examType: examStage,
       examStage,
@@ -194,8 +213,11 @@ async function buildMockForExam(examStage) {
   const buckets = pattern.sections.map(() => []);
   const strays = [];
   const pyqInSection = pattern.sections.map(() => 0);
+  // Which chart/figure chapters a section already has a set from, so a
+  // resumed mock does not get a second one.
+  const visualsInSection = pattern.sections.map(() => new Set());
   if (test.questions.length) {
-    const have = await Question.find({ _id: { $in: test.questions } }).select("subject source").lean();
+    const have = await Question.find({ _id: { $in: test.questions } }).select("subject source chapter visual.kind").lean();
     const byId = new Map(have.map((q) => [String(q._id), q]));
     for (const id of test.questions) {
       const q = byId.get(String(id));
@@ -205,6 +227,7 @@ async function buildMockForExam(examStage) {
       else {
         buckets[k].push(q._id);
         if (q.source === "pyq") pyqInSection[k] += 1;
+        if (q.visual?.kind) visualsInSection[k].add(q.chapter);
       }
     }
   }
@@ -235,7 +258,7 @@ async function buildMockForExam(examStage) {
     while (remaining > 0 && !allowanceGone) {
       const thisBatch = Math.min(CHUNK, remaining);
       const offset = syllabusOffsets.get(section.subject) || 0;
-      const topics = syllabusSlice(section.syllabus, offset);
+      const topics = syllabusSlice(syllabusOf(section), offset);
       syllabusOffsets.set(section.subject, offset + (topics.length || 1));
       try {
         // Only questions that pass the rule checks AND the AI's own re-solve
@@ -246,7 +269,7 @@ async function buildMockForExam(examStage) {
           tag: { examStage },
           generateParams: {
             examType: examStage,
-            examDisplayName: pattern.displayName,
+            examDisplayName: vacancy ? vacancy.name : pattern.displayName,
             subject: section.subject,
             topic: section.subject,
             difficulty,
@@ -289,6 +312,42 @@ async function buildMockForExam(examStage) {
       pyqUsed += pyqIds.length;
       await saveProgress();
     }
+
+    // A section whose syllabus names a Data Interpretation or figure chapter
+    // gets one set of those, the way the real paper has one: a chart with
+    // five questions, or three figure questions. Figures still need their
+    // pictures uploaded before the mock can be published.
+    for (const v of visualPlan[k] || []) {
+      if (allowanceGone || visualsInSection[k].has(v.chapter)) continue;
+      const room = section.questionCount - buckets[k].length;
+      const want = Math.min(room, v.kind === "chart" ? 5 : 3);
+      if (want < (v.kind === "chart" ? 3 : 1)) continue;
+      try {
+        const built = await createVerifiedQuestions({
+          needed: want,
+          tag: { examStage, chapter: v.chapter },
+          generateParams: {
+            examType: examStage,
+            examDisplayName: vacancy ? vacancy.name : pattern.displayName,
+            subject: v.subject,
+            topic: v.chapter,
+            difficulty: "medium",
+            examLevel: pattern.examLevel,
+            syllabusTopics: v.topics,
+            visualKind: v.kind,
+          },
+        });
+        for (const key of Object.keys(tally)) tally[key] += built[key] || 0;
+        buckets[k].push(...built.ids);
+        if (built.ids.length) visualsInSection[k].add(v.chapter);
+        await saveProgress();
+      } catch (err) {
+        hadFailure = true;
+        if (/every model has used its allowance|PerDay|per day|quota exceeded/i.test(err.message || "")) allowanceGone = true;
+        console.log(`Visual set failed (${v.kind} ${v.chapter}): ${err.message}`);
+      }
+    }
+    if (allowanceGone) break;
 
     // Whatever the PYQ bank couldn't supply is generated instead, so a thin
     // bank means a more AI-heavy mock, never a short one.
@@ -345,10 +404,40 @@ async function buildMockForExam(examStage) {
   };
 }
 
+/**
+ * For each section of a pattern, the catalog's chart and figure chapters its
+ * syllabus names - by chapter name or by one of the chapter's topics, in the
+ * section's own subject or one it draws from.
+ */
+async function visualChaptersFor(pattern, syllabusOf) {
+  const subjects = await Subject.find({ isActive: true, "chapters.visual": { $in: ["chart", "figure"] } }).lean();
+  return pattern.sections.map((section) => {
+    const names = new Set(
+      (syllabusOf(section) || []).map((t) => String(typeof t === "string" ? t : t?.topic || "").trim().toLowerCase()).filter(Boolean)
+    );
+    if (!names.size) return [];
+    const inSection = [section.subject, ...(section.sources || [])].map((s) => s.toLowerCase());
+    const out = [];
+    for (const subj of subjects) {
+      const subjNames = [subj.name, ...(subj.aliases || [])].map((s) => s.toLowerCase());
+      if (!subjNames.some((n) => inSection.includes(n))) continue;
+      for (const ch of subj.chapters || []) {
+        if (!ch.visual) continue;
+        const keys = [ch.name, ...(ch.topics || [])].map((t) => t.toLowerCase());
+        if (keys.some((t) => names.has(t))) {
+          out.push({ kind: ch.visual, subject: subj.name, chapter: ch.name, topics: ch.topics?.length ? ch.topics : [ch.name] });
+        }
+      }
+    }
+    return out.slice(0, 2);
+  });
+}
+
 // POST /api/exam-series/:examStage/generate-mock (admin)
+// body: { vacancyId? } - a mock in that recruitment notice's series
 async function generateExamMock(req, res) {
   try {
-    const built = await buildMockForExam(req.params.examStage);
+    const built = await buildMockForExam(req.params.examStage, { vacancyId: req.body?.vacancyId });
     res.status(201).json(built);
   } catch (err) {
     console.error(err);
@@ -388,8 +477,13 @@ async function publishMock(req, res) {
     });
   }
 
+  // ...and with every figure's picture in it.
+  const pending = await imagesPendingIn(test.questions);
+  if (pending) return res.status(400).json({ message: pendingImagesMessage(pending), imagesPending: pending });
+
   test.publishStatus = "published";
   test.isFree = !!isFree;
+  test.hasVisuals = await hasVisuals(test.questions);
   await test.save();
 
   res.json({ message: "Mock is live", test });
@@ -407,11 +501,13 @@ async function deleteMock(req, res) {
   const test = await Test.findById(req.params.testId);
   if (!test) return res.status(404).json({ message: "Mock not found" });
 
-  // Delete the mock's questions too (they were generated for this mock only)
+  // Delete the mock's questions too (they were generated for this mock only),
+  // and the pictures of any figure questions among them.
+  await QuestionImage.deleteMany({ question: { $in: test.questions } });
   await Question.deleteMany({ _id: { $in: test.questions } });
   await Test.findByIdAndDelete(req.params.testId);
 
-  res.json({ message: "Mock aur uske questions delete ho gaye" });
+  res.json({ message: "The mock and its questions were deleted" });
 }
 
 // DELETE /api/exam-series/mock/:testId/question/:questionId (admin)
@@ -441,6 +537,7 @@ async function removeQuestionFromMock(req, res) {
         reason: "removed_by_admin", detail: `removed from ${test.title}`,
       }).catch(() => {});
       await Question.findByIdAndDelete(questionId);
+      await QuestionImage.deleteMany({ question: questionId });
       deleted = true;
     }
   }
@@ -667,6 +764,10 @@ async function buildPracticeTest({ subject, chapter, subtopic, topics, difficult
             topic: topicsForPrompt, // all topics of the chapter in one call
             difficulty: genDifficulty,
             syllabusTopics: topicList, // the chapter's topics ARE its syllabus
+            // A Data Interpretation or figure chapter goes to the visual
+            // generator, which checks every answer against its chart or
+            // figure in code.
+            ...(chapterDoc?.visual ? { visualKind: chapterDoc.visual } : {}),
           },
         });
 
@@ -851,7 +952,7 @@ async function addQuestionsToMock(req, res) {
         : ` No real PYQs found yet for ${subject} - upload some in PYQ Bank for closer style-matching.`;
 
     res.json({
-      message: `${newIds.length} questions add ho gaye${sectionNote}${qualityNote(built)}. Total ${test.questions.length} questions.${groundingNote}`,
+      message: `${newIds.length} questions added${sectionNote}${qualityNote(built)}. Total ${test.questions.length} questions.${groundingNote}`,
       added: newIds.length,
       totalCount: test.questions.length,
       groundedInRealPyqs: pyqExamples.length > 0,
@@ -959,8 +1060,13 @@ async function publishPracticeTest(req, res) {
     });
   }
 
+  // A figure question without its picture is a question nobody can answer.
+  const pending = await imagesPendingIn(test.questions);
+  if (pending) return res.status(400).json({ message: pendingImagesMessage(pending), imagesPending: pending });
+
   test.publishStatus = "published";
   test.isFree = !!isFree;
+  test.hasVisuals = await hasVisuals(test.questions);
   await test.save();
   res.json({ message: "Practice test is live", test });
 }

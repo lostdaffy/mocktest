@@ -592,9 +592,12 @@ async function verifyQuestions(questions) {
     return out;
   }
 
+  // A chart or figure question is shown with its chart as a table, or its
+  // figure as a precise description - the checker cannot see pictures.
+  const { visualAsText } = require("./visuals");
   const list = questions
     .map(
-      (q, i) => `Q${i + 1}. ${q.text}
+      (q, i) => `Q${i + 1}. ${q.visual?.kind ? visualAsText(q.visual) + "\n" : ""}${q.text}
 0. ${q.options[0]}
 1. ${q.options[1]}
 2. ${q.options[2]}

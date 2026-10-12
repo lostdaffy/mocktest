@@ -3,7 +3,7 @@ import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 
-const blankChapter = () => ({ name: "", nameHi: "", category: "", categoryHi: "", topics: [], exams: [] });
+const blankChapter = () => ({ name: "", nameHi: "", category: "", categoryHi: "", topics: [], exams: [], visual: "" });
 
 export default function Subjects() {
   const toast = useToast();
@@ -194,6 +194,22 @@ export default function Subjects() {
                     ✕
                   </button>
                 </div>
+
+                <label className="flex flex-wrap items-center gap-2 text-xs text-slate mb-2">
+                  Questions in this chapter:
+                  <select
+                    value={ch.visual || ""}
+                    onChange={(e) => updateChapter(idx, "visual", e.target.value)}
+                    className="rv-input !w-auto !py-1 text-xs"
+                  >
+                    <option value="">Ordinary (text only)</option>
+                    <option value="chart">Data Interpretation - with a chart the app draws</option>
+                    <option value="figure">Figure reasoning - a picture is uploaded per question</option>
+                  </select>
+                  {ch.visual === "figure" && (
+                    <span className="text-warn">Tests here cannot be published until every picture is uploaded (Images pending).</span>
+                  )}
+                </label>
 
                 <input
                   placeholder="Topics / subtopics (comma-separated, must match question tags)"

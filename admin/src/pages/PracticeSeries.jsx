@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
+import QuestionVisual from "../components/QuestionVisual";
 
 const LEVELS = ["easy", "medium", "hard", "advanced"];
 // A practice test holds this many questions (the server sends its own number
@@ -420,7 +421,9 @@ export default function PracticeSeries() {
   const testNumber = (t) => Number((t.title || "").match(/#(\d+)\s*$/)?.[1]) || 0;
   // Which series is open: the whole chapter, or one of its topics (the
   // chapter's topics as set in Subjects). Each has its own four levels.
-  const subtopics = ch.topics || [];
+  // A topic named like the chapter itself ("Percentage" in Percentage) is
+  // the whole chapter again, not a series of its own.
+  const subtopics = (ch.topics || []).filter((t) => t.trim().toLowerCase() !== ch.name.trim().toLowerCase());
   const openSub = subtopics.includes(params.get("sub")) ? params.get("sub") : "";
   const inSeries = (sub) => chapterTests.filter((t) => (t.subtopic || "") === sub);
   const seriesTests = inSeries(openSub);
@@ -683,6 +686,7 @@ export default function PracticeSeries() {
                       </div>
 
                       {q.textHi && <p className="text-xs text-slate mb-2 pl-6">{q.textHi}</p>}
+                      <QuestionVisual q={q} className="mb-2 pl-6" />
 
                       <div className="grid grid-cols-2 gap-1.5 mb-2 pl-6">
                         {q.options?.map((opt, i) => (

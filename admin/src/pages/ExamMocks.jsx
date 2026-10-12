@@ -5,6 +5,7 @@ import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 import QuestionEditor from "../components/QuestionEditor";
 import ManualQuestions from "../components/ManualQuestions";
+import QuestionVisual from "../components/QuestionVisual";
 
 export default function ExamMocks() {
   const toast = useToast();
@@ -467,9 +468,12 @@ function ReviewModal({ mock, onClose, onPublish, onDelete, onRemoveQuestion, onE
           {mock.questions.map((q, idx) => (
             <div key={q._id} className="border border-border-soft rounded-xl p-4">
               <div className="flex justify-between items-start gap-2">
-                <p className="font-medium text-ink text-sm">
-                  {idx + 1}. {q.text}
-                </p>
+                <div className="min-w-0">
+                  <p className="font-medium text-ink text-sm">
+                    {idx + 1}. {q.text}
+                  </p>
+                  <QuestionVisual q={q} className="mt-2" />
+                </div>
                 <div className="flex gap-3 shrink-0">
                   {/* Fixing beats removing: a removed question has to be paid
                       for again, and most of them are one digit out. */}

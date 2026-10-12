@@ -22,6 +22,10 @@ const generationJobSchema = new mongoose.Schema(
     // alone. Empty means the whole chapter.
     subtopic: String,
 
+    // mock: the recruitment notice whose syllabus the mock follows. Empty
+    // means the exam's general mock series.
+    vacancy: { type: mongoose.Schema.Types.ObjectId, ref: "Vacancy" },
+
     // daily_quiz: the day ("2026-10-13", India time) whose GK quiz to make,
     // and who asked - "auto" (the scheduler: goes live as soon as it is
     // made) or an admin's name (left as a draft for them to review).
@@ -82,6 +86,7 @@ generationJobSchema.statics.isAlreadyQueued = function (job) {
     chapter: job.chapter ?? null,
     subtopic: job.subtopic ?? null,
     testId: job.testId ?? null,
+    vacancy: job.vacancy ?? null,
     difficulty: job.difficulty ?? null,
     examType: job.examType ?? null,
     status: { $in: ["queued", "running"] },

@@ -76,7 +76,15 @@ const testSchema = new mongoose.Schema(
       default: "draft",
       index: true,
     },
-    seriesNumber: { type: Number }, // Mock #1, #2, #3... within an exam
+    seriesNumber: { type: Number }, // Mock #1, #2, #3... within an exam (within a vacancy, for a vacancy's mocks)
+
+    // A mock built for one recruitment notice, following its syllabus - see
+    // models/Vacancy.js. Empty for the exam's general mocks.
+    vacancy: { type: mongoose.Schema.Types.ObjectId, ref: "Vacancy", index: true },
+
+    // Set when published: the paper holds a chart or figure question, which
+    // an app before 1.2.0 cannot show. Those installs do not see the test.
+    hasVisuals: { type: Boolean, default: false },
     examStage: { type: String, index: true }, // "SSC_CGL", "SSC_MTS" etc.
 
     // Personalization: null means it's a generic test, otherwise it was

@@ -4,6 +4,9 @@ const Test = require("../models/Test");
 const Attempt = require("../models/Attempt");
 const { generateQuestions, repairQuestion } = require("./geminiService");
 const { runValidationPipelineBatch, questionKey, looksLikeRepeat } = require("./validationPipeline");
+// Through the module, not destructured, so the test stub can stand in for it.
+const visualGen = require("./visualGenerator");
+const { visualSignature } = require("./visuals");
 
 // How many extra to ask for each round. A round that asks for exactly what is
 // missing comes back short the moment anything is rejected, and the test ends
@@ -53,9 +56,12 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
   // Both are needed. Told not to repeat itself the model rewords instead -
   // the same "price of sugar rises 20%" question with a householder in place
   // of the housewife - so the reminder alone does not hold.
-  const topicFilter = generateParams.syllabusTopics?.length
-    ? { $in: generateParams.syllabusTopics }
-    : generateParams.topic;
+  // Names only: a syllabus topic may arrive as { topic, subTopics } (an exam
+  // pattern's or a vacancy's syllabus), which a string field cannot match.
+  const topicNames = (generateParams.syllabusTopics || [])
+    .map((t) => (typeof t === "string" ? t : t?.topic))
+    .filter(Boolean);
+  const topicFilter = topicNames.length ? { $in: topicNames } : generateParams.topic;
   const bankTexts = (
     await Question.find({ subject: generateParams.subject, topic: topicFilter })
       .select("text")
@@ -86,11 +92,21 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
   for (let round = 0; round < rounds && accepted.length < needed; round++) {
     const remaining = needed - accepted.length;
 
-    const raw = await generateQuestions({
-      ...generateParams,
-      count: remaining + SURPLUS,
-      avoidTexts: [...alreadyAsked, ...accepted.map((q) => q.text)].slice(0, 60),
-    });
+    // A chart or figure chapter is written by the visual generator, which
+    // checks every answer against its chart or figure in code before the
+    // question gets this far.
+    const raw = generateParams.visualKind
+      ? await visualGen.generateVisualQuestions({
+          ...generateParams,
+          kind: generateParams.visualKind,
+          count: remaining,
+          avoidTexts: [...alreadyAsked, ...accepted.map((q) => q.text)].slice(0, 30),
+        })
+      : await generateQuestions({
+          ...generateParams,
+          count: remaining + SURPLUS,
+          avoidTexts: [...alreadyAsked, ...accepted.map((q) => q.text)].slice(0, 60),
+        });
     if (!raw.length) break;
 
     for (const q of raw) Object.assign(q, tag);
@@ -139,7 +155,10 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
     // ---- and nothing already in the bank, however it is worded
     const savedRound = [];
     for (const q of keep) {
-      const key = q.textKey || questionKey(q.text);
+      // A visual question's identity includes its chart or figure: the same
+      // "What is the average?" about two different charts is two questions.
+      const key = q.visual?.kind ? questionKey(q.text + visualSignature(q.visual)) : q.textKey || questionKey(q.text);
+      q.textKey = key;
       if (acceptedKeys.has(key)) {
         duplicates++;
         await drop(q, "duplicate", "identical to another question in this batch");
@@ -153,7 +172,7 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
         continue;
       }
 
-      const reworded = looksLikeRepeat(q.text, [...bankTexts, ...accepted.map((a) => a.text)]);
+      const reworded = q.visual?.kind ? { repeat: false } : looksLikeRepeat(q.text, [...bankTexts, ...accepted.map((a) => a.text)]);
       if (reworded.repeat) {
         duplicates++;
         await drop(q, "reworded", `already asked as: ${String(reworded.of).slice(0, 120)}`);
@@ -312,7 +331,7 @@ function isMendable(flagReason = "") {
   // "must be written in Hindi" is a translation job, not a rethink: the
   // question, its options and its answer all stay exactly as they are.
   const fixable = /solution too short|hindi|romanised/i.test(issues);
-  const fatal = /options|correctIndex|question text too short|solution is just the option|does not contain|argues with itself|never arrives/i.test(issues);
+  const fatal = /options|correctIndex|question text too short|solution is just the option|does not contain|argues with itself|never arrives|chart|figure/i.test(issues);
   return fixable && !fatal;
 }
 

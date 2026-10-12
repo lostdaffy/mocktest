@@ -4,6 +4,7 @@ import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 import QuestionEditor from "../components/QuestionEditor";
+import QuestionVisual from "../components/QuestionVisual";
 
 const PAGE_SIZE = 20;
 
@@ -205,6 +206,7 @@ export default function ManageQuestions() {
 
               <p className="font-medium text-ink">{q.text}</p>
               {q.textHi && <p className="text-sm text-slate mt-1">{q.textHi}</p>}
+              <QuestionVisual q={q} className="mt-2" />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-3">
                 {(q.options || []).map((opt, i) => (

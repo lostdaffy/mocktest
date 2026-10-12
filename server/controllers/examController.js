@@ -1,6 +1,7 @@
 const ExamPattern = require("../models/ExamPattern");
 const Test = require("../models/Test");
 const Attempt = require("../models/Attempt");
+const { showsVisuals } = require("../utils/appVersion");
 const {
   POST_EXAM_VISIBLE_DAYS,
   liveWindow,
@@ -179,6 +180,8 @@ async function listUpcomingLiveExams(req, res) {
     type: "live",
     publishStatus: "published",
     scheduledAt: { $gte: visibleFrom },
+    // An app before 1.2.0 cannot show a paper with charts or figures.
+    ...(showsVisuals(req) ? {} : { hasVisuals: { $ne: true } }),
   })
     .sort({ scheduledAt: 1 })
     .select("-questions");

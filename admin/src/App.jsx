@@ -16,6 +16,8 @@ import ExamMocks from "./pages/ExamMocks";
 import PracticeSeries from "./pages/PracticeSeries";
 import Generation from "./pages/Generation";
 import DailyQuiz from "./pages/DailyQuiz";
+import ImagesPending from "./pages/ImagesPending";
+import Vacancies from "./pages/Vacancies";
 import PyqBank from "./pages/PyqBank";
 import Coupons from "./pages/Coupons";
 import Sessions from "./pages/Sessions";
@@ -57,6 +59,22 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Users />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/images-pending"
+              element={
+                <ProtectedRoute>
+                  <ImagesPending />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/vacancies"
+              element={
+                <ProtectedRoute>
+                  <Vacancies />
                 </ProtectedRoute>
               }
             />

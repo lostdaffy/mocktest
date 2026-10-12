@@ -60,7 +60,7 @@ async function startServer(uri, extraEnv) {
   // ---- what a crash shows a student
   r = await api("/__boom");
   check("an unexpected crash answers 500, not a hang", r.status === 500, String(r.status));
-  check("the student gets plain Hindi, not a stack trace", r.json.message === "Kuch galat ho gaya. Thodi der baad try karo.", r.json.message);
+  check("the student gets a plain sentence, not a stack trace", r.json.message === "Something went wrong. Please try again in a little while.", r.json.message);
   check("no connection string, host or password reaches the phone",
     !JSON.stringify(r.json).includes("mongodb") && !JSON.stringify(r.json).includes("hunter2") && r.json.error === undefined,
     JSON.stringify(r.json));

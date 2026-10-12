@@ -30,3 +30,22 @@ function refreshesUserItself(req) {
 }
 
 module.exports = { atLeast, appVersion, refreshesUserItself };
+
+// True for an install that can draw charts and show figure pictures (1.2.0+).
+// Admin requests count as able: the panel shows both.
+function showsVisuals(req) {
+  if (req.user?.role === "admin") return true;
+  const v = appVersion(req);
+  return !!v && atLeast(v, "1.2.0");
+}
+
+// The part of a question query that keeps out what this install cannot show:
+// every chart and figure for an app before 1.2.0, and - for everyone - a
+// figure whose picture has not been uploaded yet.
+function visualQuestionFilter(req) {
+  if (!showsVisuals(req)) return { "visual.kind": { $nin: ["chart", "figure"] } };
+  return { $or: [{ "visual.kind": { $ne: "figure" } }, { "visual.figure.imageId": { $type: "objectId" } }] };
+}
+
+module.exports.showsVisuals = showsVisuals;
+module.exports.visualQuestionFilter = visualQuestionFilter;

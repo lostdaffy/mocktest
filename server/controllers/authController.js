@@ -42,11 +42,11 @@ const WARN_AFTER_FAILURES = 7;
 // 1440 minutes" is technically true and completely useless.
 function waitText(minutes) {
   const total = Math.max(1, Math.ceil(minutes));
-  if (total < 60) return `${total} minute`;
+  if (total < 60) return `${total} minute${total === 1 ? "" : "s"}`;
   const hours = Math.floor(total / 60);
   const mins = total % 60;
-  const hourWord = hours === 1 ? "ghanta" : "ghante";
-  return mins ? `${hours} ${hourWord} ${mins} minute` : `${hours} ${hourWord}`;
+  const hourWord = hours === 1 ? "hour" : "hours";
+  return mins ? `${hours} ${hourWord} ${mins} minute${mins === 1 ? "" : "s"}` : `${hours} ${hourWord}`;
 }
 const RESET_CODE_MINUTES = 15;
 
@@ -117,7 +117,7 @@ async function logout(req, res) {
       { $set: { revokedAt: new Date(), revokedReason: "logged out" } }
     );
   }
-  res.json({ message: "Logout ho gaya" });
+  res.json({ message: "Signed out" });
 }
 
 // GET /api/auth/sessions -> where this account is signed in right now.
@@ -142,7 +142,7 @@ async function listSessions(req, res) {
 // on its very next request).
 async function revokeSession(req, res) {
   const session = await Session.findOne({ _id: req.params.id, user: req.user._id });
-  if (!session) return res.status(404).json({ message: "Ye session nahi mila" });
+  if (!session) return res.status(404).json({ message: "That session was not found" });
 
   session.revokedAt = new Date();
   session.revokedReason = "revoked by account owner";
@@ -150,8 +150,8 @@ async function revokeSession(req, res) {
 
   res.json({
     message: String(session._id) === String(req.sessionId || "")
-      ? "Is device se logout ho gaye"
-      : "Us device se logout kar diya",
+      ? "Signed out on this device"
+      : "Signed out on that device",
   });
 }
 
@@ -165,8 +165,8 @@ async function revokeOtherSessions(req, res) {
 
   res.json({
     message: result.modifiedCount
-      ? `${result.modifiedCount} doosre device se logout kar diya`
-      : "Aur kahin login nahi ho",
+      ? `Signed out on ${result.modifiedCount} other device${result.modifiedCount === 1 ? "" : "s"}`
+      : "You are not signed in anywhere else",
     revoked: result.modifiedCount,
   });
 }
@@ -220,7 +220,7 @@ async function recheckPassword(userId, password, wrongMessage) {
     const minutes = Math.ceil((me.lockUntil - Date.now()) / 60000);
     return {
       status: 423,
-      body: { message: `Bahut baar galat password daala gaya. ${waitText(minutes)} baad try karo.`, code: "ACCOUNT_LOCKED" },
+      body: { message: `Too many wrong passwords. Please try again in ${waitText(minutes)}.`, code: "ACCOUNT_LOCKED" },
     };
   }
 
@@ -276,17 +276,17 @@ async function sendSignupOtp(req, res) {
 
     const existing = await User.findOne({ phone });
     if (existing) {
-      return res.status(409).json({ message: "Is number se account pehle se bana hua hai. Login karo." });
+      return res.status(409).json({ message: "An account with this number already exists. Please sign in." });
     }
 
     // Every SMS costs money - catch a signup that's going to fail anyway
     // (bad or already-used email) BEFORE paying to send the code.
     if (email) {
       if (!EMAIL_RE.test(email)) {
-        return res.status(400).json({ message: "Email format valid nahi hai" });
+        return res.status(400).json({ message: "Please enter a valid email address" });
       }
       if (await User.exists({ email })) {
-        return res.status(409).json({ message: "Ye email pehle se kisi aur account mein use ho raha hai", code: "EMAIL_TAKEN" });
+        return res.status(409).json({ message: "This email is already used by another account", code: "EMAIL_TAKEN" });
       }
     }
 
@@ -299,7 +299,7 @@ async function sendSignupOtp(req, res) {
     if (!budget.ok) {
       await releaseSend(throttleKey);
       console.error(`SMS daily budget of ${GLOBAL_SMS.dailyMax} reached - signup OTPs paused. Raise SMS_DAILY_LIMIT if this is real traffic.`);
-      return res.status(503).json({ message: "Abhi bahut zyada signups ho rahe hain. Kuch der baad dobara try karo.", code: "SMS_BUDGET" });
+      return res.status(503).json({ message: "Too many sign-ups right now. Please try again in a little while.", code: "SMS_BUDGET" });
     }
 
     const otp = generateOtpCode();
@@ -317,13 +317,13 @@ async function sendSignupOtp(req, res) {
       await releaseSend(throttleKey);
       await releaseSend("sms:global");
       console.error("Signup OTP SMS failed:", err.message);
-      return res.status(502).json({ message: "OTP bhejne mein problem hui. Thodi der baad dobara try karo." });
+      return res.status(502).json({ message: "We could not send the OTP. Please try again in a little while." });
     }
 
-    res.json({ message: "OTP aapke mobile number pe bhej diya gaya hai" });
+    res.json({ message: "OTP sent to your mobile number" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "OTP bhejne mein problem hui, thodi der baad try karo" });
+    res.status(500).json({ message: "We could not send the OTP. Please try again in a little while." });
   }
 }
 
@@ -335,7 +335,7 @@ async function signup(req, res) {
     const email = String(req.body.email || "").trim().toLowerCase();
 
     if (!name || !phone || !password || !email) {
-      return res.status(400).json({ message: "Naam, phone, email aur password - sab zaroori hain" });
+      return res.status(400).json({ message: "Name, phone, email and password are all required" });
     }
     if (!PHONE_RE.test(phone)) {
       return res.status(400).json({ message: "Valid 10-digit Indian mobile number daalo" });
@@ -343,37 +343,37 @@ async function signup(req, res) {
     // Email is required because it's the only way to reset a forgotten
     // password - an account without one could be lost for good.
     if (!EMAIL_RE.test(email)) {
-      return res.status(400).json({ message: "Email format valid nahi hai" });
+      return res.status(400).json({ message: "Please enter a valid email address" });
     }
     if (password.length < 6) {
-      return res.status(400).json({ message: "Password kam se kam 6 characters ka hona chahiye" });
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
     // Phone must have been verified via /auth/signup/request-otp first -
     // this is what actually stops fake/typo'd numbers from creating accounts.
     if (!otp) {
-      return res.status(400).json({ message: "Phone verification zaroori hai. Pehle OTP bhejo." });
+      return res.status(400).json({ message: "Please verify your phone number first - request an OTP." });
     }
     const otpRecord = await PhoneOtp.findOne({ phone });
     if (!otpRecord || otpRecord.expiresAt < new Date()) {
-      return res.status(400).json({ message: "OTP expire ho gaya hai. Naya OTP mangwao." });
+      return res.status(400).json({ message: "This OTP has expired. Please request a new one." });
     }
     const otpOk = await bcrypt.compare(String(otp), otpRecord.otpHash);
     if (!otpOk) {
       otpRecord.attempts = (otpRecord.attempts || 0) + 1;
       if (otpRecord.attempts >= MAX_CODE_ATTEMPTS) {
         await PhoneOtp.deleteOne({ _id: otpRecord._id });
-        return res.status(400).json({ message: "Bahut baar galat OTP daala. Naya OTP mangwao.", code: "OTP_ATTEMPTS_EXCEEDED" });
+        return res.status(400).json({ message: "Too many wrong OTPs. Please request a new one.", code: "OTP_ATTEMPTS_EXCEEDED" });
       }
       await otpRecord.save();
-      return res.status(400).json({ message: `OTP galat hai. ${MAX_CODE_ATTEMPTS - otpRecord.attempts} try baaki.` });
+      return res.status(400).json({ message: `Wrong OTP. ${MAX_CODE_ATTEMPTS - otpRecord.attempts} attempt(s) left.` });
     }
 
     if (await User.findOne({ phone })) {
-      return res.status(409).json({ message: "Is number se account pehle se bana hua hai. Login karo." });
+      return res.status(409).json({ message: "An account with this number already exists. Please sign in." });
     }
     if (await User.findOne({ email })) {
-      return res.status(409).json({ message: "Ye email pehle se kisi aur account mein use ho raha hai", code: "EMAIL_TAKEN" });
+      return res.status(409).json({ message: "This email is already used by another account", code: "EMAIL_TAKEN" });
     }
 
     // Resolve referrer if a referral code was entered
@@ -412,10 +412,10 @@ async function signup(req, res) {
       // Two signups racing for the same phone/email - the unique indexes
       // catch what the checks above couldn't.
       if (isDuplicateKey(err, "email")) {
-        return res.status(409).json({ message: "Ye email pehle se kisi aur account mein use ho raha hai", code: "EMAIL_TAKEN" });
+        return res.status(409).json({ message: "This email is already used by another account", code: "EMAIL_TAKEN" });
       }
       if (isDuplicateKey(err, "phone")) {
-        return res.status(409).json({ message: "Is number se account pehle se bana hua hai. Login karo." });
+        return res.status(409).json({ message: "An account with this number already exists. Please sign in." });
       }
       throw err;
     }
@@ -455,13 +455,13 @@ async function login(req, res) {
     const user = await User.findOne({ phone }).select("+passwordHash +failedLoginAttempts +lockUntil");
     if (!user) {
       await bcrypt.compare(String(password), DUMMY_HASH);
-      return res.status(401).json({ message: "Phone number ya password galat hai" });
+      return res.status(401).json({ message: "Wrong phone number or password" });
     }
 
     if (user.lockUntil && user.lockUntil > new Date()) {
       const minutes = Math.ceil((user.lockUntil - Date.now()) / 60000);
       return res.status(423).json({
-        message: `Bahut baar galat password daala gaya. ${waitText(minutes)} baad try karo, ya "Forgot password" se abhi naya password bana lo.`,
+        message: `Too many wrong passwords. Try again in ${waitText(minutes)}, or set a new password now with "Forgot password".`,
         code: "ACCOUNT_LOCKED",
         retryAfterSec: minutes * 60,
       });
@@ -472,7 +472,7 @@ async function login(req, res) {
     // gets them in.
     if (!user.passwordHash) {
       return res.status(400).json({
-        message: 'Is account pe password set nahi hai. "Forgot password" se email pe code mangwao aur password bana lo.',
+        message: 'This account has no password yet. Use "Forgot password" to get a code by email and set one.',
         code: "NO_PASSWORD_SET",
       });
     }
@@ -491,7 +491,7 @@ async function login(req, res) {
           { $set: { lockUntil: new Date(Date.now() + LOCK_MINUTES * 60 * 1000), failedLoginAttempts: 0 } }
         );
         return res.status(423).json({
-          message: `Bahut baar galat password daala gaya. Account ${waitText(LOCK_MINUTES)} ke liye lock hai. "Forgot password" se abhi naya password bana sakte ho.`,
+          message: `Too many wrong passwords. The account is locked for ${waitText(LOCK_MINUTES)}. You can set a new password now with "Forgot password".`,
           code: "ACCOUNT_LOCKED",
           retryAfterSec: LOCK_MINUTES * 60,
         });
@@ -500,8 +500,8 @@ async function login(req, res) {
       return res.status(401).json({
         message:
           updated.failedLoginAttempts >= WARN_AFTER_FAILURES
-            ? `Phone number ya password galat hai. ${left} try baaki, phir account ${waitText(LOCK_MINUTES)} ke liye lock ho jayega.`
-            : "Phone number ya password galat hai",
+            ? `Wrong phone number or password. ${left} attempt(s) left before the account is locked for ${waitText(LOCK_MINUTES)}.`
+            : "Wrong phone number or password",
       });
     }
 
@@ -540,7 +540,7 @@ async function updateProfile(req, res) {
     if (email !== undefined) {
       const cleanEmail = String(email).trim().toLowerCase();
       if (!EMAIL_RE.test(cleanEmail)) {
-        return res.status(400).json({ message: "Email format valid nahi hai" });
+        return res.status(400).json({ message: "Please enter a valid email address" });
       }
 
       if (cleanEmail !== (req.user.email || "")) {
@@ -551,11 +551,11 @@ async function updateProfile(req, res) {
         const denied = await recheckPassword(
           req.user._id,
           currentPassword,
-          "Email badalne ke liye apna current password sahi daalo"
+          "Enter your current password correctly to change your email"
         );
         if (denied) return res.status(denied.status).json(denied.body);
         if (await User.findOne({ email: cleanEmail, _id: { $ne: req.user._id } })) {
-          return res.status(409).json({ message: "Ye email pehle se kisi aur account mein use ho raha hai", code: "EMAIL_TAKEN" });
+          return res.status(409).json({ message: "This email is already used by another account", code: "EMAIL_TAKEN" });
         }
         updates.email = cleanEmail;
       }
@@ -565,7 +565,7 @@ async function updateProfile(req, res) {
     res.json({ user });
   } catch (err) {
     if (isDuplicateKey(err, "email")) {
-      return res.status(409).json({ message: "Ye email pehle se kisi aur account mein use ho raha hai", code: "EMAIL_TAKEN" });
+      return res.status(409).json({ message: "This email is already used by another account", code: "EMAIL_TAKEN" });
     }
     res.status(500).json({ message: "Profile update failed", error: err.message });
   }
@@ -577,7 +577,7 @@ async function updateProfile(req, res) {
 // the student most recently logged in on.
 async function registerPushToken(req, res) {
   const { token } = req.body;
-  if (!token) return res.status(400).json({ message: "token chahiye" });
+  if (!token) return res.status(400).json({ message: "A token is required" });
 
   await User.findByIdAndUpdate(req.user._id, { pushToken: token });
   res.json({ message: "Push token saved" });
@@ -595,17 +595,17 @@ async function forgotPassword(req, res) {
 
     const user = await User.findOne({ phone });
     if (!user) {
-      return res.status(404).json({ message: "Is number se koi account nahi mila. Pehle signup karo." });
+      return res.status(404).json({ message: "No account found with this number. Please sign up first." });
     }
     if (!user.email) {
       return res.status(400).json({
-        message: "Is account mein email add nahi hai, isliye reset code nahi bheja ja sakta. Support se sampark karo.",
+        message: "This account has no email address, so a reset code cannot be sent. Please contact support.",
         code: "NO_EMAIL",
       });
     }
     if (!isEmailConfigured()) {
       console.error("forgotPassword: EMAIL_USER / EMAIL_APP_PASSWORD are not set");
-      return res.status(503).json({ message: "Password reset abhi available nahi hai. Thodi der baad try karo.", code: "EMAIL_NOT_CONFIGURED" });
+      return res.status(503).json({ message: "Password reset is not available right now. Please try again in a little while.", code: "EMAIL_NOT_CONFIGURED" });
     }
 
     const throttleKey = `email:reset:${user._id}`;
@@ -625,14 +625,14 @@ async function forgotPassword(req, res) {
     } catch (err) {
       await releaseSend(throttleKey);
       console.error("Password reset email failed:", err.message);
-      return res.status(502).json({ message: "Email bhejne mein problem hui. Thodi der baad dobara try karo." });
+      return res.status(502).json({ message: "We could not send the email. Please try again in a little while." });
     }
 
     const maskedEmail = maskEmail(user.email);
-    res.json({ message: `Reset code ${maskedEmail} pe bhej diya gaya hai`, maskedEmail });
+    res.json({ message: `Reset code sent to ${maskedEmail}`, maskedEmail });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Reset code bhejne mein problem hui, thodi der baad try karo" });
+    res.status(500).json({ message: "We could not send the reset code. Please try again in a little while." });
   }
 }
 
@@ -645,15 +645,15 @@ async function resetPassword(req, res) {
     const { newPassword } = req.body;
 
     if (!phone || !code || !newPassword) {
-      return res.status(400).json({ message: "Phone, reset code aur naya password chahiye" });
+      return res.status(400).json({ message: "Phone, reset code and a new password are required" });
     }
     if (String(newPassword).length < 6) {
-      return res.status(400).json({ message: "Password kam se kam 6 characters ka hona chahiye" });
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
     const user = await User.findOne({ phone }).select("+passwordResetOTPHash +passwordResetExpires +passwordResetAttempts");
     if (!user || !user.passwordResetOTPHash || !user.passwordResetExpires || user.passwordResetExpires < new Date()) {
-      return res.status(400).json({ message: "Code expire ho gaya ya galat hai. Naya code mangwao." });
+      return res.status(400).json({ message: "This code is wrong or has expired. Please request a new one." });
     }
 
     const ok = await bcrypt.compare(code, user.passwordResetOTPHash);
@@ -664,10 +664,10 @@ async function resetPassword(req, res) {
         user.passwordResetExpires = undefined;
         user.passwordResetAttempts = 0;
         await user.save();
-        return res.status(400).json({ message: "Bahut baar galat code daala. Naya code mangwao.", code: "CODE_ATTEMPTS_EXCEEDED" });
+        return res.status(400).json({ message: "Too many wrong codes. Please request a new one.", code: "CODE_ATTEMPTS_EXCEEDED" });
       }
       await user.save();
-      return res.status(400).json({ message: `Code galat hai. ${MAX_CODE_ATTEMPTS - user.passwordResetAttempts} try baaki.` });
+      return res.status(400).json({ message: `Wrong code. ${MAX_CODE_ATTEMPTS - user.passwordResetAttempts} attempt(s) left.` });
     }
 
     user.passwordHash = await bcrypt.hash(String(newPassword), 10);
@@ -687,10 +687,10 @@ async function resetPassword(req, res) {
       { $set: { revokedAt: new Date(), revokedReason: "password reset" } }
     );
 
-    res.json({ message: "Password reset ho gaya. Ab naye password se login karo." });
+    res.json({ message: "Password reset. Please sign in with your new password." });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Password reset fail hua", error: err.message });
+    res.status(500).json({ message: "Password reset failed", error: err.message });
   }
 }
 
@@ -705,18 +705,18 @@ async function deleteAccount(req, res) {
     // The admin account runs the platform - losing it by a stray tap in the
     // student app would lock everyone out of the admin panel.
     if (req.user.role === "admin") {
-      return res.status(403).json({ message: "Admin account app se delete nahi ho sakta.", code: "ADMIN_ACCOUNT" });
+      return res.status(403).json({ message: "An admin account cannot be deleted from the app.", code: "ADMIN_ACCOUNT" });
     }
 
-    const denied = await recheckPassword(req.user._id, req.body.password, "Account delete karne ke liye apna password sahi daalo");
+    const denied = await recheckPassword(req.user._id, req.body.password, "Enter your password correctly to delete your account");
     if (denied) return res.status(denied.status).json(denied.body);
 
     await deleteAccountData(req.user);
 
-    res.json({ message: "Aapka account aur uska data delete ho gaya hai." });
+    res.json({ message: "Your account and its data have been deleted." });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Account delete nahi ho paaya, thodi der baad try karo" });
+    res.status(500).json({ message: "Your account could not be deleted. Please try again in a little while." });
   }
 }
 

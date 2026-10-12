@@ -214,8 +214,8 @@ async function api(method, p, { body, token } = {}) {
   await db.collection("questions").deleteMany({ topic: "Indian History" });
   r = await api("POST", "/subjects/chapter-test", { token: ssc, body: { subject: "GK", chapter: "Indian History" } });
   check("an empty chapter answers 400, not a server error", r.status === 400, `was ${before}, now ${r.status}`);
-  check("...and says so in Hindi, without blaming the student",
-    /taiyaar ho rahe hain/.test(r.json.message || ""), r.json.message);
+  check("...and says so plainly, without blaming the student",
+    /still being prepared/.test(r.json.message || ""), r.json.message);
 
   // ============================================================
   // 7. The real test: a brand-new exam, added with no code change

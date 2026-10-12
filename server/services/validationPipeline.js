@@ -3,6 +3,7 @@ const { isHindiMedium, hasDevanagari, isLanguageNeutral } = require("../utils/la
 const { refersToAPassage, carriesItsPassage } = require("../utils/comprehension");
 const { arguesWithItself } = require("../utils/selfDoubt");
 const { solutionReachesTheAnswer } = require("../utils/answerAgrees");
+const { normaliseChart, checkChartAnswer, normaliseFigure, checkFigureAnswer, visualSignature } = require("./visuals");
 
 // "What is 15% of 240?" and "what is 15 % of 240" are the same question.
 // Used both to spot repeats inside a batch and to catch a question the bank
@@ -95,6 +96,26 @@ function ruleBasedCheck(q) {
   const solution = (q.solution || "").trim();
 
   if (options.length !== 4) issues.push("must have exactly 4 options");
+
+  // A chart or figure question is only as good as its picture. Checked again
+  // here (the generator checked it first) so a question that reaches the
+  // bank any other way meets the same bar.
+  if (q.visual?.kind === "chart") {
+    try {
+      const chart = normaliseChart(q.visual.chart);
+      const check = checkChartAnswer({ ...q, formula: q.visual.formula }, chart);
+      if (check.ok === false) issues.push(`chart answer does not add up: ${check.reason}`);
+    } catch (err) {
+      issues.push(`chart unusable: ${err.message}`);
+    }
+  } else if (q.visual?.kind === "figure") {
+    try {
+      const check = checkFigureAnswer(normaliseFigure(q.visual.figure?.spec), q.correctIndex);
+      if (check.ok === false) issues.push(`figure answer does not follow: ${check.reason}`);
+    } catch (err) {
+      issues.push(`figure unusable: ${err.message}`);
+    }
+  }
   if (options.some((o) => !o)) issues.push("an option is empty");
   if (new Set(options.map((o) => o.toLowerCase())).size !== options.length) issues.push("duplicate options found");
   if (q.correctIndex === undefined || q.correctIndex === null || q.correctIndex < 0 || q.correctIndex > 3)
@@ -254,7 +275,7 @@ async function runValidationPipelineBatch(questions, { reshuffle = true } = {}) 
   const verificationByQuestion = new Map(needVerification.map((q, i) => [q, verifications[i]]));
 
   return ruleResults.map(({ question, rule }) => {
-    const withKey = { ...question, textKey: questionKey(question.text) };
+    const withKey = { ...question, textKey: questionKey(question.text + visualSignature(question.visual)) };
     if (!rule.passed) {
       return {
         ...withKey,

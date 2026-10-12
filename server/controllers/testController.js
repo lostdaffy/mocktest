@@ -13,6 +13,11 @@ const {
 const { FREE_MOCK_TESTS, FREE_LIVE_EXAMS, FREE_TRIAL_DAYS } = require("../config/freeLimits");
 const { liveWindow, liveState, secondsRemaining } = require("../utils/liveExam");
 const { updateChapterMastery } = require("./subjectController");
+const { showsVisuals } = require("../utils/appVersion");
+
+// An app before 1.2.0 cannot draw charts or show figures, so tests holding
+// them are left out of its lists.
+const forThisApp = (req) => (showsVisuals(req) ? {} : { hasVisuals: { $ne: true } });
 
 // A day means an Indian calendar day. Every streak and daily-goal
 // calculation in this file uses this, so a test finished at 11pm counts for
@@ -90,7 +95,7 @@ async function getDailyStatus(req, res) {
       },
     });
   } catch (err) {
-    res.status(500).json({ message: "Daily status load nahi hua", error: err.message });
+    res.status(500).json({ message: "Could not load your daily status", error: err.message });
   }
 }
 
@@ -98,10 +103,10 @@ async function getDailyStatus(req, res) {
 async function setDailyGoal(req, res) {
   const goal = Number(req.body.goal);
   if (!Number.isFinite(goal) || goal < 5 || goal > 200) {
-    return res.status(400).json({ message: "Daily goal 5 se 200 questions ke beech rakho" });
+    return res.status(400).json({ message: "Set a daily goal between 5 and 200 questions" });
   }
   await User.updateOne({ _id: req.user._id }, { $set: { dailyGoal: Math.round(goal) } });
-  res.json({ message: `Roz ka lakshya ${Math.round(goal)} questions set ho gaya`, goal: Math.round(goal) });
+  res.json({ message: `Daily goal set to ${Math.round(goal)} questions`, goal: Math.round(goal) });
 }
 
 function hasActiveSubscription(user) {
@@ -127,6 +132,7 @@ async function listTests(req, res) {
     { publishStatus: "published" },
     { generatedForUser: req.user._id },
   ];
+  Object.assign(filter, forThisApp(req));
 
   const tests = await Test.find(filter).sort({ seriesNumber: 1, createdAt: -1 }).limit(100).select("-questions");
   res.json({ tests });
@@ -233,6 +239,7 @@ async function getExamSeries(req, res) {
     type: "full_mock",
     publishStatus: "published",
     liveExclusive: { $ne: true }, // exclusive content only surfaces via a scheduled live exam
+    ...forThisApp(req),
   })
     .sort({ seriesNumber: 1 })
     .select("-questions");
@@ -250,7 +257,7 @@ async function getExamSeries(req, res) {
 // chapter's order, so the app can offer them without a second request.
 async function getPracticeSeries(req, res) {
   const { subject, chapter } = req.params;
-  const filter = { type: "practice", subject, topic: chapter, publishStatus: "published" };
+  const filter = { type: "practice", subject, topic: chapter, publishStatus: "published", ...forThisApp(req) };
   if (typeof req.query.subtopic === "string") {
     filter.subtopic = req.query.subtopic.trim() || null;
   }
@@ -258,7 +265,7 @@ async function getPracticeSeries(req, res) {
   const [tests, perTopic, subjectDoc] = await Promise.all([
     Test.find(filter).sort({ difficultyLevel: 1, seriesNumber: 1 }).select("-questions"),
     Test.aggregate([
-      { $match: { type: "practice", subject, topic: chapter, publishStatus: "published" } },
+      { $match: { type: "practice", subject, topic: chapter, publishStatus: "published", ...forThisApp(req) } },
       { $group: { _id: { $ifNull: ["$subtopic", ""] }, n: { $sum: 1 } } },
     ]),
     Subject.findOne({ $or: [{ name: subject }, { aliases: subject }] }).select("chapters.name chapters.topics").lean(),
@@ -284,6 +291,18 @@ async function getTest(req, res) {
   const { testForStudent } = require("../utils/liveTestCache");
   const test = await testForStudent(req.params.id);
   if (!test) return res.status(404).json({ message: "Test not found" });
+
+  // A paper with charts or figures needs an app that can draw them. Older
+  // installs do not list such tests, so this is reached only from a link or
+  // a stale screen - and says what to do rather than showing questions
+  // about a chart that is not there.
+  const hasPictures = test.hasVisuals || (test.questions || []).some((q) => q?.visual?.kind);
+  if (hasPictures && !showsVisuals(req)) {
+    return res.status(426).json({
+      message: "This test has charts or figures. Please update the RankVeer app from the Play Store to open it.",
+      code: "UPDATE_REQUIRED",
+    });
+  }
 
   // PYQ: free-by-recency, not a usage counter - a paper from this year or
   // last year is always free (see isPyqFree above); older years need a
@@ -376,7 +395,7 @@ async function getTest(req, res) {
         // it would sit in_progress and be graded as a blank paper at close.
         await Attempt.deleteOne({ _id: liveAttempt._id });
         return res.status(402).json({
-          message: `Aapke ${FREE_LIVE_EXAMS} free live exams khatam ho gaye. Unlimited live exams ke liye subscribe karo.`,
+          message: `You have used your ${FREE_LIVE_EXAMS} free live exams. Subscribe for unlimited live exams.`,
           code: "SUBSCRIPTION_REQUIRED",
         });
       }
@@ -436,7 +455,7 @@ async function createFullMock(req, res) {
       );
       if (!claimed) {
         return res.status(402).json({
-          message: `Aapke ${FREE_MOCK_TESTS} free mock tests khatam ho gaye. Unlimited mocks ke liye subscribe karo.`,
+          message: `You have used your ${FREE_MOCK_TESTS} free mock tests. Subscribe for unlimited mocks.`,
           code: "SUBSCRIPTION_REQUIRED",
         });
       }
@@ -486,7 +505,7 @@ async function getTodayTest(req, res) {
       const daysSinceSignup = (Date.now() - new Date(req.user.createdAt).getTime()) / (1000 * 60 * 60 * 24);
       if (daysSinceSignup > FREE_TRIAL_DAYS) {
         return res.status(402).json({
-          message: `Aapka ${FREE_TRIAL_DAYS}-din ka free trial khatam ho gaya. Daily personalized test unlimited paane ke liye subscribe karo.`,
+          message: `Your ${FREE_TRIAL_DAYS}-day free trial has ended. Subscribe for unlimited daily personalised tests.`,
           code: "SUBSCRIPTION_REQUIRED",
         });
       }
@@ -504,7 +523,7 @@ async function createWeeklyRevision(req, res) {
   try {
     if (!hasActiveSubscription(req.user)) {
       return res.status(402).json({
-        message: "Weekly weak-topic revision premium feature hai. Subscribe karke unlock karo.",
+        message: "Weekly weak-topic revision is a premium feature. Subscribe to unlock it.",
         code: "SUBSCRIPTION_REQUIRED",
       });
     }
@@ -897,7 +916,7 @@ async function getAttemptResult(req, res) {
   const attempt = await Attempt.findById(req.params.attemptId)
     .populate({
       path: "answers.question",
-      select: "text textHi options optionsHi correctIndex solution solutionHi subject topic",
+      select: "text textHi options optionsHi correctIndex solution solutionHi subject topic visual.kind visual.setId visual.chart visual.figure.imageId",
     })
     .populate("test", "title type examType scheduledAt durationMinutes");
 
@@ -950,8 +969,8 @@ async function getAttemptResult(req, res) {
       fastAndWrong: fastWrong,
       note:
         slowWrong > fastWrong
-          ? "Aap zyada time lekar bhi galat kar rahe hain - concept clarity pe kaam karo"
-          : "Aap jaldi mein galti kar rahe hain - speed thodi kam karke accuracy badhao",
+          ? "You are taking a long time and still getting these wrong - work on the concepts."
+          : "You are making mistakes in a hurry - slow down a little and improve accuracy.",
     },
   });
 }
@@ -1215,4 +1234,5 @@ module.exports = {
   getFreeLimits,
   getExamSeries,
   getPracticeSeries,
+  withAttemptStatus,
 };

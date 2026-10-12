@@ -46,7 +46,7 @@ function paymentsEnabled() {
 }
 
 const PAYMENTS_OFF = {
-  message: "Payments abhi shuru nahi hue hain - jaldi aa rahe hain!",
+  message: "Payments have not started yet - coming soon!",
   code: "PAYMENTS_DISABLED",
 };
 
@@ -94,7 +94,7 @@ async function createOrder(req, res) {
         status: "paid",
       });
       if (alreadyUsed) {
-        return res.status(400).json({ message: "Ye coupon aap pehle use kar chuke ho" });
+        return res.status(400).json({ message: "You have already used this coupon" });
       }
 
       // Checkouts other students already have open count against the limit
@@ -332,7 +332,7 @@ async function getReferralInfo(req, res) {
     rewardPerSignup: REFERRAL_SIGNUP_REWARD,
     offerActive: REFERRAL_OFFER_ACTIVE,
     maxDiscountPercent: MAX_CREDIT_DISCOUNT_PERCENT,
-    shareMessage: `Rankveer pe practice karo! Mera referral code "${user.referralCode}" use karo signup pe. SSC, UP Police, Railway, Banking, CTET ke unlimited mock tests, PYQs aur live exams.`,
+    shareMessage: `Practise on Rankveer! Use my referral code "${user.referralCode}" when you sign up. Unlimited mock tests, PYQs and live exams for SSC, UP Police, Railway, Banking and CTET.`,
   });
 }
 

@@ -23,7 +23,9 @@ const cache = new Map(); // key -> { value, expires }
 const inFlight = new Map(); // key -> promise, so a crowd arriving together shares one read
 
 // What a student is shown: no answer key, no solution.
-const STUDENT_FIELDS = "text textHi options optionsHi subject topic difficulty";
+// A chart question carries its chart; a figure question only the id of its
+// picture - never the figure spec, which would give the answer away.
+const STUDENT_FIELDS = "text textHi options optionsHi subject topic difficulty visual.kind visual.setId visual.chart visual.figure.imageId";
 
 async function cached(key, loader) {
   const hit = cache.get(key);

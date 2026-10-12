@@ -95,7 +95,7 @@ function fakeRes() {
   // ---- same student can't reuse a coupon that still has uses left
   await Coupon.updateOne({ code: "TEST1" }, { maxUses: 5 });
   r = await order(u1, "TEST1");
-  check("same student can't use the same coupon twice", r.statusCode === 400 && /pehle use/i.test(r.body.message), `${r.statusCode} ${r.body?.message}`);
+  check("same student can't use the same coupon twice", r.statusCode === 400 && /already used/i.test(r.body.message), `${r.statusCode} ${r.body?.message}`);
 
   // ---- a different student can still use it while uses remain
   r = await order(u3, "TEST1");

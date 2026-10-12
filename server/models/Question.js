@@ -61,10 +61,59 @@ const questionSchema = new mongoose.Schema(
     repeatCount: { type: Number, default: 0 }, // how many times a near-identical PYQ has appeared historically
 
     createdBy: { type: String, enum: ["ai", "admin", "import"], default: "ai" },
+
+    // A question that needs a picture - see services/visuals.js.
+    //
+    //  chart:  Data Interpretation. The numbers are stored and the app draws
+    //          the chart, so nothing is uploaded. The questions of one set
+    //          share a setId and the same chart.
+    //  figure: figure-based reasoning. `spec` is the figure as shapes on a
+    //          grid; the prompt for an image AI and the reference drawing are
+    //          both made from it. Until `imageId` is set the question keeps
+    //          its test from being published.
+    //
+    // Absent on every ordinary question, which is what keeps apps before
+    // 1.2.0 - which cannot draw either - working exactly as they did.
+    visual: {
+      kind: { type: String, enum: ["chart", "figure"] },
+      setId: { type: String },
+      chart: {
+        type: { type: String, enum: ["bar", "line", "pie", "table", "mixed", "caselet"] },
+        title: String,
+        titleHi: String,
+        unit: String,
+        xLabel: String,
+        yLabel: String,
+        // default: undefined - otherwise every ordinary question would be
+        // saved carrying an empty visual.chart.
+        categories: { type: [String], default: undefined },
+        series: {
+          type: [{ _id: false, name: String, values: [Number], as: { type: String, enum: ["bar", "line"] } }],
+          default: undefined,
+        },
+        caselet: String,
+        caseletHi: String,
+      },
+      // The arithmetic the marked answer was checked against, kept so the
+      // admin can see why a DI question was trusted.
+      formula: String,
+      figure: {
+        spec: { type: mongoose.Schema.Types.Mixed },
+        // "checked": the answer was worked out in code from the figure's rule.
+        // "by_eye": this kind of figure cannot be - the admin should look.
+        answerCheck: { type: String, enum: ["checked", "by_eye"] },
+        imageId: { type: mongoose.Schema.Types.ObjectId, ref: "QuestionImage" },
+        uploadedAt: Date,
+        uploadedBy: String,
+      },
+    },
   },
   { timestamps: true }
 );
 
 questionSchema.index({ examType: 1, subject: 1, topic: 1, status: 1 });
+
+// The Images pending page: figure questions without their picture.
+questionSchema.index({ "visual.kind": 1, "visual.figure.imageId": 1 }, { sparse: true });
 
 module.exports = mongoose.model("Question", questionSchema);

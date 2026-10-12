@@ -120,7 +120,7 @@ async function pickFromBank(count, { exclude = new Set(), exceptDate } = {}) {
   const skip = [...new Set([...used, ...exclude])].map((id) => new mongoose.Types.ObjectId(id));
 
   const pool = await Question.aggregate([
-    { $match: { subject: { $in: GK_SUBJECTS }, status: "published", _id: { $nin: skip } } },
+    { $match: { subject: { $in: GK_SUBJECTS }, status: "published", "visual.kind": { $nin: ["chart", "figure"] }, _id: { $nin: skip } } },
     { $sample: { size: Math.max(count * 15, 120) } },
     { $project: { _id: 1, topic: 1, textKey: 1, options: 1, text: 1, correctIndex: 1 } },
   ]);

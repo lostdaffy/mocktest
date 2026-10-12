@@ -1,4 +1,5 @@
 const Test = require("../models/Test");
+const { imagesPendingIn, hasVisuals, pendingImagesMessage } = require("../services/visuals");
 const { sectionRulesFrom } = require("../utils/marking");
 const Question = require("../models/Question");
 const Attempt = require("../models/Attempt");
@@ -257,8 +258,12 @@ async function publishLiveExam(req, res) {
   if (!test.scheduledAt || test.scheduledAt <= new Date()) {
     return res.status(400).json({ message: "The scheduled date and time must be in the future." });
   }
+  // Every figure question needs its picture before anyone sits the paper.
+  const pending = await imagesPendingIn(test.questions);
+  if (pending) return res.status(400).json({ message: pendingImagesMessage(pending), imagesPending: pending });
 
   test.publishStatus = "published";
+  test.hasVisuals = await hasVisuals(test.questions);
   await test.save();
 
   res.json({ message: "Live exam scheduled - students can see it now", test });
@@ -298,7 +303,7 @@ async function deleteLiveExam(req, res) {
   await Question.deleteMany({ _id: { $in: test.questions } });
   await Test.findByIdAndDelete(test._id);
 
-  res.json({ message: "Live exam aur uske questions delete ho gaye" });
+  res.json({ message: "The live exam and its questions were deleted" });
 }
 
 // GET /api/live-exams/:id/attempts (admin) -> results + integrity flags for

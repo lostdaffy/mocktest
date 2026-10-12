@@ -219,7 +219,7 @@ app.use("/api", generalLimiter);
 // lockout, per-number SMS limits and per-code attempt limits (see
 // authController.js) - these just shed obvious abuse early and cheaply.
 const phoneKey = (req) => `${req.ip}|${String(req.body?.phone || "").trim()}`;
-const tooMany = { message: "Bahut zyada requests. Kuch minute baad dobara try karo." };
+const tooMany = { message: "Too many requests. Please try again in a few minutes." };
 
 const authLimit = (max, keyGenerator) =>
   rateLimit({ windowMs: 15 * 60 * 1000, max, keyGenerator, message: tooMany, standardHeaders: true, legacyHeaders: false });
@@ -310,6 +310,8 @@ app.use("/api/pyq", pyqRoutes);
 app.use("/api/admin/coupons", couponRoutes);
 app.use("/api/generation", require("./routes/generationRoutes"));
 app.use("/api/daily-quiz", require("./routes/dailyQuizRoutes"));
+app.use("/api/question-images", require("./routes/questionImageRoutes"));
+app.use("/api/vacancies", require("./routes/vacancyRoutes"));
 
 // Fallback error handler.
 //
@@ -323,7 +325,7 @@ app.use((err, req, res, next) => {
   console.error(`[${errorId}] ${req.method} ${req.originalUrl} ->`, err.stack || err.message);
 
   res.status(err.status || 500).json({
-    message: "Kuch galat ho gaya. Thodi der baad try karo.",
+    message: "Something went wrong. Please try again in a little while.",
     errorId,
     // Only while developing, never from the deployed server.
     ...(process.env.NODE_ENV === "production" ? {} : { error: err.message }),

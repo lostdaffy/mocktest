@@ -69,8 +69,8 @@ async function sendUpcomingReminders() {
   for (const test of upcoming) {
     if (tokens.length > 0) {
       await sendPushNotifications(tokens, {
-        title: "Live Exam shuru hone wala hai!",
-        body: `${test.title} 15 minute mein shuru hoga - taiyaar ho jao.`,
+        title: "Live exam starting soon!",
+        body: `${test.title} starts in 15 minutes - get ready.`,
         data: { type: "live_exam_reminder", testId: String(test._id) },
       });
     }
