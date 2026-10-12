@@ -1,11 +1,10 @@
-import Constants from "expo-constants";
-import api from "../api/client";
+import api, { APP_VERSION } from "../api/client";
 
 // Version of THIS installed build, from app.json's "version". Bump that
 // field for every Play Store release, or the update check has nothing to
 // compare against.
 export function getInstalledVersion() {
-  return Constants.expoConfig?.version || "0.0.0";
+  return APP_VERSION;
 }
 
 // Numeric, segment-by-segment comparison: "1.10.0" is newer than "1.9.0",

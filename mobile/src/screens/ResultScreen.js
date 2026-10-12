@@ -27,6 +27,7 @@ import {
   shadow,
   card,
 } from "../theme/theme";
+import QuestionVisual from "../components/QuestionVisual";
 
 /* =========================================================
    LANGUAGE HELPERS
@@ -1374,6 +1375,8 @@ function WrongAnswerCard({
       </View>
 
       {/* QUESTION */}
+
+      <QuestionVisual question={question} hindi={language === "hi"} />
 
       <Text
         style={styles.wrongQuestion}

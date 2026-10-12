@@ -1,5 +1,7 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
+import appJson from "../../app.json";
 
 // ⚠️ SWITCH THIS TO https://api.rankveer.com/api BEFORE THE PLAY STORE RELEASE.
 //
@@ -17,7 +19,16 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // EXPO_PUBLIC_API_URL lets a local dev server point elsewhere; release builds never set it.
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "https://mocktest-6gci.onrender.com/api";
 
-const api = axios.create({ baseURL: API_URL });
+// Every request says which app version sent it. From 1.2.0 the server uses
+// this to know the app refreshes the plan by itself and can draw charts and
+// figures - older installs send nothing and are treated as before.
+// Read from app.json, which is bundled into the build itself, so it always
+// names this build. (Constants.expoConfig can lag behind it in a dev server.)
+export const APP_VERSION = appJson?.expo?.version || Constants.expoConfig?.version || "0.0.0";
+
+const api = axios.create({ baseURL: API_URL, headers: { "X-App-Version": APP_VERSION } });
+
+export { API_URL };
 
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem("token");

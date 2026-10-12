@@ -308,6 +308,15 @@ async function drainQueue(token) {
   r = await api("POST", "/subjects/chapter-test", { token: stoken, body: { subject: "Maths", chapter: "Data Interpretation" } });
   check("an on-the-spot chapter test leaves charts out", r.status === 400 && /still being prepared/.test(r.json.message), `${r.status} ${r.json.message}`);
 
+  // ---- app 1.2.0: the exam list comes from the server
+  r = await api("GET", "/exams/catalog");
+  check("the exam list is public, for the sign-up screen", r.status === 200 && r.json.exams.some((e) => e.examType === "RRB_GROUP_D" && e.name === "RRB Group D"),
+    JSON.stringify(r.json).slice(0, 120));
+  r = await api("PATCH", "/auth/profile", { token: stoken, body: { examGoals: ["NOT_AN_EXAM"] } });
+  check("Profile refuses an exam that does not exist", r.status === 400 && /Unknown exam/.test(r.json.message), r.json.message);
+  r = await api("PATCH", "/auth/profile", { token: stoken, body: { examGoals: ["RRB_GROUP_D"] } });
+  check("...and saves one that does", r.status === 200, `${r.status} ${r.json.message || ""}`);
+
   const passed = results.filter((x) => x.ok).length;
   console.log(`\n${passed}/${results.length} passed`);
   if (fs.existsSync(CALLS)) fs.unlinkSync(CALLS);

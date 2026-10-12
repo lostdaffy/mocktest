@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   View,
@@ -19,6 +19,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "../context/AuthContext";
+import { useExamCatalog } from "../utils/examCatalog";
 
 import {
   colors,
@@ -38,38 +39,6 @@ const RANKVEER_LOGO = require(
 );
 
 /* =========================================================
-   EXAMS
-========================================================= */
-
-const EXAMS = [
-  {
-    code: "SSC_CGL",
-    label: "SSC",
-    icon: "school-outline",
-  },
-  {
-    code: "UP_POLICE",
-    label: "UP Police",
-    icon: "shield-checkmark-outline",
-  },
-  {
-    code: "RAILWAY",
-    label: "Railway",
-    icon: "train-outline",
-  },
-  {
-    code: "BANKING",
-    label: "Banking",
-    icon: "card-outline",
-  },
-  {
-    code: "CTET",
-    label: "CTET",
-    icon: "person-outline",
-  },
-];
-
-/* =========================================================
    SIGNUP SCREEN
 ========================================================= */
 
@@ -84,6 +53,9 @@ export default function SignupScreen({
   } = useAuth();
 
   const [step, setStep] = useState(1);
+
+  // The exams on offer, from the server - see utils/examCatalog.js.
+  const exams = useExamCatalog();
 
   const [name, setName] =
     useState("");
@@ -105,6 +77,15 @@ export default function SignupScreen({
 
   const [selectedExam, setSelectedExam] =
     useState("SSC_CGL");
+
+  // The chosen exam must be one on offer: when the server's list arrives
+  // without it, the first exam is chosen instead of sending a code that
+  // is not on screen.
+  useEffect(() => {
+    if (exams.length && !exams.some((e) => e.code === selectedExam)) {
+      setSelectedExam(exams[0].code);
+    }
+  }, [exams, selectedExam]);
 
   const [otp, setOtp] =
     useState("");
@@ -628,7 +609,7 @@ export default function SignupScreen({
                   styles.examGrid
                 }
               >
-                {EXAMS.map(
+                {exams.map(
                   (exam) => {
                     const active =
                       selectedExam ===

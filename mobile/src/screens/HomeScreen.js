@@ -137,7 +137,7 @@ const BANNER_RATIO = 2.72;
 export default function HomeScreen({
   navigation,
 }) {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const insets = useSafeAreaInsets();
 
   const [loadingTest, setLoadingTest] =
@@ -327,7 +327,8 @@ export default function HomeScreen({
   async function onRefresh() {
     setRefreshing(true);
 
-    await loadData();
+    // The account too: a plan granted since the app opened shows at once.
+    await Promise.all([loadData(), refreshUser({ quiet: true })]);
 
     setRefreshing(false);
   }

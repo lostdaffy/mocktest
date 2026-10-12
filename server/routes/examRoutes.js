@@ -6,10 +6,15 @@ const {
   updateExamPattern,
   deleteExamPattern,
   listUpcomingLiveExams,
+  listExamCatalog,
 } = require("../controllers/examController");
 const { protect, adminOnly } = require("../middleware/auth");
 const asyncRoute = require("../utils/asyncRoute");
 
+// Public: the exam list the app shows at sign-up and in Profile, read from
+// the active exam patterns so a new exam (UPTET, Super TET) appears without
+// an app update.
+router.get("/catalog", asyncRoute(listExamCatalog));
 router.get("/", protect, asyncRoute(listExamPatterns));
 router.post("/", protect, adminOnly, asyncRoute(upsertExamPattern));
 router.patch("/:id", protect, adminOnly, asyncRoute(updateExamPattern));

@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { examLogo } from "../utils/examLogos";
 import OfficialSources from "../components/OfficialSources";
+import VacancySections from "../components/VacancySections";
 
 import {
   useFocusEffect,
@@ -433,6 +434,9 @@ export default function ExamPickerScreen({
               </View>
             </View>
 
+
+            {/* Upcoming / Previous exam mock series, by recruitment notice */}
+            <VacancySections navigation={navigation} colors={colors} />
 
             {/* =================================================
                 HERO

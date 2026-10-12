@@ -16,6 +16,7 @@ import {
 
 import AppAlert from "../components/AppAlert";
 import OfficialSources from "../components/OfficialSources";
+import { useExamCatalog } from "../utils/examCatalog";
 
 import { Ionicons } from "@expo/vector-icons";
 
@@ -54,7 +55,38 @@ export default function ProfileScreen({
     logout,
     refreshUser,
     deleteAccount,
+    updateExamGoals,
   } = useAuth();
+
+  // The exam this student prepares for decides their Practice chapters and
+  // mocks. From the server's list, so new exams appear without an update.
+  const exams = useExamCatalog();
+  const [savingExam, setSavingExam] = useState(null);
+
+  async function changeExam(exam) {
+    if (user?.examGoals?.[0] === exam.code) return;
+    AppAlert.alert(
+      `Switch to ${exam.label}?`,
+      "Practice chapters and mock tests will follow this exam. Your past results stay.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Switch",
+          onPress: async () => {
+            setSavingExam(exam.code);
+            try {
+              await updateExamGoals([exam.code]);
+            } catch (err) {
+              AppAlert.alert("Could not change exam", err.response?.data?.message || "Please try again.");
+            } finally {
+              setSavingExam(null);
+            }
+          },
+        },
+      ],
+      { type: "info" }
+    );
+  }
 
   const [savingLang, setSavingLang] =
     useState(false);
@@ -988,6 +1020,50 @@ export default function ProfileScreen({
                   )
                 }
               />
+            </View>
+          </View>
+
+          {/* MY EXAM */}
+
+          <View style={styles.settingCard}>
+            <View style={styles.settingHeader}>
+              <View style={[styles.settingIcon, { backgroundColor: colors.brandLight }]}>
+                <Ionicons name="ribbon-outline" size={20} color={colors.brand} />
+              </View>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingTitle}>My Exam</Text>
+                <Text style={styles.settingSubtitle}>Practice and mock tests follow this exam</Text>
+              </View>
+              {!!savingExam && <ActivityIndicator size="small" color={colors.brand} />}
+            </View>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: spacing.md }}>
+              {exams.map((exam) => {
+                const on = user?.examGoals?.[0] === exam.code;
+                return (
+                  <TouchableOpacity
+                    key={exam.code}
+                    onPress={() => changeExam(exam)}
+                    disabled={!!savingExam}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: on }}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: on ? colors.brand : colors.border,
+                      backgroundColor: on ? colors.brand : colors.surface,
+                    }}
+                  >
+                    <Ionicons name={exam.icon} size={14} color={on ? "#FFFFFF" : colors.slate} />
+                    <Text style={{ fontSize: 13, fontWeight: "700", color: on ? "#FFFFFF" : colors.inkSoft }}>{exam.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 

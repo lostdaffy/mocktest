@@ -104,9 +104,12 @@ export default function ExamSeriesScreen({
 }) {
   const insets = useSafeAreaInsets();
 
+  // vacancyId: opened from "Upcoming / Previous exam mock series" - only
+  // that recruitment notice's mocks are listed, under its series name.
   const {
     examStage,
     examName,
+    vacancyId,
   } = route.params || {};
 
   const { user } = useAuth();
@@ -146,7 +149,8 @@ export default function ExamSeriesScreen({
         `/tests/exam-series/${examStage}`
       );
 
-      setTests(res.data?.tests || []);
+      const all = res.data?.tests || [];
+      setTests(vacancyId ? all.filter((t) => String(t.vacancy) === String(vacancyId)) : all);
     } catch (err) {
       console.log(
         "Exam series loading error:",
@@ -157,7 +161,7 @@ export default function ExamSeriesScreen({
     } finally {
       setLoading(false);
     }
-  }, [examStage]);
+  }, [examStage, vacancyId]);
 
   useFocusEffect(
     useCallback(() => {

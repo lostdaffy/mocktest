@@ -534,7 +534,20 @@ async function updateProfile(req, res) {
     const { name, examGoals, preferredLanguage, email, currentPassword } = req.body;
     const updates = {};
     if (name) updates.name = String(name).trim();
-    if (examGoals) updates.examGoals = examGoals;
+    if (examGoals) {
+      // Changing exam from Profile (app 1.2.0). Only exams that exist - or
+      // one the student already had, so an older code from sign-up still
+      // saves - and at most three, to keep Practice focused.
+      const wanted = [...new Set((Array.isArray(examGoals) ? examGoals : [examGoals]).map((e) => String(e).trim()).filter(Boolean))];
+      const ExamPattern = require("../models/ExamPattern");
+      const known = new Set((await ExamPattern.find({ isActive: true }).select("examType").lean()).map((p) => p.examType));
+      const had = new Set(req.user.examGoals || []);
+      const unknown = wanted.filter((e) => !known.has(e) && !had.has(e));
+      if (!wanted.length || wanted.length > 3 || unknown.length) {
+        return res.status(400).json({ message: unknown.length ? `Unknown exam: ${unknown.join(", ")}` : "Choose one to three exams" });
+      }
+      updates.examGoals = wanted;
+    }
     if (preferredLanguage && ["hi", "en"].includes(preferredLanguage)) updates.preferredLanguage = preferredLanguage;
 
     if (email !== undefined) {

@@ -13,10 +13,17 @@ export function imageUrl(id) {
   return `${String(api.defaults.baseURL || "").replace(/\/$/, "")}/question-images/${id}`;
 }
 
-function niceMax(v) {
-  if (v <= 0) return 1;
-  const p = 10 ** Math.floor(Math.log10(v));
-  return Math.ceil(v / (p / 2)) * (p / 2);
+// Axis ticks on round numbers - 0, 10, 20, 30 rather than 7.5 and 22.5.
+function niceTicks(max) {
+  if (!(max > 0)) return [0, 1];
+  const rough = max / 4;
+  const mag = 10 ** Math.floor(Math.log10(rough));
+  const n = rough / mag;
+  const step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+  const top = Math.ceil(max / step) * step;
+  const out = [];
+  for (let t = 0; t <= top + step / 2; t += step) out.push(+t.toFixed(6));
+  return out;
 }
 
 function Legend({ series }) {
@@ -40,7 +47,8 @@ function BarLine({ chart }) {
   const pad = { l: 44, r: 12, t: 12, b: 36 };
   const cats = chart.categories || [];
   const series = chart.series || [];
-  const max = niceMax(Math.max(...series.flatMap((s) => s.values), 0));
+  const ticks = niceTicks(Math.max(...series.flatMap((s) => s.values), 0));
+  const max = ticks[ticks.length - 1];
   const iw = W - pad.l - pad.r;
   const ih = H - pad.t - pad.b;
   const y = (v) => pad.t + ih - (v / max) * ih;
@@ -48,7 +56,6 @@ function BarLine({ chart }) {
   const bars = chart.type === "line" ? [] : series.filter((s) => chart.type !== "mixed" || s.as !== "line");
   const lines = chart.type === "line" ? series : chart.type === "mixed" ? series.filter((s) => s.as === "line") : [];
   const bw = bars.length ? (band * 0.7) / bars.length : 0;
-  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => f * max);
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-xl text-slate" role="img" aria-label={chart.title || "chart"}>
       {ticks.map((t) => (

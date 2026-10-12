@@ -32,6 +32,7 @@ import {
   radius,
   shadow,
 } from "../theme/theme";
+import QuestionVisual from "../components/QuestionVisual";
 
 // Retries a submit that failed for a reason that passes: no response at
 // all, a server error, or "still being marked" (409). A 4xx that means
@@ -479,9 +480,9 @@ export default function TestTakingScreen({
               hasWarnedBackgroundRef.current = true;
 
               AppAlert.alert(
-                "Live exam ke dauran app se bahar mat jao",
-                "Baar baar app se bahar jaana is attempt ko review ke liye flag kar sakta hai.",
-                [{ text: "Theek hai" }]
+                "Stay in the app during a live exam",
+                "Leaving the app again and again can flag this attempt for review.",
+                [{ text: "OK" }]
               );
             }
           }
@@ -1858,6 +1859,9 @@ export default function TestTakingScreen({
             </View>
           )}
         </View>
+
+        {/* A Data Interpretation chart, or a figure, comes before the question about it. */}
+        <QuestionVisual question={question} hindi={language === "hi"} />
 
         <Text
           style={

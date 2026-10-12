@@ -253,7 +253,29 @@ async function getLeaderboard(req, res) {
   res.json({ leaderboard });
 }
 
+// GET /api/exams/catalog (public) -> the exams a student can choose
+//
+// Every active exam pattern, with the family it belongs to so the app can
+// group posts ("SSC" -> CGL, CHSL, MTS, GD). Nothing else of the pattern
+// leaves the server.
+async function listExamCatalog(req, res) {
+  const patterns = await ExamPattern.find({ isActive: true })
+    .select("examType displayName examGroup postName")
+    .sort({ examGroup: 1, displayName: 1 })
+    .lean();
+  res.set("Cache-Control", "public, max-age=300");
+  res.json({
+    exams: patterns.map((p) => ({
+      examType: p.examType,
+      name: p.displayName,
+      group: p.examGroup || p.displayName,
+      post: p.postName || null,
+    })),
+  });
+}
+
 module.exports = {
+  listExamCatalog,
   listExamPatterns,
   upsertExamPattern,
   updateExamPattern,
