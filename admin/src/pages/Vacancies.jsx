@@ -120,6 +120,23 @@ export default function Vacancies() {
     }
   }
 
+  // Mocks built before vacancies existed: bring them into this series.
+  async function adopt(v) {
+    const ok = await toast.confirm({
+      title: `Move older ${v.examType} mocks into ${v.seriesName}?`,
+      message: `Each is renamed "${v.seriesName} - Mock #n". Questions, numbers and publish status stay the same.`,
+      confirmLabel: "Move them",
+    });
+    if (!ok) return;
+    try {
+      const res = await api.post(`/vacancies/${v._id}/adopt-mocks`);
+      toast.success(res.data?.message || "Done");
+      await load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Couldn't move them");
+    }
+  }
+
   async function setStatus(v, status) {
     try {
       await api.patch(`/vacancies/${v._id}`, { status });
@@ -198,6 +215,9 @@ export default function Vacancies() {
                     <div className="mt-auto pt-4 flex flex-wrap gap-2">
                       <Button size="sm" loading={busy === v._id} onClick={() => queueMock(v)}>
                         + Queue a mock
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => adopt(v)}>
+                        Bring in older mocks
                       </Button>
                       <Link to={`/exam-series/${v.examType}`} className="rv-btn-secondary !py-1.5 !px-3 text-xs">
                         Review mocks

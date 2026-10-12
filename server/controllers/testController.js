@@ -928,7 +928,7 @@ async function getAttemptResult(req, res) {
       path: "answers.question",
       select: "text textHi options optionsHi correctIndex solution solutionHi subject topic visual.kind visual.setId visual.chart visual.figure.imageId",
     })
-    .populate("test", "title type examType scheduledAt durationMinutes");
+    .populate("test", "title type examType scheduledAt durationMinutes dailyQuizDate");
 
   if (!attempt) return res.status(404).json({ message: "Attempt not found" });
   if (String(attempt.user) !== String(req.user._id) && req.user.role !== "admin") {
@@ -970,6 +970,16 @@ async function getAttemptResult(req, res) {
       attemptObj.resultsReleased = false;
       attemptObj.rankAvailableAt = liveWindow(attempt.test).endsAt;
     }
+  }
+
+  // The Daily GK Quiz is the same for everyone, so it has a rank all day.
+  // A student's first try is what counts on the board, so a retake shows
+  // the rank that first try earned.
+  if (attempt.test?.dailyQuizDate) {
+    const { quizBoard } = require("../services/engagement");
+    const board = await quizBoard(attempt.test._id, attempt.user, { top: 0 });
+    attemptObj.rank = board.me?.rank || null;
+    attemptObj.totalParticipants = board.participants || null;
   }
 
   res.json({

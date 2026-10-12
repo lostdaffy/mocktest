@@ -312,6 +312,8 @@ app.use("/api/generation", require("./routes/generationRoutes"));
 app.use("/api/daily-quiz", require("./routes/dailyQuizRoutes"));
 app.use("/api/question-images", require("./routes/questionImageRoutes"));
 app.use("/api/vacancies", require("./routes/vacancyRoutes"));
+// Wakes the server and sends due reminders - see controllers/engagementController.
+app.post("/api/jobs/tick", require("./utils/asyncRoute")(require("./controllers/engagementController").jobsTick));
 
 // Fallback error handler.
 //
@@ -363,7 +365,12 @@ async function start() {
   // days. Going live needs no timer - a ready quiz is live on its date (see
   // services/dailyQuiz.js) - so a sleeping instance never misses midnight.
   const { runDailyQuizTick } = require("./services/dailyQuiz");
-  const quizTick = setInterval(() => runDailyQuizTick().catch((e) => console.error("Daily quiz tick:", e.message)), 5 * 60_000);
+  const { runReminders } = require("./services/engagement");
+  // The daily quiz, then any reminder that is due (each goes out once a day).
+  const quizTick = setInterval(() => {
+    runDailyQuizTick().catch((e) => console.error("Daily quiz tick:", e.message));
+    runReminders().catch((e) => console.error("Reminders:", e.message));
+  }, 5 * 60_000);
   setTimeout(() => runDailyQuizTick().catch(() => {}), 20_000);
 
   // A run is hours of work in a process the free plan stops as soon as

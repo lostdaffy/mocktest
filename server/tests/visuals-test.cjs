@@ -308,6 +308,21 @@ async function drainQueue(token) {
   r = await api("POST", "/subjects/chapter-test", { token: stoken, body: { subject: "Maths", chapter: "Data Interpretation" } });
   check("an on-the-spot chapter test leaves charts out", r.status === 400 && /still being prepared/.test(r.json.message), `${r.status} ${r.json.message}`);
 
+  // ---- mocks made before vacancies existed join a series
+  await db.collection("tests").insertMany([1, 2].map((n) => ({
+    title: `RRB Group D - Mock #${n}`, type: "full_mock", examType: "RRB_GROUP_D", examStage: "RRB_GROUP_D", seriesNumber: n,
+    questions: [], durationMinutes: 60, publishStatus: "published", isFree: true,
+  })));
+  r = await api("POST", `/vacancies/${vacancyId}/adopt-mocks`, { token });
+  const adopted = await db.collection("tests").find({ vacancy: oid(vacancyId) }).sort({ seriesNumber: 1 }).toArray();
+  check("older mocks are brought into the vacancy's series", r.status === 200 && r.json.adopted === 2 && adopted.length === 3, `${r.status} ${r.json.message}`);
+  check("...renamed with the series name, numbered after the one already there",
+    adopted.map((t) => t.title).join(" | ") === "RRB Group D 2025 Mock Series - Mock #1 | RRB Group D 2025 Mock Series - Mock #2 | RRB Group D 2025 Mock Series - Mock #3",
+    adopted.map((t) => t.title).join(" | "));
+  check("...and still published", adopted.every((t) => t.publishStatus === "published"));
+  r = await api("POST", `/vacancies/${vacancyId}/adopt-mocks`, { token });
+  check("...a second press finds nothing left to move", r.json.adopted === 0, r.json.message);
+
   // ---- app 1.2.0: the exam list comes from the server
   r = await api("GET", "/exams/catalog");
   check("the exam list is public, for the sign-up screen", r.status === 200 && r.json.exams.some((e) => e.examType === "RRB_GROUP_D" && e.name === "RRB Group D"),

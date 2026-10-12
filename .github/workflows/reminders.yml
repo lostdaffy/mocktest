@@ -1,0 +1,28 @@
+# Wakes the free Render server at the times students are reminded, and asks
+# it to send whatever is due (POST /api/jobs/tick). Each reminder goes out at
+# most once a day, so a late, early or repeated run does no harm.
+#
+#   00:20 IST  - the new Daily GK Quiz is made ready for the day
+#   07:05 IST  - "Today's GK Quiz is live"
+#   20:05 IST  - "Your streak ends at midnight" (only to those at risk)
+name: Daily reminders
+
+on:
+  schedule:
+    - cron: "50 18 * * *" # 00:20 IST
+    - cron: "35 1 * * *" # 07:05 IST
+    - cron: "35 14 * * *" # 20:05 IST
+  workflow_dispatch:
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Wake the server and send due reminders
+        run: |
+          for i in 1 2 3 4 5 6; do
+            if curl -fsS -m 90 -X POST https://mocktest-6gci.onrender.com/api/jobs/tick; then exit 0; fi
+            echo "server still waking up, retrying in 20s"; sleep 20
+          done
+          exit 1

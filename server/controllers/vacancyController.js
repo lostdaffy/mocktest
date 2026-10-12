@@ -158,6 +158,35 @@ async function queueVacancyMock(req, res) {
   });
 }
 
+// POST /api/vacancies/:id/adopt-mocks (admin)
+//
+// Brings the exam's existing general mocks (built before vacancies existed)
+// into this vacancy's series: each one joins the series and is renamed
+// "<series name> - Mock #n", keeping its number, questions and status.
+async function adoptMocks(req, res) {
+  const vacancy = await Vacancy.findById(req.params.id).lean();
+  if (!vacancy) return res.status(404).json({ message: "Vacancy not found" });
+  const mocks = await Test.find({ type: "full_mock", examStage: vacancy.examType, vacancy: null }).select("title seriesNumber").lean();
+  if (!mocks.length) return res.json({ message: "This exam has no mocks outside a series", adopted: 0 });
+
+  // Numbers already used in the series are left to the mocks that have them.
+  const taken = new Set(
+    (await Test.find({ type: "full_mock", vacancy: vacancy._id }).select("seriesNumber").lean()).map((t) => t.seriesNumber)
+  );
+  let next = Math.max(0, ...taken, 0);
+  const renamed = [];
+  for (const m of mocks.sort((a, b) => (a.seriesNumber || 0) - (b.seriesNumber || 0))) {
+    let n = m.seriesNumber || ++next;
+    if (taken.has(n)) n = ++next;
+    taken.add(n);
+    next = Math.max(next, n);
+    const title = `${vacancy.seriesName} - Mock #${n}`;
+    await Test.updateOne({ _id: m._id }, { $set: { vacancy: vacancy._id, seriesNumber: n, title } });
+    renamed.push({ from: m.title, to: title });
+  }
+  res.json({ message: `${renamed.length} mock(s) moved into ${vacancy.seriesName}`, adopted: renamed.length, renamed });
+}
+
 // GET /api/vacancies/:id/mocks (admin)
 async function vacancyMocks(req, res) {
   const tests = await Test.aggregate([
@@ -224,6 +253,7 @@ module.exports = {
   updateVacancy,
   deleteVacancy,
   queueVacancyMock,
+  adoptMocks,
   vacancyMocks,
   seriesForStudent,
 };

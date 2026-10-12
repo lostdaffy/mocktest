@@ -35,6 +35,8 @@ import {
   type,
   card,
 } from "../theme/theme";
+import TodayPlanCard from "../components/TodayPlanCard";
+import FirstRunGuide from "../components/FirstRunGuide";
 
 /* =========================================================
    LOGO
@@ -524,159 +526,21 @@ export default function HomeScreen({
       </View>
 
       {/* =================================================
-          PRACTICE TODAY
+          TODAY'S PLAN - quiz, practice, mock: what to do next
       ================================================= */}
 
       <View
         style={styles.section}
       >
-        <View
-          style={styles.hero}
-        >
-          <View
-            style={
-              styles.heroDecorationOne
-            }
-          />
-
-          <View
-            style={
-              styles.heroDecorationTwo
-            }
-          />
-
-          {loadingTest ? (
-            <View
-              style={
-                styles.heroLoading
-              }
-            >
-              <ActivityIndicator
-                color={
-                  colors.heroAccent
-                }
-                size="large"
-              />
-
-              <Text
-                style={
-                  styles.heroLoadingText
-                }
-              >
-                Preparing your test…
-              </Text>
-            </View>
-          ) : (
-            <View
-              style={styles.heroRow}
-            >
-              <View
-                style={
-                  styles.heroContent
-                }
-              >
-                <View
-                  style={
-                    styles.heroEyebrow
-                  }
-                >
-                  <Ionicons
-                    name="flash"
-                    size={11}
-                    color={
-                      colors.heroAccent
-                    }
-                  />
-
-                  <Text
-                    style={
-                      styles.heroEyebrowText
-                    }
-                  >
-                    DAILY PRACTICE
-                  </Text>
-                </View>
-
-                <Text
-                  style={
-                    styles.heroTitle
-                  }
-                >
-                  Practice Today
-                </Text>
-
-                <Text
-                  style={
-                    styles.heroSub
-                  }
-                >
-                  Improve your score
-                  with a focused test
-                </Text>
-
-                <TouchableOpacity
-                  style={
-                    styles.heroButton
-                  }
-                  onPress={
-                    startTodayTest
-                  }
-                  activeOpacity={0.85}
-                >
-                  <Text
-                    style={
-                      styles.heroButtonText
-                    }
-                  >
-                    Start Practice
-                  </Text>
-
-                  <Ionicons
-                    name="arrow-forward"
-                    size={15}
-                    color="#FFFFFF"
-                  />
-                </TouchableOpacity>
-              </View>
-
-              <View
-                style={
-                  styles.targetWrap
-                }
-              >
-                <View
-                  style={
-                    styles.targetRingOuter
-                  }
-                >
-                  <View
-                    style={
-                      styles.targetRingMid
-                    }
-                  >
-                    <View
-                      style={
-                        styles.targetRingInner
-                      }
-                    />
-                  </View>
-                </View>
-
-                <Ionicons
-                  name="arrow-up"
-                  size={20}
-                  color={
-                    colors.heroAccent
-                  }
-                  style={
-                    styles.targetArrow
-                  }
-                />
-              </View>
-            </View>
-          )}
-        </View>
+        <TodayPlanCard
+          navigation={navigation}
+          onStartQuiz={startTodayTest}
+          startingQuiz={loadingTest}
+        />
       </View>
+
+      {/* Three cards explaining the app, the first time only */}
+      <FirstRunGuide onStart={startTodayTest} />
 
       {/* =================================================
           CAROUSEL
