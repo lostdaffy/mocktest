@@ -168,14 +168,15 @@ async function manageSubscription(req, res) {
     if (action === "revoke") {
       user.subscriptionStatus = "expired";
       user.subscriptionExpiresAt = new Date();
+      user.planChangedAt = new Date(); // older apps re-sign-in to see it (middleware/auth.js)
       await user.save();
-      return res.json({ message: `${user.name}'s subscription has been revoked`, user });
+      return res.json({ message: `${user.name}'s subscription has been revoked. On an app older than 1.2.0 they will be asked to sign in again.`, user });
     }
 
     if (action === "grant" || action === "extend") {
       const durationMonths = months ? parseInt(months, 10) : PLAN_DURATION_MONTHS[plan] || 1;
       if (!durationMonths || durationMonths <= 0) {
-        return res.status(400).json({ message: "Valid plan ya months chuno" });
+        return res.status(400).json({ message: "Choose a valid plan or number of months" });
       }
 
       // Extend from current expiry if it's still active and in the future,
@@ -190,6 +191,9 @@ async function manageSubscription(req, res) {
       user.subscriptionStatus = "active";
       user.subscriptionExpiresAt = newExpiry;
       if (plan) user.subscriptionPlan = plan;
+      // Apps before 1.2.0 never re-read the plan after sign-in; this sends
+      // them back to sign in once so the new plan actually unlocks tests.
+      user.planChangedAt = new Date();
       await user.save();
 
       try {
@@ -210,7 +214,7 @@ async function manageSubscription(req, res) {
         console.error("Manual subscription log failed (user was still updated):", subErr.message);
       }
 
-      return res.json({ message: `Subscription ${action === "grant" ? "activated" : "extended"} for ${user.name}`, user });
+      return res.json({ message: `Subscription ${action === "grant" ? "activated" : "extended"} for ${user.name}. On an app older than 1.2.0 they will be asked to sign in again, and the plan shows after that.`, user });
     }
 
     res.status(400).json({ message: "Invalid action - use grant, extend, or revoke" });

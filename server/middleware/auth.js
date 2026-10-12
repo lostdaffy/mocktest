@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Session = require("../models/Session");
+const { refreshesUserItself } = require("../utils/appVersion");
 
 // Verifies the JWT AND that it's still the most recent one issued for this
 // user. Every login (password or OTP) generates a fresh
@@ -35,9 +36,14 @@ async function protect(req, res, next) {
     if (decoded.sid) {
       const session = await Session.findById(decoded.sid).select("revokedAt lastSeenAt");
       if (!session || session.revokedAt) {
+        // Sent as TOKEN_INVALID because that is the code every installed
+        // app already acts on - it clears the session and opens the sign-in
+        // screen. SESSION_REVOKED alone was ignored by the app, which then
+        // failed every request and showed empty screens instead.
         return res.status(401).json({
-          message: "Is device se logout kar diya gaya hai. Dobara login karo.",
-          code: "SESSION_REVOKED",
+          message: "You have been signed out on this device. Please sign in again.",
+          code: "TOKEN_INVALID",
+          reason: "SESSION_REVOKED",
         });
       }
 
@@ -56,6 +62,26 @@ async function protect(req, res, next) {
       return res.status(401).json({
         message: "You've been logged out because your account was signed in on another device",
         code: "SESSION_REPLACED",
+      });
+    }
+
+    // An admin changed this student's plan after this token was issued.
+    // Apps before 1.2.0 hold the plan they saw at sign-in and never ask for
+    // it again, so the new plan only reaches them through a fresh sign-in -
+    // TOKEN_INVALID is what makes them go there. 1.2.0+ re-reads the user
+    // itself and is left signed in.
+    if (
+      user.role !== "admin" &&
+      user.planChangedAt &&
+      // iat is whole seconds: a sign-in in the same second as the change
+      // counts as after it, or re-signing-in right away would bounce too.
+      decoded.iat < Math.floor(user.planChangedAt.getTime() / 1000) &&
+      !refreshesUserItself(req)
+    ) {
+      return res.status(401).json({
+        message: "Your plan has been updated. Please sign in again to see it.",
+        code: "TOKEN_INVALID",
+        reason: "PLAN_CHANGED",
       });
     }
 

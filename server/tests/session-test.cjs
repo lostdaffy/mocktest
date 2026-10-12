@@ -90,8 +90,11 @@ const APP = "okhttp/4.9.2";
   check("a device can be logged out from another device", r.status === 200, r.json.message);
 
   r = await api("GET", "/auth/me", { token: phone });
+  // TOKEN_INVALID is the code every installed app acts on (it opens sign-in);
+  // the reason says why for anyone reading the response.
   check("...and that device really is locked out on its next request",
-    r.status === 401 && r.json.code === "SESSION_REVOKED", `${r.status} ${r.json.code || ""}`);
+    r.status === 401 && r.json.code === "TOKEN_INVALID" && r.json.reason === "SESSION_REVOKED",
+    `${r.status} ${r.json.code || ""} ${r.json.reason || ""}`);
 
   r = await api("GET", "/auth/me", { token: laptop });
   check("the device that did it stays signed in", r.status === 200);
