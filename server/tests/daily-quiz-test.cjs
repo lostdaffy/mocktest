@@ -62,9 +62,9 @@ const istKey = (days = 0) => new Date(Date.now() + 5.5 * 3600e3 + days * 864e5).
   ]);
   const topics = ["Ancient History", "Geography", "Polity", "Economy", "Science", "Awards"];
   const q = (i, subject, extra = {}) => ({
-    text: `${subject} question number ${i} about ${topics[i % topics.length]}?`,
+    text: `Name zq${i}fact kx${i * 7}clue wv${i * 3}mark?`,
     textKey: `${subject.toLowerCase()} question number ${i}`,
-    options: ["A", "B", "C", "D"], correctIndex: i % 4, solution: "Because.", subject,
+    options: [`a${i}one`, `b${i}two`, `c${i}three`, `d${i}four`], correctIndex: i % 4, solution: "Because.", subject,
     topic: topics[i % topics.length], examType: ["SSC_CGL"], difficulty: "medium", source: "ai", status: "published", ...extra,
   });
   await db.collection("questions").insertMany([
@@ -137,6 +137,21 @@ const istKey = (days = 0) => new Date(Date.now() + 5.5 * 3600e3 + days * 864e5).
   await api("PATCH", `/daily-quiz/${tomorrow}/status`, { token: admin, body: { status: "draft" } });
   r = await api("PATCH", `/daily-quiz/${tomorrow}/status`, { token: admin, body: { status: "ready" } });
   check("a quiz holding an unpublished question cannot be marked ready", r.status === 400 && /not published/.test(r.json.message), r.json.message);
+
+  // ---- the same fact asked twice in different words is caught
+  const [tw1, tw2] = (await db.collection("questions").insertMany([
+    { text: "Who was the founder of the Khudai Khidmatgar movement, also known as the Red Shirts?", textKey: "twin one", options: ["Gandhi", "Khan Abdul Ghaffar Khan", "Nehru", "Bose"], correctIndex: 1, solution: "s", subject: "GK", topic: "Freedom Movement", examType: ["SSC_CGL"], difficulty: "medium", source: "ai", status: "published" },
+    { text: "Who among the following founded the Khudai Khidmatgar movement, known as the Red Shirts?", textKey: "twin two", options: ["Khan Abdul Ghaffar Khan", "Patel", "Tilak", "Azad"], correctIndex: 0, solution: "s", subject: "GK", topic: "Freedom Movement", examType: ["SSC_CGL"], difficulty: "medium", source: "ai", status: "published" },
+  ])).insertedIds ? Object.values((await db.collection("questions").find({ topic: "Freedom Movement" }).toArray()).map((x) => x._id)) : [];
+  const t2 = await db.collection("tests").findOne({ dailyQuizDate: tomorrow });
+  await db.collection("tests").updateOne({ _id: t2._id }, { $set: { "questions.0": tw1, "questions.1": tw2 } });
+  r = await api("GET", `/daily-quiz/${tomorrow}`, { token: admin });
+  check("two questions asking the same fact in other words are flagged", r.json.problems.some((x) => /same thing in different words/.test(x)), r.json.problems.join(" | "));
+  r = await api("POST", `/daily-quiz/${tomorrow}/fill-bank`, { token: admin });
+  check("...and completing from the bank swaps the twin out, keeping 20", r.json.questions?.length === 20 && !r.json.problems.some((x) => /same thing/.test(x)),
+    `${r.json.questions?.length} ${(r.json.problems || []).join(" | ")}`);
+  check("...keeping the first of the pair", r.json.questions.some((x) => String(x._id) === String(tw1)) && !r.json.questions.some((x) => String(x._id) === String(tw2)));
+  await db.collection("questions").deleteMany({ topic: "Freedom Movement" });
 
   // ---- the bank runs out: 44 GK in all, 40 used by two days
   r = await api("POST", `/daily-quiz/${istKey(2)}/fill-bank`, { token: admin });

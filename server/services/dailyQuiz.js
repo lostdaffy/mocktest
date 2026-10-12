@@ -32,6 +32,52 @@ const AI_TOPICS = [
 
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
+// Two GK questions that ask the same fact in different words. The bank's
+// own repeat check (validationPipeline.looksLikeRepeat) is tuned for maths
+// and misses "Who was the founder of X?" against "Who among the following
+// founded X?" - the first daily quiz on production had exactly that pair.
+// Words are cut to their first six letters so founder/founded match, and two
+// questions with the same correct answer need far less overlap to count.
+const STOP = new Set(["which", "among", "following", "these", "those", "about", "known", "called", "there", "their", "where", "while", "what", "with", "from", "that", "this", "were", "have", "been", "into", "also", "when", "whom", "whose", "does", "correct", "statement"]);
+function stems(text) {
+  return new Set(
+    String(text || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9ऀ-ॿ ]+/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 3 && !STOP.has(w))
+      .map((w) => w.slice(0, 6))
+  );
+}
+function overlap(a, b) {
+  if (!a.size || !b.size) return 0;
+  let both = 0;
+  for (const w of a) if (b.has(w)) both++;
+  return both / Math.min(a.size, b.size);
+}
+const answerOf = (q) => String(q?.options?.[q?.correctIndex] ?? "").trim().toLowerCase();
+// The names a question is about - Plassey, Buxar, Bihar, Bengal. Two
+// questions worded alike but about different names ("Battle of Plassey" /
+// "Battle of Buxar") ask different facts.
+function names(text) {
+  const words = String(text || "").match(/[A-Za-z][A-Za-z-]+/g) || [];
+  return new Set(
+    words
+      .slice(1) // the first word is capitalised because it starts the sentence
+      .filter((w) => /^[A-Z]/.test(w) && !STOP.has(w.toLowerCase()))
+      .map((w) => w.toLowerCase().slice(0, 6))
+  );
+}
+function sameFact(q1, q2) {
+  const o = overlap(stems(q1.text), stems(q2.text));
+  const a1 = answerOf(q1);
+  if (a1 && a1 === answerOf(q2) && o >= 0.3) return true;
+  if (o < 0.75) return false;
+  const n1 = names(q1.text);
+  const n2 = names(q2.text);
+  return !n1.size || !n2.size || overlap(n1, n2) >= 0.75;
+}
+
 // "2026-10-13" for the India date of `when`, or `days` after it.
 function istDateKey(when = new Date(), days = 0) {
   const d = new Date(when.getTime() + IST_OFFSET_MS + days * 24 * 60 * 60 * 1000);
@@ -76,7 +122,7 @@ async function pickFromBank(count, { exclude = new Set(), exceptDate } = {}) {
   const pool = await Question.aggregate([
     { $match: { subject: { $in: GK_SUBJECTS }, status: "published", _id: { $nin: skip } } },
     { $sample: { size: Math.max(count * 15, 120) } },
-    { $project: { _id: 1, topic: 1, textKey: 1, options: 1, text: 1 } },
+    { $project: { _id: 1, topic: 1, textKey: 1, options: 1, text: 1, correctIndex: 1 } },
   ]);
 
   // Round-robin over topics; never two questions with the same text.
@@ -89,6 +135,10 @@ async function pickFromBank(count, { exclude = new Set(), exceptDate } = {}) {
   }
   const picked = [];
   const texts = new Set();
+  // What is already in the quiz counts too, so a top-up never adds a twin.
+  const taken = exclude.size
+    ? await Question.find({ _id: { $in: [...exclude] } }).select("text options correctIndex").lean()
+    : [];
   const lists = [...byTopic.values()];
   while (picked.length < count && lists.some((l) => l.length)) {
     for (const list of lists) {
@@ -96,8 +146,9 @@ async function pickFromBank(count, { exclude = new Set(), exceptDate } = {}) {
       while (list.length) {
         const q = list.shift();
         const t = q.textKey || q.text;
-        if (texts.has(t)) continue;
+        if (texts.has(t) || taken.some((x) => sameFact(x, q))) continue;
         texts.add(t);
+        taken.push(q);
         picked.push(q._id);
         break;
       }
@@ -127,6 +178,10 @@ async function quizProblems(test, date) {
   if (broken.length) problems.push(`${broken.length} question(s) are incomplete (text, four options or the answer missing).`);
   const keys = qs.map((q) => q.textKey || q.text);
   if (new Set(keys).size !== keys.length) problems.push("Two questions have the same wording.");
+  const twins = [];
+  for (let i = 0; i < qs.length; i++)
+    for (let j = i + 1; j < qs.length; j++) if (sameFact(qs[i], qs[j])) twins.push(i);
+  if (twins.length) problems.push(`${twins.length} pair(s) of questions ask the same thing in different words - replace one of each.`);
 
   const used = await recentlyUsedIds(date);
   const repeats = ids.filter((id) => used.has(id));
@@ -170,10 +225,17 @@ async function fillFromBank(date, { status = "ready", by = "auto" } = {}) {
   // each once. Anything else is dropped and replaced.
   const used = await recentlyUsedIds(date);
   const have = (test?.questions || []).map(String);
-  const fit = new Set(
-    (await Question.find({ _id: { $in: have }, subject: { $in: GK_SUBJECTS }, status: "published" }).select("_id").lean()).map((q) => String(q._id))
+  const fit = new Map(
+    (await Question.find({ _id: { $in: have }, subject: { $in: GK_SUBJECTS }, status: "published" }).select("text options correctIndex").lean()).map((q) => [String(q._id), q])
   );
-  const keep = [...new Set(have)].filter((id) => fit.has(id) && !used.has(id)).slice(0, QUIZ_SIZE);
+  // ...and only the first of two questions that ask the same thing.
+  const keep = [];
+  for (const id of new Set(have)) {
+    const q = fit.get(id);
+    if (!q || used.has(id) || keep.some((k) => sameFact(fit.get(k), q))) continue;
+    keep.push(id);
+    if (keep.length === QUIZ_SIZE) break;
+  }
   const add = await pickFromBank(QUIZ_SIZE - keep.length, { exclude: new Set(keep), exceptDate: date });
   const ids = [...keep, ...add.map(String)];
   if (ids.length < QUIZ_SIZE) {
@@ -359,6 +421,7 @@ async function runDailyQuizTick() {
 }
 
 module.exports = {
+  sameFact,
   QUIZ_SIZE,
   GK_SUBJECTS,
   NO_REPEAT_DAYS,
