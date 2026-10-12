@@ -410,7 +410,7 @@ export default function ChapterListScreen({
                 }
                 onPress={() =>
                   navigation.navigate(
-                    "ChapterPractice",
+                    "PracticeMode",
                     {
                       subject:
                         subject?.name,

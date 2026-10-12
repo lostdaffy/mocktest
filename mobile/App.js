@@ -38,6 +38,7 @@ import ReferralScreen from "./src/screens/ReferralScreen";
 import ExamSeriesScreen from "./src/screens/ExamSeriesScreen";
 import ExamPickerScreen from "./src/screens/ExamPickerScreen";
 import ChapterPracticeScreen from "./src/screens/ChapterPracticeScreen";
+import PracticeModeScreen from "./src/screens/PracticeModeScreen";
 import PyqExamPickerScreen from "./src/screens/PyqExamPickerScreen";
 import PyqYearListScreen from "./src/screens/PyqYearListScreen";
 import PyqPapersScreen from "./src/screens/PyqPapersScreen";
@@ -157,6 +158,7 @@ function AppStack() {
       <Stack.Screen name="Referral" component={ReferralScreen} options={{ title: "Refer & Earn" }} />
       <Stack.Screen name="ExamSeries" component={ExamSeriesScreen} options={{ title: "Mock Series" }} />
       <Stack.Screen name="ExamPicker" component={ExamPickerScreen} options={{ title: "Mock Tests" }} />
+      <Stack.Screen name="PracticeMode" component={PracticeModeScreen} options={{ title: "Practice" }} />
       <Stack.Screen name="ChapterPractice" component={ChapterPracticeScreen} options={{ title: "Practice Tests" }} />
       <Stack.Screen name="PyqYears" component={PyqYearListScreen} options={{ title: "Previous Year Papers" }} />
       <Stack.Screen name="PyqPapers" component={PyqPapersScreen} options={{ title: "Papers" }} />

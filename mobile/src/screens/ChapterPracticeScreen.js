@@ -13,7 +13,6 @@ import {
   FlatList,
   ActivityIndicator,
   useColorScheme,
-  ScrollView,
 } from "react-native";
 
 import {
@@ -125,16 +124,10 @@ export default function ChapterPracticeScreen({
   const [starting, setStarting] =
     useState(null);
 
-  // Which series is open: "" for the whole chapter, or one of its topics.
-  // The server says which topics have tests of their own.
-  const [series, setSeries] =
-    useState("");
-
-  const [subtopics, setSubtopics] =
-    useState([]);
-
-  const [chapterTestCount, setChapterTestCount] =
-    useState(0);
+  // Which series this screen shows, chosen on the screen before it (see
+  // PracticeModeScreen): "" for the whole chapter, or one subtopic.
+  const series =
+    route.params?.series || "";
 
 
   /* =======================================================
@@ -191,8 +184,6 @@ export default function ChapterPracticeScreen({
         setTests(
           res.data?.tests || []
         );
-        setSubtopics(res.data?.subtopics || []);
-        setChapterTestCount(res.data?.chapterTests || 0);
       } catch (err) {
         console.log(
           "ChapterPracticeScreen load error:",
@@ -648,6 +639,7 @@ export default function ChapterPracticeScreen({
             ================================================= */}
 
             <PracticeHero
+              series={series}
               chapter={
                 chapter
               }
@@ -764,44 +756,6 @@ export default function ChapterPracticeScreen({
               </View>
             </View>
 
-
-            {/* =================================================
-                SERIES: the whole chapter, or one of its topics
-            ================================================= */}
-
-            {subtopics.length > 0 && (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: spacing.lg, gap: 8, paddingBottom: spacing.md }}
-              >
-                {[{ name: "", label: "Whole chapter", tests: chapterTestCount }, ...subtopics.map((s) => ({ ...s, label: s.name }))].map((s) => {
-                  const on = s.name === series;
-                  return (
-                    <TouchableOpacity
-                      key={s.name || "__chapter"}
-                      onPress={() => setSeries(s.name)}
-                      activeOpacity={0.8}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: on }}
-                      style={{
-                        paddingHorizontal: 14,
-                        paddingVertical: 8,
-                        borderRadius: 999,
-                        borderWidth: 1,
-                        borderColor: on ? colors.brand : colors.border,
-                        backgroundColor: on ? colors.brand : colors.surface,
-                      }}
-                    >
-                      <Text style={{ fontSize: 13, fontWeight: "700", color: on ? "#fff" : colors.inkSoft }}>
-                        {s.label}
-                        <Text style={{ fontWeight: "500", color: on ? "rgba(255,255,255,0.8)" : colors.slate }}>  {s.tests}</Text>
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            )}
 
             {/* =================================================
                 LEVEL SELECTOR
@@ -1085,6 +1039,7 @@ export default function ChapterPracticeScreen({
 ========================================================= */
 
 function PracticeHero({
+  series,
   chapter,
   subject,
   activeLevel,
@@ -1194,7 +1149,7 @@ function PracticeHero({
             ]}
             numberOfLines={1}
           >
-            {subject} · Practice Series
+            {series ? `Subtopic · ${series}` : `${subject} · Mixed practice`}
           </Text>
 
         </View>

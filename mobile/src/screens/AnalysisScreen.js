@@ -135,7 +135,7 @@ export default function AnalysisScreen({ navigation }) {
 
   function openFocusTopic() {
     if (!focus?.chapter) return;
-    navigation.navigate("ChapterPractice", {
+    navigation.navigate("PracticeMode", {
       subject: focus.subject,
       chapter: focus.chapter,
     });
@@ -846,7 +846,7 @@ export default function AnalysisScreen({ navigation }) {
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={() =>
-                    navigation.navigate("ChapterPractice", {
+                    navigation.navigate("PracticeMode", {
                       subject: item.subject,
                       chapter: item.chapter,
                     })
