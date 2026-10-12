@@ -7,6 +7,7 @@ const {
   deleteVacancy,
   queueVacancyMock,
   adoptMocks,
+  renumberMocks,
   vacancyMocks,
   seriesForStudent,
 } = require("../controllers/vacancyController");
@@ -23,6 +24,7 @@ router.patch("/:id", protect, adminOnly, asyncRoute(updateVacancy));
 router.delete("/:id", protect, adminOnly, asyncRoute(deleteVacancy));
 router.post("/:id/build-mock", protect, adminOnly, asyncRoute(queueVacancyMock));
 router.post("/:id/adopt-mocks", protect, adminOnly, asyncRoute(adoptMocks));
+router.post("/:id/renumber", protect, adminOnly, asyncRoute(renumberMocks));
 router.get("/:id/mocks", protect, adminOnly, asyncRoute(vacancyMocks));
 
 module.exports = router;

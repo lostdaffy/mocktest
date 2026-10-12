@@ -158,33 +158,49 @@ async function queueVacancyMock(req, res) {
   });
 }
 
+// Numbers a series' mocks 1, 2, 3... in their existing order (series number,
+// then age) and names each "<series name> - Mock #n". A series that starts
+// at "Mock #2", or skips a number, reads as if something is missing.
+async function renumberSeries(vacancy) {
+  const mocks = await Test.find({ type: "full_mock", vacancy: vacancy._id }).select("title seriesNumber createdAt").lean();
+  mocks.sort((a, b) => (a.seriesNumber || 0) - (b.seriesNumber || 0) || new Date(a.createdAt) - new Date(b.createdAt));
+  const renamed = [];
+  for (let i = 0; i < mocks.length; i++) {
+    const title = `${vacancy.seriesName} - Mock #${i + 1}`;
+    if (mocks[i].seriesNumber === i + 1 && mocks[i].title === title) continue;
+    await Test.updateOne({ _id: mocks[i]._id }, { $set: { seriesNumber: i + 1, title } });
+    renamed.push({ from: mocks[i].title, to: title });
+  }
+  return renamed;
+}
+
 // POST /api/vacancies/:id/adopt-mocks (admin)
 //
 // Brings the exam's existing general mocks (built before vacancies existed)
-// into this vacancy's series: each one joins the series and is renamed
-// "<series name> - Mock #n", keeping its number, questions and status.
+// into this vacancy's series, keeping their questions and status, and
+// numbers the series from #1.
 async function adoptMocks(req, res) {
   const vacancy = await Vacancy.findById(req.params.id).lean();
   if (!vacancy) return res.status(404).json({ message: "Vacancy not found" });
-  const mocks = await Test.find({ type: "full_mock", examStage: vacancy.examType, vacancy: null }).select("title seriesNumber").lean();
+  const mocks = await Test.find({ type: "full_mock", examStage: vacancy.examType, vacancy: null }).select("_id").lean();
   if (!mocks.length) return res.json({ message: "This exam has no mocks outside a series", adopted: 0 });
 
-  // Numbers already used in the series are left to the mocks that have them.
-  const taken = new Set(
-    (await Test.find({ type: "full_mock", vacancy: vacancy._id }).select("seriesNumber").lean()).map((t) => t.seriesNumber)
-  );
-  let next = Math.max(0, ...taken, 0);
-  const renamed = [];
-  for (const m of mocks.sort((a, b) => (a.seriesNumber || 0) - (b.seriesNumber || 0))) {
-    let n = m.seriesNumber || ++next;
-    if (taken.has(n)) n = ++next;
-    taken.add(n);
-    next = Math.max(next, n);
-    const title = `${vacancy.seriesName} - Mock #${n}`;
-    await Test.updateOne({ _id: m._id }, { $set: { vacancy: vacancy._id, seriesNumber: n, title } });
-    renamed.push({ from: m.title, to: title });
-  }
-  res.json({ message: `${renamed.length} mock(s) moved into ${vacancy.seriesName}`, adopted: renamed.length, renamed });
+  // After the series' own mocks, in their old order.
+  const last = await Test.findOne({ type: "full_mock", vacancy: vacancy._id }).sort({ seriesNumber: -1 }).select("seriesNumber").lean();
+  const ordered = await Test.find({ _id: { $in: mocks.map((m) => m._id) } }).sort({ seriesNumber: 1, createdAt: 1 }).select("_id").lean();
+  let n = last?.seriesNumber || 0;
+  for (const m of ordered) await Test.updateOne({ _id: m._id }, { $set: { vacancy: vacancy._id, seriesNumber: ++n } });
+
+  const renamed = await renumberSeries(vacancy);
+  res.json({ message: `${mocks.length} mock(s) moved into ${vacancy.seriesName}`, adopted: mocks.length, renamed });
+}
+
+// POST /api/vacancies/:id/renumber (admin) -> Mock #1, #2, #3 again
+async function renumberMocks(req, res) {
+  const vacancy = await Vacancy.findById(req.params.id).lean();
+  if (!vacancy) return res.status(404).json({ message: "Vacancy not found" });
+  const renamed = await renumberSeries(vacancy);
+  res.json({ message: renamed.length ? `${renamed.length} mock(s) renumbered` : "Already numbered 1, 2, 3...", renamed });
 }
 
 // GET /api/vacancies/:id/mocks (admin)
@@ -254,6 +270,7 @@ module.exports = {
   deleteVacancy,
   queueVacancyMock,
   adoptMocks,
+  renumberMocks,
   vacancyMocks,
   seriesForStudent,
 };
