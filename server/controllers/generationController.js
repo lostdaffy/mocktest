@@ -151,10 +151,15 @@ async function enqueueShort(req, res) {
     return res.json({ message: req.body?.testId ? "That test is already full" : "Every practice test is full", queued: 0 });
   }
 
-  const limit = Math.max(1, Math.min(Number(req.body?.limit) || short.length, 500));
-  // Fullest first: a test at 12 needs 8, one at 2 needs 18, so the cheap
-  // ones are done before the allowance runs out.
-  const wanted = [...short].sort((a, b) => b.have - a.have).slice(0, limit);
+  // A few at a time, by default ten: there were 329 short tests when this
+  // shipped, and queueing them all in one press would spend days of AI
+  // allowance with nobody looking at what came out.
+  const limit = Math.max(1, Math.min(Number(req.body?.limit) || 10, 50));
+  // Live tests first - students are using those - then the fullest: a test
+  // at 12 needs 8, one at 2 needs 18, so the cheap ones are done first.
+  const wanted = [...short]
+    .sort((a, b) => Number(b.published) - Number(a.published) || b.have - a.have)
+    .slice(0, limit);
 
   const batch = new Date().toISOString();
   let queued = 0;

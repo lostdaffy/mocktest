@@ -763,12 +763,12 @@ function FillShortBanner({ count, onFill, busy }) {
         <b>
           {count} practice test{count === 1 ? "" : "s"} hold{count === 1 ? "s" : ""} fewer than {FULL_TEST} questions
         </b>{" "}
-        - mostly ones built when a test held 12. Topping up queues them on the Generation page, ten questions at a
-        time; a published test stays live while it fills. New questions pass the same quality gate and are checked
+        - mostly ones built when a test held 12. Each press queues the next 10 on the Generation page, live tests
+        first; a published test stays live while it fills. New questions pass the same quality gate and are checked
         against what the chapter has already asked.
       </p>
       <button onClick={onFill} disabled={busy} className="rv-btn-primary disabled:opacity-60 shrink-0">
-        {busy ? "Queueing..." : `Top up ${count} to ${FULL_TEST}`}
+        {busy ? "Queueing..." : `Top up next ${Math.min(10, count)} to ${FULL_TEST}`}
       </button>
     </div>
   );
