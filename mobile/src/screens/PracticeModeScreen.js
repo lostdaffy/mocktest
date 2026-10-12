@@ -42,7 +42,10 @@ export default function PracticeModeScreen({ route, navigation }) {
         .get(`/tests/practice-series/${encodeURIComponent(subject || "")}/${encodeURIComponent(chapter || "")}`)
         .then((res) => {
           if (!alive) return;
-          const subtopics = res.data?.subtopics || [];
+          // Every subtopic of the chapter, those still waiting for tests
+          // included (a server before allSubtopics existed sends only the
+          // ones with tests).
+          const subtopics = res.data?.allSubtopics || res.data?.subtopics || [];
           if (!subtopics.length) return openTests("", true);
           setData({ chapterTests: res.data?.chapterTests || 0, subtopics });
         })
@@ -113,31 +116,46 @@ export default function PracticeModeScreen({ route, navigation }) {
               icon="list"
               title="Subtopic-wise practice"
               text="Pick one subtopic and practise only that, level by level."
-              meta={`${data.subtopics.length} subtopic${data.subtopics.length === 1 ? "" : "s"} · ${topicTests} test${topicTests === 1 ? "" : "s"}`}
+              meta={`${data.subtopics.length} subtopic${data.subtopics.length === 1 ? "" : "s"} · ${topicTests ? `${topicTests} test${topicTests === 1 ? "" : "s"}` : "tests coming soon"}`}
               onPress={() => setView("topics")}
             />
           </>
         ) : (
-          data.subtopics.map((s, i) => (
-            <TouchableOpacity
-              key={s.name}
-              onPress={() => openTests(s.name)}
-              activeOpacity={0.8}
-              accessibilityRole="button"
-              style={[styles.topicRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            >
-              <View style={[styles.topicNumber, { backgroundColor: colors.brandTint }]}>
-                <Text style={[styles.topicNumberText, { color: colors.brand }]}>{String(i + 1).padStart(2, "0")}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.topicName, { color: colors.ink }]}>{s.name}</Text>
-                <Text style={[styles.topicMeta, { color: colors.slate }]}>
-                  {s.tests} test{s.tests === 1 ? "" : "s"}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.slate} />
-            </TouchableOpacity>
-          ))
+          data.subtopics.map((s, i) => {
+            // A subtopic still waiting for its tests is listed, so the student
+            // sees what is coming, but cannot be opened.
+            const ready = s.tests > 0;
+            return (
+              <TouchableOpacity
+                key={s.name}
+                onPress={() => ready && openTests(s.name)}
+                disabled={!ready}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !ready }}
+                style={[
+                  styles.topicRow,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  !ready && { opacity: 0.55 },
+                ]}
+              >
+                <View style={[styles.topicNumber, { backgroundColor: colors.brandTint }]}>
+                  <Text style={[styles.topicNumberText, { color: colors.brand }]}>{String(i + 1).padStart(2, "0")}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.topicName, { color: colors.ink }]}>{s.name}</Text>
+                  <Text style={[styles.topicMeta, { color: colors.slate }]}>
+                    {ready ? `${s.tests} test${s.tests === 1 ? "" : "s"}` : "Tests coming soon"}
+                  </Text>
+                </View>
+                {ready ? (
+                  <Ionicons name="chevron-forward" size={20} color={colors.slate} />
+                ) : (
+                  <Ionicons name="time-outline" size={18} color={colors.slate} />
+                )}
+              </TouchableOpacity>
+            );
+          })
         )}
       </ScrollView>
     </View>

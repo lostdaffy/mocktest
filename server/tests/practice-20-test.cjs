@@ -172,6 +172,9 @@ async function api(method, p, { body, token } = {}) {
   check("...and is told which topics have tests of their own",
     r.json.subtopics?.length === 1 && r.json.subtopics[0].name === "Successive change" && r.json.subtopics[0].tests === 1,
     JSON.stringify(r.json.subtopics));
+  check("...and, for the choose-a-series screen, every subtopic with its count, empty ones included",
+    JSON.stringify(r.json.allSubtopics) === JSON.stringify([{ name: "Successive change", tests: 1 }, { name: "Percentage error", tests: 0 }]),
+    JSON.stringify(r.json.allSubtopics));
   r = await api("GET", `/tests/practice-series/Maths/Percentage?subtopic=${encodeURIComponent("Successive change")}`, { token: stoken });
   check("asking for one topic gives that topic's tests only",
     r.json.tests.length === 1 && r.json.tests[0].subtopic === "Successive change", `${r.json.tests?.length}`);

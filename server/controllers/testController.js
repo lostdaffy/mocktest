@@ -275,12 +275,22 @@ async function getPracticeSeries(req, res) {
   const topics = (subjectDoc?.chapters || []).find((c) => c.name === chapter)?.topics || [];
   const subtopics = topics.filter((t) => count.get(t)).map((name) => ({ name, tests: count.get(name) }));
 
+  // Every subtopic of the chapter, tests or not, for the app's "Mixed or
+  // subtopic-wise?" screen - it lists all of them and marks the ones still
+  // waiting for tests. A topic named like the chapter is the chapter itself.
+  // (subtopics above stays as it was: app 1.2.0 shows a chip for each one,
+  // and a chip with nothing behind it would be a dead end.)
+  const allSubtopics = topics
+    .filter((t) => t.trim().toLowerCase() !== String(chapter).trim().toLowerCase())
+    .map((name) => ({ name, tests: count.get(name) || 0 }));
+
   // isFree is the admin's own choice made at publish time (see
   // publishPracticeTest) - it must not be recomputed here.
   res.json({
     tests: await withAttemptStatus(tests, req.user._id),
     chapterTests: count.get("") || 0,
     subtopics,
+    allSubtopics,
   });
 }
 
