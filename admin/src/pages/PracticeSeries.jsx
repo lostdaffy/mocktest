@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
@@ -166,7 +166,8 @@ export default function PracticeSeries() {
   // waits out the AI allowance instead of failing. What is queued for this
   // chapter shows on the page (useJobs below); when one finishes, the page
   // re-reads itself and a notification says so, wherever the admin is.
-  const { refresh: refreshQueue } = useGenerationActivity();
+  const { activity: queue, refresh: refreshQueue } = useGenerationActivity();
+  const queuePaused = !!queue?.paused;
   const subjectJobs = useJobs((j) => (j.kind === "practice" || j.kind === "top_up") && j.subject === subjectName);
   const chapterJobs = subjectJobs.filter((j) => j.chapter === chapterName);
   const topUpJobs = new Map(chapterJobs.filter((j) => j.kind === "top_up" && j.testId).map((j) => [String(j.testId), j]));
@@ -459,6 +460,15 @@ export default function PracticeSeries() {
           <p className="text-sm font-semibold text-info mb-2">
             In the queue for this chapter ({chapterJobs.length}) - each appears below when it is done; you can leave this page.
           </p>
+          {queuePaused && (
+            <p className="text-xs text-warn mb-2">
+              The queue is paused, so nothing is being built.{" "}
+              <Link to="/generation" className="underline font-semibold">
+                Resume it on the Generation page
+              </Link>
+              .
+            </p>
+          )}
           <ul className="space-y-1.5">
             {chapterJobs.map((j) => (
               <li key={j._id} className="flex items-center gap-2 text-sm text-ink-soft">
@@ -473,7 +483,7 @@ export default function PracticeSeries() {
                     : `New ${j.difficulty || ""} test · ${j.subtopic || "Mixed Practice"}`}
                 </span>
                 <span className={`text-xs font-semibold shrink-0 ${j.position === 0 ? "text-info" : "text-slate-soft"}`}>
-                  {j.position === 0 ? "Building now" : `#${j.position} in line`}
+                  {j.position === 0 ? "Building now" : queuePaused ? `#${j.position} · paused` : `#${j.position} in line`}
                 </span>
               </li>
             ))}
@@ -593,7 +603,7 @@ export default function PracticeSeries() {
                     {topUp.position === 0 && (
                       <span className="inline-block w-3 h-3 border-2 border-info-border border-t-info rounded-full animate-spin" />
                     )}
-                    {topUp.position === 0 ? "Topping up now…" : `Waiting to top up (#${topUp.position})`}
+                    {topUp.position === 0 ? "Topping up now…" : `Waiting to top up (#${topUp.position}${queuePaused ? ", paused" : ""})`}
                   </p>
                 )}
 

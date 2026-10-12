@@ -6,7 +6,7 @@ import { useToast } from "../components/Toast";
 import QuestionEditor from "../components/QuestionEditor";
 import ManualQuestions from "../components/ManualQuestions";
 import QuestionVisual from "../components/QuestionVisual";
-import { useGenerationFinished, useJobs } from "../context/GenerationActivity";
+import { useGenerationActivity, useGenerationFinished, useJobs } from "../context/GenerationActivity";
 
 export default function ExamMocks() {
   const toast = useToast();
@@ -75,6 +75,7 @@ export default function ExamMocks() {
 
   // Mocks for this exam on the Generation queue (from Vacancies or the
   // Generation page): shown here, and the list re-read when one finishes.
+  const queuePaused = !!useGenerationActivity().activity?.paused;
   const mockJobs = useJobs((j) => j.kind === "mock" && j.examType === examStage);
   useGenerationFinished((job) => job.kind === "mock" && job.examType === examStage && load());
 
@@ -221,6 +222,15 @@ export default function ExamMocks() {
           <p className="text-sm font-semibold text-info mb-2">
             On the Generation queue ({mockJobs.length}) - each appears below as a draft when it is done.
           </p>
+          {queuePaused && (
+            <p className="text-xs text-warn mb-2">
+              The queue is paused, so nothing is being built.{" "}
+              <Link to="/generation" className="underline font-semibold">
+                Resume it on the Generation page
+              </Link>
+              .
+            </p>
+          )}
           <ul className="space-y-1.5">
             {mockJobs.map((j) => (
               <li key={j._id} className="flex items-center gap-2 text-sm text-ink-soft">
@@ -231,7 +241,7 @@ export default function ExamMocks() {
                 )}
                 <span className="flex-1 min-w-0 truncate">{j.testTitle || j.label}</span>
                 <span className={`text-xs font-semibold shrink-0 ${j.position === 0 ? "text-info" : "text-slate-soft"}`}>
-                  {j.position === 0 ? "Building now" : `#${j.position} in line`}
+                  {j.position === 0 ? "Building now" : queuePaused ? `#${j.position} · paused` : `#${j.position} in line`}
                 </span>
               </li>
             ))}
