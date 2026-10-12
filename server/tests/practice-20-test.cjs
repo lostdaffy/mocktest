@@ -87,7 +87,7 @@ async function api(method, p, { body, token } = {}) {
     made.every((c) => c.syllabusTopics.includes("Successive change") && c.syllabusTopics.includes("Percentage error")));
   const chapterTest = await db.collection("tests").findOne({ _id: oid(r.json.test._id) });
   check("...with a minute a question", chapterTest.durationMinutes === 20, `${chapterTest.durationMinutes} min`);
-  check("...and no topic of its own", !chapterTest.subtopic && chapterTest.title === "Percentage - Easy #1", chapterTest.title);
+  check("...and no topic of its own", !chapterTest.subtopic && chapterTest.title === "Percentage · Mixed Practice · Easy #1", chapterTest.title);
   const firstTwenty = new Set(chapterTest.questions.map(String));
   check("...twenty different questions", firstTwenty.size === 20, `${firstTwenty.size}`);
 
@@ -104,7 +104,7 @@ async function api(method, p, { body, token } = {}) {
   const topicTest = await db.collection("tests").findOne({ _id: oid(r.json.test?._id) });
   check("...it remembers its topic", topicTest?.subtopic === "Successive change");
   check("...and is #1 of its own series, not #2 of the chapter's",
-    topicTest?.seriesNumber === 1 && topicTest?.title === "Percentage: Successive change - Easy #1", topicTest?.title);
+    topicTest?.seriesNumber === 1 && topicTest?.title === "Percentage · Successive change · Easy #1", topicTest?.title);
 
   r = await api("POST", "/exam-series/practice/generate", {
     token, body: { subject: "Maths", chapter: "Percentage", subtopic: "Compound interest", difficulty: "easy" },
@@ -232,10 +232,19 @@ async function api(method, p, { body, token } = {}) {
     .sort({ createdAt: 1 }).toArray();
   check("the queue builds both, each the next in its own series",
     series.map((t) => t.title).join(" | ") ===
-      "Percentage - Easy #1 | Percentage: Successive change - Easy #1 | Percentage: Successive change - Easy #2 | Percentage - Easy #2",
+      "Percentage · Mixed Practice · Easy #1 | Percentage · Successive change · Easy #1 | Percentage · Successive change · Easy #2 | Percentage · Mixed Practice · Easy #2",
     series.map((t) => t.title).join(" | "));
   check("...20 questions each", series.every((t) => t.questions.length === 20), series.map((t) => t.questions.length).join(","));
   check("...as drafts for the admin to review", series.slice(2).every((t) => t.publishStatus === "draft"));
+
+  // ---- older names brought into the new format
+  await db.collection("tests").updateOne({ _id: old.insertedId }, { $set: { title: "Percentage - Medium #1" } });
+  r = await api("POST", "/exam-series/practice/rename-all", { token });
+  const renamedOld = await db.collection("tests").findOne({ _id: old.insertedId });
+  check("older practice tests are renamed chapter · series · level #n", r.status === 200 && renamedOld.title === "Percentage · Mixed Practice · Medium #1",
+    `${r.status} ${renamedOld.title} ${r.json.message}`);
+  r = await api("POST", "/exam-series/practice/rename-all", { token });
+  check("...and a second run changes nothing", r.json.renamed === 0, r.json.message);
 
   // ---- a removed question is replaced, keeping the test at 20
   const victim = String(after.questions[0]);

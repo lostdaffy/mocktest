@@ -797,10 +797,9 @@ async function buildPracticeTest({ subject, chapter, subtopic, topics, difficult
       difficultyLevel: difficulty,
     }).sort({ seriesNumber: -1 });
     const nextNumber = (lastTest?.seriesNumber || 0) + 1;
-    const levelName = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
 
     const test = await Test.create({
-      title: `${subtopic ? `${chapter}: ${subtopic}` : chapter} - ${levelName} #${nextNumber}`,
+      title: practiceTitle({ chapter, subtopic, level: difficulty, number: nextNumber }),
       type: "practice",
       examType: "PRACTICE",
       examStage: "PRACTICE",
@@ -820,6 +819,43 @@ async function buildPracticeTest({ subject, chapter, subtopic, topics, difficult
       test: { _id: test._id, title: test.title, questionCount: allQuestionIds.length },
     };
   }
+}
+
+// A practice test's name says where it sits: chapter, then the whole chapter
+// ("Mixed Practice") or the one subtopic, then level and number -
+// "Percentage · Successive Percentage Change · Easy #1".
+function practiceTitle({ chapter, subtopic, level, number }) {
+  const levelName = String(level || "easy").charAt(0).toUpperCase() + String(level || "easy").slice(1);
+  return `${chapter} · ${subtopic || "Mixed Practice"} · ${levelName} #${number}`;
+}
+
+// POST /api/exam-series/practice/rename-all (admin)
+//
+// Gives every practice test the name practiceTitle() would give it today,
+// numbering each series (chapter + subtopic + level) 1, 2, 3 in the order
+// the tests were made. Questions, publish status and access are untouched.
+async function renamePracticeTests(req, res) {
+  const tests = await Test.find({ type: "practice" }).select("title topic subtopic difficultyLevel seriesNumber createdAt").lean();
+  const groups = new Map();
+  for (const t of tests) {
+    const key = `${t.topic}\u0000${t.subtopic || ""}\u0000${t.difficultyLevel || "easy"}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(t);
+  }
+  let renamed = 0;
+  const examples = [];
+  for (const list of groups.values()) {
+    list.sort((a, b) => (a.seriesNumber || 1e9) - (b.seriesNumber || 1e9) || new Date(a.createdAt) - new Date(b.createdAt));
+    for (let i = 0; i < list.length; i++) {
+      const t = list[i];
+      const title = practiceTitle({ chapter: t.topic, subtopic: t.subtopic, level: t.difficultyLevel, number: i + 1 });
+      if (t.title === title && t.seriesNumber === i + 1) continue;
+      await Test.updateOne({ _id: t._id }, { $set: { title, seriesNumber: i + 1 } });
+      renamed++;
+      if (examples.length < 5) examples.push({ from: t.title, to: title });
+    }
+  }
+  res.json({ message: `${renamed} of ${tests.length} practice test(s) renamed`, renamed, total: tests.length, examples });
 }
 
 // POST /api/exam-series/practice/generate (admin)
@@ -1143,4 +1179,5 @@ module.exports = {
   publishPracticeTest,
   unpublishPracticeTest,
   fillShortTests,
+  renamePracticeTests,
 };
