@@ -449,9 +449,18 @@ async function createTopicTest(req, res) {
   }
 }
 
-// GET /api/tests/today  -> personalized "Aaj Ka Test" for logged-in user
+// GET /api/tests/today  -> the Daily GK Quiz (same 20 questions for everyone,
+// new at 12:00 AM IST, free). Only if there is none for today - the bank is
+// too small and AI is off - does it fall back to the old personalised test.
 async function getTodayTest(req, res) {
   try {
+    const { ensureTodayQuiz } = require("../services/dailyQuiz");
+    const quiz = await ensureTodayQuiz().catch((err) => {
+      console.error("Daily quiz unavailable, falling back to the personalised test:", err.message);
+      return null;
+    });
+    if (quiz) return res.json({ test: quiz });
+
     if (!hasActiveSubscription(req.user)) {
       const daysSinceSignup = (Date.now() - new Date(req.user.createdAt).getTime()) / (1000 * 60 * 60 * 24);
       if (daysSinceSignup > FREE_TRIAL_DAYS) {

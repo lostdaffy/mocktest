@@ -11,6 +11,7 @@ const ROUTE_TITLES = [
   ["/generation", "Generation"],
   ["/exam-series", "Exam Mock Series"],
   ["/practice-series", "Subject Practice"],
+  ["/daily-quiz", "Daily GK Quiz"],
   ["/pyq-bank", "PYQ Bank"],
   ["/questions", "Manage Questions"],
   ["/reports", "Student Reports"],

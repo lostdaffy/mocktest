@@ -309,6 +309,7 @@ app.use("/api/live-exams", liveExamRoutes);
 app.use("/api/pyq", pyqRoutes);
 app.use("/api/admin/coupons", couponRoutes);
 app.use("/api/generation", require("./routes/generationRoutes"));
+app.use("/api/daily-quiz", require("./routes/dailyQuizRoutes"));
 
 // Fallback error handler.
 //
@@ -356,6 +357,13 @@ async function start() {
 
   const genTick = setInterval(runGenerationTick, 5_000);
 
+  // The Daily GK Quiz: keeps today covered and, with AI on, queues the next
+  // days. Going live needs no timer - a ready quiz is live on its date (see
+  // services/dailyQuiz.js) - so a sleeping instance never misses midnight.
+  const { runDailyQuizTick } = require("./services/dailyQuiz");
+  const quizTick = setInterval(() => runDailyQuizTick().catch((e) => console.error("Daily quiz tick:", e.message)), 5 * 60_000);
+  setTimeout(() => runDailyQuizTick().catch(() => {}), 20_000);
+
   // A run is hours of work in a process the free plan stops as soon as
   // nobody is visiting. See jobs/keepAwake.js - it only pings while the
   // queue actually has something left to build.
@@ -373,6 +381,7 @@ async function start() {
     console.log(`${signal} received - finishing in-flight requests, then shutting down...`);
     clearInterval(tick);
     clearInterval(genTick);
+    clearInterval(quizTick);
     stopKeepAwake();
 
     // Hand back the test being built so it is queued again immediately,

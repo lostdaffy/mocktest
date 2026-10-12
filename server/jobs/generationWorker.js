@@ -51,6 +51,11 @@ async function runPracticeJob(job) {
   return built.message;
 }
 
+async function runDailyQuizJob(job) {
+  const { generateQuizWithAI } = require("../services/dailyQuiz");
+  return generateQuizWithAI(job.quizDate, { by: job.requestedBy || "auto" });
+}
+
 async function runMockJob(job) {
   // The mock builder already knows how to assemble a paper section by
   // section from its pattern; the worker only has to call it and record what
@@ -165,7 +170,10 @@ async function runGenerationTick() {
   running = true;
   currentJobId = job._id;
   try {
-    const result = job.kind === "practice" ? await runPracticeJob(job) : await runMockJob(job);
+    const result =
+      job.kind === "practice" ? await runPracticeJob(job)
+      : job.kind === "daily_quiz" ? await runDailyQuizJob(job)
+      : await runMockJob(job);
     job.status = "done";
     job.result = String(result).slice(0, 300);
     job.finishedAt = new Date();

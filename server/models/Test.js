@@ -50,6 +50,11 @@ const testSchema = new mongoose.Schema(
     // questions' counters, so it is done exactly once.
     statsRolledUpAt: { type: Date },
 
+    // The day this is the Daily GK Quiz for ("2026-10-13", India time). Set
+    // only on those tests; type stays "revision" so installed apps list it
+    // in History the way they list the old daily test.
+    dailyQuizDate: { type: String, index: true },
+
     // Access control
     isFree: { type: Boolean, default: false },
 

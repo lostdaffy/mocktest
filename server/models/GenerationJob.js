@@ -12,7 +12,13 @@ const mongoose = require("mongoose");
 // survives a restart, the panel can show it, and a job that fails says why.
 const generationJobSchema = new mongoose.Schema(
   {
-    kind: { type: String, enum: ["practice", "mock"], required: true },
+    kind: { type: String, enum: ["practice", "mock", "daily_quiz"], required: true },
+
+    // daily_quiz: the day ("2026-10-13", India time) whose GK quiz to make,
+    // and who asked - "auto" (the scheduler: goes live as soon as it is
+    // made) or an admin's name (left as a draft for them to review).
+    quizDate: String,
+    requestedBy: String,
 
     // What to build. A practice job names a chapter and a level; a mock job
     // names the exam and its pattern decides the rest.

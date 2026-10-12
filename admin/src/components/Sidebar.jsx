@@ -16,6 +16,7 @@ import {
   RiShieldKeyholeLine,
   RiCloseLine,
   RiMagicLine,
+  RiCalendarCheckLine,
 } from "@remixicon/react";
 
 // Grouped rather than one flat list of 11 - with this many destinations a
@@ -31,6 +32,7 @@ const NAV_GROUPS = [
       { to: "/generation", label: "Generation", Icon: RiMagicLine },
       { to: "/exam-series", label: "Exam Mock Series", Icon: RiFileList3Line },
       { to: "/practice-series", label: "Subject Practice", Icon: RiBookOpenLine },
+      { to: "/daily-quiz", label: "Daily GK Quiz", Icon: RiCalendarCheckLine },
       { to: "/pyq-bank", label: "PYQ Bank", Icon: RiFilePaperLine },
       { to: "/questions", label: "Question Review", Icon: RiQuestionnaireLine },
     ],

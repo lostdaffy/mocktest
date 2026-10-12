@@ -4,7 +4,10 @@
     {
       "name": "admin",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "cwd": "admin",
       "port": 5173,
       "autoPort": true
@@ -12,24 +15,56 @@
     {
       "name": "website",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "cwd": "website",
       "port": 4176
     },
     {
       "name": "mobile-web",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["expo", "start", "--web", "--port", "8081"],
+      "runtimeArgs": [
+        "expo",
+        "start",
+        "--web",
+        "--port",
+        "8081"
+      ],
       "cwd": "mobile",
       "port": 8081,
-      "env": { "EXPO_PUBLIC_API_URL": "http://127.0.0.1:5056/api", "CI": "1", "BROWSER": "none" }
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://127.0.0.1:5056/api",
+        "CI": "1",
+        "BROWSER": "none"
+      }
     },
     {
       "name": "website-build",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "preview"],
+      "runtimeArgs": [
+        "run",
+        "preview"
+      ],
       "cwd": "website",
       "port": 4176
+    },
+    {
+      "name": "admin-local",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5174"
+      ],
+      "cwd": "admin",
+      "port": 5174,
+      "env": {
+        "VITE_API_URL": "http://localhost:5080/api"
+      }
     }
   ]
 }
