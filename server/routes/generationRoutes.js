@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const {
   queueStatus,
+  activity,
   listGaps,
   enqueue,
   enqueueShort,
@@ -17,6 +18,7 @@ const asyncRoute = require("../utils/asyncRoute");
 
 // Everything here is admin-only: this is the machinery that fills the bank.
 router.get("/status", protect, adminOnly, asyncRoute(queueStatus));
+router.get("/activity", protect, adminOnly, asyncRoute(activity));
 router.get("/gaps", protect, adminOnly, asyncRoute(listGaps));
 router.post("/enqueue", protect, adminOnly, asyncRoute(enqueue));
 router.post("/enqueue-short", protect, adminOnly, asyncRoute(enqueueShort));

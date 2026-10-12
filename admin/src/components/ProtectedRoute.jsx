@@ -4,6 +4,7 @@ import { RiMenuLine, RiSunLine, RiMoonLine, RiComputerLine } from "@remixicon/re
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import Sidebar from "./Sidebar";
+import GenerationBadge from "./GenerationBadge";
 
 // Route -> page name, used for the topbar label so the admin always knows
 // where they are (especially on mobile, where the sidebar is hidden).
@@ -77,6 +78,7 @@ export default function ProtectedRoute({ children }) {
 
           <p className="font-display font-bold text-ink truncate flex-1">{titleForPath(location.pathname)}</p>
 
+          <GenerationBadge />
           <ThemeToggle />
         </header>
 

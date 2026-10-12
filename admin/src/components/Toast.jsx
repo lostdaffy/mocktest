@@ -34,12 +34,16 @@ export function ToastProvider({ children }) {
   const [confirmState, setConfirmState] = useState(null);
   const idRef = useRef(0);
 
-  const showToast = useCallback((message, variant = "info") => {
+  // Errors stay long enough to be read (10 s). A notification can stay until
+  // dismissed (sticky) and carry one action - "Open", "Review".
+  const showToast = useCallback((message, variant = "info", opts = {}) => {
     const id = ++idRef.current;
-    setToasts((t) => [...t, { id, message, variant }]);
-    setTimeout(() => {
-      setToasts((t) => t.filter((x) => x.id !== id));
-    }, 4000);
+    setToasts((t) => [...t.slice(-5), { id, message, variant, ...opts }]);
+    if (!opts.sticky) {
+      setTimeout(() => {
+        setToasts((t) => t.filter((x) => x.id !== id));
+      }, opts.duration || (variant === "error" ? 10000 : 4000));
+    }
   }, []);
 
   const showConfirm = useCallback(({ title, message, confirmLabel = "Confirm", danger = false }) => {
@@ -59,6 +63,8 @@ export function ToastProvider({ children }) {
         success: (m) => showToast(m, "success"),
         error: (m) => showToast(m, "error"),
         info: (m) => showToast(m, "info"),
+        // { variant, title, message, sticky, actionLabel, onAction }
+        notify: ({ variant = "info", message, ...opts }) => showToast(message, variant, opts),
         confirm: showConfirm,
       }}
     >
@@ -75,7 +81,21 @@ export function ToastProvider({ children }) {
               className={`flex items-start gap-3 ${v.wrap} border rounded-sm shadow-lift px-4 py-3.5 animate-[toastIn_0.2s_ease-out]`}
             >
               <Icon size={18} className={`${v.iconColor} shrink-0 mt-0.5`} />
-              <p className={`text-sm font-medium ${v.text} leading-snug flex-1`}>{t.message}</p>
+              <div className="flex-1 min-w-0">
+                {t.title && <p className={`text-sm font-bold ${v.text} leading-snug`}>{t.title}</p>}
+                <p className={`text-sm ${t.title ? "text-ink-soft" : `font-medium ${v.text}`} leading-snug break-words`}>{t.message}</p>
+                {t.actionLabel && (
+                  <button
+                    onClick={() => {
+                      t.onAction?.();
+                      setToasts((prev) => prev.filter((x) => x.id !== t.id));
+                    }}
+                    className="mt-1.5 text-xs font-bold text-brand hover:underline"
+                  >
+                    {t.actionLabel} →
+                  </button>
+                )}
+              </div>
               <button
                 onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
                 className="shrink-0 text-slate-soft hover:text-ink transition-colors"

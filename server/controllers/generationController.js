@@ -58,6 +58,51 @@ async function queueStatus(req, res) {
   });
 }
 
+// GET /api/generation/activity?since=ISO (admin)
+//
+// What every admin page polls: the job being built, everything waiting (in
+// order, with what it is for - subject, chapter, subtopic, level, test,
+// exam), and every job that finished since `since`, so the panel can say
+// "Built: ..." or "Failed: ... because ..." wherever the admin happens to be.
+// Small on purpose: no coverage counts, no gap search.
+async function activity(req, res) {
+  const since = req.query.since && !Number.isNaN(Date.parse(req.query.since)) ? new Date(req.query.since) : new Date(Date.now() - 60 * 1000);
+  // Read before the queries: a job finishing while they run is then
+  // reported on the next poll instead of falling between two.
+  const serverTime = new Date();
+  const fields = "label kind status subject chapter subtopic difficulty examType vacancy testId quizDate startedAt queuedAt finishedAt result lastError attempts";
+  const [running, waiting, finished, state] = await Promise.all([
+    GenerationJob.findOne({ status: "running" }).select(fields).populate("testId", "title subject topic").lean(),
+    GenerationJob.find({ status: "queued" }).sort({ queuedAt: 1 }).limit(200).select(fields).populate("testId", "title subject topic").lean(),
+    GenerationJob.find({ status: { $in: ["done", "failed"] }, finishedAt: { $gt: since } })
+      .sort({ finishedAt: 1 })
+      .limit(50)
+      .select(fields)
+      .populate("testId", "title subject topic")
+      .lean(),
+    QueueState.get(),
+  ]);
+  // A top-up names its test; give it the test's subject and chapter so a
+  // page can tell which of its own tests is being worked on.
+  const shape = (j) =>
+    j && {
+      ...j,
+      testId: j.testId?._id || j.testId || null,
+      testTitle: j.testId?.title || null,
+      subject: j.subject || j.testId?.subject || null,
+      chapter: j.chapter || j.testId?.topic || null,
+    };
+  res.json({
+    serverTime,
+    running: shape(running),
+    waiting: waiting.map(shape),
+    finished: finished.map(shape),
+    paused: state.paused,
+    pausedReason: state.pausedReason || "",
+    resumableAfter: state.paused && state.pausedBy === "worker" ? state.resumableAfter || null : null,
+  });
+}
+
 // GET /api/generation/gaps (admin) -> what the catalog is still missing
 async function listGaps(req, res) {
   const excludeSubjects = String(req.query.exclude || "")
@@ -269,4 +314,4 @@ async function cancelQueued(req, res) {
   res.json({ message: `${r.modifiedCount} waiting job(s) cancelled. Anything already built is untouched.`, cancelled: r.modifiedCount });
 }
 
-module.exports = { queueStatus, listGaps, enqueue, enqueueShort, enqueuePractice, pause, resume, retryFailed, clearHistory, cancelQueued };
+module.exports = { queueStatus, activity, listGaps, enqueue, enqueueShort, enqueuePractice, pause, resume, retryFailed, clearHistory, cancelQueued };

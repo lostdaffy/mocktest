@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../api/axios";
 import { PageHeader, Badge, Button, Modal, Field, Input, Select, Textarea, EmptyState, LoadingState } from "../components/ui";
 import { useToast } from "../components/Toast";
+import { useGenerationActivity, useGenerationFinished, useJobs } from "../context/GenerationActivity";
 import { RiMegaphoneLine } from "@remixicon/react";
 
 // Recruitment notices ("RRB Group D 2025") and their mock series.
@@ -61,6 +62,11 @@ export default function Vacancies() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Live place in line for each vacancy's mocks; the counts re-read when one is done.
+  const { refresh: refreshQueue } = useGenerationActivity();
+  const vacancyJobs = useJobs((j) => j.kind === "mock" && j.vacancy);
+  useGenerationFinished((job) => job.kind === "mock" && load().catch(() => {}));
+
   const patterns = data?.patterns || [];
   const sectionsOf = (examType) => patterns.find((p) => p.examType === examType)?.sections || [];
 
@@ -112,6 +118,7 @@ export default function Vacancies() {
     try {
       const res = await api.post(`/vacancies/${v._id}/build-mock`, { count: 1 });
       toast.success(res.data?.message || "Queued");
+      refreshQueue();
       await load();
     } catch (err) {
       toast.error(err.response?.data?.message || "Couldn't queue a mock");
@@ -210,7 +217,18 @@ export default function Vacancies() {
                     <p className="text-xs mt-2">
                       <span className="text-success font-medium">{v.mocks.published} published</span>
                       {v.mocks.draft > 0 && <span className="text-warn font-medium"> · {v.mocks.draft} draft</span>}
-                      {v.mocks.building > 0 && <span className="text-brand font-medium"> · {v.mocks.building} building</span>}
+                      {(() => {
+                        const jobs = vacancyJobs.filter((j) => String(j.vacancy) === String(v._id));
+                        if (!jobs.length) return null;
+                        const now = jobs.some((j) => j.position === 0);
+                        const next = Math.min(...jobs.map((j) => j.position));
+                        return (
+                          <span className="text-brand font-medium">
+                            {" "}
+                            · {now ? `building now${jobs.length > 1 ? ` (+${jobs.length - 1} waiting)` : ""}` : `${jobs.length} waiting (#${next} in line)`}
+                          </span>
+                        );
+                      })()}
                     </p>
                     <div className="mt-auto pt-4 flex flex-wrap gap-2">
                       <Button size="sm" loading={busy === v._id} onClick={() => queueMock(v)}>

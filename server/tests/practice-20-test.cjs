@@ -183,6 +183,10 @@ async function api(method, p, { body, token } = {}) {
     r.json.tests.length === 2 && r.json.tests.every((t) => !t.subtopic), `${r.json.tests?.length}`);
 
   // ---- topping the old test up, through the queue, while it stays live
+  const clock = (await api("GET", "/generation/activity", { token })).json.serverTime;
+  check("the panel's activity feed answers with the server's clock", !!clock && !Number.isNaN(Date.parse(clock)), `${clock}`);
+  r = await api("GET", "/generation/activity", {});
+  check("...and only for an admin", r.status === 401, `${r.status}`);
   r = await api("POST", "/generation/enqueue-short", { token });
   check("the short tests are queued to be topped up", r.status === 201 && r.json.queued === 1, `${r.status} ${r.json.message}`);
   r = await api("POST", "/generation/enqueue-short", { token });
@@ -201,6 +205,14 @@ async function api(method, p, { body, token } = {}) {
   check("...keeping the 12 it had", oldIds.every((id) => after.questions.some((q) => String(q) === String(id))));
   check("...still live and still free", after.publishStatus === "published" && after.isFree === true);
   check("...with its clock grown to match", after.durationMinutes === 20, `${after.durationMinutes} min`);
+  r = await api("GET", `/generation/activity?since=${encodeURIComponent(clock)}`, { token });
+  const news = (r.json.finished || []).find((j) => j.kind === "top_up");
+  check("the activity feed reports the top-up as finished, so the panel can say so",
+    news?.status === "done" && news.testTitle === after.title && news.subject === "Maths" && news.chapter === "Percentage",
+    JSON.stringify(news || r.json).slice(0, 200));
+  check("...with nothing left running or waiting", !r.json.running && r.json.waiting.length === 0);
+  r = await api("GET", `/generation/activity?since=${encodeURIComponent(new Date().toISOString())}`, { token });
+  check("...and does not report it again once seen", r.json.finished.length === 0, `${r.json.finished.length}`);
 
   r = await api("POST", "/generation/enqueue-short", { token });
   check("once full, nothing is left to top up", r.json.queued === 0 && /full/.test(r.json.message || ""), r.json.message);

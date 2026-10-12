@@ -4,6 +4,7 @@ import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 import QuestionVisual from "../components/QuestionVisual";
+import { useGenerationActivity, useGenerationFinished, useJobs } from "../context/GenerationActivity";
 
 const LEVELS = ["easy", "medium", "hard", "advanced"];
 // A practice test holds this many questions (the server sends its own number
@@ -162,9 +163,19 @@ export default function PracticeSeries() {
 
   // A new test is built on the Generation queue: twenty questions in two
   // batches of ten is longer than this page should hang for, and the queue
-  // waits out the AI allowance instead of failing. The chapter's list is
-  // re-read for a few minutes so the draft appears here when it is done.
-  const [waitingFor, setWaitingFor] = useState(null); // { subject, chapter, until, count }
+  // waits out the AI allowance instead of failing. What is queued for this
+  // chapter shows on the page (useJobs below); when one finishes, the page
+  // re-reads itself and a notification says so, wherever the admin is.
+  const { refresh: refreshQueue } = useGenerationActivity();
+  const subjectJobs = useJobs((j) => (j.kind === "practice" || j.kind === "top_up") && j.subject === subjectName);
+  const chapterJobs = subjectJobs.filter((j) => j.chapter === chapterName);
+  const topUpJobs = new Map(chapterJobs.filter((j) => j.kind === "top_up" && j.testId).map((j) => [String(j.testId), j]));
+  useGenerationFinished((job) => {
+    if (job.kind !== "practice" && job.kind !== "top_up") return;
+    load({ silent: true });
+    if (job.subject === subjectName && job.chapter === chapterName) loadChapterTests(subjectName, chapterName);
+  });
+
   async function generate(chapter, difficulty, subtopic) {
     setGenBusy(`${chapter.name}-${subtopic || ""}-${difficulty}`);
     setMessage("");
@@ -175,35 +186,14 @@ export default function PracticeSeries() {
         subtopic: subtopic || undefined,
         difficulty,
       });
-      setMessage("✅ " + res.data.message);
-      setWaitingFor({ subject: selectedSubject.name, chapter: chapter.name, until: Date.now() + 5 * 60 * 1000, count: chapterTests.length });
+      toast.success(res.data.message);
+      refreshQueue();
     } catch (err) {
-      setMessage("❌ " + (err.response?.data?.message || "Couldn't queue the test"));
+      toast.error(err.response?.data?.message || "Couldn't queue the test");
     } finally {
       setGenBusy(null);
     }
   }
-  useEffect(() => {
-    if (!waitingFor) return;
-    const t = setInterval(async () => {
-      if (Date.now() > waitingFor.until) return setWaitingFor(null);
-      try {
-        const res = await api.get(
-          `/exam-series/practice/${encodeURIComponent(waitingFor.subject)}/${encodeURIComponent(waitingFor.chapter)}`
-        );
-        if (res.data.tests.length > waitingFor.count) {
-          if (subjectName === waitingFor.subject && chapterName === waitingFor.chapter) setChapterTests(res.data.tests);
-          setWaitingFor(null);
-          setMessage("✅ The new test is built - it is in the list as a draft. Review it, then publish.");
-          load({ silent: true });
-        }
-      } catch {
-        // try again on the next tick
-      }
-    }, 10000);
-    return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [waitingFor]);
 
   // Every practice test below its size - mostly the ones built when a test
   // held 12 - queued to be filled up. A published test stays live meanwhile.
@@ -212,6 +202,7 @@ export default function PracticeSeries() {
     try {
       const res = await api.post("/generation/enqueue-short", testId ? { testId } : {});
       toast.success(res.data?.message || "Queued");
+      refreshQueue();
     } catch (err) {
       toast.error(err.response?.data?.message || "Couldn’t queue the short tests");
     } finally {
@@ -361,6 +352,7 @@ export default function PracticeSeries() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {visibleChapters.map((ch) => {
               const number = selectedSubject.chapters.indexOf(ch) + 1;
+              const queued = subjectJobs.filter((j) => j.chapter === ch.name);
               return (
                 <button
                   key={ch.name}
@@ -371,11 +363,24 @@ export default function PracticeSeries() {
                     <span className="w-8 h-8 rounded-lg bg-brand-light text-brand text-xs font-bold flex items-center justify-center">
                       {String(number).padStart(2, "0")}
                     </span>
-                    {ch.draftTests > 0 && (
-                      <span className="text-[11px] font-medium text-warn bg-warn-light px-1.5 py-0.5 rounded">
-                        {ch.draftTests} draft
-                      </span>
-                    )}
+                    <span className="flex items-center gap-1">
+                      {queued.length > 0 && (
+                        <span
+                          className="text-[11px] font-medium text-info bg-info-light px-1.5 py-0.5 rounded inline-flex items-center gap-1"
+                          title={queued.some((j) => j.position === 0) ? "Being built now" : "Waiting on the Generation queue"}
+                        >
+                          {queued.some((j) => j.position === 0) && (
+                            <span className="inline-block w-2.5 h-2.5 border-2 border-info-border border-t-info rounded-full animate-spin" />
+                          )}
+                          {queued.length} queued
+                        </span>
+                      )}
+                      {ch.draftTests > 0 && (
+                        <span className="text-[11px] font-medium text-warn bg-warn-light px-1.5 py-0.5 rounded">
+                          {ch.draftTests} draft
+                        </span>
+                      )}
+                    </span>
                   </div>
 
                   <p className="mt-3 font-semibold text-ink leading-snug line-clamp-3 group-hover:text-brand transition-colors">
@@ -449,11 +454,30 @@ export default function PracticeSeries() {
         <div className="mb-6 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3">{message}</div>
       )}
 
-      {waitingFor && waitingFor.chapter === ch.name && (
-        <div className="mb-6 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3 flex items-center gap-3">
-          <span className="inline-block w-4 h-4 border-2 border-info-border border-t-info rounded-full animate-spin"></span>
-          Building on the Generation queue ({FULL_TEST} questions, 10 at a time). It appears here as a draft when it is
-          done - you can leave this page meanwhile.
+      {chapterJobs.length > 0 && (
+        <div className="mb-6 rounded-lg border border-info-border bg-info-light px-4 py-3">
+          <p className="text-sm font-semibold text-info mb-2">
+            In the queue for this chapter ({chapterJobs.length}) - each appears below when it is done; you can leave this page.
+          </p>
+          <ul className="space-y-1.5">
+            {chapterJobs.map((j) => (
+              <li key={j._id} className="flex items-center gap-2 text-sm text-ink-soft">
+                {j.position === 0 ? (
+                  <span className="inline-block w-3.5 h-3.5 border-2 border-info-border border-t-info rounded-full animate-spin shrink-0" />
+                ) : (
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-info-border shrink-0" />
+                )}
+                <span className="flex-1 min-w-0 truncate">
+                  {j.kind === "top_up"
+                    ? `Top up: ${j.testTitle || j.label}`
+                    : `New ${j.difficulty || ""} test · ${j.subtopic || "Mixed Practice"}`}
+                </span>
+                <span className={`text-xs font-semibold shrink-0 ${j.position === 0 ? "text-info" : "text-slate-soft"}`}>
+                  {j.position === 0 ? "Building now" : `#${j.position} in line`}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -539,6 +563,7 @@ export default function PracticeSeries() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {levelTests.map((t, i) => {
             const short = typeof t.questionCount === "number" && t.questionCount < FULL_TEST;
+            const topUp = topUpJobs.get(String(t._id));
             const btn = "px-2 py-1.5 rounded-lg text-[11px] font-medium text-center";
             return (
               <div key={t._id} className="rv-card aspect-square p-4 flex flex-col">
@@ -563,6 +588,14 @@ export default function PracticeSeries() {
                 <p className={`text-xs mt-1 ${short ? "text-warn" : "text-slate-soft"}`}>
                   {typeof t.questionCount === "number" ? `${t.questionCount} / ${FULL_TEST} questions` : ""}
                 </p>
+                {topUp && (
+                  <p className="mt-1 text-[11px] font-semibold text-info flex items-center gap-1.5">
+                    {topUp.position === 0 && (
+                      <span className="inline-block w-3 h-3 border-2 border-info-border border-t-info rounded-full animate-spin" />
+                    )}
+                    {topUp.position === 0 ? "Topping up now…" : `Waiting to top up (#${topUp.position})`}
+                  </p>
+                )}
 
                 <div className="mt-auto grid grid-cols-2 gap-1.5">
                   <button onClick={() => openReview(t._id)} className={`${btn} bg-slate-light hover:bg-border-strong text-ink-soft`}>
@@ -593,7 +626,7 @@ export default function PracticeSeries() {
                   {t.publishStatus === "published" && short && (
                     <button
                       onClick={() => fillShort(t._id)}
-                      disabled={fillingShort}
+                      disabled={fillingShort || !!topUp}
                       className={`${btn} bg-warn-light text-warn disabled:opacity-60`}
                       title="Queues the missing questions on the Generation page; the test stays live meanwhile"
                     >

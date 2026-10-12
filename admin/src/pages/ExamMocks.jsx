@@ -6,6 +6,7 @@ import { useToast } from "../components/Toast";
 import QuestionEditor from "../components/QuestionEditor";
 import ManualQuestions from "../components/ManualQuestions";
 import QuestionVisual from "../components/QuestionVisual";
+import { useGenerationFinished, useJobs } from "../context/GenerationActivity";
 
 export default function ExamMocks() {
   const toast = useToast();
@@ -71,6 +72,11 @@ export default function ExamMocks() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examStage]);
+
+  // Mocks for this exam on the Generation queue (from Vacancies or the
+  // Generation page): shown here, and the list re-read when one finishes.
+  const mockJobs = useJobs((j) => j.kind === "mock" && j.examType === examStage);
+  useGenerationFinished((job) => job.kind === "mock" && job.examType === examStage && load());
 
   // Option 2a: create an empty mock to fill gradually
   async function createEmpty() {
@@ -207,6 +213,29 @@ export default function ExamMocks() {
         <div className="mb-6 bg-warn-light border border-warn-border text-warn text-sm rounded-lg px-4 py-3 flex items-center gap-3">
           <span className="inline-block w-4 h-4 border-2 border-warn-border border-t-warn rounded-full animate-spin"></span>
           Generating questions... this can take 30-60 seconds due to rate limits. Please don't close this page.
+        </div>
+      )}
+
+      {mockJobs.length > 0 && (
+        <div className="mb-6 rounded-lg border border-info-border bg-info-light px-4 py-3">
+          <p className="text-sm font-semibold text-info mb-2">
+            On the Generation queue ({mockJobs.length}) - each appears below as a draft when it is done.
+          </p>
+          <ul className="space-y-1.5">
+            {mockJobs.map((j) => (
+              <li key={j._id} className="flex items-center gap-2 text-sm text-ink-soft">
+                {j.position === 0 ? (
+                  <span className="inline-block w-3.5 h-3.5 border-2 border-info-border border-t-info rounded-full animate-spin shrink-0" />
+                ) : (
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-info-border shrink-0" />
+                )}
+                <span className="flex-1 min-w-0 truncate">{j.testTitle || j.label}</span>
+                <span className={`text-xs font-semibold shrink-0 ${j.position === 0 ? "text-info" : "text-slate-soft"}`}>
+                  {j.position === 0 ? "Building now" : `#${j.position} in line`}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
