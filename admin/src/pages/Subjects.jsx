@@ -102,7 +102,8 @@ export default function Subjects() {
       />
       <p className="text-slate -mt-4 mb-8">
         These subjects and chapters are what students practise from. A chapter's <b>topics</b> must match exactly
-        what's tagged on the questions, or the chapter will look empty however full the bank is.
+        what's tagged on the questions, or the chapter will look empty however full the bank is. Each topic can also have
+        practice tests of its own (Subject Practice → open the chapter → pick the topic).
       </p>
 
       <CatalogHealth health={health} />
@@ -195,7 +196,7 @@ export default function Subjects() {
                 </div>
 
                 <input
-                  placeholder="Topics (comma-separated, must match question tags)"
+                  placeholder="Topics / subtopics (comma-separated, must match question tags)"
                   value={(ch.topics || []).join(", ")}
                   onChange={(e) => updateChapter(idx, "topics", e.target.value)}
                   className="w-full rv-input !py-1.5 text-sm mb-2"

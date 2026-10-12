@@ -46,9 +46,23 @@ async function runPracticeJob(job) {
   const built = await buildPracticeTest({
     subject: job.subject,
     chapter: job.chapter,
+    subtopic: job.subtopic,
     difficulty: job.difficulty,
   });
   return built.message;
+}
+
+// Fills one practice test up to its size - the old 12-question tests to 20.
+async function runTopUpJob(job) {
+  const { refillTest } = require("../services/testTopUp");
+  const r = await refillTest(job.testId);
+  if (r.filled) return r.added ? `${r.title}: ${r.from} → ${r.to} questions` : `${r.title} was already full`;
+  if (r.why === "test not found") return "The test was deleted before it could be topped up";
+  // Whatever was added stays; another go picks up from there. Worded so the
+  // checks below the tick recognise an allowance stop or a passing failure.
+  const where = `${r.title} is at ${r.to} of ${r.target}`;
+  if (isDailyAllowanceGone(r.why)) throw new Error(`Every model has used its allowance for today - ${where}.`);
+  throw new Error(`${where} (${r.why || "the generator came up short"}) - try again in a minute to finish it.`);
 }
 
 async function runDailyQuizJob(job) {
@@ -173,6 +187,7 @@ async function runGenerationTick() {
     const result =
       job.kind === "practice" ? await runPracticeJob(job)
       : job.kind === "daily_quiz" ? await runDailyQuizJob(job)
+      : job.kind === "top_up" ? await runTopUpJob(job)
       : await runMockJob(job);
     job.status = "done";
     job.result = String(result).slice(0, 300);

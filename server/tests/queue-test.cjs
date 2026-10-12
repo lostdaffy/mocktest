@@ -124,7 +124,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   check("the worker builds the queued tests", r.json.counts.done === 8,
     `done ${r.json.counts.done}, failed ${r.json.counts.failed}, queued ${r.json.counts.queued}`);
   const tests = await db.collection("tests").find({ type: "practice" }).toArray();
-  check("...as real tests of twelve questions", tests.length === 8 && tests.every((t) => t.questions.length === 12),
+  check("...as real tests of twenty questions", tests.length === 8 && tests.every((t) => t.questions.length === 20),
     `${tests.length} tests, sizes ${[...new Set(tests.map((t) => t.questions.length))].join(",")}`);
   check("...one per chapter and level, none duplicated",
     new Set(tests.map((t) => t.topic + "|" + t.difficultyLevel)).size === 8);

@@ -3,7 +3,7 @@ const ExamPattern = require("../models/ExamPattern");
 const Test = require("../models/Test");
 
 const LEVELS = ["easy", "medium", "hard", "advanced"];
-const PRACTICE_TEST_SIZE = 12;
+const { PRACTICE_TEST_SIZE } = require("../utils/practice");
 
 /**
  * Everything the catalog is still missing.
@@ -20,11 +20,11 @@ async function findGaps({ includeSubjects, excludeSubjects = [], mocksPerExam = 
   const [subjects, patterns, tests] = await Promise.all([
     Subject.find({ isActive: true }).lean(),
     ExamPattern.find({ isActive: true }).lean(),
-    Test.find({}).select("type topic difficultyLevel examStage questions").lean(),
+    Test.find({}).select("type title topic subtopic difficultyLevel examStage questions publishStatus").lean(),
   ]);
 
   const havePractice = new Set(
-    tests.filter((t) => t.type === "practice").map((t) => `${t.topic}|${t.difficultyLevel}`)
+    tests.filter((t) => t.type === "practice" && !t.subtopic).map((t) => `${t.topic}|${t.difficultyLevel}`)
   );
 
   // Only a FULL mock fills the gap. Counting every mock document meant SSC
@@ -77,7 +77,14 @@ async function findGaps({ includeSubjects, excludeSubjects = [], mocksPerExam = 
   // top-up ran out of allowance part way.
   const short = tests
     .filter((t) => t.type === "practice" && (t.questions || []).length < PRACTICE_TEST_SIZE)
-    .map((t) => ({ title: t.topic, level: t.difficultyLevel, have: (t.questions || []).length }));
+    .map((t) => ({
+      testId: t._id,
+      title: t.title || t.topic,
+      level: t.difficultyLevel,
+      have: (t.questions || []).length,
+      of: PRACTICE_TEST_SIZE,
+      published: t.publishStatus === "published",
+    }));
 
   return { practice, mocks, short, levels: LEVELS };
 }
@@ -92,11 +99,11 @@ async function coverage() {
   const [subjects, patterns, tests] = await Promise.all([
     Subject.find({ isActive: true }).lean(),
     ExamPattern.find({ isActive: true }).lean(),
-    Test.find({}).select("type topic difficultyLevel examStage questions").lean(),
+    Test.find({}).select("type topic subtopic difficultyLevel examStage questions").lean(),
   ]);
 
   const havePractice = new Set(
-    tests.filter((t) => t.type === "practice").map((t) => `${t.topic}|${t.difficultyLevel}`)
+    tests.filter((t) => t.type === "practice" && !t.subtopic).map((t) => `${t.topic}|${t.difficultyLevel}`)
   );
 
   let possible = 0;

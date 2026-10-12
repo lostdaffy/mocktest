@@ -304,10 +304,10 @@ async function api(method, p, { body, token } = {}) {
     r.json.subjects.map((x) => x.name).join(",") || "EMPTY");
 
   // ---- a live test with a hole in it
-  // Eight practice tests were live holding ten or eleven of their twelve
+  // Eight practice tests were live holding ten or eleven of their twelve (a test holds twenty now)
   // questions and nothing on this screen said so. It is the only fault here
   // a student feels the same day.
-  const full = Array.from({ length: 12 }, () => new mongoose.Types.ObjectId());
+  const full = Array.from({ length: 20 }, () => new mongoose.Types.ObjectId());
   await db.collection("tests").insertMany([
     { title: "Percentage - Easy #1", type: "practice", questions: full.slice(0, 10), publishStatus: "published" },
     { title: "Percentage - Easy #2", type: "practice", questions: full, publishStatus: "published" },
@@ -317,10 +317,10 @@ async function api(method, p, { body, token } = {}) {
   r = await api("GET", "/subjects/health", { token: adminToken });
   const shortTests = r.json.problems.filter((x) => x.kind === "test_short");
   check("a live test that is short is reported", shortTests.length === 1, shortTests.map((x) => x.detail).join(" | ") || "none");
-  check("...naming it and both numbers", /Percentage - Easy #1/.test(shortTests[0]?.detail || "") && /10 of 12/.test(shortTests[0]?.detail || ""),
+  check("...naming it and both numbers", /Percentage - Easy #1/.test(shortTests[0]?.detail || "") && /10 of 20/.test(shortTests[0]?.detail || ""),
     shortTests[0]?.detail);
   check("...as high severity, because a student can open it now", shortTests[0]?.severity === "high", shortTests[0]?.severity);
-  check("...and it says how to fix it", /add 2 question/i.test(shortTests[0]?.fix || ""), shortTests[0]?.fix);
+  check("...and it says how to fix it", /Top up short tests/i.test(shortTests[0]?.fix || ""), shortTests[0]?.fix);
   check("a full test is not reported", !shortTests.some((x) => /#2/.test(x.detail)), "quiet about the full one");
   check("a draft is not reported - no student can open it", !shortTests.some((x) => /#9/.test(x.detail)), "quiet about the draft");
 

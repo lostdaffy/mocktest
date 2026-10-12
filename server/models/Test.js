@@ -13,6 +13,11 @@ const testSchema = new mongoose.Schema(
     subject: { type: String }, // for sectional/topic-wise
     topic: { type: String }, // for topic-wise
     difficultyLevel: { type: String, enum: ["easy", "medium", "hard", "advanced"] }, // for practice series
+    // Practice only: one topic of the chapter this test covers ("Successive
+    // percentage" inside Percentage), from the chapter's topics in Subjects.
+    // Empty means the test covers the whole chapter, as every test did
+    // before this existed.
+    subtopic: { type: String },
 
     questions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Question", required: true }],
     durationMinutes: { type: Number, required: true },

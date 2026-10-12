@@ -61,7 +61,7 @@ async function api(method, p, { body, token } = {}) {
   const studentToken = jwt.sign({ id: student.insertedId.toString(), sessionId: "x" }, JWT_SECRET);
 
   const ins = await db.collection("questions").insertMany(
-    Array.from({ length: 12 }, (_, i) => ({
+    Array.from({ length: 20 }, (_, i) => ({
       text: `Question number ${i} about percentages`, textHi: "प्रश्न", options: ["a", "b", "c", "d"], optionsHi: ["a", "b", "c", "d"],
       correctIndex: 1, solution: "because 2 + 2 = 4", solutionHi: "कारण",
       examType: ["SSC_CGL"], subject: "Maths", topic: "Percentage", difficulty: "easy",
@@ -72,13 +72,13 @@ async function api(method, p, { body, token } = {}) {
 
   const test = await db.collection("tests").insertOne({
     title: "Percentage - Easy #1", type: "practice", examType: "PRACTICE", subject: "Maths", topic: "Percentage",
-    difficultyLevel: "easy", questions: ids, durationMinutes: 12, publishStatus: "published", isFree: true,
+    difficultyLevel: "easy", questions: ids, durationMinutes: 20, publishStatus: "published", isFree: true,
   });
   const testId = String(test.insertedId);
 
-  // ---- the student can see all twelve
+  // ---- the student can see all twenty
   let r = await api("GET", `/tests/${testId}`, { token: studentToken });
-  check("the student sees the full test", r.json.test?.questions?.length === 12, `${r.json.test?.questions?.length}`);
+  check("the student sees the full test", r.json.test?.questions?.length === 20, `${r.json.test?.questions?.length}`);
 
   const doomed = String(ids[3]);
   const doomedText = "Question number 3 about percentages";
@@ -102,13 +102,13 @@ async function api(method, p, { body, token } = {}) {
   const stillThere = (r.json.test?.questions || []).some((q) => q.text === doomedText);
   check("the rejected question is GONE from the student's test", !stillThere,
     stillThere ? "STILL SERVED" : "gone");
-  check("...and the student still gets a full twelve", r.json.test?.questions?.length === 12, `${r.json.test?.questions?.length}`);
+  check("...and the student still gets a full twenty", r.json.test?.questions?.length === 20, `${r.json.test?.questions?.length}`);
 
   // ---- approving does not disturb anything
   r = await api("PATCH", `/questions/${String(ids[4])}/approve`, { token: adminToken });
   check("approving a question still works", r.status === 200, `${r.status}`);
   r = await api("GET", `/tests/${testId}`, { token: studentToken });
-  check("...and leaves the test alone", r.json.test?.questions?.length === 12, `${r.json.test?.questions?.length}`);
+  check("...and leaves the test alone", r.json.test?.questions?.length === 20, `${r.json.test?.questions?.length}`);
 
   // ---- a big test with a hole in it must be named too
   // "Short" used to mean "fewer than twelve", a practice test's size. A

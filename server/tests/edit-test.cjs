@@ -69,7 +69,7 @@ async function api(method, p, { body, token } = {}) {
     token, body: { subject: "Maths", chapter: "Percentage", topics: ["Percentage"], difficulty: "easy" },
   });
   const testId = r.json.test._id;
-  check("a practice test is built full", r.json.test.questionCount === 12, `${r.json.test.questionCount}`);
+  check("a practice test is built full", r.json.test.questionCount === 20, `${r.json.test.questionCount}`);
 
   let test = await db.collection("tests").findOne({ _id: new mongoose.Types.ObjectId(testId) });
   const victim = String(test.questions[2]);
@@ -79,8 +79,8 @@ async function api(method, p, { body, token } = {}) {
   check("the admin can take a question out of a practice test", r.status === 200, `${r.status} ${r.json.message || ""}`);
   // It used to leave the test at 11 with a note saying "add replacements".
   // Removal carries the repair with it now.
-  check("...and the test is still twelve, because one was put back",
-    r.json.remainingCount === 12, `${r.json.remainingCount}`);
+  check("...and the test is still twenty, because one was put back",
+    r.json.remainingCount === 20, `${r.json.remainingCount}`);
   check("...so nothing is short", r.json.short === 0, `short ${r.json.short}`);
   check("...and the message says a replacement went in", /replacement/i.test(r.json.message || ""), r.json.message);
   check("...the question is gone from the bank, nothing else was using it",
@@ -109,8 +109,8 @@ async function api(method, p, { body, token } = {}) {
   // populate just drops it and the test silently serves one fewer.
   const other = await db.collection("tests").findOne({ _id: new mongoose.Types.ObjectId(secondId) });
   const resolved = await db.collection("questions").countDocuments({ _id: { $in: other.questions } });
-  check("...so the other test still has all 12 of its questions",
-    other.questions.length === 12 && resolved === 12, `${resolved} of ${other.questions.length} resolve`);
+  check("...so the other test still has all 20 of its questions",
+    other.questions.length === 20 && resolved === 20, `${resolved} of ${other.questions.length} resolve`);
 
   // ---- refilling by hand, for a test that somehow ended up short anyway
   // (a top-up that ran out of quota, or one built before any of this)
@@ -118,11 +118,11 @@ async function api(method, p, { body, token } = {}) {
   await db.collection("tests").updateOne({ _id: test._id }, { $pop: { questions: 1 } });
   r = await api("POST", `/exam-series/practice/${testId}/add-questions`, { token, body: {} });
   check("the admin can still add replacements by hand", r.status === 200, `${r.status} ${r.json.message || ""}`);
-  check("...enough to make the test whole again", r.json.total === 12, `${r.json.total} questions`);
+  check("...enough to make the test whole again", r.json.total === 20, `${r.json.total} questions`);
 
   test = await db.collection("tests").findOne({ _id: new mongoose.Types.ObjectId(testId) });
   const texts = await db.collection("questions").find({ _id: { $in: test.questions } }).toArray();
-  check("...every question in it really exists", texts.length === 12, `${texts.length} of ${test.questions.length} resolve`);
+  check("...every question in it really exists", texts.length === 20, `${texts.length} of ${test.questions.length} resolve`);
   check("...and none of them is a repeat of another in the same test",
     new Set(texts.map((q) => q.text)).size === texts.length, `${new Set(texts.map((q) => q.text)).size} distinct`);
 
@@ -142,7 +142,7 @@ async function api(method, p, { body, token } = {}) {
   check("a published test can be taken back off the app", r.status === 200, `${r.status} ${r.json.message || ""}`);
   test = await db.collection("tests").findOne({ _id: new mongoose.Types.ObjectId(testId) });
   check("...it is a draft again", test.publishStatus === "draft", test.publishStatus);
-  check("...and its questions were left alone", test.questions.length === 12, `${test.questions.length}`);
+  check("...and its questions were left alone", test.questions.length === 20, `${test.questions.length}`);
 
   r = await api("PATCH", `/exam-series/practice/${testId}/unpublish`, { token });
   check("...unpublishing a draft says so rather than pretending", r.status === 400, `${r.status} ${r.json.message || ""}`);
@@ -154,7 +154,7 @@ async function api(method, p, { body, token } = {}) {
   test = await db.collection("tests").findOne({ _id: new mongoose.Types.ObjectId(testId) });
   await db.collection("tests").updateOne({ _id: test._id }, { $pop: { questions: 1 } });
   check("a test can still end up short if a top-up cannot finish",
-    (await db.collection("tests").findOne({ _id: test._id })).questions.length === 11);
+    (await db.collection("tests").findOne({ _id: test._id })).questions.length === 19);
 
   r = await api("PATCH", `/exam-series/practice/${testId}/publish`, { token, body: { isFree: true } });
   check("a short test cannot be published", r.status === 400, `${r.status} ${r.json.message || ""}`);
@@ -165,7 +165,7 @@ async function api(method, p, { body, token } = {}) {
   r = await api("PATCH", `/exam-series/practice/${testId}/publish`, { token, body: { isFree: true } });
   check("once it is full again it publishes", r.status === 200, `${r.status} ${r.json.message || ""}`);
   test = await db.collection("tests").findOne({ _id: new mongoose.Types.ObjectId(testId) });
-  check("...with all 12 questions in it", test.questions.length === 12 && test.publishStatus === "published", `${test.questions.length} ${test.publishStatus}`);
+  check("...with all 20 questions in it", test.questions.length === 20 && test.publishStatus === "published", `${test.questions.length} ${test.publishStatus}`);
 
   // ---- the panel is read by one person doing a careful job; it speaks one language
   const spoken = [

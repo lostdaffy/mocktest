@@ -12,7 +12,15 @@ const mongoose = require("mongoose");
 // survives a restart, the panel can show it, and a job that fails says why.
 const generationJobSchema = new mongoose.Schema(
   {
-    kind: { type: String, enum: ["practice", "mock", "daily_quiz"], required: true },
+    kind: { type: String, enum: ["practice", "mock", "daily_quiz", "top_up"], required: true },
+
+    // top_up: the practice test to fill up to its size (the old 12-question
+    // tests, brought to 20).
+    testId: { type: mongoose.Schema.Types.ObjectId, ref: "Test" },
+
+    // practice: one topic of the chapter, when the test is for that topic
+    // alone. Empty means the whole chapter.
+    subtopic: String,
 
     // daily_quiz: the day ("2026-10-13", India time) whose GK quiz to make,
     // and who asked - "auto" (the scheduler: goes live as soon as it is
@@ -72,6 +80,8 @@ generationJobSchema.statics.isAlreadyQueued = function (job) {
     kind: job.kind,
     subject: job.subject ?? null,
     chapter: job.chapter ?? null,
+    subtopic: job.subtopic ?? null,
+    testId: job.testId ?? null,
     difficulty: job.difficulty ?? null,
     examType: job.examType ?? null,
     status: { $in: ["queued", "running"] },

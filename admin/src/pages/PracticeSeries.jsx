@@ -5,10 +5,11 @@ import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 
 const LEVELS = ["easy", "medium", "hard", "advanced"];
-// A practice test holds this many questions. The server refuses to publish
-// one that holds fewer, so the buttons here refuse too - a student should
-// never open a test with a hole in it.
-const FULL_TEST = 12;
+// A practice test holds this many questions (the server sends its own number
+// with the subject list; this is only the fallback). The server refuses to
+// publish one that holds fewer, so the buttons here refuse too - a student
+// should never open a test with a hole in it.
+let FULL_TEST = 20;
 // Badge colours for the level headings in the grouped test list.
 const LEVEL_BADGES = {
   easy: "bg-easy-bg text-easy",
@@ -20,6 +21,7 @@ const LEVEL_BADGES = {
 export default function PracticeSeries() {
   const toast = useToast();
   const [subjects, setSubjects] = useState([]);
+  const [shortTests, setShortTests] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // Three screens - subjects, a subject's chapters, one chapter's tests - kept
@@ -58,7 +60,7 @@ export default function PracticeSeries() {
     const ok = await toast.confirm({
       title: "Remove this question?",
       message:
-        "It comes out of this test. If no other test is using it, it is deleted from the bank as well. Use \"Add replacements\" afterwards to bring the test back to 12.",
+        `It comes out of this test. If no other test is using it, it is deleted from the bank as well, and a replacement is generated to keep the test at ${FULL_TEST}.`,
       confirmLabel: "Remove",
     });
     if (!ok) return;
@@ -100,6 +102,8 @@ export default function PracticeSeries() {
     if (!silent) setLoading(true);
     try {
       const res = await api.get("/exam-series/subjects/list");
+      if (res.data.testSize) FULL_TEST = res.data.testSize;
+      setShortTests(res.data.shortTests || 0);
       setSubjects(res.data.subjects);
     } catch (err) {
       if (!silent) setMessage("Couldn't load subjects. Is the backend running?");
@@ -155,38 +159,60 @@ export default function PracticeSeries() {
     return q ? list.filter((c) => c.name.toLowerCase().includes(q)) : list;
   }, [selectedSubject, chapterSearch]);
 
-  async function generate(chapter, difficulty) {
-    setGenBusy(`${chapter.name}-${difficulty}`);
+  // A new test is built on the Generation queue: twenty questions in two
+  // batches of ten is longer than this page should hang for, and the queue
+  // waits out the AI allowance instead of failing. The chapter's list is
+  // re-read for a few minutes so the draft appears here when it is done.
+  const [waitingFor, setWaitingFor] = useState(null); // { subject, chapter, until, count }
+  async function generate(chapter, difficulty, subtopic) {
+    setGenBusy(`${chapter.name}-${subtopic || ""}-${difficulty}`);
     setMessage("");
     try {
-      const res = await api.post("/exam-series/practice/generate", {
+      const res = await api.post("/generation/enqueue-practice", {
         subject: selectedSubject.name,
         chapter: chapter.name,
-        topics: chapter.topics,
+        subtopic: subtopic || undefined,
         difficulty,
       });
       setMessage("✅ " + res.data.message);
-      loadChapterTests(selectedSubject.name, chapter.name);
-      load({ silent: true });
+      setWaitingFor({ subject: selectedSubject.name, chapter: chapter.name, until: Date.now() + 5 * 60 * 1000, count: chapterTests.length });
     } catch (err) {
-      setMessage("❌ " + (err.response?.data?.message || "Couldn't generate the test"));
+      setMessage("❌ " + (err.response?.data?.message || "Couldn't queue the test"));
     } finally {
       setGenBusy(null);
     }
   }
+  useEffect(() => {
+    if (!waitingFor) return;
+    const t = setInterval(async () => {
+      if (Date.now() > waitingFor.until) return setWaitingFor(null);
+      try {
+        const res = await api.get(
+          `/exam-series/practice/${encodeURIComponent(waitingFor.subject)}/${encodeURIComponent(waitingFor.chapter)}`
+        );
+        if (res.data.tests.length > waitingFor.count) {
+          if (subjectName === waitingFor.subject && chapterName === waitingFor.chapter) setChapterTests(res.data.tests);
+          setWaitingFor(null);
+          setMessage("✅ The new test is built - it is in the list as a draft. Review it, then publish.");
+          load({ silent: true });
+        }
+      } catch {
+        // try again on the next tick
+      }
+    }, 10000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waitingFor]);
 
-  // Every practice test that is below its size, filled. Removal fills its own
-  // hole now, so this is for the ones that went short before it did - the
-  // purge of 127 untrustworthy answer keys left 26 live tests wanting.
-  async function fillShort() {
+  // Every practice test below its size - mostly the ones built when a test
+  // held 12 - queued to be filled up. A published test stays live meanwhile.
+  async function fillShort(testId) {
     setFillingShort(true);
     try {
-      const res = await api.post("/exam-series/practice/fill-short", { limit: 5 });
-      toast.success(res.data?.message || "Filled");
-      load({ silent: true });
-      if (openChapter && selectedSubject) loadChapterTests(selectedSubject.name, openChapter.name);
+      const res = await api.post("/generation/enqueue-short", testId ? { testId } : {});
+      toast.success(res.data?.message || "Queued");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Couldn’t fill the short tests");
+      toast.error(err.response?.data?.message || "Couldn’t queue the short tests");
     } finally {
       setFillingShort(false);
     }
@@ -245,7 +271,7 @@ export default function PracticeSeries() {
   if (!selectedSubject) {
     return (
       <div>
-        <FillShortBanner onFill={fillShort} busy={fillingShort} />
+        {shortTests > 0 && <FillShortBanner count={shortTests} onFill={() => fillShort()} busy={fillingShort} />}
 
       <PageHeader
           eyebrow="Content"
@@ -392,11 +418,17 @@ export default function PracticeSeries() {
   // Tests arrive newest first; show them in the order they were built,
   // "… - Easy #1" first, so the card number matches the title.
   const testNumber = (t) => Number((t.title || "").match(/#(\d+)\s*$/)?.[1]) || 0;
-  const levelTests = chapterTests
+  // Which series is open: the whole chapter, or one of its topics (the
+  // chapter's topics as set in Subjects). Each has its own four levels.
+  const subtopics = ch.topics || [];
+  const openSub = subtopics.includes(params.get("sub")) ? params.get("sub") : "";
+  const inSeries = (sub) => chapterTests.filter((t) => (t.subtopic || "") === sub);
+  const seriesTests = inSeries(openSub);
+  const levelTests = seriesTests
     .filter((t) => t.difficultyLevel === openLevel)
     .sort((x, y) => testNumber(x) - testNumber(y));
-  function goLevel(level) {
-    setParams({ subject: selectedSubject.name, chapter: ch.name, level }, { replace: true });
+  function goLevel(level, sub = openSub) {
+    setParams({ subject: selectedSubject.name, chapter: ch.name, ...(sub ? { sub } : {}), level }, { replace: true });
   }
   return (
     <div>
@@ -414,10 +446,36 @@ export default function PracticeSeries() {
         <div className="mb-6 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3">{message}</div>
       )}
 
-      {genBusy && (
-        <div className="mb-6 bg-warn-light border border-warn-border text-warn text-sm rounded-lg px-4 py-3 flex items-center gap-3">
-          <span className="inline-block w-4 h-4 border-2 border-warn-border border-t-warn rounded-full animate-spin"></span>
-          Building the test... this can take 10-30 seconds. Please don't close this page.
+      {waitingFor && waitingFor.chapter === ch.name && (
+        <div className="mb-6 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3 flex items-center gap-3">
+          <span className="inline-block w-4 h-4 border-2 border-info-border border-t-info rounded-full animate-spin"></span>
+          Building on the Generation queue ({FULL_TEST} questions, 10 at a time). It appears here as a draft when it is
+          done - you can leave this page meanwhile.
+        </div>
+      )}
+
+      {/* Whole chapter, or one of its topics. Each is its own series of tests. */}
+      {subtopics.length > 0 && (
+        <div className="mb-5">
+          <p className="text-xs font-semibold text-slate-soft uppercase tracking-wide mb-2">Series</p>
+          <div className="flex flex-wrap gap-2">
+            {["", ...subtopics].map((sub) => {
+              const n = inSeries(sub).length;
+              const active = sub === openSub;
+              return (
+                <button
+                  key={sub || "__chapter"}
+                  onClick={() => goLevel(openLevel, sub)}
+                  className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                    active ? "bg-brand text-white border-brand" : "bg-surface text-ink-soft border-border-soft hover:border-brand"
+                  }`}
+                >
+                  {sub || "Whole chapter"}
+                  <span className={`ml-1.5 text-xs ${active ? "text-white/80" : "text-slate-soft"}`}>{n}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -426,7 +484,7 @@ export default function PracticeSeries() {
           once ran to several screens. */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {LEVELS.map((level) => {
-          const levelTests = chapterTests.filter((t) => t.difficultyLevel === level);
+          const levelTests = seriesTests.filter((t) => t.difficultyLevel === level);
           const published = levelTests.filter((t) => t.publishStatus === "published").length;
           const active = level === openLevel;
           return (
@@ -451,19 +509,21 @@ export default function PracticeSeries() {
       </div>
 
       <div className="flex items-center justify-between gap-3 mb-4">
-        <h2 className="font-display text-lg font-bold text-ink capitalize">{openLevel} tests</h2>
+        <h2 className="font-display text-lg font-bold text-ink">
+          <span className="capitalize">{openLevel}</span> tests{openSub && <span className="text-slate"> · {openSub}</span>}
+        </h2>
         <button
-          onClick={() => generate(ch, openLevel)}
+          onClick={() => generate(ch, openLevel, openSub)}
           disabled={!!genBusy}
           className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-xs font-medium disabled:opacity-50 inline-flex items-center gap-2"
         >
-          {genBusy === `${ch.name}-${openLevel}` ? (
+          {genBusy === `${ch.name}-${openSub}-${openLevel}` ? (
             <>
               <span className="inline-block w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-              Building...
+              Queueing...
             </>
           ) : (
-            `+ Build ${openLevel} test`
+            `+ Build ${openLevel} test (${FULL_TEST} Qs)`
           )}
         </button>
       </div>
@@ -527,10 +587,20 @@ export default function PracticeSeries() {
                         </button>
                       </>
                     ))}
+                  {t.publishStatus === "published" && short && (
+                    <button
+                      onClick={() => fillShort(t._id)}
+                      disabled={fillingShort}
+                      className={`${btn} bg-warn-light text-warn disabled:opacity-60`}
+                      title="Queues the missing questions on the Generation page; the test stays live meanwhile"
+                    >
+                      Top up to {FULL_TEST}
+                    </button>
+                  )}
                   {t.publishStatus === "published" && (
                     <button
                       onClick={() => unpublishTest(t._id)}
-                      className={`${btn} col-span-2 bg-slate-light hover:bg-border-strong text-ink-soft`}
+                      className={`${btn} ${short ? "" : "col-span-2"} bg-slate-light hover:bg-border-strong text-ink-soft`}
                       title="Take it off the app so its questions can be changed"
                     >
                       Unpublish
@@ -686,16 +756,19 @@ export default function PracticeSeries() {
 // A test that is short says so here, with the one button that fixes it.
 // Removal fills its own hole now, so this only ever holds the older ones -
 // the purge of 127 untrustworthy answer keys left 26 live tests wanting.
-function FillShortBanner({ onFill, busy }) {
+function FillShortBanner({ count, onFill, busy }) {
   return (
     <div className="rv-card p-4 mb-6 flex items-center justify-between gap-4 flex-wrap border-l-4 border-l-warn">
       <p className="text-sm text-ink-soft">
-        Any practice test holding fewer than 12 questions can be topped up from here. Replacements go through
-        the same quality gate and are checked against what the chapter has already asked, so one is never a
-        reworded copy of what is still in the test.
+        <b>
+          {count} practice test{count === 1 ? "" : "s"} hold{count === 1 ? "s" : ""} fewer than {FULL_TEST} questions
+        </b>{" "}
+        - mostly ones built when a test held 12. Topping up queues them on the Generation page, ten questions at a
+        time; a published test stays live while it fills. New questions pass the same quality gate and are checked
+        against what the chapter has already asked.
       </p>
       <button onClick={onFill} disabled={busy} className="rv-btn-primary disabled:opacity-60 shrink-0">
-        {busy ? "Filling..." : "Fill short tests"}
+        {busy ? "Queueing..." : `Top up ${count} to ${FULL_TEST}`}
       </button>
     </div>
   );

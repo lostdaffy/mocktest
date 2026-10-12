@@ -4,6 +4,8 @@ const {
   queueStatus,
   listGaps,
   enqueue,
+  enqueueShort,
+  enqueuePractice,
   pause,
   resume,
   retryFailed,
@@ -17,6 +19,8 @@ const asyncRoute = require("../utils/asyncRoute");
 router.get("/status", protect, adminOnly, asyncRoute(queueStatus));
 router.get("/gaps", protect, adminOnly, asyncRoute(listGaps));
 router.post("/enqueue", protect, adminOnly, asyncRoute(enqueue));
+router.post("/enqueue-short", protect, adminOnly, asyncRoute(enqueueShort));
+router.post("/enqueue-practice", protect, adminOnly, asyncRoute(enqueuePractice));
 router.post("/pause", protect, adminOnly, asyncRoute(pause));
 router.post("/resume", protect, adminOnly, asyncRoute(resume));
 router.post("/retry-failed", protect, adminOnly, asyncRoute(retryFailed));

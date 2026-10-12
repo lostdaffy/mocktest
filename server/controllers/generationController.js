@@ -128,6 +128,101 @@ async function enqueue(req, res) {
   });
 }
 
+// Puts the queue back to work after an admin added to it; queueing work
+// implies wanting it done.
+async function unpause() {
+  await QueueState.updateOne(
+    { key: "generation" },
+    { $set: { paused: false, pausedReason: "", pausedBy: "admin" }, $unset: { resumableAfter: "", resumeAfter: "" } }
+  );
+}
+
+// POST /api/generation/enqueue-short (admin)
+//
+// One job per practice test holding fewer than PRACTICE_TEST_SIZE questions -
+// mostly the tests built when a test was 12 - to fill it up. A published test
+// stays live while it fills; the new questions pass the same gate as any
+// other and are checked against what its chapter already asks.
+async function enqueueShort(req, res) {
+  // { testId } tops up that one test; without it, every short one.
+  const all = (await findGaps()).short;
+  const short = req.body?.testId ? all.filter((t) => String(t.testId) === String(req.body.testId)) : all;
+  if (!short.length) {
+    return res.json({ message: req.body?.testId ? "That test is already full" : "Every practice test is full", queued: 0 });
+  }
+
+  const limit = Math.max(1, Math.min(Number(req.body?.limit) || short.length, 500));
+  // Fullest first: a test at 12 needs 8, one at 2 needs 18, so the cheap
+  // ones are done before the allowance runs out.
+  const wanted = [...short].sort((a, b) => b.have - a.have).slice(0, limit);
+
+  const batch = new Date().toISOString();
+  let queued = 0;
+  let alreadyThere = 0;
+  for (const t of wanted) {
+    const job = { kind: "top_up", testId: t.testId, label: `Top up ${t.title} (${t.have} → ${t.of})` };
+    if (await GenerationJob.isAlreadyQueued(job)) {
+      alreadyThere++;
+      continue;
+    }
+    await GenerationJob.create({ ...job, batch, status: "queued" });
+    queued++;
+  }
+  if (queued) await unpause();
+
+  res.status(201).json({
+    message:
+      `${queued} test(s) queued to be topped up` +
+      (alreadyThere ? `, ${alreadyThere} were already waiting` : "") +
+      (short.length > wanted.length ? `. ${short.length - wanted.length} more are short` : "") +
+      ". Follow it on the Generation page.",
+    queued,
+    alreadyThere,
+    short: short.length,
+  });
+}
+
+// POST /api/generation/enqueue-practice (admin)
+// body: { subject, chapter, subtopic?, difficulty }
+//
+// One practice test, built in the queue rather than while the admin waits:
+// twenty questions in two batches is longer than a page should hang for.
+async function enqueuePractice(req, res) {
+  const { subject, chapter, difficulty } = req.body || {};
+  const subtopic = String(req.body?.subtopic || "").trim() || undefined;
+  if (!subject || !chapter || !["easy", "medium", "hard", "advanced"].includes(difficulty)) {
+    return res.status(400).json({ message: "subject, chapter and difficulty are required" });
+  }
+  if (subtopic) {
+    const Subject = require("../models/Subject");
+    const subjectDoc = await Subject.findOne({ $or: [{ name: subject }, { aliases: subject }] }).lean();
+    const topics = (subjectDoc?.chapters || []).find((c) => c.name === chapter)?.topics || [];
+    if (!topics.includes(subtopic)) {
+      return res.status(400).json({ message: `"${subtopic}" is not one of the topics of ${chapter}. Add it to the chapter in Subjects first.` });
+    }
+  }
+
+  const job = {
+    kind: "practice",
+    subject,
+    chapter,
+    subtopic,
+    difficulty,
+    label: `${subject} · ${chapter}${subtopic ? ` · ${subtopic}` : ""} · ${difficulty}`,
+  };
+  if (await GenerationJob.isAlreadyQueued(job)) {
+    return res.json({ message: "That test is already waiting in the queue", queued: 0 });
+  }
+  await GenerationJob.create({ ...job, batch: new Date().toISOString(), status: "queued" });
+  await unpause();
+
+  const ahead = await GenerationJob.countDocuments({ status: { $in: ["queued", "running"] } });
+  res.status(201).json({
+    message: `Queued${ahead > 1 ? ` (${ahead - 1} ahead of it)` : ""}. It shows up here as a draft when it is built.`,
+    queued: 1,
+  });
+}
+
 // POST /api/generation/pause and /resume (admin)
 async function pause(req, res) {
   await QueueState.updateOne(
@@ -169,4 +264,4 @@ async function cancelQueued(req, res) {
   res.json({ message: `${r.modifiedCount} waiting job(s) cancelled. Anything already built is untouched.`, cancelled: r.modifiedCount });
 }
 
-module.exports = { queueStatus, listGaps, enqueue, pause, resume, retryFailed, clearHistory, cancelQueued };
+module.exports = { queueStatus, listGaps, enqueue, enqueueShort, enqueuePractice, pause, resume, retryFailed, clearHistory, cancelQueued };

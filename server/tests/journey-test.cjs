@@ -89,7 +89,7 @@ async function api(method, p, { body, token } = {}) {
   });
   check("admin can build a practice test", r.status === 201, `${r.status} ${r.json.message || ""}`);
   const practiceTestId = r.json.test?._id;
-  check("...and it is FULL", r.json.test?.questionCount === 12, `${r.json.test?.questionCount} questions`);
+  check("...and it is FULL", r.json.test?.questionCount === 20, `${r.json.test?.questionCount} questions`);
   const draftRow = await db.collection("tests").findOne({ _id: new mongoose.Types.ObjectId(practiceTestId) });
     check("...and starts as a draft, invisible to students", draftRow?.publishStatus === "draft", draftRow?.publishStatus);
 

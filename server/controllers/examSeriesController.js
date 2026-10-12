@@ -12,9 +12,9 @@ const { refillTest, refillTests, refillNote, targetSize } = require("../services
 // the shortfall is simply generated too - the mock is never left short.
 const PYQ_MIX_PERCENT = 50;
 
-// How many questions a chapter practice test holds. Named so that the
-// "is this test short?" checks and the generator cannot drift apart.
-const PRACTICE_TEST_SIZE = 12;
+// How many questions a chapter practice test holds, and how many are asked
+// for at a time - see utils/practice.js.
+const { PRACTICE_TEST_SIZE, PRACTICE_BATCH } = require("../utils/practice");
 
 // How many questions a full mock of a given exam must hold: whatever its
 // pattern's sections add up to. Read from the pattern rather than fixed in
@@ -490,45 +490,20 @@ async function addQuestionsToPractice(req, res) {
     return res.status(400).json({ message: `This test already has ${test.questions.length} questions` });
   }
 
-  const chapter = test.topic;
-  const subjectDoc = await Subject.findOne({ $or: [{ name: test.subject }, { aliases: test.subject }] }).lean();
-  const chapterDoc = (subjectDoc?.chapters || []).find((c) => c.name === chapter);
-  const topicList = chapterDoc?.topics?.length ? chapterDoc.topics : [chapter];
+  // The same top-up removal uses: the chapter's (or the one topic's) syllabus,
+  // the chapter's exam tags, ten at a time.
+  const result = await refillTest(test._id, { max: wanted });
 
-  let examTags = chapterDoc?.exams?.length ? chapterDoc.exams : null;
-  if (!examTags) {
-    const active = await ExamPattern.find({ isActive: true }).select(`examType`).lean();
-    examTags = active.map((e) => e.examType);
-  }
-
-  const level = test.difficultyLevel === "advanced" ? "hard" : test.difficultyLevel || "easy";
-
-  const built = await createVerifiedQuestions({
-    needed: wanted,
-    tag: { chapter, examType: examTags },
-    generateParams: {
-      examType: "PRACTICE",
-      examDisplayName: `${test.subject} - ${chapter}, for ${examTags.join(", ")}`,
-      subject: test.subject,
-      topic: topicList.join(", "),
-      difficulty: level,
-      syllabusTopics: topicList,
-    },
-  });
-
-  if (!built.ids.length) {
+  if (!result.added) {
     return res.status(400).json({
-      message: "No questions could be generated (rate limit or API issue). Try again in a minute.",
+      message: `No questions could be added${result.why ? ` (${result.why})` : ""}. Try again in a minute.`,
     });
   }
 
-  test.questions.push(...built.ids);
-  await test.save();
-
   res.json({
-    message: `${built.ids.length} question(s) added${qualityNote(built)}. ${test.questions.length} in this test now.`,
-    added: built.ids.length,
-    total: test.questions.length,
+    message: `${result.added} question(s) added. ${result.to} in this test now.`,
+    added: result.added,
+    total: result.to,
   });
 }
 
@@ -549,8 +524,11 @@ async function listSubjectsForAdmin(req, res) {
     { $match: { type: "practice", publishStatus: { $in: ["published", "draft"] } } },
     {
       $group: {
-        _id: { subject: "$subject", topic: "$topic", level: "$difficultyLevel", status: "$publishStatus" },
+        _id: { subject: "$subject", topic: "$topic", subtopic: "$subtopic", level: "$difficultyLevel", status: "$publishStatus" },
         n: { $sum: 1 },
+        // Below PRACTICE_TEST_SIZE: the old 12-question tests, and any that
+        // went short. Counted here so the page can offer to top them up.
+        short: { $sum: { $cond: [{ $lt: [{ $size: { $ifNull: ["$questions", []] } }, PRACTICE_TEST_SIZE] }, 1, 0] } },
       },
     },
   ]);
@@ -562,14 +540,22 @@ async function listSubjectsForAdmin(req, res) {
     advanced: { published: 0, draft: 0 },
   });
 
+  // Keyed subject + chapter, with a NUL between so no two names can collide.
   const byChapter = new Map();
+  let shortTests = 0;
   for (const row of counts) {
-    const key = `${row._id.subject} ${row._id.topic}`;
-    if (!byChapter.has(key)) byChapter.set(key, { published: 0, draft: 0, levels: emptyLevels() });
+    shortTests += row.short;
+    const key = `${row._id.subject}\u0000${row._id.topic}`;
+    if (!byChapter.has(key)) byChapter.set(key, { published: 0, draft: 0, levels: emptyLevels(), subtopics: {} });
     const entry = byChapter.get(key);
     const status = row._id.status === "published" ? "published" : "draft";
     entry[status] += row.n;
     if (entry.levels[row._id.level]) entry.levels[row._id.level][status] += row.n;
+    // Tests for one topic of the chapter, counted per topic as well.
+    if (row._id.subtopic) {
+      const t = (entry.subtopics[row._id.subtopic] ||= { published: 0, draft: 0 });
+      t[status] += row.n;
+    }
   }
 
   const withCounts = subjects.map((s) => ({
@@ -577,18 +563,19 @@ async function listSubjectsForAdmin(req, res) {
     name: s.name,
     icon: s.icon,
     chapters: (s.chapters || []).map((ch) => {
-      const entry = byChapter.get(`${s.name} ${ch.name}`);
+      const entry = byChapter.get(`${s.name}\u0000${ch.name}`);
       return {
         name: ch.name,
         topics: ch.topics,
         publishedTests: entry?.published || 0,
         draftTests: entry?.draft || 0,
         levels: entry?.levels || emptyLevels(),
+        subtopicCounts: entry?.subtopics || {},
       };
     }),
   }));
 
-  res.json({ subjects: withCounts });
+  res.json({ subjects: withCounts, shortTests, testSize: PRACTICE_TEST_SIZE });
 }
 
 // POST /api/exam-series/practice/generate (admin)
@@ -605,11 +592,10 @@ async function listSubjectsForAdmin(req, res) {
  * Throws rather than returning an error shape; the caller decides whether
  * that is a 400 or a failed job.
  */
-async function buildPracticeTest({ subject, chapter, topics, difficulty = "easy" }) {
+async function buildPracticeTest({ subject, chapter, subtopic, topics, difficulty = "easy" }) {
   {
     if (!subject || !chapter) throw new Error("subject and chapter are required");
-
-    const topicList = topics && topics.length ? topics : [chapter];
+    subtopic = String(subtopic || "").trim() || undefined;
     // "advanced" maps to hard-difficulty questions (hardest we generate)
     const genDifficulty = difficulty === "advanced" ? "hard" : difficulty;
 
@@ -630,6 +616,20 @@ async function buildPracticeTest({ subject, chapter, topics, difficulty = "easy"
     }).lean();
     const chapterDoc = (subjectDoc?.chapters || []).find((c) => c.name === chapter);
 
+    // A topic test covers one of the chapter's own topics, as named in
+    // Subjects - not any string, or the app would show a topic the chapter
+    // does not have.
+    if (subtopic && !(chapterDoc?.topics || []).includes(subtopic)) {
+      throw new Error(`"${subtopic}" is not one of the topics of ${chapter}. Add it to the chapter in Subjects first.`);
+    }
+    const topicList = subtopic
+      ? [subtopic]
+      : topics && topics.length
+      ? topics
+      : chapterDoc?.topics?.length
+      ? chapterDoc.topics
+      : [chapter];
+
     let examTags = chapterDoc?.exams?.length ? chapterDoc.exams : null;
     if (!examTags) {
       // Chapter not in the catalog, or not tagged to any exam yet. An
@@ -639,55 +639,73 @@ async function buildPracticeTest({ subject, chapter, topics, difficulty = "easy"
       examTags = active.map((e) => e.examType);
     }
 
-    // ONE Gemini call for the whole test (not one per topic) — this keeps us
-    // well under the 15 requests/minute free-tier limit. We pass all the
-    // chapter's topics into a single prompt so the test still covers them.
+    // All the chapter's topics go into each request (not one request per
+    // topic), which keeps us under the free tier's 15 requests/minute.
     const topicsForPrompt = topicList.join(", ");
 
+    // Twenty questions, asked for ten at a time. Each batch is checked
+    // against everything already in the bank - the first batch included - so
+    // the second is not a reworded copy of the first.
     let allQuestionIds = [];
-    let quality = { flagged: 0, duplicates: 0 };
-    try {
-      const built = await createVerifiedQuestions({
-        needed: 12,
-        // examType here OVERRIDES what the generator stamped on each
-        // question - tags are applied after generation. examStage is gone:
-        // the Question schema has no such field, so it was being dropped
-        // silently and only looked like it was doing something.
-        tag: { chapter, examType: examTags },
-        generateParams: {
-          examType: "PRACTICE",
-          // Tell the model who this is for, so a chapter shared by SSC CGL
-          // and Agniveer is not written at graduate level by default.
-          examDisplayName: `${subject} - ${chapter}, for ${examTags.join(", ")}`,
-          subject,
-          topic: topicsForPrompt, // all topics of the chapter in one call
-          difficulty: genDifficulty,
-          syllabusTopics: topicList, // the chapter's topics ARE its syllabus
-        },
-      });
+    let quality = { verified: 0, repaired: 0, discarded: 0, duplicates: 0, short: 0 };
+    for (let batch = 0; allQuestionIds.length < PRACTICE_TEST_SIZE; batch++) {
+      const ask = Math.min(PRACTICE_BATCH, PRACTICE_TEST_SIZE - allQuestionIds.length);
+      try {
+        const built = await createVerifiedQuestions({
+          needed: ask,
+          // examType here OVERRIDES what the generator stamped on each
+          // question - tags are applied after generation. examStage is gone:
+          // the Question schema has no such field, so it was being dropped
+          // silently and only looked like it was doing something.
+          tag: { chapter, examType: examTags },
+          generateParams: {
+            examType: "PRACTICE",
+            // Tell the model who this is for, so a chapter shared by SSC CGL
+            // and Agniveer is not written at graduate level by default.
+            examDisplayName: `${subject} - ${chapter}${subtopic ? ` (${subtopic})` : ""}, for ${examTags.join(", ")}`,
+            subject,
+            topic: topicsForPrompt, // all topics of the chapter in one call
+            difficulty: genDifficulty,
+            syllabusTopics: topicList, // the chapter's topics ARE its syllabus
+          },
+        });
 
-      quality = built;
-      allQuestionIds.push(...built.ids);
-    } catch (err) {
-      console.log(`Practice generation fail (${chapter}/${difficulty}): ${err.message}`);
+        for (const k of Object.keys(quality)) quality[k] += built[k] || 0;
+        allQuestionIds.push(...built.ids);
+        // A batch that came back short will not do better asked again straight
+        // away; the test is saved as it is and "Add questions" finishes it.
+        if (built.ids.length < ask) break;
+      } catch (err) {
+        console.log(`Practice generation fail (${chapter}/${difficulty}, batch ${batch + 1}): ${err.message}`);
+        break;
+      }
     }
 
     if (allQuestionIds.length === 0) {
       throw new Error("No questions were generated (rate limit or API issue). Wait a minute and try again.");
     }
 
-    const lastTest = await Test.findOne({ type: "practice", subject, topic: chapter, difficultyLevel: difficulty }).sort({
-      seriesNumber: -1,
-    });
+    // Numbered within its own series: the whole chapter's Easy tests are one
+    // series, each topic's Easy tests another. `subtopic: null` also matches
+    // tests from before the field existed.
+    const lastTest = await Test.findOne({
+      type: "practice",
+      subject,
+      topic: chapter,
+      subtopic: subtopic || null,
+      difficultyLevel: difficulty,
+    }).sort({ seriesNumber: -1 });
     const nextNumber = (lastTest?.seriesNumber || 0) + 1;
+    const levelName = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
 
     const test = await Test.create({
-      title: `${chapter} - ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} #${nextNumber}`,
+      title: `${subtopic ? `${chapter}: ${subtopic}` : chapter} - ${levelName} #${nextNumber}`,
       type: "practice",
       examType: "PRACTICE",
       examStage: "PRACTICE",
       subject,
       topic: chapter,
+      ...(subtopic ? { subtopic } : {}),
       difficultyLevel: difficulty,
       seriesNumber: nextNumber,
       questions: allQuestionIds,
@@ -697,7 +715,7 @@ async function buildPracticeTest({ subject, chapter, topics, difficulty = "easy"
     });
 
     return {
-      message: `${chapter} ${difficulty} test created — ${allQuestionIds.length} questions${qualityNote(quality)}. Review and publish.`,
+      message: `${subtopic ? `${chapter}: ${subtopic}` : chapter} ${difficulty} test created — ${allQuestionIds.length} of ${PRACTICE_TEST_SIZE} questions${qualityNote(quality)}. ${allQuestionIds.length < PRACTICE_TEST_SIZE ? `Add the last ${PRACTICE_TEST_SIZE - allQuestionIds.length} from Review, then publish.` : "Review and publish."}`,
       test: { _id: test._id, title: test.title, questionCount: allQuestionIds.length },
     };
   }
@@ -710,7 +728,7 @@ async function generatePracticeTest(req, res) {
     res.status(201).json(built);
   } catch (err) {
     console.error(err);
-    const bad = /are required|No questions were generated/.test(err.message);
+    const bad = /are required|No questions were generated|is not one of the topics/.test(err.message);
     res.status(bad ? 400 : 500).json({ message: bad ? err.message : "Generation failed: " + err.message });
   }
 }

@@ -71,7 +71,7 @@ async function api(method, p, { body, token } = {}) {
     token, body: { subject: "Maths", chapter: "Percentage", topics: ["Percentage"], difficulty: "easy" },
   });
   const testId = r.json.test._id;
-  check("a practice test starts full", r.json.test.questionCount === 12, `${r.json.test.questionCount}`);
+  check("a practice test starts full", r.json.test.questionCount === 20, `${r.json.test.questionCount}`);
 
   // ---- taking one out puts another in
   let test = await db.collection("tests").findOne({ _id: oid(testId) });
@@ -80,7 +80,7 @@ async function api(method, p, { body, token } = {}) {
 
   r = await api("DELETE", `/exam-series/mock/${testId}/question/${victim}`, { token });
   check("removing a question answers 200", r.status === 200, `${r.status} ${r.json.message || ""}`);
-  check("...and the test is STILL twelve", r.json.remainingCount === 12, `${r.json.remainingCount}`);
+  check("...and the test is STILL twenty", r.json.remainingCount === 20, `${r.json.remainingCount}`);
   check("...because a replacement was generated, not just promised",
     r.json.refilled?.[0]?.added === 1, JSON.stringify(r.json.refilled?.[0] || {}));
   check("...and the message says so instead of 'add replacements'",
@@ -92,9 +92,9 @@ async function api(method, p, { body, token } = {}) {
   check("...exactly one is new", after.filter((id) => !before.includes(id)).length === 1,
     `${after.filter((id) => !before.includes(id)).length} new`);
   const resolved = await db.collection("questions").countDocuments({ _id: { $in: test.questions } });
-  check("...and every id in the test resolves to a real question", resolved === 12, `${resolved} of ${test.questions.length}`);
+  check("...and every id in the test resolves to a real question", resolved === 20, `${resolved} of ${test.questions.length}`);
   const texts = await db.collection("questions").find({ _id: { $in: test.questions } }).toArray();
-  check("...with no repeat among them", new Set(texts.map((q) => q.text)).size === 12,
+  check("...with no repeat among them", new Set(texts.map((q) => q.text)).size === 20,
     `${new Set(texts.map((q) => q.text)).size} distinct`);
 
   // ---- a published test heals too: it has already changed, the only
@@ -102,7 +102,7 @@ async function api(method, p, { body, token } = {}) {
   await api("PATCH", `/exam-series/practice/${testId}/publish`, { token, body: { isFree: true } });
   test = await db.collection("tests").findOne({ _id: oid(testId) });
   r = await api("DELETE", `/exam-series/mock/${testId}/question/${String(test.questions[0])}`, { token });
-  check("a LIVE test is healed rather than left short", r.json.remainingCount === 12, `${r.json.remainingCount}`);
+  check("a LIVE test is healed rather than left short", r.json.remainingCount === 20, `${r.json.remainingCount}`);
   test = await db.collection("tests").findOne({ _id: oid(testId) });
   check("...and it is still published", test.publishStatus === "published", test.publishStatus);
 
@@ -120,7 +120,7 @@ async function api(method, p, { body, token } = {}) {
     (r.json.refilled || []).length === 2, `${(r.json.refilled || []).length} test(s) refilled`);
   const t1 = await db.collection("tests").findOne({ _id: oid(testId) });
   const t2 = await db.collection("tests").findOne({ _id: oid(secondId) });
-  check("...both are back to full", t2.questions.length === 12, `second: ${t2.questions.length}`);
+  check("...both are back to full", t2.questions.length === 20, `second: ${t2.questions.length}`);
   check("...and the rejected one is in neither",
     !t1.questions.map(String).includes(String(shared)) && !t2.questions.map(String).includes(String(shared)));
   check("...and nothing points at a question that is gone",
@@ -138,7 +138,7 @@ async function api(method, p, { body, token } = {}) {
   r = await api("POST", "/exam-series/practice/fill-short", { token, body: { limit: 5 } });
   check("every test that was already short can be filled in one call", r.status === 200, `${r.status} ${r.json.message || ""}`);
   const healed = await db.collection("tests").findOne({ _id: stunted.insertedId });
-  check("...the one serving five of twelve is full", healed.questions.length === 12, `${healed.questions.length}/12`);
+  check("...the one serving five of twenty is full", healed.questions.length === 20, `${healed.questions.length}/20`);
   check("...even though it predates half the schema", !healed.durationMinutes && !healed.examType, "still missing those fields, still filled");
   check("...and the report says what it did", /added across/.test(r.json.message || ""), r.json.message);
 

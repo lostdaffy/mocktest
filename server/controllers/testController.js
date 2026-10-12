@@ -240,20 +240,41 @@ async function getExamSeries(req, res) {
 }
 
 // GET /api/tests/practice-series/:subject/:chapter -> published practice series for a chapter
+//
+// ?subtopic=Successive%20percentage -> only that topic's tests
+// ?subtopic=                         -> only the whole-chapter tests
+// (no subtopic at all)               -> every test of the chapter, which is
+//                                       what apps before 1.2.0 ask for
+//
+// Also says which of the chapter's topics have tests of their own, in the
+// chapter's order, so the app can offer them without a second request.
 async function getPracticeSeries(req, res) {
   const { subject, chapter } = req.params;
-  const tests = await Test.find({
-    type: "practice",
-    subject,
-    topic: chapter,
-    publishStatus: "published",
-  })
-    .sort({ difficultyLevel: 1, seriesNumber: 1 })
-    .select("-questions");
+  const filter = { type: "practice", subject, topic: chapter, publishStatus: "published" };
+  if (typeof req.query.subtopic === "string") {
+    filter.subtopic = req.query.subtopic.trim() || null;
+  }
+
+  const [tests, perTopic, subjectDoc] = await Promise.all([
+    Test.find(filter).sort({ difficultyLevel: 1, seriesNumber: 1 }).select("-questions"),
+    Test.aggregate([
+      { $match: { type: "practice", subject, topic: chapter, publishStatus: "published" } },
+      { $group: { _id: { $ifNull: ["$subtopic", ""] }, n: { $sum: 1 } } },
+    ]),
+    Subject.findOne({ $or: [{ name: subject }, { aliases: subject }] }).select("chapters.name chapters.topics").lean(),
+  ]);
+
+  const count = new Map(perTopic.map((r) => [r._id, r.n]));
+  const topics = (subjectDoc?.chapters || []).find((c) => c.name === chapter)?.topics || [];
+  const subtopics = topics.filter((t) => count.get(t)).map((name) => ({ name, tests: count.get(name) }));
 
   // isFree is the admin's own choice made at publish time (see
   // publishPracticeTest) - it must not be recomputed here.
-  res.json({ tests: await withAttemptStatus(tests, req.user._id) });
+  res.json({
+    tests: await withAttemptStatus(tests, req.user._id),
+    chapterTests: count.get("") || 0,
+    subtopics,
+  });
 }
 
 // GET /api/tests/:id  -> full test with questions (without revealing correct answers)

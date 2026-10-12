@@ -2,10 +2,9 @@ const Test = require("../models/Test");
 const Subject = require("../models/Subject");
 const ExamPattern = require("../models/ExamPattern");
 const { createVerifiedQuestions } = require("./questionFactory");
-
-// A practice test holds this many. A mock holds whatever its exam's pattern
-// adds up to.
-const PRACTICE_TEST_SIZE = 12;
+// A practice test holds PRACTICE_TEST_SIZE. A mock holds whatever its exam's
+// pattern adds up to.
+const { PRACTICE_TEST_SIZE, PRACTICE_BATCH } = require("../utils/practice");
 
 /**
  * When a question leaves a test, another takes its place.
@@ -39,7 +38,12 @@ async function generationParamsFor(test, subjectName) {
 
   const subjectDoc = await Subject.findOne({ $or: [{ name: subject }, { aliases: subject }] }).lean();
   const chapterDoc = (subjectDoc?.chapters || []).find((c) => c.name === chapter);
-  const topicList = chapterDoc?.topics?.length ? chapterDoc.topics : [chapter || subject];
+  // A test for one topic of the chapter asks about that topic alone.
+  const topicList = test.subtopic
+    ? [test.subtopic]
+    : chapterDoc?.topics?.length
+    ? chapterDoc.topics
+    : [chapter || subject];
 
   let examTags = chapterDoc?.exams?.length ? chapterDoc.exams : null;
   if (!examTags) {
@@ -54,7 +58,7 @@ async function generationParamsFor(test, subjectName) {
     tag: { chapter, examType: examTags },
     generateParams: {
       examType: test.examStage || "PRACTICE",
-      examDisplayName: `${subject}${chapter ? ` - ${chapter}` : ""}, for ${examTags.join(", ")}`,
+      examDisplayName: `${subject}${chapter ? ` - ${chapter}` : ""}${test.subtopic ? ` (${test.subtopic})` : ""}, for ${examTags.join(", ")}`,
       subject,
       topic: topicList.join(", "),
       difficulty: level,
@@ -93,30 +97,45 @@ async function refillTest(testId, { max } = {}) {
   const needed = Math.min(target - from, max || target);
   const { tag, generateParams } = await generationParamsFor(test);
 
-  let built;
-  try {
-    built = await createVerifiedQuestions({ needed, tag, generateParams });
-  } catch (err) {
-    return { title: test.title, added: 0, from, to: from, target, filled: false, why: err.message };
+  // Ten at a time, the way a new test is built. Each batch is written as soon
+  // as it is made, so a later batch failing keeps what an earlier one added.
+  let added = 0;
+  let why;
+  while (added < needed) {
+    const ask = Math.min(PRACTICE_BATCH, needed - added);
+    let built;
+    try {
+      built = await createVerifiedQuestions({ needed: ask, tag, generateParams });
+    } catch (err) {
+      why = err.message;
+      break;
+    }
+    if (built.ids.length) {
+      // Pushed, not saved. test.save() revalidates the whole document, so one
+      // test written before a schema field existed would throw and take the
+      // other twenty-five in the batch down with it. Adding questions has no
+      // business caring whether an old test remembers its durationMinutes.
+      await Test.updateOne({ _id: test._id }, { $push: { questions: { $each: built.ids } } });
+      added += built.ids.length;
+    }
+    if (built.ids.length < ask) break;
   }
 
-  if (built.ids.length) {
-    // Pushed, not saved. test.save() revalidates the whole document, so one
-    // test written before a schema field existed would throw and take the
-    // other twenty-five in the batch down with it. Adding questions has no
-    // business caring whether an old test remembers its durationMinutes.
-    await Test.updateOne({ _id: test._id }, { $push: { questions: { $each: built.ids } } });
+  // A practice test gets a minute a question. Topped up from 12 to 20, an old
+  // test would otherwise ask 20 questions on its 12-minute clock.
+  const to = from + added;
+  if (added) {
+    await Test.updateOne({ _id: test._id, durationMinutes: { $lt: to } }, { $set: { durationMinutes: to } });
   }
 
-  const to = from + built.ids.length;
   return {
     title: test.title,
-    added: built.ids.length,
+    added,
     from,
     to,
     target,
     filled: to >= target,
-    why: to >= target ? undefined : "the generator came up short - run it again",
+    why: to >= target ? undefined : why || "the generator came up short - run it again",
   };
 }
 

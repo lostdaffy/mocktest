@@ -214,9 +214,9 @@ async function updateChapterMastery(userId, subject, chapter, accuracy) {
 // CTET subjects with no catalog entry, and Current Affairs questions that no
 // exam section could ever reach. This is the screen that would have caught
 // all three the same day.
-// A practice test holds twelve; a mock or a live exam holds whatever its
-// exam's pattern adds up to.
-const PRACTICE_TEST_SIZE = 12;
+// A practice test holds PRACTICE_TEST_SIZE; a mock or a live exam holds
+// whatever its exam's pattern adds up to.
+const { PRACTICE_TEST_SIZE, OLD_PRACTICE_TEST_SIZE } = require("../utils/practice");
 
 async function catalogHealth(req, res) {
   const [subjects, patterns, topicCounts, liveTests] = await Promise.all([
@@ -349,15 +349,40 @@ async function catalogHealth(req, res) {
   const paperSize = new Map(
     patterns.map((p) => [p.examType, (p.sections || []).reduce((n, sec) => n + (sec.questionCount || 0), 0)])
   );
+  // Practice tests built when a test held 12 are full by the old measure, and
+  // there are hundreds; they are one line, not hundreds of alarms.
+  let oldSize = 0;
   for (const t of liveTests) {
     const want = t.type === "practice" ? PRACTICE_TEST_SIZE : paperSize.get(t.examStage);
     const have = (t.questions || []).length;
     if (!want || have >= want) continue;
+    if (t.type === "practice") {
+      if (have >= OLD_PRACTICE_TEST_SIZE) {
+        oldSize++;
+        continue;
+      }
+      problems.push({
+        kind: "test_short",
+        severity: "high",
+        detail: `"${t.title}" is live with ${have} of ${want} questions.`,
+        fix: "Subject Practice → Top up short tests. It fills live tests without taking them off the app.",
+      });
+      continue;
+    }
     problems.push({
       kind: "test_short",
       severity: "high",
       detail: `"${t.title}" is live with ${have} of ${want} questions.`,
       fix: `Unpublish it, add ${want - have} question(s), then publish it again.`,
+    });
+  }
+
+  if (oldSize) {
+    problems.push({
+      kind: "test_old_size",
+      severity: "medium",
+      detail: `${oldSize} live practice test(s) still hold ${OLD_PRACTICE_TEST_SIZE} questions, from before a test held ${PRACTICE_TEST_SIZE}.`,
+      fix: `Subject Practice → Top up short tests queues them on the Generation page; each gets ${PRACTICE_TEST_SIZE - OLD_PRACTICE_TEST_SIZE} more and stays live meanwhile.`,
     });
   }
 

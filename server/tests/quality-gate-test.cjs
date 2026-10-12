@@ -88,7 +88,7 @@ async function api(method, p, body) {
   // deleted and replaced, and the test still comes out full.
   const parked = all.filter((q) => q.status !== "published");
   check("nothing is left sitting in a review queue", parked.length === 0, `${parked.length} parked`);
-  check("the test is FULL, not short of its target", test.questions.length === 12, `${test.questions.length} questions`);
+  check("the test is FULL, not short of its target", test.questions.length === 20, `${test.questions.length} questions`);
 
   // ---- but every deletion leaves a note, so a broken gate is visible
   const rejects = await db.collection("rejectedquestions").find({}).toArray();
