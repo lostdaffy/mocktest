@@ -71,7 +71,7 @@ export default function Sidebar({ open, onClose }) {
       {/* Backdrop - mobile only, since on desktop the sidebar is permanent */}
       {open && (
         <div
-          className="fixed inset-0 z-30 bg-brand-navy/50 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-30 bg-ink/40 lg:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -80,13 +80,13 @@ export default function Sidebar({ open, onClose }) {
       <aside
         className={`
           fixed lg:sticky top-0 z-40 h-screen w-[268px] shrink-0
-          flex flex-col bg-brand-navy text-white
+          flex flex-col bg-surface text-ink border-r border-border
           transition-transform duration-200 ease-out
           ${open ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
         `}
       >
         {/* BRAND */}
-        <div className="flex items-center justify-between gap-3 px-5 h-[68px] border-b border-white/10 shrink-0">
+        <div className="flex items-center justify-between gap-3 px-5 h-[68px] border-b border-border-soft shrink-0">
           <Link
             to="/"
             onClick={onClose}
@@ -96,13 +96,13 @@ export default function Sidebar({ open, onClose }) {
             <img
               src={`${import.meta.env.BASE_URL}images/brand_logo.png`}
               alt="Rankveer"
-              className="h-full w-auto"
+              className="h-12 w-auto"
             />
           </Link>
 
           <button
             onClick={onClose}
-            className="lg:hidden w-8 h-8 rounded-xs grid place-items-center text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+            className="lg:hidden w-8 h-8 rounded-xs grid place-items-center text-slate hover:bg-slate-light hover:text-ink transition-colors"
             aria-label="Close menu"
           >
             <RiCloseLine size={19} />
@@ -114,7 +114,7 @@ export default function Sidebar({ open, onClose }) {
           {NAV_GROUPS.map((group, i) => (
             <div key={group.label || i}>
               {group.label && (
-                <p className="px-3 mb-1.5 text-[10px] font-extrabold tracking-[0.14em] text-white/35">
+                <p className="px-3 mb-1.5 text-[11px] font-bold tracking-[0.12em] text-slate-soft">
                   {group.label.toUpperCase()}
                 </p>
               )}
@@ -129,15 +129,15 @@ export default function Sidebar({ open, onClose }) {
                     className={({ isActive }) =>
                       `relative flex items-center gap-3 px-3 py-2.5 rounded-xs text-sm font-medium transition-colors ${
                         isActive
-                          ? "bg-white/[0.14] text-white"
-                          : "text-white/60 hover:bg-white/[0.07] hover:text-white"
+                          ? "bg-brand-light text-brand font-semibold"
+                          : "text-ink-soft hover:bg-slate-light hover:text-ink"
                       }`
                     }
                   >
                     {({ isActive }) => (
                       <>
                         {isActive && (
-                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-brand-lavender" />
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-brand" />
                         )}
                         <Icon size={18} className="shrink-0" />
                         <span className="truncate">{label}</span>
@@ -151,19 +151,19 @@ export default function Sidebar({ open, onClose }) {
         </nav>
 
         {/* USER */}
-        <div className="px-3 py-3 border-t border-white/10 shrink-0">
+        <div className="px-3 py-3 border-t border-border-soft shrink-0">
           <div className="flex items-center gap-2.5 px-2 py-2">
-            <div className="w-8 h-8 rounded-full bg-white/12 grid place-items-center text-xs font-bold shrink-0">
+            <div className="w-8 h-8 rounded-full bg-brand-light text-brand grid place-items-center text-xs font-bold shrink-0">
               {user?.name?.trim()?.charAt(0)?.toUpperCase() || "A"}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[13px] font-semibold truncate">{user?.name || "Admin"}</p>
-              <p className="text-[10px] text-white/40 truncate">{user?.phone || user?.email || "Administrator"}</p>
+              <p className="text-[11px] text-slate truncate">{user?.phone || user?.email || "Administrator"}</p>
             </div>
             <button
               onClick={logout}
               title="Log out"
-              className="w-8 h-8 rounded-xs grid place-items-center text-white/50 hover:bg-danger/20 hover:text-white transition-colors shrink-0"
+              className="w-8 h-8 rounded-xs grid place-items-center text-slate hover:bg-danger-light hover:text-danger transition-colors shrink-0"
             >
               <RiLogoutBoxRLine size={16} />
             </button>

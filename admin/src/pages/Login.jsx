@@ -29,7 +29,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex bg-surface">
       {/* Brand panel - hidden on small screens, this is where the "premium" feel lives */}
-      <div className="hidden lg:flex lg:w-[44%] relative overflow-hidden bg-gradient-to-br from-[#2563EB] via-brand to-[#0B3EC1]">
+      <div className="hidden lg:flex lg:w-[44%] relative overflow-hidden bg-brand">
         <div className="absolute -top-24 -right-16 w-96 h-96 rounded-full border-[56px] border-white/[0.05]" />
         <div className="absolute bottom-[-80px] right-24 w-64 h-64 rounded-full border-[40px] border-white/[0.04]" />
 

@@ -2,15 +2,20 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 
 const ThemeContext = createContext(null);
 
-const STORAGE_KEY = "rv-admin-theme";
+const STORAGE_KEY = "rv-admin-theme-v2";
+const OLD_KEY = "rv-admin-theme";
 
-// Three states, matching how the mobile app behaves: an explicit "light" or
-// "dark" choice, or "system" (the default) which follows the OS setting and
-// keeps following it if the user changes it while the tab is open.
+// Three states: "light" (the default), "dark", or "system", which follows
+// the OS setting. Light is the default because the panel is a work tool used
+// for hours - a phone or laptop set to dark used to open it dark without the
+// admin ever choosing that.
 function readStoredPreference() {
-  if (typeof window === "undefined") return "system";
+  if (typeof window === "undefined") return "light";
   const stored = window.localStorage.getItem(STORAGE_KEY);
-  return stored === "light" || stored === "dark" || stored === "system" ? stored : "system";
+  if (stored === "light" || stored === "dark" || stored === "system") return stored;
+  // The old key held "system" for everyone by default; only an explicit
+  // dark choice is carried over.
+  return window.localStorage.getItem(OLD_KEY) === "dark" ? "dark" : "light";
 }
 
 function systemPrefersDark() {

@@ -211,6 +211,11 @@ export default function Vacancies() {
                       <Badge tone={STATUS[v.status].tone}>{STATUS[v.status].label}</Badge>
                     </div>
                     <p className="text-sm text-ink-soft mt-2">{v.seriesName}</p>
+                    {v.status === "upcoming" && v.shownAs === "previous" && (
+                      <p className="text-xs text-warn bg-warn-light rounded-md px-2.5 py-1.5 mt-2">
+                        Exam date has passed - students now see this series under &quot;Exam held&quot;, below the newer one.
+                      </p>
+                    )}
                     <p className="text-xs text-slate-soft mt-1">
                       {v.syllabus?.length ? `Own syllabus for ${v.syllabus.map((s) => s.subject).join(", ")}` : "Follows the exam pattern's syllabus"}
                     </p>

@@ -358,7 +358,7 @@ export default function PracticeSeries() {
                 <button
                   key={ch.name}
                   onClick={() => goChapter(ch.name)}
-                  className="rv-card aspect-square p-4 flex flex-col text-left hover:border-brand hover:shadow-card transition-all group"
+                  className="rv-card min-h-[168px] p-4 flex flex-col text-left hover:border-brand hover:shadow-card transition-all group"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="w-8 h-8 rounded-lg bg-brand-light text-brand text-xs font-bold flex items-center justify-center">
@@ -574,9 +574,9 @@ export default function PracticeSeries() {
           {levelTests.map((t, i) => {
             const short = typeof t.questionCount === "number" && t.questionCount < FULL_TEST;
             const topUp = topUpJobs.get(String(t._id));
-            const btn = "px-2 py-1.5 rounded-lg text-[11px] font-medium text-center";
+            const btn = "px-2.5 py-2 rounded-lg text-xs font-semibold text-center";
             return (
-              <div key={t._id} className="rv-card aspect-square p-4 flex flex-col">
+              <div key={t._id} className="rv-card min-h-[190px] p-4 flex flex-col">
                 <div className="flex items-center justify-between gap-2">
                   <span className="w-8 h-8 rounded-lg bg-brand-light text-brand text-xs font-bold flex items-center justify-center">
                     #{testNumber(t) || i + 1}

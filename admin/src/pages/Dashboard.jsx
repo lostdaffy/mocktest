@@ -67,7 +67,7 @@ export default function Dashboard() {
       )}
 
       {/* HERO SUMMARY */}
-      <div className="relative overflow-hidden rounded-xl bg-brand-gradient text-white p-6 sm:p-7 mb-6 shadow-brand">
+      <div className="relative overflow-hidden rounded-xl bg-brand text-white p-6 sm:p-7 mb-6">
         <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full border-[44px] border-white/[0.06] pointer-events-none" />
         <div className="absolute -bottom-20 right-32 w-48 h-48 rounded-full border-[32px] border-white/[0.05] pointer-events-none" />
 

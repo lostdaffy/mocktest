@@ -141,7 +141,7 @@ export default function DailyQuiz() {
               <button
                 key={d.date}
                 onClick={() => setParams({ date: d.date })}
-                className={`rv-card aspect-square p-3 flex flex-col text-left transition-all ${
+                className={`rv-card min-h-[118px] p-3 flex flex-col text-left transition-all ${
                   active ? "border-brand ring-2 ring-brand/40" : "hover:border-brand"
                 } ${d.past ? "opacity-60" : ""}`}
               >
