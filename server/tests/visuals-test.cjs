@@ -292,12 +292,33 @@ async function drainQueue(token) {
   r = await api("GET", "/vacancies/series", { token: stoken });
   check("...an older app is not handed a mock with a chart in it", r.json.upcoming[0].tests.length === 0);
 
+  // ---- the exam's own mock list, cut by notice: new on top, held below
+  r = await api("GET", "/tests/exam-series/RRB_GROUP_D", { token: stoken, version: "1.2.1" });
+  check("the exam's mock list groups the mocks under their notice", r.status === 200 && r.json.groups?.[0]?.kind === "upcoming" &&
+    r.json.groups[0].title === "RRB Group D 2025 Mock Series" && r.json.groups[0].tests.length === 1 && r.json.tests.length === 1,
+    JSON.stringify(r.json.groups || r.json).slice(0, 200));
+  r = await api("POST", "/vacancies", { token, body: { name: "RRB Group D 2026", year: 2026, seriesName: "RRB Group D 2026 Mock Series", examType: "RRB_GROUP_D", status: "upcoming" } });
+  const newerId = r.json.vacancy?._id;
+  await api("PATCH", `/vacancies/${vacancyId}`, { token, body: { examDate: "2025-11-20" } });
+  r = await api("GET", "/tests/exam-series/RRB_GROUP_D", { token: stoken, version: "1.2.1" });
+  check("a new notice goes on top, and the one whose exam date has passed drops below as held",
+    r.json.groups?.map((g) => `${g.kind}:${g.year}:${g.tests.length}`).join(",") === "upcoming:2026:0,previous:2025:1",
+    r.json.groups?.map((g) => `${g.kind}:${g.year}:${g.tests.length}`).join(","));
+  r = await api("GET", "/vacancies/series", { token: stoken, version: "1.2.1" });
+  check("...the same in the series list", r.json.upcoming.map((v) => v.year).join() === "2026" && r.json.previous.map((v) => v.year).join() === "2025");
+  r = await api("GET", "/vacancies", { token });
+  check("...and the admin is told it now shows as a previous exam", r.json.vacancies.find((v) => v._id === vacancyId)?.shownAs === "previous");
+  await api("DELETE", `/vacancies/${newerId}`, { token });
+  await api("PATCH", `/vacancies/${vacancyId}`, { token, body: { examDate: null } });
+
   await api("PATCH", `/vacancies/${vacancyId}`, { token, body: { status: "previous" } });
   r = await api("GET", "/vacancies/series", { token: stoken, version: "1.2.0" });
   check("set to Previous, it moves to Previous exam mock series", r.json.upcoming.length === 0 && r.json.previous.length === 1);
   await api("PATCH", `/vacancies/${vacancyId}`, { token, body: { status: "hidden" } });
   r = await api("GET", "/vacancies/series", { token: stoken, version: "1.2.0" });
   check("hidden, it shows nowhere", r.json.upcoming.length === 0 && r.json.previous.length === 0);
+  r = await api("GET", "/tests/exam-series/RRB_GROUP_D", { token: stoken, version: "1.2.1" });
+  check("...not even in the exam's mock list", r.json.tests.length === 0 && r.json.groups.length === 0, JSON.stringify(r.json).slice(0, 120));
   r = await api("DELETE", `/vacancies/${vacancyId}`, { token });
   check("a vacancy with mocks cannot be deleted", r.status === 400, r.json.message);
 

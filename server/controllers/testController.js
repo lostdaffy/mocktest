@@ -14,6 +14,8 @@ const { FREE_MOCK_TESTS, FREE_LIVE_EXAMS, FREE_TRIAL_DAYS } = require("../config
 const { liveWindow, liveState, secondsRemaining } = require("../utils/liveExam");
 const { updateChapterMastery } = require("./subjectController");
 const { showsVisuals } = require("../utils/appVersion");
+const Vacancy = require("../models/Vacancy");
+const { stageOf, orderVacancies } = require("../utils/vacancyOrder");
 
 // An app before 1.2.0 cannot draw charts or show figures, so tests holding
 // them are left out of its lists.
@@ -232,18 +234,52 @@ async function withAttemptStatus(tests, userId) {
 }
 
 // GET /api/tests/exam-series/:examStage -> published mock series for one exam (student-facing)
+//
+// `groups` is the same list cut by recruitment notice, in the order the app
+// shows it: the upcoming exam's series on top, exams already held below
+// (newest first), and mocks that belong to no notice last. `tests` stays the
+// flat list apps before 1.2.1 read.
 async function getExamSeries(req, res) {
   const { examStage } = req.params;
+  const vacancies = await Vacancy.find({ examType: examStage }).lean();
+  // A notice still being set up keeps its mocks out of sight.
+  const hiddenIds = vacancies.filter((v) => stageOf(v) === "hidden").map((v) => v._id);
+
   const tests = await Test.find({
     examStage,
     type: "full_mock",
     publishStatus: "published",
     liveExclusive: { $ne: true }, // exclusive content only surfaces via a scheduled live exam
+    ...(hiddenIds.length ? { vacancy: { $nin: hiddenIds } } : {}),
     ...forThisApp(req),
   })
     .sort({ seriesNumber: 1 })
     .select("-questions");
-  res.json({ tests: await withAttemptStatus(tests, req.user._id) });
+  const withStatus = await withAttemptStatus(tests, req.user._id);
+
+  const groups = [];
+  const placed = new Set();
+  for (const v of orderVacancies(vacancies.filter((x) => stageOf(x) !== "hidden"))) {
+    const own = withStatus.filter((t) => t.vacancy && String(t.vacancy) === String(v._id));
+    own.forEach((t) => placed.add(String(t._id)));
+    // A notice with no mocks yet still shows when it is upcoming - students
+    // see the series is coming. A held exam with nothing in it is left out.
+    if (!own.length && v.stage !== "upcoming") continue;
+    groups.push({
+      key: String(v._id),
+      kind: v.stage, // "upcoming" | "previous"
+      title: v.seriesName,
+      name: v.name,
+      year: v.year,
+      examDate: v.examDate || null,
+      notes: v.notes || null,
+      tests: own,
+    });
+  }
+  const others = withStatus.filter((t) => !placed.has(String(t._id)));
+  if (others.length) groups.push({ key: "other", kind: "other", title: "More mock tests", tests: others });
+
+  res.json({ tests: withStatus, groups });
 }
 
 // GET /api/tests/practice-series/:subject/:chapter -> published practice series for a chapter

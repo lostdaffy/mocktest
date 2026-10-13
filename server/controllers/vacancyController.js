@@ -2,6 +2,7 @@ const Vacancy = require("../models/Vacancy");
 const Test = require("../models/Test");
 const ExamPattern = require("../models/ExamPattern");
 const GenerationJob = require("../models/GenerationJob");
+const { orderVacancies, stageOf } = require("../utils/vacancyOrder");
 const QueueState = require("../models/QueueState");
 const User = require("../models/User");
 const { showsVisuals } = require("../utils/appVersion");
@@ -74,6 +75,8 @@ async function listVacancies(req, res) {
   res.json({
     vacancies: vacancies.map((v) => ({
       ...v,
+      // What students see: an upcoming notice whose exam date has passed is shown as held.
+      shownAs: stageOf(v),
       mocks: {
         published: count.get(`${v._id}|published`) || 0,
         draft: count.get(`${v._id}|draft`) || 0,
@@ -225,7 +228,8 @@ async function seriesForStudent(req, res) {
   const filter = { status: { $in: ["upcoming", "previous"] } };
   if (goals.length && req.query.all !== "1") filter.examType = { $in: goals };
 
-  const vacancies = await Vacancy.find(filter).sort({ displayOrder: 1, year: -1, createdAt: -1 }).lean();
+  // Newest first, and a notice whose exam date has passed counts as held.
+  const vacancies = orderVacancies(await Vacancy.find(filter).lean());
   const testFilter = {
     type: "full_mock",
     vacancy: { $in: vacancies.map((v) => v._id) },
@@ -250,7 +254,7 @@ async function seriesForStudent(req, res) {
     seriesName: v.seriesName,
     examType: v.examType,
     examName: nameOf.get(v.examType) || v.examType,
-    status: v.status,
+    status: v.stage,
     examDate: v.examDate || null,
     notificationUrl: v.notificationUrl || null,
     notes: v.notes || null,
@@ -258,8 +262,8 @@ async function seriesForStudent(req, res) {
   });
 
   res.json({
-    upcoming: vacancies.filter((v) => v.status === "upcoming").map(card),
-    previous: vacancies.filter((v) => v.status === "previous").map(card),
+    upcoming: vacancies.filter((v) => v.stage === "upcoming").map(card),
+    previous: vacancies.filter((v) => v.stage === "previous").map(card),
   });
 }
 
