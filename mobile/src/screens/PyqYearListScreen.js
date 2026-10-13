@@ -24,7 +24,7 @@ import {
 
 import {
   LinearGradient,
-} from "expo-linear-gradient";
+} from "../components/SolidFill";
 
 import api from "../api/client";
 

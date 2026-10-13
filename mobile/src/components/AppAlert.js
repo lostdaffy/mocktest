@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, TouchableWithoutFeedback } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import { LinearGradient } from "./SolidFill";
 import { colors, gradients, spacing, radius, type, shadow } from "../theme/theme";
 
 // Drop-in replacement for React Native's Alert.alert - same call signature

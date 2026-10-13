@@ -17,7 +17,6 @@ import {
 } from "react-native";
 import { examLogo } from "../utils/examLogos";
 import OfficialSources from "../components/OfficialSources";
-import VacancySections from "../components/VacancySections";
 
 import {
   useFocusEffect,
@@ -94,6 +93,10 @@ const EXAM_META = {
 export default function ExamPickerScreen({
   navigation,
 }) {
+  // On a main tab there is nowhere to go back to; the arrow shows only
+  // when this screen was opened on top of another one.
+  const isTabRoot = navigation.getState?.()?.type === "tab";
+
   const insets =
     useSafeAreaInsets();
 
@@ -339,6 +342,7 @@ export default function ExamPickerScreen({
                 },
               ]}
             >
+              {!isTabRoot && (
               <TouchableOpacity
                 style={[
                   styles.backButton,
@@ -364,6 +368,7 @@ export default function ExamPickerScreen({
                   }
                 />
               </TouchableOpacity>
+              )}
 
 
               <View
@@ -434,9 +439,6 @@ export default function ExamPickerScreen({
               </View>
             </View>
 
-
-            {/* Upcoming / Previous exam mock series, by recruitment notice */}
-            <VacancySections navigation={navigation} colors={colors} />
 
             {/* =================================================
                 HERO

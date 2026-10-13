@@ -16,7 +16,7 @@ import {
 
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import { LinearGradient } from "../components/SolidFill";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import api from "../api/client";
@@ -73,6 +73,10 @@ const SUBJECT_META = [
 export default function SubjectsScreen({
   navigation,
 }) {
+  // On a main tab there is nowhere to go back to; the arrow shows only
+  // when this screen was opened on top of another one.
+  const isTabRoot = navigation.getState?.()?.type === "tab";
+
   const insets = useSafeAreaInsets();
 
   const [subjects, setSubjects] = useState([]);
@@ -229,6 +233,7 @@ export default function SubjectsScreen({
             },
           ]}
         >
+          {!isTabRoot && (
           <TouchableOpacity
             style={styles.headerButton}
             activeOpacity={0.75}
@@ -242,6 +247,7 @@ export default function SubjectsScreen({
               color={colors.ink}
             />
           </TouchableOpacity>
+          )}
 
           <View style={styles.headerContent}>
             <Text style={styles.headerTitle}>

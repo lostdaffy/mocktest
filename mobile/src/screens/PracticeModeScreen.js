@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, useColorScheme } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import { LinearGradient } from "../components/SolidFill";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../api/client";
 import { getColors, getCard, gradients, spacing, radius, shadow } from "../theme/theme";

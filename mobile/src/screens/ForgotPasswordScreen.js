@@ -15,7 +15,7 @@ import {
 
 import AppAlert from "../components/AppAlert";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import { LinearGradient } from "../components/SolidFill";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import api from "../api/client";

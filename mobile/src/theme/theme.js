@@ -848,7 +848,7 @@ export function getCard(isDark = false) {
    SAFE AREA / TAB BAR
 ========================================================= */
 
-export const TAB_BAR_HEIGHT = 60;
+export const TAB_BAR_HEIGHT = 68;
 
 /* =========================================================
    RESPONSIVE

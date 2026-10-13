@@ -12,7 +12,7 @@ import {
   Image,
 } from "react-native";
 
-import { LinearGradient } from "expo-linear-gradient";
+import { LinearGradient } from "../components/SolidFill";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 

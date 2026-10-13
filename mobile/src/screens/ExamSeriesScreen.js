@@ -10,14 +10,14 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
+  SectionList,
   ActivityIndicator,
 } from "react-native";
 
 import AppAlert from "../components/AppAlert";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import { LinearGradient } from "../components/SolidFill";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import api from "../api/client";
@@ -104,8 +104,8 @@ export default function ExamSeriesScreen({
 }) {
   const insets = useSafeAreaInsets();
 
-  // vacancyId: opened from "Upcoming / Previous exam mock series" - only
-  // that recruitment notice's mocks are listed, under its series name.
+  // vacancyId: opened for one recruitment notice (a notification, say) -
+  // only that notice's mocks are listed.
   const {
     examStage,
     examName,
@@ -117,6 +117,9 @@ export default function ExamSeriesScreen({
   const subscribed = isSubscribed(user);
 
   const [tests, setTests] = useState([]);
+  // The mocks cut by recruitment notice: the upcoming exam's series first,
+  // exams already held below, mocks of no notice last (see getExamSeries).
+  const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(null);
 
@@ -150,7 +153,11 @@ export default function ExamSeriesScreen({
       );
 
       const all = res.data?.tests || [];
-      setTests(vacancyId ? all.filter((t) => String(t.vacancy) === String(vacancyId)) : all);
+      // A server from before the groups: everything in one list.
+      let list = res.data?.groups || (all.length ? [{ key: "other", kind: "other", title: "All mock tests", tests: all }] : []);
+      if (vacancyId) list = list.filter((g) => g.key === String(vacancyId));
+      setGroups(list);
+      setTests(list.flatMap((g) => g.tests));
     } catch (err) {
       console.log(
         "Exam series loading error:",
@@ -158,6 +165,7 @@ export default function ExamSeriesScreen({
       );
 
       setTests([]);
+      setGroups([]);
     } finally {
       setLoading(false);
     }
@@ -258,6 +266,8 @@ export default function ExamSeriesScreen({
   const featured = useMemo(() => {
     if (!tests.length) return null;
 
+    // A mock already started comes first; otherwise the next one not done,
+    // from the topmost series - the upcoming exam's, when there is one.
     return (
       tests.find(
         (test) =>
@@ -269,19 +279,21 @@ export default function ExamSeriesScreen({
           test.attemptStatus !==
           "completed"
       ) ||
-      tests[0]
+      null
     );
   }, [tests]);
 
-  const rest = useMemo(
+  // One section per series. An upcoming exam with no mocks yet still gets
+  // its heading, with a "coming soon" line in place of the list.
+  const sections = useMemo(
     () =>
-      tests.filter(
-        (test) =>
-          test._id !==
-          featured?._id
-      ),
-    [tests, featured]
+      groups.map((g) => ({
+        ...g,
+        data: g.tests.length ? g.tests : [{ _id: `soon-${g.key}`, placeholder: true }],
+      })),
+    [groups]
   );
+  const showGroupHeads = groups.length > 1 || groups.some((g) => g.kind !== "other");
 
   /* =======================================================
      STATS
@@ -354,11 +366,12 @@ export default function ExamSeriesScreen({
     <View
       style={styles.container}
     >
-      <FlatList
-        data={rest}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) =>
           item._id
         }
+        stickySectionHeadersEnabled={false}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.listContent,
@@ -473,7 +486,7 @@ export default function ExamSeriesScreen({
                 ALL TESTS
             ================================================= */}
 
-            {rest.length > 0 && (
+            {tests.length > 0 && !showGroupHeads && (
               <View
                 style={styles.listHeader}
               >
@@ -513,15 +526,23 @@ export default function ExamSeriesScreen({
           </>
         }
         ListEmptyComponent={
-          !featured ? (
-            <EmptyState />
-          ) : null
+          <EmptyState />
         }
+        renderSectionHeader={({ section }) =>
+          showGroupHeads ? <GroupHeader group={section} /> : null
+        }
+        renderSectionFooter={() => <View style={{ height: spacing.sm }} />}
         renderItem={({
           item,
           index,
-        }) => (
+          section,
+        }) =>
+          item.placeholder ? (
+            <ComingSoonRow />
+          ) : (
           <MockTestRow
+            held={section.kind === "previous"}
+            shortTitle={showGroupHeads ? shortTitleOf(item.title, section.title) : null}
             item={item}
             index={index}
             subscribed={subscribed}
@@ -533,8 +554,73 @@ export default function ExamSeriesScreen({
               startTest(item)
             }
           />
-        )}
+          )
+        }
       />
+    </View>
+  );
+}
+
+/* =========================================================
+   GROUP HEADER - one recruitment notice's series
+========================================================= */
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function shortDate(d) {
+  const x = new Date(d);
+  return Number.isNaN(x.getTime()) ? "" : `${x.getDate()} ${MONTHS[x.getMonth()]} ${x.getFullYear()}`;
+}
+
+const GROUP_LOOK = {
+  upcoming: { label: "UPCOMING EXAM", icon: "calendar-outline", fg: colors.brand, bg: colors.brandLight },
+  previous: { label: "EXAM HELD", icon: "checkmark-done-outline", fg: colors.slate, bg: colors.slateLight },
+  other: { label: "MORE MOCKS", icon: "albums-outline", fg: colors.inkSoft, bg: colors.slateLight },
+};
+
+function GroupHeader({ group }) {
+  const look = GROUP_LOOK[group.kind] || GROUP_LOOK.other;
+  const total = group.tests.length;
+  const done = group.tests.filter((t) => t.attemptStatus === "completed").length;
+  let when = "";
+  if (group.kind === "upcoming") {
+    when = group.examDate ? `Exam on ${shortDate(group.examDate)}` : group.year ? `Notification ${group.year}` : "";
+  } else if (group.kind === "previous") {
+    when = group.examDate
+      ? `Held on ${shortDate(group.examDate)} · good for revision`
+      : `Past exam${group.year ? ` · ${group.year}` : ""} · good for revision`;
+  }
+  return (
+    <View style={styles.groupHead}>
+      <View style={styles.groupTopRow}>
+        <View style={[styles.groupBadge, { backgroundColor: look.bg }]}>
+          <Ionicons name={look.icon} size={12} color={look.fg} />
+          <Text style={[styles.groupBadgeText, { color: look.fg }]}>{look.label}</Text>
+        </View>
+        {total > 0 && (
+          <Text style={styles.groupCount}>
+            {total} mock{total === 1 ? "" : "s"}
+            {done ? ` · ${done} done` : ""}
+          </Text>
+        )}
+      </View>
+      <Text style={[styles.groupTitle, group.kind === "previous" && { color: colors.inkSoft }]} numberOfLines={2}>
+        {group.title}
+      </Text>
+      {!!when && <Text style={styles.groupWhen}>{when}</Text>}
+      {!!group.notes && (
+        <Text style={styles.groupNotes} numberOfLines={2}>
+          {group.notes}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+function ComingSoonRow() {
+  return (
+    <View style={styles.soonRow}>
+      <Ionicons name="hourglass-outline" size={16} color={colors.brand} />
+      <Text style={styles.soonText}>Mock tests for this exam are being prepared. Check back soon.</Text>
     </View>
   );
 }
@@ -971,7 +1057,7 @@ function FeaturedTestCard({
 
         <Text
           style={styles.featuredTitle}
-          numberOfLines={1}
+          numberOfLines={2}
         >
           {test.title}
         </Text>
@@ -1032,9 +1118,20 @@ function FeaturedTestCard({
    MOCK TEST ROW
 ========================================================= */
 
+// Under its series heading a mock needs only its own part of the name:
+// "RRB Group D 2026 Mock Series - Mock #3" is just "Mock #3" there.
+function shortTitleOf(title, seriesTitle) {
+  const t = String(title || "");
+  if (!seriesTitle || !t.startsWith(seriesTitle)) return null;
+  const rest = t.slice(seriesTitle.length).replace(/^\s*[-–·:]\s*/, "").trim();
+  return rest || null;
+}
+
 function MockTestRow({
   item,
   index,
+  held,
+  shortTitle,
   subscribed,
   meta,
   starting,
@@ -1054,7 +1151,7 @@ function MockTestRow({
 
   const seriesNumber =
     item.seriesNumber ||
-    index + 2;
+    index + 1;
 
   const questions =
     item.questions?.length || 0;
@@ -1096,6 +1193,8 @@ function MockTestRow({
       <TouchableOpacity
         style={[
           styles.rowCard,
+          held &&
+            styles.rowCardHeld,
           isActive &&
             styles.rowCardActive,
           locked &&
@@ -1148,7 +1247,7 @@ function MockTestRow({
             style={styles.rowTitle}
             numberOfLines={1}
           >
-            {item.title}
+            {shortTitle || item.title}
           </Text>
 
           <View
@@ -1378,6 +1477,81 @@ function EmptyState() {
 ========================================================= */
 
 const styles = StyleSheet.create({
+  /* =======================================================
+     SERIES GROUPS
+  ======================================================= */
+
+  groupHead: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  groupTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  groupBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  groupBadgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+  },
+  groupCount: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.slate,
+  },
+  groupTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: colors.ink,
+    marginTop: 10,
+    lineHeight: 23,
+  },
+  groupWhen: {
+    fontSize: 12.5,
+    fontWeight: "600",
+    color: colors.slate,
+    marginTop: 3,
+  },
+  groupNotes: {
+    fontSize: 12.5,
+    color: colors.slate,
+    marginTop: 4,
+    lineHeight: 18,
+  },
+  soonRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginHorizontal: spacing.lg,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: colors.brandLight,
+    backgroundColor: colors.brandTint,
+  },
+  soonText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.inkSoft,
+    fontWeight: "600",
+  },
+  rowCardHeld: {
+    backgroundColor: colors.surfaceSoft,
+  },
+
   /* =======================================================
      GENERAL
   ======================================================= */

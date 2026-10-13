@@ -84,7 +84,7 @@ function MainTabs() {
         tabBarStyle: {
           height: TAB_BAR_HEIGHT + insets.bottom,
           paddingBottom: insets.bottom + 8,
-          paddingTop: 8,
+          paddingTop: 6,
           backgroundColor: "#fff",
           borderTopWidth: 1,
           borderTopColor: colors.border,
@@ -94,7 +94,10 @@ function MainTabs() {
           shadowRadius: 12,
           shadowOffset: { width: 0, height: -2 },
         },
-        tabBarLabelStyle: { fontSize: 10, fontWeight: "700" },
+        // Room for the icon and a label under it - at 60 the labels were
+        // clipped at the bottom edge.
+        tabBarIconStyle: { flexGrow: 0, flexShrink: 0, height: 24 },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "700", marginTop: 2, marginBottom: 0 },
       }}
     >
       <Tab.Screen

@@ -18,7 +18,7 @@ import {
 
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import { LinearGradient } from "../components/SolidFill";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AppAlert from "../components/AppAlert";
@@ -197,6 +197,10 @@ function formatCountdown(ms) {
 export default function TestListScreen({
   navigation,
 }) {
+  // As the Live Exam tab there is nowhere to go back to; the arrow shows
+  // only when this list was opened on top of another screen.
+  const isTabRoot = navigation.getState?.()?.type === "tab";
+
   const insets = useSafeAreaInsets();
 
   const scheme = useColorScheme();
@@ -640,6 +644,7 @@ export default function TestListScreen({
                 },
               ]}
             >
+              {!isTabRoot && (
               <TouchableOpacity
                 style={
                   styles.backButton
@@ -660,6 +665,7 @@ export default function TestListScreen({
                   color={colors.ink}
                 />
               </TouchableOpacity>
+              )}
 
               <View
                 style={styles.headerText}

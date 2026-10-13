@@ -33,7 +33,7 @@ import {
   gradients,
 } from "../theme/theme";
 
-import { LinearGradient } from "expo-linear-gradient";
+import { LinearGradient } from "../components/SolidFill";
 
 /* =========================================================
    RAZORPAY CHECKOUT HTML

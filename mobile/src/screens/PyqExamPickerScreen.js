@@ -26,7 +26,7 @@ import {
 
 import {
   LinearGradient,
-} from "expo-linear-gradient";
+} from "../components/SolidFill";
 
 import {
   useSafeAreaInsets,
@@ -107,6 +107,10 @@ const DEFAULT_META = {
 export default function PyqExamPickerScreen({
   navigation,
 }) {
+  // On a main tab there is nowhere to go back to; the arrow shows only
+  // when this screen was opened on top of another one.
+  const isTabRoot = navigation.getState?.()?.type === "tab";
+
   const insets =
     useSafeAreaInsets();
 
@@ -284,6 +288,7 @@ export default function PyqExamPickerScreen({
                 styles.header
               }
             >
+              {!isTabRoot && (
               <TouchableOpacity
                 style={
                   styles.headerButton
@@ -303,6 +308,7 @@ export default function PyqExamPickerScreen({
                   }
                 />
               </TouchableOpacity>
+              )}
 
               <View
                 style={
