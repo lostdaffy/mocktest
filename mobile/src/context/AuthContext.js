@@ -44,6 +44,10 @@ export function AuthProvider({ children }) {
       // Then the fresh copy: a plan granted from the admin panel since the
       // last sign-in shows straight away, with no need to sign in again.
       if (stored) refreshUser({ quiet: true });
+      // And the push token, every launch - not only at sign-in. A student
+      // who signed in once on an app that could not register (or who later
+      // allowed notifications) would otherwise never get a reminder.
+      if (stored) registerForPushNotifications(api);
     }
     loadStoredUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps

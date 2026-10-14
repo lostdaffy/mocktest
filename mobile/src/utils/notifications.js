@@ -28,7 +28,8 @@ export function configureNotificationHandler() {
 
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
-      shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
       shouldPlaySound: true,
       shouldSetBadge: false,
     }),
@@ -40,11 +41,29 @@ export function configureNotificationHandler() {
 // login/signup/OTP - whichever the student used). Never throws - a
 // student who denies the permission, or is on Expo Go / a simulator with no
 // push capability, should just carry on using the app normally.
+//
+// When the phone cannot get a token, the reason goes to the server instead
+// ({ error }), so the admin can see why a student gets no notifications -
+// before this, every failure was swallowed and nobody could tell.
 export async function registerForPushNotifications(api) {
   const Notifications = loadNotifications();
   if (!Notifications) return;
 
+  const report = (error) => api.post("/auth/push-token", { error }).catch(() => {});
+
   try {
+    // Android 8+ shows nothing without a channel, and on Android 13+ the
+    // permission prompt only appears once a channel exists.
+    const { Platform } = require("react-native");
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "Reminders and results",
+        importance: Notifications.AndroidImportance.HIGH,
+        sound: "default",
+        vibrationPattern: [0, 250, 250, 250],
+      });
+    }
+
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
@@ -53,19 +72,26 @@ export async function registerForPushNotifications(api) {
       finalStatus = status;
     }
 
-    if (finalStatus !== "granted") return;
+    if (finalStatus !== "granted") {
+      report("Notification permission not given on this phone");
+      return;
+    }
 
     const projectId = Constants.expoConfig?.extra?.eas?.projectId;
     const tokenResponse = await Notifications.getExpoPushTokenAsync(
       projectId ? { projectId } : undefined
     );
     const token = tokenResponse?.data;
-    if (!token) return;
+    if (!token) {
+      report("The phone returned no push token");
+      return;
+    }
 
     await api.post("/auth/push-token", { token });
   } catch (err) {
-    // Push is a nice-to-have (live exam reminders) - never let it block or
-    // crash the login flow.
-    console.log("Push notification registration skipped:", err.message);
+    // Push is a nice-to-have - never let it block or crash the login flow.
+    const msg = String(err?.message || err);
+    console.log("Push notification registration skipped:", msg);
+    report(/firebase|fcm|google-services/i.test(msg) ? `Push is not set up in this app build (Firebase): ${msg}` : msg);
   }
 }

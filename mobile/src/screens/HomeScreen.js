@@ -37,6 +37,7 @@ import {
 } from "../theme/theme";
 import TodayPlanCard from "../components/TodayPlanCard";
 import FirstRunGuide from "../components/FirstRunGuide";
+import ReferEarnCard from "../components/ReferEarnCard";
 
 /* =========================================================
    LOGO
@@ -791,6 +792,9 @@ export default function HomeScreen({
           RECOMMENDED
       ================================================= */}
 
+      {/* Nothing to recommend (a premium student with no live exam coming)
+          means no heading either. */}
+      {(upcomingLive || !isPremium) && (
       <View
         style={styles.section}
       >
@@ -888,77 +892,13 @@ export default function HomeScreen({
           <PremiumCard
             navigation={navigation}
           />
-        ) : (
-          <TouchableOpacity
-            style={styles.recCard}
-            activeOpacity={0.8}
-            onPress={() =>
-              navigation.navigate(
-                "Referral"
-              )
-            }
-          >
-            <View
-              style={[
-                styles.recIcon,
-                {
-                  backgroundColor:
-                    colors
-                      .categories[2]
-                      .bg,
-                },
-              ]}
-            >
-              <Ionicons
-                name="gift"
-                size={18}
-                color={
-                  colors
-                    .categories[2]
-                    .fg
-                }
-              />
-            </View>
+        ) : null}
+      </View>
+      )}
 
-            <View
-              style={{
-                flex: 1,
-                minWidth: 0,
-              }}
-            >
-              <Text
-                style={
-                  styles.recTitle
-                }
-              >
-                Refer & Earn
-              </Text>
-
-              <Text
-                style={
-                  styles.recSub
-                }
-              >
-                Invite a friend and
-                earn credits
-              </Text>
-            </View>
-
-            <View
-              style={
-                styles.recArrow
-              }
-            >
-              <Ionicons
-                name="chevron-forward"
-                size={16}
-                color={
-                  colors.brand
-                }
-              />
-            </View>
-          </TouchableOpacity>
-        )}
+      {/* Refer & Earn - last on Home, for every student (not only premium ones) */}
+      <View style={styles.section}>
+        <ReferEarnCard navigation={navigation} />
       </View>
     </ScrollView>
   );
