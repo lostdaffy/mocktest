@@ -145,6 +145,42 @@ async function api(method, p, { body, token } = {}) {
   r = await api("POST", "/exam-series/practice/fill-short", { token, body: {} });
   check("...run again with nothing to do, it says so", /every practice test is full/i.test(r.json.message || ""), r.json.message);
 
+  // ---- a mock heals too: same section, same spot in the paper
+  const bankIds = (await db.collection("questions").find({ subject: "Maths" }).limit(12).toArray()).map((q) => q._id);
+  const mock = await db.collection("tests").insertOne({
+    title: "SSC CGL - Mock #1", type: "full_mock", examType: "SSC_CGL", examStage: "SSC_CGL",
+    questions: bankIds, publishStatus: "draft", durationMinutes: 60,
+  });
+  const mockVictim = String(bankIds[5]);
+  r = await api("DELETE", `/exam-series/mock/${mock.insertedId}/question/${mockVictim}`, { token });
+  check("taking a question out of a mock puts one back", r.json.remainingCount === 12 && r.json.short === 0,
+    `${r.json.remainingCount}, short ${r.json.short}, ${r.json.message}`);
+  const healedMock = await db.collection("tests").findOne({ _id: mock.insertedId });
+  const fresh = healedMock.questions.map(String).filter((id) => !bankIds.map(String).includes(id));
+  check("...in the same place in the paper", fresh.length === 1 && String(healedMock.questions[5]) === fresh[0],
+    `new at ${healedMock.questions.map(String).indexOf(fresh[0])}`);
+  const freshQ = await db.collection("questions").findOne({ _id: oid(fresh[0]) });
+  check("...from the same section", freshQ?.subject === "Maths", freshQ?.subject);
+
+  // ---- a question already in the paper under another section is a repeat
+  // Super TET Mock #2 asked who chaired the Drafting Committee in GK and
+  // again in EVS: the bank check looks at one subject only. Run in this
+  // process, with the stub, so the next text it writes is known.
+  require(STUB);
+  const { createVerifiedQuestions } = require(path.join(SERVER, "services/questionFactory"));
+  const { questionKey } = require(path.join(SERVER, "services/validationPipeline"));
+  const twin = "AI EVS easy #1";
+  const inGk = await db.collection("questions").insertOne({
+    text: twin, textKey: questionKey(twin), subject: "GK", topic: "GK", options: ["a", "b", "c", "d"], correctIndex: 0, status: "published",
+  });
+  const built = await createVerifiedQuestions({
+    needed: 2, inTest: [inGk.insertedId],
+    generateParams: { examType: "SUPER_TET", subject: "EVS", topic: "EVS", difficulty: "easy" },
+  });
+  const builtTexts = (await db.collection("questions").find({ _id: { $in: built.ids } }).toArray()).map((q) => q.text);
+  check("a question the paper already has in another section is not added again",
+    builtTexts.length === 2 && !builtTexts.includes(twin) && built.duplicates >= 1, JSON.stringify({ builtTexts, dup: built.duplicates }));
+
   const student = await db.collection("users").insertOne({ name: "S", phone: "9111111111", role: "user", referralCode: "S1" });
   const sToken = jwt.sign({ id: student.insertedId.toString(), sessionId: "y" }, JWT_SECRET);
   const denied = await api("POST", "/exam-series/practice/fill-short", { token: sToken, body: {} });

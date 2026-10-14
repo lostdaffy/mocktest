@@ -266,6 +266,7 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
         // deleted if it cannot - nothing doubtful is kept.
         const built = await createVerifiedQuestions({
           needed: thisBatch,
+          inTest: everyId(),
           tag: { examStage },
           generateParams: {
             examType: examStage,
@@ -325,6 +326,7 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
       try {
         const built = await createVerifiedQuestions({
           needed: want,
+          inTest: everyId(),
           tag: { examStage, chapter: v.chapter },
           generateParams: {
             examType: examStage,
@@ -510,6 +512,47 @@ async function deleteMock(req, res) {
   res.json({ message: "The mock and its questions were deleted" });
 }
 
+// One question in place of the one taken out of a mock: same section, same
+// level, same spot in the paper, checked against the rest of the paper so it
+// is not the question just removed coming back. A figure is replaced by a
+// figure; a chart question by a plain one, since a chart needs its set.
+// Answers in refillTest's shape so refillNote can word it.
+async function replaceInMock(test, removed, position) {
+  const from = test.questions.length;
+  const report = (added, why) => ({ title: test.title, added, from, to: from + added, target: from + 1, filled: added > 0, ...(why ? { why } : {}) });
+  if (!removed) return report(0, "the question was not in the bank");
+  const pattern = await ExamPattern.findOne({ examType: test.examStage }).lean();
+  const sectionDef = pattern?.sections?.find((s) => s.subject === removed.subject);
+  if (!sectionDef) return report(0, `${removed.subject} is not a section of this exam`);
+  const figure = removed.visual?.kind === "figure";
+  try {
+    const built = await createVerifiedQuestions({
+      needed: 1,
+      inTest: test.questions,
+      tag: { examStage: test.examStage, ...(figure ? { chapter: removed.chapter } : {}) },
+      generateParams: {
+        examType: test.examStage,
+        examDisplayName: pattern.displayName,
+        subject: removed.subject,
+        topic: figure ? removed.chapter : removed.subject,
+        difficulty: removed.difficulty || "medium",
+        examLevel: pattern.examLevel,
+        syllabusTopics: figure ? [removed.chapter] : syllabusSlice(sectionDef.syllabus, Math.floor(Math.random() * 100)),
+        ...(figure ? { visualKind: "figure" } : {}),
+      },
+      maxRounds: 3,
+    });
+    if (!built.ids.length) return report(0, "no replacement passed the checks");
+    await Test.updateOne(
+      { _id: test._id },
+      { $push: { questions: { $each: built.ids, ...(position >= 0 ? { $position: position } : {}) } } }
+    );
+    return report(built.ids.length);
+  } catch (err) {
+    return report(0, err.message);
+  }
+}
+
 // DELETE /api/exam-series/mock/:testId/question/:questionId (admin)
 // Remove a single bad question from a mock (and delete it).
 // Works for any test - a mock, a practice test, whatever holds questions.
@@ -524,6 +567,8 @@ async function removeQuestionFromMock(req, res) {
   const test = await Test.findById(testId);
   if (!test) return res.status(404).json({ message: "Test not found" });
 
+  const removed = await Question.findById(questionId).select("subject difficulty chapter visual.kind").lean();
+  const position = test.questions.findIndex((q) => String(q) === String(questionId));
   test.questions = test.questions.filter((q) => String(q) !== String(questionId));
   await test.save();
 
@@ -544,10 +589,15 @@ async function removeQuestionFromMock(req, res) {
 
   // ...and another takes its place, right now. Telling the admin the test is
   // short and leaving it there is how a test ends up serving five questions.
-  const refilled = test.type === "practice" ? [await refillTest(test._id)] : [];
+  const refilled =
+    test.type === "practice"
+      ? [await refillTest(test._id)]
+      : test.type === "full_mock"
+      ? [await replaceInMock(test, removed, position)]
+      : [];
   const after = await Test.findById(test._id).select("questions").lean();
   const remaining = (after?.questions || test.questions).length;
-  const short = Math.max(0, PRACTICE_TEST_SIZE - remaining);
+  const short = Math.max(0, ((await targetSize(test)) || PRACTICE_TEST_SIZE) - remaining);
 
   res.json({
     message:
@@ -960,6 +1010,7 @@ async function addQuestionsToMock(req, res) {
     const pyqExamples = await getPyqStyleExamples(test.examStage, subject);
     const built = await createVerifiedQuestions({
       needed: batch,
+      inTest: test.questions.map((q) => q._id),
       tag: { examStage: test.examStage },
       generateParams: {
         examType: test.examStage,

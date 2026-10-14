@@ -39,12 +39,20 @@ const MAX_ROUNDS = 8;
  * A one-line note about each deletion is kept (see models/RejectedQuestion) so
  * that a gate which starts rejecting good work is visible instead of silent.
  */
-async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRounds }) {
+async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRounds, inTest = [] }) {
   if (needed <= 0) return { ids: [], verified: 0, repaired: 0, discarded: 0, duplicates: 0, short: 0 };
 
   const rounds = maxRounds || MAX_ROUNDS;
   const accepted = [];
-  const acceptedKeys = new Set();
+  // The paper the questions are going into, every section of it. The bank
+  // check below looks only at this subject, so a mock's GK section and its
+  // EVS section could both ask who chaired the Drafting Committee - Super TET
+  // Mock #2 did.
+  const paper = inTest.length
+    ? await Question.find({ _id: { $in: inTest } }).select("text textKey visual").lean()
+    : [];
+  const paperTexts = paper.filter((q) => !q.visual?.kind).map((q) => q.text);
+  const acceptedKeys = new Set(paper.map((q) => figureKey(q.visual) || q.textKey || questionKey(q.text)));
   let repaired = 0;
   let discarded = 0;
   let duplicates = 0;
@@ -164,7 +172,7 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
       q.textKey = key;
       if (acceptedKeys.has(key)) {
         duplicates++;
-        await drop(q, "duplicate", "identical to another question in this batch");
+        await drop(q, "duplicate", "identical to another question in this batch or test");
         continue;
       }
 
@@ -175,7 +183,9 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
         continue;
       }
 
-      const reworded = q.visual?.kind ? { repeat: false } : looksLikeRepeat(q.text, [...bankTexts, ...accepted.map((a) => a.text)]);
+      const reworded = q.visual?.kind
+        ? { repeat: false }
+        : looksLikeRepeat(q.text, [...bankTexts, ...paperTexts, ...accepted.map((a) => a.text)]);
       if (reworded.repeat) {
         duplicates++;
         await drop(q, "reworded", `already asked as: ${String(reworded.of).slice(0, 120)}`);

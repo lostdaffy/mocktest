@@ -163,6 +163,7 @@ async function addQuestionsToLiveExam(req, res) {
     // to fix a bad question once thousands of students are sitting it.
     const built = await createVerifiedQuestions({
       needed: batch,
+      inTest: test.questions.map((q) => q._id),
       tag: { examStage: test.examType },
       generateParams: {
         examType: test.examType,
