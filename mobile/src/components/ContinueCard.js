@@ -100,8 +100,8 @@ export default function ContinueCard({ navigation, user }) {
     const pct = item.total ? Math.round((item.answered / item.total) * 100) : 0;
     return (
       <TouchableOpacity style={styles.card} activeOpacity={0.85} disabled={starting} onPress={() => open(item.testId, true)}>
-        <View style={[styles.icon, { backgroundColor: "#FFF1E8" }]}>
-          <Ionicons name="play" size={18} color="#EA580C" />
+        <View style={[styles.icon, { backgroundColor: colors.brandLight }]}>
+          <Ionicons name="play" size={18} color={colors.brand} />
         </View>
         <View style={styles.body}>
           <Text style={styles.eyebrow}>LEFT HALF-WAY</Text>
@@ -117,7 +117,7 @@ export default function ContinueCard({ navigation, user }) {
             </Text>
           </View>
         </View>
-        <View style={[styles.button, { backgroundColor: "#EA580C" }]}>
+        <View style={[styles.button, { backgroundColor: colors.brand }]}>
           {starting ? <ActivityIndicator size="small" color="#FFFFFF" /> : <Text style={styles.buttonText}>Resume</Text>}
         </View>
       </TouchableOpacity>
@@ -129,8 +129,8 @@ export default function ContinueCard({ navigation, user }) {
   const good = item.lastAccuracy >= 60;
   return (
     <View style={styles.card}>
-      <View style={[styles.icon, { backgroundColor: "#E6F7EC" }]}>
-        <Ionicons name={next ? "arrow-forward" : "trophy"} size={18} color="#16A34A" />
+      <View style={[styles.icon, { backgroundColor: colors.brandLight }]}>
+        <Ionicons name={next ? "arrow-forward" : "trophy"} size={18} color={colors.brand} />
       </View>
       <View style={styles.body}>
         <Text style={styles.eyebrow} numberOfLines={1}>
@@ -149,7 +149,7 @@ export default function ContinueCard({ navigation, user }) {
       </View>
       {next ? (
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: "#16A34A" }]}
+          style={[styles.button, { backgroundColor: colors.brand }]}
           activeOpacity={0.85}
           disabled={starting}
           onPress={() => open(next.testId, next.isFree)}
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   sub: { fontSize: 12, fontWeight: "700", color: colors.slate, marginTop: 2 },
   barRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 5 },
   bar: { flex: 1, height: 5, borderRadius: 3, backgroundColor: colors.slateLight, overflow: "hidden" },
-  barFill: { height: 5, borderRadius: 3, backgroundColor: "#EA580C" },
+  barFill: { height: 5, borderRadius: 3, backgroundColor: colors.brand },
   barText: { fontSize: 11, fontWeight: "800", color: colors.slate },
   button: {
     flexDirection: "row",

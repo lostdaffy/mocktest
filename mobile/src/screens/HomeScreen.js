@@ -544,14 +544,9 @@ export default function HomeScreen({
       {/* Three cards explaining the app, the first time only */}
       <FirstRunGuide onStart={startTodayTest} />
 
-      {/* QUICK ACTIONS - one sideways row, so more fit without taking height */}
+      {/* QUICK ACTIONS - two rows of four */}
       <Text style={[styles.sectionTitleSm, styles.padded]}>Quick actions</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.actionsStrip}
-        contentContainerStyle={styles.actionsScroll}
-      >
+      <View style={styles.actionsGrid}>
         {[
           { icon: "document-text", label: "Mock Tests", c: 0, go: () => navigation.navigate("MockTab") },
           { icon: "book", label: "Practice", c: 4, go: () => navigation.navigate("PracticeTab") },
@@ -571,7 +566,7 @@ export default function HomeScreen({
             onPress={a.go}
           />
         ))}
-      </ScrollView>
+      </View>
 
       {/* CONTINUE LEARNING - resume, or the next test of their series */}
       <View style={styles.sectionTight}>
@@ -1345,14 +1340,12 @@ const styles =
       marginBottom: 8,
     },
 
-    actionsStrip: {
-      flexGrow: 0,
+    actionsGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      paddingHorizontal: spacing.lg - 4,
+      rowGap: 10,
       marginBottom: 14,
-    },
-
-    actionsScroll: {
-      paddingHorizontal: spacing.lg,
-      gap: 6,
     },
 
     /* =====================================================
@@ -2218,7 +2211,7 @@ const styles =
       alignItems:
         "center",
 
-      width: 72,
+      width: "25%",
     },
 
     actionIcon: {
