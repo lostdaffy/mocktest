@@ -9,6 +9,7 @@ import {
   RiTimeLine,
   RiAlarmWarningLine,
   RiCloseLine,
+  RiNotification3Line,
 } from "@remixicon/react";
 import api from "../api/axios";
 import { PageHeader } from "../components/ui";
@@ -282,7 +283,7 @@ export default function Users() {
 
       {/* Stats cards */}
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
           <StatCard icon={RiUserLine} label="Total" value={stats.total} tint="text-slate" bg="bg-slate-light" />
           <StatCard icon={RiStarLine} label="Premium" value={stats.premium} tint="text-success" bg="bg-success-light" />
           <StatCard
@@ -294,6 +295,8 @@ export default function Users() {
             onClick={() => setSubscription("expiring")}
           />
           <StatCard icon={RiTimeLine} label="New this week" value={stats.newThisWeek} tint="text-brand" bg="bg-brand/5" />
+          {/* Students whose phone can get a notification - reminders reach only these */}
+          <StatCard icon={RiNotification3Line} label="Notifications on" value={stats.notificationsOn ?? 0} tint="text-info" bg="bg-info-light" />
         </div>
       )}
 
@@ -502,7 +505,11 @@ export default function Users() {
                     {detail.flags.failedLoginAttempts > 0 && (
                       <Flag tone="slate">{detail.flags.failedLoginAttempts} failed login attempts</Flag>
                     )}
-                    {!detail.flags.hasPushToken && <Flag tone="slate">No notifications token</Flag>}
+                    {!detail.flags.hasPushToken && (
+                      <Flag tone="slate">
+                        No notifications{detail.flags.pushError ? ` · ${detail.flags.pushError}` : " · phone has not registered yet"}
+                      </Flag>
+                    )}
                     {!detail.flags.locked &&
                       detail.flags.hasEmail &&
                       detail.flags.hasPassword &&
