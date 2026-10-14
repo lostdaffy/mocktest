@@ -125,16 +125,32 @@ async function listGaps(req, res) {
 // Queues everything that is missing. The admin should not have to name 113
 // chapter-and-level pairs; the system already knows which exist.
 async function enqueue(req, res) {
-  const { practice = true, mocks = false, exclude = [], mocksPerExam = 1, limit } = req.body || {};
+  const { practice = true, mocks = false, exclude = [], mocksPerExam = 1, limit, exams } = req.body || {};
+  // exams: only these exams' mocks (e.g. ["SUPER_TET"]); all exams when absent.
+  const onlyExams = Array.isArray(exams) && exams.length ? new Set(exams.map(String)) : null;
 
   const gaps = await findGaps({
     excludeSubjects: Array.isArray(exclude) ? exclude : String(exclude).split(",").map((s) => s.trim()).filter(Boolean),
-    mocksPerExam: Math.min(Math.max(Number(mocksPerExam) || 1, 0), 5),
+    mocksPerExam: Math.min(Math.max(Number(mocksPerExam) || 1, 0), 10),
   });
 
   let wanted = [];
   if (practice) wanted.push(...gaps.practice);
-  if (mocks) wanted.push(...gaps.mocks);
+  if (mocks) {
+    // Every missing mock of an exam is the same job ({ kind, examType }), so
+    // the duplicate check below let only ONE through - "5 per exam" queued
+    // one. Mocks already waiting are counted off instead, per exam.
+    const byExam = new Map();
+    for (const m of gaps.mocks) {
+      if (onlyExams && !onlyExams.has(m.examType)) continue;
+      if (!byExam.has(m.examType)) byExam.set(m.examType, []);
+      byExam.get(m.examType).push(m);
+    }
+    for (const [examType, list] of byExam) {
+      const waiting = await GenerationJob.countDocuments({ kind: "mock", examType, vacancy: null, status: { $in: ["queued", "running"] } });
+      wanted.push(...list.slice(waiting).map((m) => ({ ...m, repeatable: true })));
+    }
+  }
   if (limit) wanted = wanted.slice(0, Math.max(1, Number(limit)));
 
   if (!wanted.length) {
@@ -145,9 +161,10 @@ async function enqueue(req, res) {
   let queued = 0;
   let alreadyThere = 0;
 
-  for (const job of wanted) {
-    // Two presses of the button leave one job per gap, not two.
-    if (await GenerationJob.isAlreadyQueued(job)) {
+  for (const { repeatable, ...job } of wanted) {
+    // Two presses of the button leave one job per gap, not two. (Mocks were
+    // counted off per exam above.)
+    if (!repeatable && (await GenerationJob.isAlreadyQueued(job))) {
       alreadyThere++;
       continue;
     }

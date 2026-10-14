@@ -168,6 +168,21 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const after = await db.collection("generationjobs").countDocuments({ status: "queued" });
   check("...and nothing is picked up while it is paused", before === after, `${before} -> ${after}`);
 
+  // ---- several mocks for one exam
+  // Every missing mock of an exam looks like the same job, so the duplicate
+  // check used to let only one through: "3 per exam" queued 1.
+  await api("POST", "/generation/pause", { token });
+  const mockJobs = () => db.collection("generationjobs").countDocuments({ kind: "mock", examType: "SSC_CGL", status: { $in: ["queued", "running"] } });
+  r = await api("POST", "/generation/enqueue", { token, body: { practice: false, mocks: true, mocksPerExam: 3, exams: ["SSC_CGL"] } });
+  await api("POST", "/generation/pause", { token });
+  check("asking for 3 mocks of one exam queues 3, not 1", (await mockJobs()) === 3, `${await mockJobs()} waiting, ${r.json.message}`);
+  r = await api("POST", "/generation/enqueue", { token, body: { practice: false, mocks: true, mocksPerExam: 3, exams: ["SSC_CGL"] } });
+  await api("POST", "/generation/pause", { token });
+  check("...and asking again adds none", (await mockJobs()) === 3 && r.json.queued === 0, `${await mockJobs()} waiting, ${r.json.queued} new`);
+  r = await api("POST", "/generation/enqueue", { token, body: { practice: false, mocks: true, mocksPerExam: 3, exams: ["NOT_THIS_ONE"] } });
+  await api("POST", "/generation/pause", { token });
+  check("...and the exam filter leaves other exams alone", r.json.queued === 0, r.json.message);
+
   // ---- a build the server was killed in the middle of
   // The free instance stops whenever nobody is using the site. The job it was
   // building stayed marked "running" for ever, and the worker only looks for
