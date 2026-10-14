@@ -38,6 +38,7 @@ import {
 import TodayPlanCard from "../components/TodayPlanCard";
 import FirstRunGuide from "../components/FirstRunGuide";
 import ReferEarnCard from "../components/ReferEarnCard";
+import ContinueCard from "../components/ContinueCard";
 
 /* =========================================================
    LOGO
@@ -527,12 +528,12 @@ export default function HomeScreen({
       </View>
 
       {/* =================================================
-          TODAY'S PLAN - quiz, practice, mock: what to do next
+          FIRST SCREEN - what to do today, where to go, what to pick up
+          again. These three fit without scrolling; the slider and the
+          rest come after them.
       ================================================= */}
 
-      <View
-        style={styles.section}
-      >
+      <View style={styles.sectionTight}>
         <TodayPlanCard
           navigation={navigation}
           onStartQuiz={startTodayTest}
@@ -542,6 +543,46 @@ export default function HomeScreen({
 
       {/* Three cards explaining the app, the first time only */}
       <FirstRunGuide onStart={startTodayTest} />
+
+      {/* QUICK ACTIONS - one sideways row, so more fit without taking height */}
+      <Text style={[styles.sectionTitleSm, styles.padded]}>Quick actions</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.actionsStrip}
+        contentContainerStyle={styles.actionsScroll}
+      >
+        {[
+          { icon: "document-text", label: "Mock Tests", c: 0, go: () => navigation.navigate("MockTab") },
+          { icon: "book", label: "Practice", c: 4, go: () => navigation.navigate("PracticeTab") },
+          { icon: "newspaper", label: "PYQs", c: 2, go: () => navigation.navigate("PyqTab") },
+          { icon: "trophy", label: "Quiz Rank", tint: "#D97706", bg: "#FFF4DE", go: () => navigation.navigate("QuizBoard") },
+          { icon: "radio", label: "Live Exams", tint: "#E11D48", bg: "#FFF1F2", go: () => navigation.navigate("LiveTab") },
+          { icon: "stats-chart", label: "My Analysis", c: 3, go: () => navigation.navigate("Analysis") },
+          { icon: "time", label: "History", tint: "#0891B2", bg: "#ECFEFF", go: () => navigation.navigate("HistoryTab") },
+          { icon: "gift", label: "Refer & Earn", tint: "#047857", bg: "#ECFDF5", go: () => navigation.navigate("Referral") },
+        ].map((a) => (
+          <QuickAction
+            key={a.label}
+            icon={a.icon}
+            label={a.label}
+            tint={a.tint || colors.categories[a.c].fg}
+            bg={a.bg || colors.categories[a.c].bg}
+            onPress={a.go}
+          />
+        ))}
+      </ScrollView>
+
+      {/* CONTINUE LEARNING - resume, or the next test of their series */}
+      <View style={styles.sectionTight}>
+        <View style={styles.sectionHead}>
+          <Text style={styles.sectionTitleSm}>Continue learning</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("PracticeTab")} activeOpacity={0.7} hitSlop={8}>
+            <Text style={styles.viewAll}>All subjects</Text>
+          </TouchableOpacity>
+        </View>
+        <ContinueCard navigation={navigation} user={user} />
+      </View>
 
       {/* =================================================
           CAROUSEL
@@ -553,239 +594,6 @@ export default function HomeScreen({
         <HomeCarousel
           navigation={navigation}
         />
-      </View>
-
-      {/* =================================================
-          CONTINUE LEARNING
-      ================================================= */}
-
-      {subjects.length > 0 && (
-        <View
-          style={styles.section}
-        >
-          <View
-            style={
-              styles.sectionHead
-            }
-          >
-            <Text
-              style={
-                styles.sectionTitleNoMargin
-              }
-            >
-              Continue Learning
-            </Text>
-
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate(
-                  "PracticeTab"
-                )
-              }
-              activeOpacity={0.7}
-            >
-              <Text
-                style={
-                  styles.viewAll
-                }
-              >
-                View All
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {subjects
-            .slice(0, 1)
-            .map((subj) => {
-              const progress =
-                subj.totalChapters
-                  ? Math.max(
-                      Math.min(
-                        (subj.completedCount /
-                          subj.totalChapters) *
-                          100,
-                        100
-                      ),
-                      3
-                    )
-                  : 3;
-
-              return (
-                <TouchableOpacity
-                  key={subj._id}
-                  style={
-                    styles.learnCard
-                  }
-                  activeOpacity={0.75}
-                  onPress={() =>
-                    navigation.navigate(
-                      "PracticeTab",
-                      {
-                        screen:
-                          "ChapterList",
-                        params: {
-                          subject:
-                            subj,
-                        },
-                      }
-                    )
-                  }
-                >
-                  <View
-                    style={
-                      styles.learnIcon
-                    }
-                  >
-                    <Text
-                      style={{
-                        fontSize: 21,
-                      }}
-                    >
-                      {subj.icon ||
-                        "📚"}
-                    </Text>
-                  </View>
-
-                  <View
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                    }}
-                  >
-                    <Text
-                      style={
-                        styles.learnName
-                      }
-                      numberOfLines={1}
-                    >
-                      {subj.name}
-                    </Text>
-
-                    <Text
-                      style={
-                        styles.learnSub
-                      }
-                    >
-                      Daily Practice
-                    </Text>
-
-                    <View
-                      style={
-                        styles.learnBarBg
-                      }
-                    >
-                      <View
-                        style={[
-                          styles.learnBarFill,
-                          {
-                            width: `${progress}%`,
-                          },
-                        ]}
-                      />
-                    </View>
-                  </View>
-
-                  <Text
-                    style={
-                      styles.learnFraction
-                    }
-                  >
-                    {subj.completedCount ||
-                      0}{" "}
-                    /{" "}
-                    {subj.totalChapters ||
-                      0}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-        </View>
-      )}
-
-      {/* =================================================
-          QUICK ACTIONS
-      ================================================= */}
-
-      <View
-        style={styles.section}
-      >
-        <Text
-          style={
-            styles.sectionTitle
-          }
-        >
-          Quick Actions
-        </Text>
-
-        <View
-          style={
-            styles.actionsRow
-          }
-        >
-          <QuickAction
-            icon="document-text"
-            tint={
-              colors.categories[0].fg
-            }
-            bg={
-              colors.categories[0].bg
-            }
-            label="Mock Tests"
-            onPress={() =>
-              navigation.navigate(
-                "MockTab"
-              )
-            }
-          />
-
-          <QuickAction
-            icon="book"
-            tint={
-              colors.categories[4].fg
-            }
-            bg={
-              colors.categories[4].bg
-            }
-            label="Practice"
-            onPress={() =>
-              navigation.navigate(
-                "PracticeTab"
-              )
-            }
-          />
-
-          <QuickAction
-            icon="newspaper"
-            tint={
-              colors.categories[2].fg
-            }
-            bg={
-              colors.categories[2].bg
-            }
-            label="PYQs"
-            onPress={() =>
-              navigation.navigate(
-                "PyqTab"
-              )
-            }
-          />
-
-          <QuickAction
-            icon="stats-chart"
-            tint={
-              colors.categories[3].fg
-            }
-            bg={
-              colors.categories[3].bg
-            }
-            label="Performance"
-            onPress={() =>
-              navigation.navigate(
-                "Analysis"
-              )
-            }
-          />
-        </View>
       </View>
 
       {/* =================================================
@@ -1521,12 +1329,38 @@ const styles =
         spacing.lg,
     },
 
+    sectionTight: {
+      paddingHorizontal: spacing.lg,
+      marginBottom: 14,
+    },
+
+    padded: {
+      paddingHorizontal: spacing.lg,
+    },
+
+    sectionTitleSm: {
+      ...type.h3,
+      color: colors.ink,
+      fontSize: 16,
+      marginBottom: 8,
+    },
+
+    actionsStrip: {
+      flexGrow: 0,
+      marginBottom: 14,
+    },
+
+    actionsScroll: {
+      paddingHorizontal: spacing.lg,
+      gap: 6,
+    },
+
     /* =====================================================
        HEADER
     ===================================================== */
 
     header: {
-      minHeight: 88,
+      minHeight: 64,
 
       flexDirection:
         "row",
@@ -1550,8 +1384,8 @@ const styles =
      */
 
     brandArea: {
-      width: 170,
-      height: 70,
+      width: 150,
+      height: 56,
 
       justifyContent:
         "center",
@@ -1565,8 +1399,8 @@ const styles =
     },
 
     brandLogo: {
-      width: 155,
-      height: 68,
+      width: 140,
+      height: 56,
 
       maxWidth: "100%",
 
@@ -1637,9 +1471,9 @@ const styles =
       paddingHorizontal:
         spacing.lg,
 
-      marginTop: 2,
+      marginTop: 0,
 
-      marginBottom: 18,
+      marginBottom: 12,
     },
 
     greetingRow: {
@@ -1661,9 +1495,9 @@ const styles =
       color:
         colors.ink,
 
-      fontSize: 25,
+      fontSize: 22,
 
-      lineHeight: 31,
+      lineHeight: 28,
 
       fontWeight:
         "800",
@@ -1675,9 +1509,9 @@ const styles =
     },
 
     greetingEmoji: {
-      fontSize: 25,
+      fontSize: 22,
 
-      lineHeight: 31,
+      lineHeight: 28,
 
       marginLeft: 7,
 
@@ -2384,14 +2218,12 @@ const styles =
       alignItems:
         "center",
 
-      flex: 1,
-
-      paddingHorizontal: 3,
+      width: 72,
     },
 
     actionIcon: {
-      width: 50,
-      height: 50,
+      width: 48,
+      height: 48,
 
       borderRadius: 15,
 
@@ -2410,12 +2242,12 @@ const styles =
       color:
         colors.inkSoft,
 
-      fontSize: 10,
+      fontSize: 11,
 
       lineHeight: 14,
 
       fontWeight:
-        "600",
+        "700",
 
       textAlign:
         "center",
