@@ -345,7 +345,7 @@ async function getTest(req, res) {
   const hasPictures = test.hasVisuals || (test.questions || []).some((q) => q?.visual?.kind);
   if (hasPictures && !showsVisuals(req)) {
     return res.status(426).json({
-      message: "This test has charts or figures. Please update the RankVeer app from the Play Store to open it.",
+      message: "This test has charts or figures. Please update the Rankveer app from the Play Store to open it.",
       code: "UPDATE_REQUIRED",
     });
   }

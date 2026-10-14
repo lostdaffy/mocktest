@@ -87,7 +87,7 @@ function describeDevice(userAgent = "") {
   const ua = String(userAgent);
   if (!ua) return "Unknown device";
 
-  const app = /okhttp|expo|RankVeer/i.test(ua) ? "Rankveer app" : null;
+  const app = /okhttp|expo|Rankveer/i.test(ua) ? "Rankveer app" : null;
   const browser =
     (/Edg\//.test(ua) && "Edge") ||
     (/OPR\//.test(ua) && "Opera") ||

@@ -58,7 +58,7 @@ export default function FirstRunGuide({ onStart }) {
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
 
-          <Text style={styles.welcome}>Welcome to RankVeer</Text>
+          <Text style={styles.welcome}>Welcome to Rankveer</Text>
 
           <View style={[styles.icon, { backgroundColor: s.tint }]}>
             <Ionicons name={s.icon} size={34} color="#FFFFFF" />

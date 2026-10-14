@@ -91,7 +91,7 @@ export function AuthProvider({ children }) {
         } else if (code === "UPDATE_REQUIRED") {
           AppAlert.alert(
             "Update the app",
-            data.message || "Please update RankVeer from the Play Store to open this.",
+            data.message || "Please update Rankveer from the Play Store to open this.",
             [
               { text: "Later", style: "cancel" },
               { text: "Update", onPress: () => Linking.openURL(STORE_URL).catch(() => {}) },

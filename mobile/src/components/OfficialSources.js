@@ -29,12 +29,12 @@ export default function OfficialSources({ style }) {
       </View>
 
       <Text style={[styles.text, { color: colors.slate }]}>
-        RankVeer is an independent, private exam-preparation app. It does not represent and is not
+        Rankveer is an independent, private exam-preparation app. It does not represent and is not
         affiliated with any government body. For official notifications, syllabus, dates and results,
         always check the official website:
       </Text>
       <Text style={[styles.textHi, { color: colors.slate }]}>
-        RankVeer एक निजी तैयारी ऐप है, सरकारी ऐप नहीं। आधिकारिक सूचना और रिज़ल्ट के लिए नीचे दी गई
+        Rankveer एक निजी तैयारी ऐप है, सरकारी ऐप नहीं। आधिकारिक सूचना और रिज़ल्ट के लिए नीचे दी गई
         आधिकारिक वेबसाइट देखें।
       </Text>
 
