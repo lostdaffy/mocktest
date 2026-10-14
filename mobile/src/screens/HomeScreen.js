@@ -39,6 +39,7 @@ import TodayPlanCard from "../components/TodayPlanCard";
 import FirstRunGuide from "../components/FirstRunGuide";
 import ReferEarnCard from "../components/ReferEarnCard";
 import ContinueCard from "../components/ContinueCard";
+import QuestionOfDayCard from "../components/QuestionOfDayCard";
 import { getSeenAt, hasUnseen } from "../utils/notificationSeen";
 
 /* =========================================================
@@ -560,6 +561,11 @@ export default function HomeScreen({
           onStartQuiz={startTodayTest}
           startingQuiz={loadingTest}
         />
+      </View>
+
+      {/* QUESTION OF THE DAY - ten seconds, every day */}
+      <View style={styles.sectionTight}>
+        <QuestionOfDayCard user={user} />
       </View>
 
       {/* Three cards explaining the app, the first time only */}
