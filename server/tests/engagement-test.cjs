@@ -111,6 +111,25 @@ async function api(method, p, { body, token } = {}) {
     JSON.stringify(r.json.steps[0].result));
   check("...and moves on to practice", r.json.next === "practice" && r.json.done === 1, `${r.json.next} ${r.json.done}`);
 
+  // ---- Question of the Day: one question for everyone, first answer counts
+  r = await api("GET", "/tests/question-of-day", { token: tok(asha) });
+  const qod = r.json.question;
+  check("Question of the Day hands out one question", r.status === 200 && !!qod?._id && qod.options?.length === 4, `${r.status} ${JSON.stringify(r.json).slice(0, 120)}`);
+  check("...without its answer before it is answered", !("correctIndex" in (qod || {})) && r.json.answer === null && !JSON.stringify(r.json).includes("correctIndex"));
+  r = await api("GET", "/tests/question-of-day", { token: tok(bina) });
+  check("...the same question for everyone today", String(r.json.question?._id) === String(qod?._id));
+  const key = (await db.collection("questions").findOne({ _id: new mongoose.Types.ObjectId(qod._id) })).correctIndex;
+  r = await api("POST", "/tests/question-of-day/answer", { token: tok(asha), body: { selectedIndex: (key + 1) % 4 } });
+  check("a wrong answer is marked wrong and the key is shown", r.status === 200 && r.json.answer?.correct === false && r.json.answer.correctIndex === key,
+    JSON.stringify(r.json.answer));
+  r = await api("POST", "/tests/question-of-day/answer", { token: tok(asha), body: { selectedIndex: key } });
+  check("...and answering again keeps the first answer", r.json.answer?.correct === false && r.json.answer.selectedIndex === (key + 1) % 4);
+  r = await api("POST", "/tests/question-of-day/answer", { token: tok(bina), body: { selectedIndex: key } });
+  check("the day's stats count everyone who answered", r.json.answer?.correct === true && r.json.stats?.answered === 2 && r.json.stats.correctPct === 50,
+    JSON.stringify(r.json.stats));
+  r = await api("POST", "/tests/question-of-day/answer", { token: tok(chetan), body: { selectedIndex: 7 } });
+  check("an option that does not exist is refused", r.status === 400);
+
   // ---- the Notifications screen: what is new for this student
   r = await api("GET", "/tests/notifications", { token: tok(asha) });
   check("notifications tell a student who took the quiz where they ranked", r.status === 200 &&

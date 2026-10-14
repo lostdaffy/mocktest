@@ -1,5 +1,5 @@
 const express = require("express");
-const { getTodayPlan, getQuizBoard, getContinue, getNotifications } = require("../controllers/engagementController");
+const { getTodayPlan, getQuizBoard, getContinue, getNotifications, getQuestionOfDay, postQuestionOfDay } = require("../controllers/engagementController");
 const router = express.Router();
 const {
   listTests,
@@ -29,6 +29,8 @@ const asyncRoute = require("../utils/asyncRoute");
 router.get("/today", protect, asyncRoute(getTodayTest));
 router.get("/daily", protect, asyncRoute(getDailyStatus)); // streak + today's progress for the home screen
 router.get("/today-plan", protect, asyncRoute(getTodayPlan)); // the Home screen's Today's plan card
+router.get("/question-of-day", protect, asyncRoute(getQuestionOfDay)); // Home's Question of the Day
+router.post("/question-of-day/answer", protect, asyncRoute(postQuestionOfDay));
 router.get("/notifications", protect, asyncRoute(getNotifications)); // the app's Notifications screen
 router.get("/continue", protect, asyncRoute(getContinue)); // Home's Continue learning: resume, or the next test
 router.get("/daily-quiz/board", protect, asyncRoute(getQuizBoard)); // the day's quiz ranking

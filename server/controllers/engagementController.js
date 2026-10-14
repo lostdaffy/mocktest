@@ -1,5 +1,6 @@
 const { todayPlan, quizBoard, runReminders, continueLearning, notificationFeed, recentTests } = require("../services/engagement");
 const { showsVisuals } = require("../utils/appVersion");
+const { questionOfDay, answerQuestionOfDay } = require("../services/questionOfDay");
 const { ensureTodayQuiz } = require("../services/dailyQuiz");
 const DailyQuiz = require("../models/DailyQuiz");
 
@@ -20,6 +21,18 @@ async function getContinue(req, res) {
 // GET /api/tests/notifications -> the Notifications screen: what is new for this student
 async function getNotifications(req, res) {
   res.json(await notificationFeed(req.user, { showVisuals: showsVisuals(req) }));
+}
+
+// GET /api/tests/question-of-day -> Home's Question of the Day (key only once answered)
+async function getQuestionOfDay(req, res) {
+  res.json(await questionOfDay(req.user._id));
+}
+
+// POST /api/tests/question-of-day/answer { selectedIndex } -> the first answer counts
+async function postQuestionOfDay(req, res) {
+  const r = await answerQuestionOfDay(req.user._id, Number(req.body?.selectedIndex));
+  if (r.error) return res.status(400).json({ message: r.error });
+  res.json(r);
 }
 
 // GET /api/tests/daily-quiz/board?date=YYYY-MM-DD -> the day's quiz ranking
@@ -45,4 +58,4 @@ async function jobsTick(req, res) {
   res.json({ ok: true, ...result });
 }
 
-module.exports = { getTodayPlan, getQuizBoard, jobsTick, getContinue, getNotifications };
+module.exports = { getTodayPlan, getQuizBoard, jobsTick, getContinue, getNotifications, getQuestionOfDay, postQuestionOfDay };
