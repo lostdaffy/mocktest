@@ -223,6 +223,31 @@ async function api(method, p, body) {
   r = await asStudent("POST", "/auth/push-token", {});
   check("an empty call is refused", r.status === 400);
 
+  // ---- recounting analysis from finished tests
+  const q1 = await db.collection("questions").insertOne({ text: "x?", options: ["a", "b", "c", "d"], correctIndex: 0, subject: "Maths", topic: "Percentage", status: "published" });
+  const q2 = await db.collection("questions").insertOne({ text: "y?", options: ["a", "b", "c", "d"], correctIndex: 0, subject: "Maths", topic: "Percentage", status: "published" });
+  const q3 = await db.collection("questions").insertOne({ text: "z?", options: ["a", "b", "c", "d"], correctIndex: 0, subject: "GK", topic: "Polity", status: "published" });
+  await db.collection("attempts").insertOne({
+    user: sid, test: testDoc.insertedId, status: "submitted", submittedAt: new Date(), createdAt: new Date(),
+    answers: [
+      { question: q1.insertedId, selectedIndex: 0, isCorrect: true },
+      { question: q2.insertedId, selectedIndex: 2, isCorrect: false },
+      { question: q3.insertedId, selectedIndex: null, isCorrect: false },
+    ],
+  });
+  // What the old bug left behind: the topic present, its first test lost.
+  await db.collection("users").updateOne({ _id: sid }, { $set: { topicStats: [{ subject: "Maths", topic: "Percentage", attempted: 0, correct: 0, accuracy: 0 }] } });
+  r = await api("POST", "/admin/users/rebuild-analysis");
+  const rebuilt = (await db.collection("users").findOne({ _id: sid })).topicStats;
+  const pct = rebuilt.find((t) => t.topic === "Percentage");
+  check("the analysis is recounted from finished tests", r.status === 200 && pct?.attempted === 2 && pct?.correct === 1 && pct?.accuracy === 50,
+    `${r.status} ${JSON.stringify(pct)}`);
+  check("...a skipped question is not counted, as when submitting", !rebuilt.some((t) => t.topic === "Polity"), JSON.stringify(rebuilt.map((t) => t.topic)));
+  await api("POST", "/admin/users/rebuild-analysis");
+  const again = (await db.collection("users").findOne({ _id: sid })).topicStats.find((t) => t.topic === "Percentage");
+  check("...and running it again changes nothing", again?.attempted === 2 && again?.correct === 1);
+  check("...only an admin can run it", (await asStudent("POST", "/admin/users/rebuild-analysis")).status === 403);
+
   // ---- unlock
   r = await api("PATCH", "/admin/users/" + sid + "/unlock");
   check("unlock clears the lockout", r.status === 200, r.json.message);

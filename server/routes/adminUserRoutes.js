@@ -15,10 +15,22 @@ const {
 } = require("../controllers/adminUserController");
 const { protect, adminOnly } = require("../middleware/auth");
 const asyncRoute = require("../utils/asyncRoute");
+const { rebuildAll } = require("../services/topicStatsRebuild");
 
 // Order matters - "/stats" and "/export" must be registered before "/:id"
 // routes elsewhere would even matter, though none collide here currently.
 router.get("/stats", protect, adminOnly, asyncRoute(getUserStats));
+// Recounts every student's topic analysis from their finished tests (see
+// services/topicStatsRebuild.js). Safe to run again.
+router.post(
+  "/rebuild-analysis",
+  protect,
+  adminOnly,
+  asyncRoute(async (req, res) => {
+    const r = await rebuildAll();
+    res.json({ ...r, message: `Analysis recounted for ${r.users} student(s)` });
+  })
+);
 router.get("/export", protect, adminOnly, asyncRoute(exportUsersCsv));
 router.get("/", protect, adminOnly, asyncRoute(searchUsers));
 router.patch("/:id/reset-password", protect, adminOnly, asyncRoute(adminResetPassword));
