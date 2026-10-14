@@ -6,7 +6,7 @@ const { generateQuestions, repairQuestion } = require("./geminiService");
 const { runValidationPipelineBatch, questionKey, looksLikeRepeat } = require("./validationPipeline");
 // Through the module, not destructured, so the test stub can stand in for it.
 const visualGen = require("./visualGenerator");
-const { visualSignature } = require("./visuals");
+const { visualSignature, figureKey } = require("./visuals");
 
 // How many extra to ask for each round. A round that asks for exactly what is
 // missing comes back short the moment anything is rejected, and the test ends
@@ -157,7 +157,10 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
     for (const q of keep) {
       // A visual question's identity includes its chart or figure: the same
       // "What is the average?" about two different charts is two questions.
-      const key = q.visual?.kind ? questionKey(q.text + visualSignature(q.visual)) : q.textKey || questionKey(q.text);
+      // A figure is the same question whatever its wording (see figureKey).
+      const key =
+        figureKey(q.visual) ||
+        (q.visual?.kind ? questionKey(q.text + visualSignature(q.visual)) : q.textKey || questionKey(q.text));
       q.textKey = key;
       if (acceptedKeys.has(key)) {
         duplicates++;

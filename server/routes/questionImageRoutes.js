@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { listFigures, getFigure, uploadFigure, removeFigure, serveImage } = require("../controllers/questionImageController");
+const { listFigures, getFigure, uploadFigure, removeFigure, serveImage, rekeyFigures } = require("../controllers/questionImageController");
 const { protect, adminOnly } = require("../middleware/auth");
 const asyncRoute = require("../utils/asyncRoute");
 
@@ -9,6 +9,7 @@ router.get("/figures", protect, adminOnly, asyncRoute(listFigures));
 router.get("/question/:questionId", protect, adminOnly, asyncRoute(getFigure));
 router.post("/question/:questionId", protect, adminOnly, asyncRoute(uploadFigure));
 router.delete("/question/:questionId", protect, adminOnly, asyncRoute(removeFigure));
+router.post("/rekey", protect, adminOnly, asyncRoute(rekeyFigures)); // figure keys by figure; lists repeats in tests
 
 // Public: the picture itself, for the app (see serveImage).
 router.get("/:id", asyncRoute(serveImage));

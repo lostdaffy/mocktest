@@ -686,6 +686,36 @@ function visualSignature(visual) {
   return ` #v${(h >>> 0).toString(36)}`;
 }
 
+/**
+ * A figure question's identity: what is asked about, not how it is worded
+ * or in what order its options come. "Find the correct mirror image" and
+ * "Select the option that depicts the mirror image" of the same figure are
+ * one question - two of them in a test is a repeat a student notices at
+ * once. The size of a shape does not make it a different question either.
+ *  - odd one out: the four figures, in any order;
+ *  - every other layout: the problem figure(s), in order.
+ * Returns "" for anything that is not a usable figure.
+ */
+function figureKey(visual) {
+  if (visual?.kind !== "figure") return "";
+  let spec;
+  try {
+    spec = normaliseFigure(visual.figure?.spec);
+  } catch {
+    return "";
+  }
+  const panel = (p) =>
+    (p.elements || [])
+      .map((e) => `${e.shape}:${e.fill}:${e.rotate}@${e.row}${e.col}`)
+      .sort()
+      .join(",");
+  const core =
+    spec.layout === "odd_one_out" ? `odd|${spec.options.map(panel).sort().join("|")}` : `${spec.layout}|${spec.question.map(panel).join("|")}`;
+  let h = 0;
+  for (let i = 0; i < core.length; i++) h = (h * 31 + core.charCodeAt(i)) | 0;
+  return `figure ${(h >>> 0).toString(36)} ${core.length}`;
+}
+
 const figureAwaitingImage = (q) => q?.visual?.kind === "figure" && !q?.visual?.figure?.imageId;
 
 /**
@@ -729,6 +759,7 @@ module.exports = {
   figureSvg,
   visualAsText,
   visualSignature,
+  figureKey,
   figureAwaitingImage,
   imagesPendingIn,
   hasVisuals,

@@ -3,7 +3,7 @@ const { isHindiMedium, hasDevanagari, isLanguageNeutral } = require("../utils/la
 const { refersToAPassage, carriesItsPassage } = require("../utils/comprehension");
 const { arguesWithItself } = require("../utils/selfDoubt");
 const { solutionReachesTheAnswer } = require("../utils/answerAgrees");
-const { normaliseChart, checkChartAnswer, normaliseFigure, checkFigureAnswer, visualSignature } = require("./visuals");
+const { normaliseChart, checkChartAnswer, normaliseFigure, checkFigureAnswer, visualSignature, figureKey } = require("./visuals");
 
 // "What is 15% of 240?" and "what is 15 % of 240" are the same question.
 // Used both to spot repeats inside a batch and to catch a question the bank
@@ -275,7 +275,7 @@ async function runValidationPipelineBatch(questions, { reshuffle = true } = {}) 
   const verificationByQuestion = new Map(needVerification.map((q, i) => [q, verifications[i]]));
 
   return ruleResults.map(({ question, rule }) => {
-    const withKey = { ...question, textKey: questionKey(question.text + visualSignature(question.visual)) };
+    const withKey = { ...question, textKey: figureKey(question.visual) || questionKey(question.text + visualSignature(question.visual)) };
     if (!rule.passed) {
       return {
         ...withKey,

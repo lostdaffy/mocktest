@@ -193,4 +193,38 @@ async function serveImage(req, res) {
   res.send(Buffer.from(img.data.buffer || img.data));
 }
 
-module.exports = { listFigures, getFigure, uploadFigure, removeFigure, serveImage, figureCard, MAX_BYTES };
+// POST /api/question-images/rekey (admin)
+//
+// Gives every figure question its figure-based key (see figureKey) - the
+// ones made before it were keyed by their wording, so a reworded repeat
+// slipped past the bank check - and lists the tests that hold the same
+// figure twice, so the repeats can be taken out.
+async function rekeyFigures(req, res) {
+  const { figureKey } = require("../services/visuals");
+  const qs = await Question.find({ "visual.kind": "figure" }).select("visual textKey").lean();
+  let changed = 0;
+  const keyOf = new Map();
+  for (const q of qs) {
+    const key = figureKey(q.visual);
+    if (!key) continue;
+    keyOf.set(String(q._id), key);
+    if (q.textKey !== key) {
+      await Question.updateOne({ _id: q._id }, { $set: { textKey: key } });
+      changed++;
+    }
+  }
+  const tests = await Test.find({ questions: { $in: [...keyOf.keys()] } }).select("title questions").lean();
+  const repeats = [];
+  for (const t of tests) {
+    const seen = new Map();
+    for (const id of t.questions.map(String)) {
+      const k = keyOf.get(id);
+      if (!k) continue;
+      if (seen.has(k)) repeats.push({ testId: t._id, title: t.title, keep: seen.get(k), repeat: id });
+      else seen.set(k, id);
+    }
+  }
+  res.json({ figures: qs.length, rekeyed: changed, repeats });
+}
+
+module.exports = { listFigures, getFigure, uploadFigure, removeFigure, serveImage, figureCard, rekeyFigures, MAX_BYTES };

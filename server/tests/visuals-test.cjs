@@ -104,6 +104,16 @@ async function drainQueue(token) {
     V.checkFigureAnswer(V.normaliseFigure({ layout: "mirror", grid: 3, question: [p1], options: [p1, V.mirrorPanel(p1, 3), step(p1), V.waterPanel(p1, 3)] }), 1).ok === true);
   check("an odd-one-out is left to the admin's eye, not guessed",
     V.checkFigureAnswer(V.normaliseFigure({ layout: "odd_one_out", grid: 3, question: [], options: [p1, step(p1), V.mirrorPanel(p1, 3), V.waterPanel(p1, 3)] }), 0).ok === null);
+  // A figure's identity is its figure, not its wording or option order.
+  const mirrorA = { kind: "figure", figure: { spec: { layout: "mirror", grid: 3, question: [p1], options: [p1, V.mirrorPanel(p1, 3), step(p1), V.waterPanel(p1, 3)] } } };
+  const mirrorB = { kind: "figure", figure: { spec: { layout: "mirror", grid: 3, question: [p1], options: [V.waterPanel(p1, 3), step(p1), V.mirrorPanel(p1, 3), p1] } } };
+  const waterSame = { kind: "figure", figure: { spec: { layout: "water", grid: 3, question: [p1], options: [p1, V.mirrorPanel(p1, 3), step(p1), V.waterPanel(p1, 3)] } } };
+  check("the same mirror figure with its options reordered is the same question", !!V.figureKey(mirrorA) && V.figureKey(mirrorA) === V.figureKey(mirrorB));
+  check("...but its water image is a different question", V.figureKey(mirrorA) !== V.figureKey(waterSame));
+  const oddA = { kind: "figure", figure: { spec: { layout: "odd_one_out", grid: 3, question: [], options: [p1, step(p1), V.mirrorPanel(p1, 3), V.waterPanel(p1, 3)] } } };
+  const oddB = { kind: "figure", figure: { spec: { layout: "odd_one_out", grid: 3, question: [], options: [V.waterPanel(p1, 3), p1, V.mirrorPanel(p1, 3), step(p1)] } } };
+  check("an odd-one-out with the same four figures in another order is the same question", V.figureKey(oddA) === V.figureKey(oddB));
+  check("a chart has no figure key", V.figureKey({ kind: "chart", chart: {} }) === "");
   let dup = "";
   try { V.normaliseFigure({ ...fig, options: [p1, p1, step(p1), V.waterPanel(p1, 3)] }); } catch (e) { dup = e.message; }
   check("two identical answer figures are refused", /same figure/.test(dup), dup);
@@ -242,6 +252,19 @@ async function drainQueue(token) {
   }
   r = await api("GET", "/question-images/figures", { token });
   check("once all are in, nothing is pending", r.json.pendingCount === 0, `${r.json.pendingCount}`);
+
+  // ---- a figure reworded is still the same question
+  const orig = figQs[0];
+  const copy = await db.collection("questions").insertOne({ ...orig, _id: undefined, text: "Choose the figure that is reworded but identical.", textKey: "whatever" });
+  await db.collection("tests").updateOne({ _id: figTest._id }, { $push: { questions: copy.insertedId } });
+  r = await api("POST", "/question-images/rekey", { token });
+  check("rekeying gives figure questions a key from the figure itself", r.status === 200 && r.json.figures >= 21, `${r.status} ${JSON.stringify(r.json).slice(0, 120)}`);
+  check("...and finds the reworded repeat in its test", r.json.repeats?.length === 1 && String(r.json.repeats[0].repeat) === String(copy.insertedId),
+    JSON.stringify(r.json.repeats));
+  const keys = await db.collection("questions").find({ _id: { $in: [orig._id, copy.insertedId] } }).project({ textKey: 1 }).toArray();
+  check("...the two now share one key, so the bank check catches the next one", keys.length === 2 && keys[0].textKey === keys[1].textKey && /^figure /.test(keys[0].textKey));
+  await db.collection("tests").updateOne({ _id: figTest._id }, { $pull: { questions: copy.insertedId } });
+  await db.collection("questions").deleteOne({ _id: copy.insertedId });
   r = await api("PATCH", `/exam-series/practice/${figTestId}/publish`, { token, body: { isFree: true } });
   check("...and the test publishes", r.status === 200, `${r.status} ${r.json.message}`);
 

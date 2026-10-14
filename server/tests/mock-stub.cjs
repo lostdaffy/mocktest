@@ -118,7 +118,17 @@ visualGen.generateVisualQuestions = async (params) => {
     const qs = [];
     for (let i = 0; i <= count; i++) {
       v += 1;
-      const p1 = { elements: [{ shape: "arrow", row: 1, col: 1, fill: "black", rotate: 0 }, { shape: "circle", row: 3, col: (v % 3) + 1 === 1 ? 2 : 3, fill: "white" }] };
+      // A different figure every time (a circle and a dot in two of the
+      // eight free cells) - the bank treats one figure reworded as a repeat.
+      const cells = [[1, 2], [1, 3], [2, 1], [2, 2], [2, 3], [3, 1], [3, 2], [3, 3]];
+      const c1 = cells[v % 8];
+      let c2 = cells[(v + 1 + Math.floor(v / 8)) % 8];
+      if (c2 === c1) c2 = cells[(v + 2) % 8];
+      const p1 = { elements: [
+        { shape: "arrow", row: 1, col: 1, fill: "black", rotate: 0 },
+        { shape: "circle", row: c1[0], col: c1[1], fill: "white" },
+        { shape: "dot", row: c2[0], col: c2[1], fill: "black" },
+      ] };
       const p2 = visuals.rotatePanel(p1, 90, 3);
       const p3 = visuals.rotatePanel(p2, 90, 3);
       const answer = visuals.rotatePanel(p3, 90, 3);
