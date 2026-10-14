@@ -1,10 +1,16 @@
-const { todayPlan, quizBoard, runReminders } = require("../services/engagement");
+const { todayPlan, quizBoard, runReminders, continueLearning } = require("../services/engagement");
+const { showsVisuals } = require("../utils/appVersion");
 const { ensureTodayQuiz } = require("../services/dailyQuiz");
 const DailyQuiz = require("../models/DailyQuiz");
 
 // GET /api/tests/today-plan -> the Home screen's "Today's plan" card
 async function getTodayPlan(req, res) {
   res.json(await todayPlan(req.user));
+}
+
+// GET /api/tests/continue -> Home's "Continue learning": resume a test, or the next one
+async function getContinue(req, res) {
+  res.json({ item: await continueLearning(req.user, { showVisuals: showsVisuals(req) }) });
 }
 
 // GET /api/tests/daily-quiz/board?date=YYYY-MM-DD -> the day's quiz ranking
@@ -30,4 +36,4 @@ async function jobsTick(req, res) {
   res.json({ ok: true, ...result });
 }
 
-module.exports = { getTodayPlan, getQuizBoard, jobsTick };
+module.exports = { getTodayPlan, getQuizBoard, jobsTick, getContinue };

@@ -111,6 +111,33 @@ async function api(method, p, { body, token } = {}) {
     JSON.stringify(r.json.steps[0].result));
   check("...and moves on to practice", r.json.next === "practice" && r.json.done === 1, `${r.json.next} ${r.json.done}`);
 
+  // ---- Continue learning: resume a test left half-way, else the next one
+  r = await api("GET", "/tests/continue", { token: tok(chetan) });
+  check("with no practice done, Continue learning has nothing to show", r.status === 200 && r.json.item === null, JSON.stringify(r.json));
+  const pt = (n, level, extra = {}) => ({
+    _id: oid(), title: `Percentage · Mixed Practice · ${level} #${n}`, type: "practice", examType: "SSC_CGL", subject: "Maths",
+    topic: "Percentage", subtopic: null, difficultyLevel: level, seriesNumber: n, questions: [oid(), oid()], durationMinutes: 20,
+    publishStatus: "published", isFree: n === 1, ...extra,
+  });
+  const e1 = pt(1, "easy"), e2 = pt(2, "easy"), e3 = pt(3, "easy", { publishStatus: "draft" }), m1 = pt(1, "medium");
+  await db.collection("tests").insertMany([e1, e2, e3, m1]);
+  const done = (u, t, acc, at) => ({ user: u._id, test: t._id, status: "submitted", accuracy: acc, score: 1, answers: [], createdAt: at, updatedAt: at, submittedAt: at });
+  await db.collection("attempts").insertOne(done(chetan, e1, 72.4, new Date(now + 1000)));
+  r = await api("GET", "/tests/continue", { token: tok(chetan) });
+  check("after a practice test, it offers the next one of the same series", r.json.item?.kind === "next" && String(r.json.item.next?.testId) === String(e2._id) &&
+    r.json.item.lastAccuracy === 72 && r.json.item.chapter === "Percentage", JSON.stringify(r.json.item));
+  await db.collection("attempts").insertOne(done(chetan, e2, 90, new Date(now + 2000)));
+  r = await api("GET", "/tests/continue", { token: tok(chetan) });
+  check("...a finished level leads to the next level, never to a draft", String(r.json.item?.next?.testId) === String(m1._id) && r.json.item.next.level === "medium",
+    JSON.stringify(r.json.item?.next));
+  await db.collection("attempts").insertOne({
+    user: chetan._id, test: m1._id, status: "in_progress", answers: [{ question: m1.questions[0], selectedIndex: 2 }, { question: m1.questions[1], selectedIndex: null }],
+    createdAt: new Date(now + 3000), updatedAt: new Date(now + 3000),
+  });
+  r = await api("GET", "/tests/continue", { token: tok(chetan) });
+  check("a test left half-way comes first, with how far they got", r.json.item?.kind === "resume" && String(r.json.item.testId) === String(m1._id) &&
+    r.json.item.answered === 1 && r.json.item.total === 2, JSON.stringify(r.json.item));
+
   // ---- reminders: each round once a day, only to those it concerns
   const pushService = require(path.join(SERVER, "services/pushService"));
   const sent = [];

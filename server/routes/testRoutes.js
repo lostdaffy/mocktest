@@ -1,5 +1,5 @@
 const express = require("express");
-const { getTodayPlan, getQuizBoard } = require("../controllers/engagementController");
+const { getTodayPlan, getQuizBoard, getContinue } = require("../controllers/engagementController");
 const router = express.Router();
 const {
   listTests,
@@ -29,6 +29,7 @@ const asyncRoute = require("../utils/asyncRoute");
 router.get("/today", protect, asyncRoute(getTodayTest));
 router.get("/daily", protect, asyncRoute(getDailyStatus)); // streak + today's progress for the home screen
 router.get("/today-plan", protect, asyncRoute(getTodayPlan)); // the Home screen's Today's plan card
+router.get("/continue", protect, asyncRoute(getContinue)); // Home's Continue learning: resume, or the next test
 router.get("/daily-quiz/board", protect, asyncRoute(getQuizBoard)); // the day's quiz ranking
 router.patch("/daily/goal", protect, asyncRoute(setDailyGoal));
 router.get("/my-attempts", protect, asyncRoute(listMyAttempts));

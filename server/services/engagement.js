@@ -177,6 +177,78 @@ async function todayPlan(user) {
   };
 }
 
+/**
+ * "Continue learning" on Home: the one thing to pick up again.
+ *
+ *  - a test left half-way (practice, mock, PYQ) -> resume it;
+ *  - else the last practice test finished -> its score, and the next test
+ *    of the same series not yet taken (the next level when the series is
+ *    done), so one tap starts it;
+ *  - else nothing - the Today's plan card already says where to begin.
+ *
+ * showVisuals: false for an app that cannot draw charts or figures.
+ */
+const LEVEL_ORDER = ["easy", "medium", "hard", "advanced"];
+const RESUMABLE = ["practice", "topic_wise", "full_mock", "pyq", "sectional", "revision"];
+async function continueLearning(user, { showVisuals = true } = {}) {
+  const testFields = "title type subject topic subtopic difficultyLevel seriesNumber isFree questions publishStatus";
+  const open = await Attempt.findOne({ user: user._id, status: "in_progress" })
+    .sort({ updatedAt: -1 })
+    .populate({ path: "test", select: testFields })
+    .select("test answers updatedAt")
+    .lean();
+  if (open?.test && RESUMABLE.includes(open.test.type) && open.test.publishStatus !== "draft") {
+    return {
+      kind: "resume",
+      testId: open.test._id,
+      title: open.test.title,
+      type: open.test.type,
+      answered: (open.answers || []).filter((a) => a.selectedIndex !== null && a.selectedIndex !== undefined).length,
+      total: (open.test.questions || []).length,
+      isFree: !!open.test.isFree,
+    };
+  }
+
+  const recent = await Attempt.find({ user: user._id, status: { $in: DONE } })
+    .sort({ createdAt: -1 })
+    .limit(15)
+    .populate({ path: "test", select: testFields })
+    .select("test accuracy createdAt")
+    .lean();
+  const last = recent.find((a) => a.test && a.test.type === "practice" && a.test.subject && a.test.topic);
+  if (!last) return null;
+
+  const t = last.test;
+  const taken = await Attempt.distinct("test", { user: user._id });
+  const base = {
+    type: "practice",
+    subject: t.subject,
+    topic: t.topic,
+    subtopic: t.subtopic || null,
+    publishStatus: "published",
+    liveExclusive: { $ne: true },
+    _id: { $nin: taken },
+    ...(showVisuals ? {} : { hasVisuals: { $ne: true } }),
+  };
+  // The same level first; once that series is done, the next level up.
+  let next = null;
+  const from = Math.max(LEVEL_ORDER.indexOf(t.difficultyLevel), 0);
+  for (const level of LEVEL_ORDER.slice(from)) {
+    next = await Test.findOne({ ...base, difficultyLevel: level }).sort({ seriesNumber: 1, createdAt: 1 }).select("title isFree difficultyLevel").lean();
+    if (next) break;
+  }
+  return {
+    kind: "next",
+    subject: t.subject,
+    chapter: t.topic,
+    subtopic: t.subtopic || null,
+    lastTitle: t.title,
+    lastAttemptId: last._id,
+    lastAccuracy: Math.round(last.accuracy || 0),
+    next: next ? { testId: next._id, title: next.title, isFree: !!next.isFree, level: next.difficultyLevel } : null,
+  };
+}
+
 /** Sends a round once: the key is claimed first, so a second caller does nothing. */
 async function sendOnce(key, build) {
   try {
@@ -244,4 +316,4 @@ async function runReminders(now = new Date()) {
   return { day, hour, rounds: out };
 }
 
-module.exports = { todayPlan, quizBoard, runReminders, shortName, streakOf };
+module.exports = { todayPlan, quizBoard, runReminders, shortName, streakOf, continueLearning };
