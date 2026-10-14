@@ -99,6 +99,12 @@ const userSchema = new mongoose.Schema(
     // Overwritten on every login/signup, so it always reflects the device
     // the student most recently used.
     pushToken: { type: String },
+    // Why this phone has no token, when it could not get one - "push
+    // notifications are not set up" (no Firebase in the build), "permission
+    // denied". Cleared once a token arrives. Without it a phone that never
+    // registers is invisible: nothing fails, no notification ever comes.
+    pushError: { type: String },
+    pushCheckedAt: { type: Date },
 
     // Referral system
     referralCode: { type: String, unique: true, sparse: true, index: true }, // this user's own code to share

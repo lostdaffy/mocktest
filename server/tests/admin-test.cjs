@@ -203,6 +203,26 @@ async function api(method, p, body) {
   check("recent attempts carry the test title", r.json.activity.recentAttempts[0].test?.title === "Agniveer Mock #1", JSON.stringify(r.json.activity.recentAttempts[0]?.test));
   check("referral picture is complete", r.json.user.referredCount === 1 && r.json.user.referralCredits === 15);
 
+  // ---- why a student gets no notifications
+  const asStudent = async (method, p, body) => {
+    const keep = token;
+    token = jwt.sign({ id: String(sid), sessionId: "sess-abc" }, JWT_SECRET);
+    try { return await api(method, p, body); } finally { token = keep; }
+  };
+  r = await asStudent("POST", "/auth/push-token", { error: "Push is not set up in this app build (Firebase): no default app" });
+  check("a phone that cannot get a push token says why", r.status === 200, `${r.status} ${r.json.message}`);
+  r = await api("GET", "/admin/users/" + sid);
+  check("...and the admin sees the reason", r.json.flags.hasPushToken === false && /Firebase/.test(r.json.flags.pushError || ""), JSON.stringify(r.json.flags));
+  r = await api("GET", "/admin/users/stats");
+  check("...it is not counted as reachable", r.json.notificationsOn === 0, `${r.json.notificationsOn}`);
+  await asStudent("POST", "/auth/push-token", { token: "ExponentPushToken[abc]" });
+  r = await api("GET", "/admin/users/" + sid);
+  check("once the phone registers, the reason is gone", r.json.flags.hasPushToken === true && r.json.flags.pushError === null, JSON.stringify(r.json.flags));
+  r = await api("GET", "/admin/users/stats");
+  check("...and the stats count it as reachable", r.json.notificationsOn === 1, `${r.json.notificationsOn}`);
+  r = await asStudent("POST", "/auth/push-token", {});
+  check("an empty call is refused", r.status === 400);
+
   // ---- unlock
   r = await api("PATCH", "/admin/users/" + sid + "/unlock");
   check("unlock clears the lockout", r.status === 200, r.json.message);

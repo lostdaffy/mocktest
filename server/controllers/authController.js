@@ -584,16 +584,23 @@ async function updateProfile(req, res) {
   }
 }
 
-// POST /api/auth/push-token  { token }
-// Registers this device's Expo push token, used for live-exam start
-// reminders. Overwritten on every call - always reflects whichever device
-// the student most recently logged in on.
+// POST /api/auth/push-token  { token } | { error }
+// Registers this device's Expo push token (daily reminders, live-exam
+// starts). Overwritten on every call - always the device the student used
+// most recently. The app sends { error } instead when the phone could not
+// get a token, so the admin can see why a student gets no notifications.
 async function registerPushToken(req, res) {
-  const { token } = req.body;
-  if (!token) return res.status(400).json({ message: "A token is required" });
+  const token = typeof req.body?.token === "string" ? req.body.token.trim() : "";
+  const error = typeof req.body?.error === "string" ? req.body.error.trim().slice(0, 300) : "";
+  if (!token && !error) return res.status(400).json({ message: "A token is required" });
 
-  await User.findByIdAndUpdate(req.user._id, { pushToken: token });
-  res.json({ message: "Push token saved" });
+  if (token) {
+    await User.findByIdAndUpdate(req.user._id, { pushToken: token, $unset: { pushError: 1 }, pushCheckedAt: new Date() });
+    return res.json({ message: "Push token saved" });
+  }
+  // A failed attempt on this phone does not wipe a token another phone gave.
+  await User.findByIdAndUpdate(req.user._id, { pushError: error, pushCheckedAt: new Date() });
+  res.json({ message: "Noted" });
 }
 
 // POST /api/auth/forgot-password  { phone }

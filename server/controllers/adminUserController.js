@@ -81,12 +81,13 @@ async function getUserStats(req, res) {
   const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const [total, premium, expiringSoon, expired, newThisWeek] = await Promise.all([
+  const [total, premium, expiringSoon, expired, newThisWeek, notificationsOn] = await Promise.all([
     User.countDocuments({}),
     User.countDocuments({ subscriptionStatus: "active" }),
     User.countDocuments({ subscriptionStatus: "active", subscriptionExpiresAt: { $gte: now, $lte: in7Days } }),
     User.countDocuments({ subscriptionExpiresAt: { $lt: now } }),
     User.countDocuments({ createdAt: { $gte: weekAgo } }),
+    User.countDocuments({ pushToken: { $exists: true, $nin: [null, ""] } }),
   ]);
 
   res.json({
@@ -96,6 +97,7 @@ async function getUserStats(req, res) {
     expiringSoon,
     expired,
     newThisWeek,
+    notificationsOn, // students whose phone can receive push notifications
   });
 }
 
@@ -285,6 +287,7 @@ async function getUserDetail(req, res) {
         hasPassword: !!user.passwordHash, // legacy Google account, can only get in via email reset
         loggedInSomewhere: !!user.activeSessionId, // single-device: a stale session logs them out elsewhere
         hasPushToken: !!user.pushToken,
+        pushError: user.pushToken ? null : user.pushError || null,
       },
       activity: { attemptCount, recentAttempts, reportCount },
       subscriptions,
