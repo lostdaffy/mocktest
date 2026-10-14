@@ -1,4 +1,4 @@
-const { todayPlan, quizBoard, runReminders, continueLearning } = require("../services/engagement");
+const { todayPlan, quizBoard, runReminders, continueLearning, notificationFeed, recentTests } = require("../services/engagement");
 const { showsVisuals } = require("../utils/appVersion");
 const { ensureTodayQuiz } = require("../services/dailyQuiz");
 const DailyQuiz = require("../models/DailyQuiz");
@@ -10,7 +10,16 @@ async function getTodayPlan(req, res) {
 
 // GET /api/tests/continue -> Home's "Continue learning": resume a test, or the next one
 async function getContinue(req, res) {
-  res.json({ item: await continueLearning(req.user, { showVisuals: showsVisuals(req) }) });
+  const [item, recent] = await Promise.all([
+    continueLearning(req.user, { showVisuals: showsVisuals(req) }),
+    recentTests(req.user, { limit: 3 }),
+  ]);
+  res.json({ item, recent });
+}
+
+// GET /api/tests/notifications -> the Notifications screen: what is new for this student
+async function getNotifications(req, res) {
+  res.json(await notificationFeed(req.user, { showVisuals: showsVisuals(req) }));
 }
 
 // GET /api/tests/daily-quiz/board?date=YYYY-MM-DD -> the day's quiz ranking
@@ -36,4 +45,4 @@ async function jobsTick(req, res) {
   res.json({ ok: true, ...result });
 }
 
-module.exports = { getTodayPlan, getQuizBoard, jobsTick, getContinue };
+module.exports = { getTodayPlan, getQuizBoard, jobsTick, getContinue, getNotifications };

@@ -196,6 +196,12 @@ async function api(method, p, { body, token } = {}) {
   // ================= their weak topics =================
   r = await api("GET", "/tests/analysis", { token });
   check("analysis is available after one test", r.status === 200, String(r.status));
+  // The first test of a topic used to be stored as 0 of 0 (counts added to
+  // a copy, not the saved entry), so a new student saw 0% everywhere.
+  const counted = (r.json.topics || []).reduce((n, t) => n + (t.attempted || 0), 0);
+  const right = (r.json.topics || []).reduce((n, t) => n + (t.correct || 0), 0);
+  check("...and that very first test is counted in it", counted === answers.length && right === expectedRight,
+    `${right} of ${counted} counted, expected ${expectedRight} of ${answers.length}`);
 
   // ================= a full mock =================
   await db.collection("questions").insertMany(

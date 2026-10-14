@@ -249,6 +249,143 @@ async function continueLearning(user, { showVisuals = true } = {}) {
   };
 }
 
+/**
+ * The tests a student used most recently, for Home's Continue learning:
+ * one line per test (its latest attempt), newest first - a half-done one to
+ * resume, a finished one to review. Live exams are left out: they cannot
+ * be resumed once their window closes.
+ */
+async function recentTests(user, { limit = 3 } = {}) {
+  const rows = await Attempt.find({ user: user._id })
+    .sort({ updatedAt: -1 })
+    .limit(25)
+    .populate({ path: "test", select: "title type examType isFree questions publishStatus" })
+    .select("test status accuracy answers updatedAt")
+    .lean();
+  const seen = new Set();
+  const out = [];
+  for (const a of rows) {
+    const t = a.test;
+    if (!t || t.type === "live" || seen.has(String(t._id))) continue;
+    seen.add(String(t._id));
+    const inProgress = a.status === "in_progress";
+    if (inProgress && t.publishStatus === "draft") continue;
+    out.push({
+      testId: t._id,
+      title: t.title,
+      type: t.type,
+      dailyQuiz: t.examType === "DAILY_GK",
+      inProgress,
+      attemptId: a._id,
+      accuracy: inProgress ? null : Math.round(a.accuracy || 0),
+      answered: inProgress ? (a.answers || []).filter((x) => x.selectedIndex !== null && x.selectedIndex !== undefined).length : null,
+      total: (t.questions || []).length,
+      isFree: !!t.isFree,
+      at: a.updatedAt,
+    });
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+/**
+ * The app's Notifications screen: what is new for this student, newest
+ * first. Built on the spot from what already exists - today's quiz (or the
+ * rank they got in it), a streak that ends tonight, live exams coming up,
+ * and mocks newly published for their exam - so nothing has to be stored
+ * per student. Each item has a stable id and an `at` time; the app keeps the
+ * time it last opened the screen and shows a dot on Home for anything newer.
+ */
+async function notificationFeed(user, { showVisuals = true } = {}) {
+  const now = new Date();
+  const dayStart = startOfIstDay(now);
+  const items = [];
+
+  const quiz = await ensureTodayQuiz().catch(() => null);
+  if (quiz) {
+    const board = await quizBoard(quiz._id, user._id, { top: 0 });
+    if (board.me) {
+      items.push({
+        id: `quiz-rank-${istDateKey(now)}`,
+        kind: "quiz_rank",
+        title: `You ranked #${board.me.rank} of ${board.participants} in today's quiz`,
+        body: `${board.me.correct} correct. See who is on top today.`,
+        at: dayStart,
+        action: { screen: "QuizBoard" },
+      });
+    } else {
+      items.push({
+        id: `quiz-${istDateKey(now)}`,
+        kind: "quiz",
+        title: "Today's GK quiz is live",
+        body: "20 questions, the same for everyone. Play and see your rank.",
+        at: dayStart,
+        action: { screen: "QuizBoard" },
+      });
+    }
+  }
+
+  const streak = streakOf(user);
+  if (streak.atRiskToday && streak.current > 0) {
+    items.push({
+      id: `streak-${istDateKey(now)}`,
+      kind: "streak",
+      title: `Keep your ${streak.current}-day streak 🔥`,
+      body: "Finish any one test today - it ends at midnight.",
+      at: dayStart,
+      action: { screen: "HomeTab" },
+    });
+  }
+
+  const goals = user.examGoals || [];
+  const weekAhead = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const visuals = showVisuals ? {} : { hasVisuals: { $ne: true } };
+  const [live, mocks] = await Promise.all([
+    Test.find({ type: "live", publishStatus: "published", scheduledAt: { $gte: now, $lte: weekAhead }, ...visuals })
+      .sort({ scheduledAt: 1 })
+      .limit(5)
+      .select("title scheduledAt publishedAt createdAt")
+      .lean(),
+    goals.length
+      ? Test.find({
+          type: "full_mock",
+          examStage: { $in: goals },
+          publishStatus: "published",
+          liveExclusive: { $ne: true },
+          publishedAt: { $gte: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000) },
+          ...visuals,
+        })
+          .sort({ publishedAt: -1 })
+          .limit(5)
+          .select("title examStage publishedAt")
+          .lean()
+      : [],
+  ]);
+  for (const t of live) {
+    items.push({
+      id: `live-${t._id}`,
+      kind: "live",
+      title: `Live exam: ${t.title}`,
+      body: `Starts ${new Date(t.scheduledAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}. Same paper, same clock, all-India rank.`,
+      at: t.publishedAt || t.createdAt,
+      action: { screen: "LiveTab" },
+    });
+  }
+  for (const t of mocks) {
+    items.push({
+      id: `mock-${t._id}`,
+      kind: "mock",
+      title: "New mock test added",
+      body: t.title,
+      at: t.publishedAt,
+      action: { screen: "ExamSeries", params: { examStage: t.examStage } },
+    });
+  }
+
+  items.sort((a, b) => new Date(b.at) - new Date(a.at));
+  return { items, serverTime: now };
+}
+
 /** Sends a round once: the key is claimed first, so a second caller does nothing. */
 async function sendOnce(key, build) {
   try {
@@ -316,4 +453,4 @@ async function runReminders(now = new Date()) {
   return { day, hour, rounds: out };
 }
 
-module.exports = { todayPlan, quizBoard, runReminders, shortName, streakOf, continueLearning };
+module.exports = { todayPlan, quizBoard, runReminders, shortName, streakOf, continueLearning, notificationFeed, recentTests };

@@ -111,6 +111,26 @@ async function api(method, p, { body, token } = {}) {
     JSON.stringify(r.json.steps[0].result));
   check("...and moves on to practice", r.json.next === "practice" && r.json.done === 1, `${r.json.next} ${r.json.done}`);
 
+  // ---- the Notifications screen: what is new for this student
+  r = await api("GET", "/tests/notifications", { token: tok(asha) });
+  check("notifications tell a student who took the quiz where they ranked", r.status === 200 &&
+    r.json.items?.some((i) => i.kind === "quiz_rank" && /#3 of 3/.test(i.title)), JSON.stringify(r.json.items?.map((i) => i.title)));
+  const Test = require(path.join(SERVER, "models/Test"));
+  const fresh = await Test.create({ title: "SSC CGL 2026 Mock Series - Mock #4", type: "full_mock", examType: "SSC_CGL", examStage: "SSC_CGL",
+    questions: [], durationMinutes: 60, publishStatus: "published" });
+  check("publishing a test stamps when it went out", !!fresh.publishedAt);
+  await Test.create({ title: "Old draft", type: "full_mock", examType: "SSC_CGL", examStage: "SSC_CGL", questions: [], durationMinutes: 60, publishStatus: "draft" });
+  r = await api("GET", "/tests/notifications", { token: tok(chetan) });
+  check("...and a newly published mock for their exam is announced, the draft is not",
+    r.json.items?.filter((i) => i.kind === "mock").map((i) => i.body).join() === "SSC CGL 2026 Mock Series - Mock #4",
+    JSON.stringify(r.json.items?.map((i) => `${i.kind}:${i.body}`)));
+  await db.collection("users").updateOne({ _id: bina._id }, { $set: { streakCount: 4, lastActiveDate: new Date(Date.now() - 86400000) } });
+  r = await api("GET", "/tests/notifications", { token: tok(bina) });
+  check("...a streak that ends tonight gets a reminder", r.json.items?.some((i) => i.kind === "streak" && /4-day/.test(i.title)),
+    JSON.stringify(r.json.items?.map((i) => i.title)));
+  await db.collection("users").updateOne({ _id: bina._id }, { $unset: { streakCount: 1, lastActiveDate: 1 } });
+  await db.collection("tests").deleteMany({ title: { $in: ["SSC CGL 2026 Mock Series - Mock #4", "Old draft"] } });
+
   // ---- Continue learning: resume a test left half-way, else the next one
   r = await api("GET", "/tests/continue", { token: tok(chetan) });
   check("with no practice done, Continue learning has nothing to show", r.status === 200 && r.json.item === null, JSON.stringify(r.json));
@@ -137,6 +157,9 @@ async function api(method, p, { body, token } = {}) {
   r = await api("GET", "/tests/continue", { token: tok(chetan) });
   check("a test left half-way comes first, with how far they got", r.json.item?.kind === "resume" && String(r.json.item.testId) === String(m1._id) &&
     r.json.item.answered === 1 && r.json.item.total === 2, JSON.stringify(r.json.item));
+  check("recently used tests are listed newest first, one line per test",
+    r.json.recent?.map((x) => `${x.title.split(" · ").pop()}:${x.inProgress ? "open" : x.accuracy}`).join() === "medium #1:open,easy #2:90,easy #1:72",
+    JSON.stringify(r.json.recent?.map((x) => [x.title, x.inProgress, x.accuracy])));
 
   // ---- reminders: each round once a day, only to those it concerns
   const pushService = require(path.join(SERVER, "services/pushService"));

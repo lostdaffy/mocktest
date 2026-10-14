@@ -773,8 +773,11 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
       if (upd.attempted === 0) continue;
       let stat = user.topicStats.find((t) => t.subject === upd.subject && t.topic === upd.topic);
       if (!stat) {
-        stat = { subject: upd.subject, topic: upd.topic, examType: test.examType, attempted: 0, correct: 0, accuracy: 0 };
-        user.topicStats.push(stat);
+        user.topicStats.push({ subject: upd.subject, topic: upd.topic, examType: test.examType, attempted: 0, correct: 0, accuracy: 0 });
+        // push() stores a cast copy; the counts below must go on that copy.
+        // Adding them to the plain object recorded every topic's first test
+        // as 0 of 0 - a first-time student's analysis showed 0% everywhere.
+        stat = user.topicStats[user.topicStats.length - 1];
       }
       stat.attempted += upd.attempted;
       stat.correct += upd.correct;

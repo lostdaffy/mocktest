@@ -44,6 +44,10 @@ const testSchema = new mongoose.Schema(
     examDate: { type: Date }, // exact date the real paper was conducted, if known
     pyqLanguage: { type: String, enum: ["english", "hindi", "bilingual"], default: "bilingual" },
 
+    // When it first went out to students - the app's "new mock tests"
+    // notice is built from this. Set by the hook below, never by hand.
+    publishedAt: { type: Date },
+
     // Live exam specific
     scheduledAt: { type: Date },
     liveStatus: { type: String, enum: ["upcoming", "live", "completed"] },
@@ -111,5 +115,10 @@ testSchema.index({ type: 1, publishStatus: 1, scheduledAt: 1 });
 
 // "Aaj Ka Test" for one student, built fresh each day.
 testSchema.index({ generatedForUser: 1, createdAt: -1 });
+
+// First publish stamps the time; unpublishing and publishing again keeps it.
+testSchema.pre("save", function stampPublished() {
+  if (this.publishStatus === "published" && !this.publishedAt) this.publishedAt = new Date();
+});
 
 module.exports = mongoose.model("Test", testSchema);
