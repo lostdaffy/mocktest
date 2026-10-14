@@ -306,7 +306,7 @@ export default function PyqYearListScreen({
               <LinearGradient
                 colors={[
                   "#0D1263",
-                  "#2818C9",
+                  "#4F46E5",
                   "#5926E8",
                 ]}
                 start={{

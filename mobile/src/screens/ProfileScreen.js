@@ -469,7 +469,7 @@ export default function ProfileScreen({
         <LinearGradient
           colors={[
             "#090C55",
-            "#1714A4",
+            "#4338CA",
             "#3214D8",
           ]}
           start={{
@@ -588,7 +588,7 @@ export default function ProfileScreen({
             <LinearGradient
               colors={[
                 "#293DEB",
-                "#3A21E8",
+                "#4F46E5",
                 "#6518E9",
               ]}
               start={{

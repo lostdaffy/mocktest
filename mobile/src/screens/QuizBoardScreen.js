@@ -44,6 +44,20 @@ export default function QuizBoardScreen({ navigation }) {
   );
 
   const meInTop = board?.top?.some((t) => t.isMe);
+  const [starting, setStarting] = useState(false);
+
+  // Not taken yet: start it from here rather than sending them back to Home.
+  async function playToday() {
+    setStarting(true);
+    try {
+      const res = await api.get("/tests/today");
+      navigation.navigate("TestTaking", { testId: res.data.test._id });
+    } catch (err) {
+      if (err.response?.data?.code === "SUBSCRIPTION_REQUIRED") navigation.navigate("Subscription");
+    } finally {
+      setStarting(false);
+    }
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -93,7 +107,10 @@ export default function QuizBoardScreen({ navigation }) {
           ) : (
             <View style={styles.meCard}>
               <Text style={styles.meLabel}>NOT TAKEN YET</Text>
-              <Text style={styles.meMeta}>Take today's quiz from Home to get your rank.</Text>
+              <Text style={styles.meMeta}>20 questions, the same for everyone. Play to get your rank.</Text>
+              <TouchableOpacity style={styles.play} onPress={playToday} disabled={starting} activeOpacity={0.85}>
+                {starting ? <ActivityIndicator size="small" color={colors.brand} /> : <Text style={styles.playText}>Play today's quiz</Text>}
+              </TouchableOpacity>
             </View>
           )}
 
@@ -109,8 +126,13 @@ export default function QuizBoardScreen({ navigation }) {
               <Text style={[styles.name, row.isMe && styles.nameMe]} numberOfLines={1}>
                 {row.isMe ? `${row.name} (you)` : row.name}
               </Text>
-              <Text style={styles.score}>{row.correct}</Text>
-              <Text style={styles.time}>{time(row.seconds)}</Text>
+              <View style={styles.right}>
+                <Text style={styles.score}>
+                  {row.correct}
+                  <Text style={styles.scoreOf}> correct</Text>
+                </Text>
+                {!!time(row.seconds) && <Text style={styles.time}>{time(row.seconds)}</Text>}
+              </View>
             </View>
           ))}
 
@@ -118,8 +140,13 @@ export default function QuizBoardScreen({ navigation }) {
             <View style={[styles.row, styles.rowMe, { marginTop: spacing.sm }]}>
               <Text style={styles.rank}>#{board.me.rank}</Text>
               <Text style={[styles.name, styles.nameMe]}>You</Text>
-              <Text style={styles.score}>{board.me.correct}</Text>
-              <Text style={styles.time}>{time(board.me.seconds)}</Text>
+              <View style={styles.right}>
+                <Text style={styles.score}>
+                  {board.me.correct}
+                  <Text style={styles.scoreOf}> correct</Text>
+                </Text>
+                {!!time(board.me.seconds) && <Text style={styles.time}>{time(board.me.seconds)}</Text>}
+              </View>
             </View>
           )}
 
@@ -147,7 +174,11 @@ const styles = StyleSheet.create({
   rank: { width: 40, fontSize: 15, fontWeight: "800", color: colors.ink },
   name: { flex: 1, fontSize: 14, fontWeight: "700", color: colors.ink },
   nameMe: { color: colors.brand },
-  score: { width: 32, textAlign: "right", fontSize: 14, fontWeight: "800", color: colors.success },
-  time: { width: 64, textAlign: "right", fontSize: 12, color: colors.slate },
+  right: { alignItems: "flex-end", marginLeft: 8 },
+  score: { fontSize: 15, fontWeight: "900", color: colors.success },
+  scoreOf: { fontSize: 11, fontWeight: "700", color: colors.slate },
+  time: { fontSize: 11, color: colors.slate, marginTop: 1 },
+  play: { marginTop: 12, backgroundColor: "#FFFFFF", borderRadius: 12, paddingHorizontal: 18, height: 38, alignItems: "center", justifyContent: "center", minWidth: 150 },
+  playText: { fontSize: 14, fontWeight: "800", color: colors.brand },
   footer: { fontSize: 12, color: colors.slate, textAlign: "center", marginTop: spacing.lg },
 });

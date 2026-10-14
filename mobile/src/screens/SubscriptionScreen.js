@@ -72,8 +72,8 @@ const BENEFITS = [
     text: "Detailed analysis of every attempt",
   },
   {
-    icon: "close-circle-outline",
-    text: "Cancel anytime",
+    icon: "card-outline",
+    text: "Pay once · no auto-debit",
   },
 ];
 
@@ -199,6 +199,11 @@ export default function SubscriptionScreen({
 
   const isActive =
     isSubscribed(user);
+
+  // "13 Nov 2026" - when the current plan ends; a renewal is added after it.
+  const expiresOn = user?.subscriptionExpiresAt
+    ? new Date(user.subscriptionExpiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+    : null;
 
   const plan =
     PLANS.find(
@@ -328,7 +333,7 @@ export default function SubscriptionScreen({
 
             <Text style={styles.heroSub}>
               {isActive
-                ? "Everything is unlocked. Keep practising and keep climbing."
+                ? `Everything is unlocked${expiresOn ? ` till ${expiresOn}` : ""}. Keep practising and keep climbing.`
                 : "Every mock, every PYQ and every practice session — without limits."}
             </Text>
           </View>
@@ -441,8 +446,12 @@ export default function SubscriptionScreen({
         ================================================= */}
 
         <SectionHeading
-          title="Choose your plan"
-          subtitle="More time means better value"
+          title={isActive ? "Extend your plan" : "Choose your plan"}
+          subtitle={
+            isActive && expiresOn
+              ? `Added after your current plan ends on ${expiresOn}`
+              : "More time means better value"
+          }
         />
 
         <View style={styles.plansWrap}>
@@ -816,7 +825,7 @@ export default function SubscriptionScreen({
               {!paymentsOn
                 ? "Payments coming soon"
                 : isActive
-                ? "Renew Now"
+                ? "Extend Plan"
                 : "Continue to Payment"}
             </Text>
 

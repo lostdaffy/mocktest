@@ -81,7 +81,7 @@ export default function TodayPlanCard({ navigation, onStartQuiz, startingQuiz })
           </Text>
           {quiz.done && quiz.result ? (
             <Text style={styles.sub} numberOfLines={1}>
-              Done · {quiz.result.correct} correct{quiz.result.rank ? ` · Rank ${quiz.result.rank}/${quiz.result.participants}` : ""}
+              {quiz.result.correct} correct{quiz.result.rank ? ` · Rank ${quiz.result.rank}/${quiz.result.participants}` : ""}
             </Text>
           ) : (
             <Text style={styles.sub} numberOfLines={1}>

@@ -348,7 +348,7 @@ export default function PyqExamPickerScreen({
               <LinearGradient
                 colors={[
                   "#0C115F",
-                  "#2114B7",
+                  "#4F46E5",
                   "#5521E8",
                 ]}
                 start={{

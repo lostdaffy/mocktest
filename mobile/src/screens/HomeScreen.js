@@ -39,6 +39,7 @@ import TodayPlanCard from "../components/TodayPlanCard";
 import FirstRunGuide from "../components/FirstRunGuide";
 import ReferEarnCard from "../components/ReferEarnCard";
 import ContinueCard from "../components/ContinueCard";
+import { getSeenAt, hasUnseen } from "../utils/notificationSeen";
 
 /* =========================================================
    LOGO
@@ -153,6 +154,9 @@ export default function HomeScreen({
   const [subjects, setSubjects] =
     useState([]);
 
+  const [hasNewNotes, setHasNewNotes] =
+    useState(false);
+
   const [refreshing, setRefreshing] =
     useState(false);
 
@@ -221,12 +225,19 @@ export default function HomeScreen({
         const [
           liveRes,
           subjectsRes,
+          notesRes,
         ] = await Promise.allSettled([
           api.get(
             "/exams/live/upcoming"
           ),
           api.get("/subjects/my"),
+          api.get("/tests/notifications"),
         ]);
+
+        // The bell's dot: only for something newer than the last visit.
+        if (notesRes.status === "fulfilled") {
+          setHasNewNotes(hasUnseen(notesRes.value.data?.items, await getSeenAt()));
+        }
 
         if (
           liveRes.status ===
@@ -466,11 +477,13 @@ export default function HomeScreen({
               color={colors.ink}
             />
 
-            <View
-              style={
-                styles.notificationDot
-              }
-            />
+            {hasNewNotes && (
+              <View
+                style={
+                  styles.notificationDot
+                }
+              />
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -515,6 +528,14 @@ export default function HomeScreen({
           >
             👋
           </Animated.Text>
+
+          {/* A small mark for a paid student - not a banner */}
+          {isPremium && (
+            <View style={styles.premiumChip}>
+              <Ionicons name="star" size={10} color="#B45309" />
+              <Text style={styles.premiumChipText}>Premium</Text>
+            </View>
+          )}
         </View>
 
         <Text
@@ -1322,6 +1343,26 @@ const styles =
         spacing.lg,
       marginBottom:
         spacing.lg,
+    },
+
+    premiumChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
+      marginLeft: 8,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      borderRadius: 999,
+      backgroundColor: "#FEF3C7",
+      borderWidth: 1,
+      borderColor: "#FCD34D",
+    },
+
+    premiumChipText: {
+      fontSize: 10.5,
+      fontWeight: "800",
+      color: "#B45309",
+      letterSpacing: 0.2,
     },
 
     sectionTight: {

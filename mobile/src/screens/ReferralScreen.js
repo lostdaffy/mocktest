@@ -438,7 +438,7 @@ export default function ReferralScreen({
                 }
               >
                 Earn ₹{reward} credit every
-                time a friend installs the app
+                time a friend signs up
                 with your code.
               </Text>
 

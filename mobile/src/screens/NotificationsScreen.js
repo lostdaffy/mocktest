@@ -1,158 +1,56 @@
-import {
-  useCallback,
-  useState,
-} from "react";
-
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
-
-import {
-  useFocusEffect,
-} from "@react-navigation/native";
-
-import {
-  Ionicons,
-} from "@expo/vector-icons";
-
-import {
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
-
+import { useCallback, useState } from "react";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../api/client";
+import { colors, spacing } from "../theme/theme";
+import { getSeenAt, markSeen } from "../utils/notificationSeen";
 
-import {
-  colors,
-  spacing,
-  radius,
-  type,
-  shadow,
-} from "../theme/theme";
+// Notifications: what is new for this student - today's quiz or the rank
+// they got in it, a streak that ends tonight, live exams coming up, and mock
+// tests newly added for their exam (GET /tests/notifications). Each one
+// opens the place it is about. Opening the screen clears the dot on Home's
+// bell. It used to list upcoming live exams only, so it was nearly always
+// empty.
 
-/* =========================================================
-   NOTIFICATIONS SCREEN
-   Rankveer Premium Design
-========================================================= */
+const LOOK = {
+  quiz: { icon: "flash", fg: colors.brand, bg: colors.brandLight },
+  quiz_rank: { icon: "trophy", fg: "#B45309", bg: "#FEF3C7" },
+  streak: { icon: "flame", fg: "#EA580C", bg: "#FFF1E8" },
+  live: { icon: "radio", fg: "#E11D48", bg: "#FFF1F2" },
+  mock: { icon: "document-text", fg: colors.brand, bg: colors.brandLight },
+};
 
-/* =========================================================
-   RELATIVE TIME
-========================================================= */
-
-function relativeWhen(
-  scheduledAt,
-  state
-) {
-  if (state === "ongoing") {
-    return "Happening now";
-  }
-
-  if (state === "ended") {
-    return "Finished";
-  }
-
-  const diffMs =
-    new Date(scheduledAt) -
-    new Date();
-
-  if (diffMs <= 0) {
-    return "Starting now";
-  }
-
-  const minutes = Math.round(
-    diffMs / 60000
-  );
-
-  if (minutes < 60) {
-    return `Starts in ${minutes} min`;
-  }
-
-  const hours = Math.round(
-    minutes / 60
-  );
-
-  if (hours < 24) {
-    return `Starts in ${hours} hr`;
-  }
-
-  const days = Math.round(
-    hours / 24
-  );
-
-  return `Starts in ${days} day${
-    days === 1 ? "" : "s"
-  }`;
+function ago(at) {
+  const ms = Date.now() - new Date(at).getTime();
+  if (Number.isNaN(ms)) return "";
+  const min = Math.round(ms / 60000);
+  if (min < 1) return "Just now";
+  if (min < 60) return `${min} min ago`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `${h} hr ago`;
+  const d = Math.round(h / 24);
+  return d === 1 ? "Yesterday" : `${d} days ago`;
 }
 
-/* =========================================================
-   DATE
-========================================================= */
+export default function NotificationsScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
+  const [items, setItems] = useState(null);
+  const [seenAt, setSeenAt] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-function formatDate(
-  scheduledAt
-) {
-  return new Date(
-    scheduledAt
-  ).toLocaleString("en-IN", {
-    day: "numeric",
-    month: "short",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-/* =========================================================
-   NOTIFICATIONS SCREEN
-========================================================= */
-
-export default function NotificationsScreen({
-  navigation,
-}) {
-  const insets =
-    useSafeAreaInsets();
-
-  const [exams, setExams] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  /* =======================================================
-     LOAD NOTIFICATIONS
-  ======================================================= */
-
-  const load = useCallback(
-    async () => {
-      try {
-        const res =
-          await api.get(
-            "/exams/live/upcoming"
-          );
-
-        setExams(
-          res.data?.exams ||
-            res.data?.tests ||
-            []
-        );
-      } catch (err) {
-        console.log(
-          "Notifications loading error:",
-          err
-        );
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
-  /* =======================================================
-     REFRESH WHEN SCREEN FOCUSES
-  ======================================================= */
+  const load = useCallback(async () => {
+    const before = await getSeenAt();
+    setSeenAt(before);
+    try {
+      const res = await api.get("/tests/notifications");
+      setItems(res.data?.items || []);
+      markSeen(res.data?.serverTime || new Date());
+    } catch {
+      setItems([]);
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -160,260 +58,76 @@ export default function NotificationsScreen({
     }, [load])
   );
 
-  /* =======================================================
-     RENDER
-  ======================================================= */
+  function open(item) {
+    const a = item.action || {};
+    if (!a.screen) return;
+    if (a.screen === "HomeTab" || a.screen === "LiveTab") return navigation.navigate("Home", { screen: a.screen });
+    navigation.navigate(a.screen, a.params || {});
+  }
 
   return (
-    <View
-      style={styles.container}
-    >
-      {/* =================================================
-          HEADER
-      ================================================= */}
-
-      <View
-        style={[
-          styles.header,
-          {
-            paddingTop:
-              insets.top + 10,
-          },
-        ]}
-      >
-        {/* BACK */}
-
-        <TouchableOpacity
-          style={
-            styles.backButton
-          }
-          activeOpacity={0.75}
-          hitSlop={8}
-          onPress={() =>
-            navigation.goBack()
-          }
-        >
-          <Ionicons
-            name="chevron-back"
-            size={21}
-            color={colors.ink}
-          />
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity style={styles.back} activeOpacity={0.75} hitSlop={8} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={22} color={colors.ink} />
         </TouchableOpacity>
-
-        {/* TITLE */}
-
-        <View
-          style={
-            styles.headerText
-          }
-        >
-          <View
-            style={
-              styles.headerTitleRow
-            }
-          >
-            <Text
-              style={
-                styles.headerTitle
-              }
-            >
-              Notifications
-            </Text>
-
-            {!loading &&
-              exams.length > 0 && (
-                <View
-                  style={
-                    styles.countBadge
-                  }
-                >
-                  <Text
-                    style={
-                      styles.countText
-                    }
-                  >
-                    {exams.length}
-                  </Text>
-                </View>
-              )}
-          </View>
-
-          <Text
-            style={
-              styles.headerSub
-            }
-          >
-            Live exam alerts and reminders
-          </Text>
-        </View>
-
-        {/* NOTIFICATION ICON */}
-
-        <View
-          style={
-            styles.headerIcon
-          }
-        >
-          <Ionicons
-            name="notifications-outline"
-            size={19}
-            color={colors.brand}
-          />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>Notifications</Text>
+          <Text style={styles.sub}>Quiz, streak, live exams and new tests</Text>
         </View>
       </View>
 
-      {/* =================================================
-          LOADING
-      ================================================= */}
-
-      {loading ? (
-        <View
-          style={
-            styles.loadingContainer
-          }
-        >
-          <View
-            style={
-              styles.loadingCard
-            }
-          >
-            <View
-              style={
-                styles.loadingIcon
-              }
-            >
-              <ActivityIndicator
-                size="small"
-                color={
-                  colors.brand
-                }
-              />
-            </View>
-
-            <Text
-              style={
-                styles.loadingTitle
-              }
-            >
-              Loading notifications
-            </Text>
-
-            <Text
-              style={
-                styles.loadingSub
-              }
-            >
-              Checking upcoming live exams
-            </Text>
-          </View>
-        </View>
+      {items === null ? (
+        <ActivityIndicator style={{ marginTop: spacing.xl }} color={colors.brand} />
       ) : (
         <FlatList
-          data={exams}
-          keyExtractor={(item) =>
-            String(item._id)
-          }
-          showsVerticalScrollIndicator={
-            false
-          }
-          bounces={false}
-          overScrollMode="never"
-          contentInsetAdjustmentBehavior="never"
-          contentContainerStyle={[
-            styles.listContent,
-            {
-              paddingBottom:
-                spacing.xxl +
-                insets.bottom +
-                12,
-            },
-          ]}
-          ListHeaderComponent={
-            exams.length > 0 ? (
-              <View
-                style={
-                  styles.infoCard
-                }
-              >
-                <View
-                  style={
-                    styles.infoIcon
-                  }
-                >
-                  <Ionicons
-                    name="radio-outline"
-                    size={19}
-                    color={
-                      colors.brand
-                    }
-                  />
-                </View>
-
-                <View
-                  style={
-                    styles.infoContent
-                  }
-                >
-                  <Text
-                    style={
-                      styles.infoTitle
-                    }
-                  >
-                    Live exam updates
-                  </Text>
-
-                  <Text
-                    style={
-                      styles.infoText
-                    }
-                  >
-                    Upcoming live exams and their latest start times will appear here.
-                  </Text>
-                </View>
-              </View>
-            ) : null
+          data={items}
+          keyExtractor={(i) => i.id}
+          contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl + insets.bottom }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={async () => {
+                setRefreshing(true);
+                await load();
+                setRefreshing(false);
+              }}
+              tintColor={colors.brand}
+            />
           }
           ListEmptyComponent={
-            <EmptyState />
+            <View style={styles.empty}>
+              <View style={styles.emptyIcon}>
+                <Ionicons name="notifications-off-outline" size={26} color={colors.brand} />
+              </View>
+              <Text style={styles.emptyTitle}>Nothing new right now</Text>
+              <Text style={styles.emptyText}>Today's quiz, live exams and new mock tests will show up here.</Text>
+            </View>
           }
-          renderItem={({
-            item,
-          }) => {
-            const state =
-              item.liveState ||
-              "upcoming";
-
-            const isLive =
-              state === "ongoing";
-
-            const isEnded =
-              state === "ended";
-
-            const tint = isLive
-              ? colors.danger
-              : isEnded
-              ? colors.slateSoft
-              : colors.brand;
-
-            const icon =
-              isLive
-                ? "radio"
-                : isEnded
-                ? "checkmark-circle-outline"
-                : "calendar-outline";
-
+          renderItem={({ item }) => {
+            const look = LOOK[item.kind] || LOOK.mock;
+            const isNew = !seenAt || new Date(item.at) > seenAt;
             return (
-              <NotificationCard
-                item={item}
-                state={state}
-                isLive={isLive}
-                isEnded={isEnded}
-                tint={tint}
-                icon={icon}
-                navigation={
-                  navigation
-                }
-              />
+              <TouchableOpacity style={[styles.card, isNew && styles.cardNew]} activeOpacity={0.85} onPress={() => open(item)}>
+                <View style={[styles.icon, { backgroundColor: look.bg }]}>
+                  <Ionicons name={look.icon} size={18} color={look.fg} />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <View style={styles.titleRow}>
+                    <Text style={styles.cardTitle} numberOfLines={2}>
+                      {item.title}
+                    </Text>
+                    {isNew && <View style={styles.newDot} />}
+                  </View>
+                  {!!item.body && (
+                    <Text style={styles.cardBody} numberOfLines={2}>
+                      {item.body}
+                    </Text>
+                  )}
+                  <Text style={styles.when}>{ago(item.at)}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={colors.slateSoft} />
+              </TouchableOpacity>
             );
           }}
         />
@@ -422,793 +136,58 @@ export default function NotificationsScreen({
   );
 }
 
-/* =========================================================
-   NOTIFICATION CARD
-========================================================= */
-
-function NotificationCard({
-  item,
-  state,
-  isLive,
-  isEnded,
-  tint,
-  icon,
-  navigation,
-}) {
-  return (
-    <TouchableOpacity
-      style={[
-        styles.card,
-        isLive &&
-          styles.liveCard,
-        isEnded &&
-          styles.endedCard,
-      ]}
-      activeOpacity={0.8}
-      onPress={() =>
-        navigation.navigate(
-          "Home",
-          {
-            screen: "LiveTab",
-          }
-        )
-      }
-    >
-      {/* LEFT BRAND ACCENT */}
-
-      <View
-        style={[
-          styles.cardAccent,
-          {
-            backgroundColor:
-              tint,
-          },
-        ]}
-      />
-
-      {/* ICON */}
-
-      <View
-        style={[
-          styles.cardIcon,
-          {
-            backgroundColor:
-              isLive
-                ? colors.dangerLight
-                : isEnded
-                ? colors.slateLight
-                : colors.brandLight,
-          },
-        ]}
-      >
-        <Ionicons
-          name={icon}
-          size={19}
-          color={tint}
-        />
-      </View>
-
-      {/* CONTENT */}
-
-      <View
-        style={
-          styles.cardBody
-        }
-      >
-        {/* LABEL */}
-
-        <View
-          style={
-            styles.cardTopRow
-          }
-        >
-          <Text
-            style={
-              styles.cardLabel
-            }
-          >
-            {isLive
-              ? "LIVE EXAM"
-              : isEnded
-              ? "COMPLETED"
-              : "UPCOMING EXAM"}
-          </Text>
-
-          {isLive && (
-            <View
-              style={
-                styles.liveBadge
-              }
-            >
-              <View
-                style={
-                  styles.liveDot
-                }
-              />
-
-              <Text
-                style={
-                  styles.liveBadgeText
-                }
-              >
-                LIVE
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* TITLE */}
-
-        <Text
-          style={[
-            styles.cardTitle,
-            isEnded &&
-              styles.endedTitle,
-          ]}
-          numberOfLines={2}
-        >
-          {item.title}
-        </Text>
-
-        {/* RELATIVE TIME */}
-
-        <View
-          style={
-            styles.whenRow
-          }
-        >
-          <Ionicons
-            name="time-outline"
-            size={14}
-            color={tint}
-          />
-
-          <Text
-            style={[
-              styles.cardWhen,
-              {
-                color: tint,
-              },
-            ]}
-          >
-            {relativeWhen(
-              item.scheduledAt,
-              state
-            )}
-          </Text>
-        </View>
-
-        {/* META */}
-
-        <View
-          style={
-            styles.metaRow
-          }
-        >
-          <Ionicons
-            name="calendar-outline"
-            size={12}
-            color={
-              colors.slateSoft
-            }
-          />
-
-          <Text
-            style={
-              styles.cardMeta
-            }
-          >
-            {formatDate(
-              item.scheduledAt
-            )}
-          </Text>
-
-          {item.durationMinutes ? (
-            <>
-              <View
-                style={
-                  styles.metaDot
-                }
-              />
-
-              <Ionicons
-                name="hourglass-outline"
-                size={11}
-                color={
-                  colors.slateSoft
-                }
-              />
-
-              <Text
-                style={
-                  styles.cardMeta
-                }
-              >
-                {
-                  item.durationMinutes
-                }{" "}
-                min
-              </Text>
-            </>
-          ) : null}
-        </View>
-      </View>
-
-      {/* ARROW */}
-
-      <View
-        style={
-          styles.arrowButton
-        }
-      >
-        <Ionicons
-          name="chevron-forward"
-          size={16}
-          color={
-            colors.slateSoft
-          }
-        />
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-/* =========================================================
-   EMPTY STATE
-========================================================= */
-
-function EmptyState() {
-  return (
-    <View
-      style={
-        styles.empty
-      }
-    >
-      <View
-        style={
-          styles.emptyIconOuter
-        }
-      >
-        <View
-          style={
-            styles.emptyIcon
-          }
-        >
-          <Ionicons
-            name="notifications-off-outline"
-            size={28}
-            color={colors.brand}
-          />
-        </View>
-      </View>
-
-      <Text
-        style={
-          styles.emptyTitle
-        }
-      >
-        No notifications yet
-      </Text>
-
-      <Text
-        style={
-          styles.emptyText
-        }
-      >
-        When a live exam is scheduled,
-        you'll get an alert here and on
-        your phone 15 minutes before it
-        starts.
-      </Text>
-
-      <View
-        style={
-          styles.emptyHint
-        }
-      >
-        <Ionicons
-          name="shield-checkmark-outline"
-          size={14}
-          color={colors.brand}
-        />
-
-        <Text
-          style={
-            styles.emptyHintText
-          }
-        >
-          We'll keep you updated.
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-/* =========================================================
-   STYLES
-========================================================= */
-
-const styles =
-  StyleSheet.create({
-    /* =====================================================
-       BASE
-    ===================================================== */
-
-    container: {
-      flex: 1,
-      backgroundColor:
-        colors.bg,
-    },
-
-    /* =====================================================
-       HEADER
-    ===================================================== */
-
-    header: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      paddingHorizontal:
-        spacing.lg,
-      paddingBottom: 15,
-      backgroundColor:
-        colors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor:
-        colors.border,
-    },
-
-    backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 14,
-      backgroundColor:
-        colors.slateLight,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginRight: 12,
-    },
-
-    headerText: {
-      flex: 1,
-      minWidth: 0,
-    },
-
-    headerTitleRow: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-    },
-
-    headerTitle: {
-      ...type.h2,
-      fontSize: 21,
-      lineHeight: 26,
-      color: colors.ink,
-      fontWeight: "900",
-      letterSpacing: -0.35,
-    },
-
-    countBadge: {
-      minWidth: 22,
-      height: 22,
-      paddingHorizontal: 6,
-      borderRadius: 11,
-      marginLeft: 8,
-      backgroundColor:
-        colors.brandLight,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-    },
-
-    countText: {
-      fontSize: 9,
-      lineHeight: 12,
-      fontWeight: "900",
-      color: colors.brand,
-    },
-
-    headerSub: {
-      fontSize: 11,
-      lineHeight: 16,
-      color: colors.slate,
-      marginTop: 2,
-      fontWeight: "500",
-    },
-
-    headerIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 14,
-      backgroundColor:
-        colors.brandLight,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginLeft: 10,
-    },
-
-    /* =====================================================
-       LOADING
-    ===================================================== */
-
-    loadingContainer: {
-      flex: 1,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      paddingHorizontal:
-        spacing.lg,
-    },
-
-    loadingCard: {
-      width: "100%",
-      maxWidth: 300,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      backgroundColor:
-        colors.surface,
-      borderRadius:
-        radius.xl,
-      borderWidth: 1,
-      borderColor:
-        colors.border,
-      paddingVertical: 28,
-      paddingHorizontal: 20,
-      ...shadow.sm,
-    },
-
-    loadingIcon: {
-      width: 48,
-      height: 48,
-      borderRadius: 16,
-      backgroundColor:
-        colors.brandLight,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-    },
-
-    loadingTitle: {
-      marginTop: 12,
-      fontSize: 13,
-      lineHeight: 18,
-      fontWeight: "800",
-      color: colors.ink,
-    },
-
-    loadingSub: {
-      marginTop: 3,
-      fontSize: 10.5,
-      lineHeight: 15,
-      color: colors.slate,
-      textAlign: "center",
-    },
-
-    /* =====================================================
-       LIST
-    ===================================================== */
-
-    listContent: {
-      flexGrow: 1,
-      paddingHorizontal:
-        spacing.lg,
-      paddingTop: 16,
-    },
-
-    /* =====================================================
-       INFO CARD
-    ===================================================== */
-
-    infoCard: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      padding: 13,
-      marginBottom: 12,
-      borderRadius: 18,
-      backgroundColor:
-        colors.brandTint,
-      borderWidth: 1,
-      borderColor:
-        colors.borderSoft,
-    },
-
-    infoIcon: {
-      width: 43,
-      height: 43,
-      borderRadius: 14,
-      backgroundColor:
-        colors.surface,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginRight: 11,
-      ...shadow.sm,
-    },
-
-    infoContent: {
-      flex: 1,
-      minWidth: 0,
-    },
-
-    infoTitle: {
-      fontSize: 12.5,
-      lineHeight: 17,
-      fontWeight: "800",
-      color: colors.ink,
-    },
-
-    infoText: {
-      fontSize: 10.5,
-      lineHeight: 15,
-      color: colors.slate,
-      marginTop: 2,
-    },
-
-    /* =====================================================
-       NOTIFICATION CARD
-    ===================================================== */
-
-    card: {
-      position: "relative",
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      backgroundColor:
-        colors.surface,
-      borderRadius:
-        radius.lg,
-      borderWidth: 1,
-      borderColor:
-        colors.border,
-      padding: 13,
-      paddingLeft: 14,
-      marginBottom: 10,
-      gap: 11,
-      overflow: "hidden",
-      ...shadow.sm,
-    },
-
-    liveCard: {
-      borderColor:
-        colors.dangerBorder,
-      backgroundColor:
-        colors.surface,
-    },
-
-    endedCard: {
-      opacity: 0.72,
-    },
-
-    cardAccent: {
-      position: "absolute",
-      left: 0,
-      top: 12,
-      bottom: 12,
-      width: 3,
-      borderRadius: 3,
-    },
-
-    cardIcon: {
-      width: 45,
-      height: 45,
-      borderRadius: 14,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginLeft: 2,
-    },
-
-    cardBody: {
-      flex: 1,
-      minWidth: 0,
-    },
-
-    cardTopRow: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      justifyContent:
-        "space-between",
-      minWidth: 0,
-      marginBottom: 3,
-    },
-
-    cardLabel: {
-      fontSize: 8.5,
-      lineHeight: 12,
-      fontWeight: "900",
-      letterSpacing: 0.65,
-      color: colors.slateSoft,
-    },
-
-    liveBadge: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      paddingHorizontal: 7,
-      height: 20,
-      borderRadius: 10,
-      backgroundColor:
-        colors.dangerLight,
-      marginLeft: 6,
-    },
-
-    liveDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor:
-        colors.danger,
-      marginRight: 4,
-    },
-
-    liveBadgeText: {
-      fontSize: 8,
-      lineHeight: 10,
-      fontWeight: "900",
-      color: colors.danger,
-      letterSpacing: 0.4,
-    },
-
-    cardTitle: {
-      fontSize: 13.5,
-      lineHeight: 18,
-      fontWeight: "800",
-      color: colors.ink,
-    },
-
-    endedTitle: {
-      color: colors.slate,
-    },
-
-    whenRow: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      marginTop: 5,
-    },
-
-    cardWhen: {
-      fontSize: 11,
-      lineHeight: 15,
-      fontWeight: "900",
-      marginLeft: 5,
-    },
-
-    metaRow: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      marginTop: 3,
-      minWidth: 0,
-    },
-
-    cardMeta: {
-      fontSize: 9.5,
-      lineHeight: 14,
-      color: colors.slateSoft,
-      marginLeft: 4,
-      fontWeight: "500",
-    },
-
-    metaDot: {
-      width: 3,
-      height: 3,
-      borderRadius: 2,
-      backgroundColor:
-        colors.slateSoft,
-      marginHorizontal: 6,
-    },
-
-    arrowButton: {
-      width: 31,
-      height: 31,
-      borderRadius: 10,
-      backgroundColor:
-        colors.slateLight,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      flexShrink: 0,
-    },
-
-    /* =====================================================
-       EMPTY
-    ===================================================== */
-
-    empty: {
-      flex: 1,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      paddingHorizontal: 28,
-      paddingBottom: 70,
-    },
-
-    emptyIconOuter: {
-      width: 88,
-      height: 88,
-      borderRadius: 28,
-      backgroundColor:
-        colors.brandTint,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      marginBottom: 16,
-    },
-
-    emptyIcon: {
-      width: 66,
-      height: 66,
-      borderRadius: 22,
-      backgroundColor:
-        colors.surface,
-      alignItems:
-        "center",
-      justifyContent:
-        "center",
-      ...shadow.sm,
-    },
-
-    emptyTitle: {
-      fontSize: 18,
-      lineHeight: 23,
-      fontWeight: "900",
-      color: colors.ink,
-      marginBottom: 6,
-      letterSpacing: -0.2,
-    },
-
-    emptyText: {
-      fontSize: 11.5,
-      lineHeight: 18,
-      color: colors.slate,
-      textAlign: "center",
-      maxWidth: 300,
-    },
-
-    emptyHint: {
-      flexDirection:
-        "row",
-      alignItems:
-        "center",
-      marginTop: 18,
-      paddingHorizontal: 12,
-      paddingVertical: 9,
-      borderRadius: 12,
-      backgroundColor:
-        colors.slateLight,
-    },
-
-    emptyHintText: {
-      fontSize: 9.5,
-      lineHeight: 14,
-      color: colors.slate,
-      fontWeight: "600",
-      marginLeft: 5,
-    },
-  });
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: 12,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  back: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: colors.slateLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  title: { fontSize: 20, fontWeight: "800", color: colors.ink },
+  sub: { fontSize: 12, color: colors.slate, marginTop: 1 },
+
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 12,
+    marginBottom: 10,
+  },
+  cardNew: { borderColor: colors.brandLight, backgroundColor: colors.brandTint },
+  icon: { width: 40, height: 40, borderRadius: 13, alignItems: "center", justifyContent: "center" },
+  titleRow: { flexDirection: "row", alignItems: "flex-start", gap: 6 },
+  cardTitle: { flex: 1, fontSize: 14, fontWeight: "800", color: colors.ink, lineHeight: 19 },
+  newDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.danger, marginTop: 5 },
+  cardBody: { fontSize: 12.5, color: colors.inkSoft, marginTop: 2, lineHeight: 17 },
+  when: { fontSize: 11, color: colors.slateSoft, marginTop: 4, fontWeight: "600" },
+
+  empty: { alignItems: "center", marginTop: 80, paddingHorizontal: spacing.lg },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: colors.brandTint,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+  emptyTitle: { fontSize: 17, fontWeight: "800", color: colors.ink },
+  emptyText: { fontSize: 13, color: colors.slate, textAlign: "center", marginTop: 6, lineHeight: 19 },
+});

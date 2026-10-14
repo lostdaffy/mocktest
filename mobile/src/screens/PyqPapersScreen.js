@@ -378,7 +378,7 @@ export default function PyqPapersScreen({
               <LinearGradient
                 colors={[
                   "#0D1263",
-                  "#2716C8",
+                  "#4F46E5",
                   "#5725E8",
                 ]}
                 start={{

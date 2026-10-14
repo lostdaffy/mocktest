@@ -47,7 +47,10 @@ const FILTERS = [
   { key: "live", label: "Live", types: "live" },
   { key: "full_mock", label: "Mock", types: "full_mock" },
   { key: "pyq", label: "PYQ", types: "pyq" },
-  { key: "practice", label: "Practice", types: "practice,topic_wise,sectional,revision" },
+  { key: "practice", label: "Practice", types: "practice,topic_wise,sectional" },
+  // The Daily GK Quiz (and the weekly revision test) are their own kind
+  // of attempt, not practice.
+  { key: "quiz", label: "Quiz", types: "revision" },
 ];
 
 const TYPE_META = {
@@ -57,10 +60,12 @@ const TYPE_META = {
   practice: { label: "Practice", icon: "school-outline", color: colors.info, bg: colors.infoLight },
   topic_wise: { label: "Practice", icon: "school-outline", color: colors.info, bg: colors.infoLight },
   sectional: { label: "Practice", icon: "school-outline", color: colors.info, bg: colors.infoLight },
-  revision: { label: "Practice", icon: "school-outline", color: colors.info, bg: colors.infoLight },
+  revision: { label: "Revision", icon: "refresh-outline", color: colors.success, bg: colors.successLight },
+  daily_quiz: { label: "Daily Quiz", icon: "flash-outline", color: colors.warn, bg: colors.warnLight },
 };
 
-function getTypeMeta(t) {
+function getTypeMeta(t, examType) {
+  if (t === "revision" && examType === "DAILY_GK") return TYPE_META.daily_quiz;
   return TYPE_META[t] || TYPE_META.practice;
 }
 
@@ -537,7 +542,7 @@ function HistoryCard({
   const result =
     getResultState(safePct);
 
-  const typeMeta = getTypeMeta(item.testType);
+  const typeMeta = getTypeMeta(item.testType, item.examType);
 
   const date =
     item.date
@@ -627,7 +632,7 @@ function HistoryCard({
             style={
               styles.title
             }
-            numberOfLines={1}
+            numberOfLines={2}
           >
             {item.testTitle ||
               "Mock Test"}
