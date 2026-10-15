@@ -7,10 +7,23 @@ const Test = require("../models/Test");
 // No check in code can know today's answer, so these are listed for a person
 // to confirm every six months, or to reject (which replaces them).
 
-const DATED = /(हाल\s*ही|वर्तमान|अभी\s*तक|नवीनतम|current(ly)?\b|recent(ly)?\b|latest|present\b|incumbent|\b20(?:2\d|3\d)\b)/i;
+// Narrow on purpose. A bare "current" is electric current, a bare "present"
+// is "Neither ... was present", "वर्तमान भारतीय राज्य" is a place on a map, and
+// "NEP 2020" is the name of a policy - the first version listed all of these.
+const OFFICE = "(chief|president|prime|governor|secretary|ceo|chairman|chairperson|head|captain|minister|director|commissioner|speaker|cji|cec)";
+const PAD = "(मुख्य|अध्यक्ष|राष्ट्रपति|प्रधान|राज्यपाल|महासचिव|गवर्नर|कप्तान|मंत्री|सचिव|निदेशक|आयुक्त|न्यायाधीश|सेनाध्यक्ष|प्रमुख)";
+const DATED = new RegExp(
+  [
+    "हाल\\s*(ही|के\\s*वर्षों)", "वर्तमान\\s*में", `वर्तमान\\s*${PAD}`, "अभी\\s*तक", "नवीनतम",
+    "currently", "at\\s*present", "presently", `current\\s*${OFFICE}`, "recent(ly)?\\b", "latest", "incumbent",
+    "\\b20(2[2-9]|3\\d)\\b",
+  ].join("|"),
+  "i"
+);
 const RECHECK_AFTER_DAYS = 180;
-// "वर्तमान आयु" / "present age" is a sum, not a fact that changes.
-const TIMELESS_SUBJECTS = /^(math|reason|गणित|तर्क)/i;
+// "वर्तमान आयु" / "present age" is a sum, not a fact that changes; an
+// English question is grammar.
+const TIMELESS_SUBJECTS = /^(math|reason|english|गणित|तर्क|अंग्रेज)/i;
 
 // GET /api/questions/time-sensitive?limit= (admin)
 async function listTimeSensitive(req, res) {

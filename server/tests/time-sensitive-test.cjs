@@ -69,6 +69,11 @@ async function api(method, p, { body, token } = {}) {
     newCheck: { ...base, text: "हाल ही में किस राज्य ने नई शिक्षा नीति घोषित की?", factCheckedAt: new Date(Date.now() - 10 * day) },
     timeless: { ...base, text: "भारत का संविधान कब लागू हुआ?" },
     ageSum: { ...base, subject: "Maths", topic: "Ages", text: "A की वर्तमान आयु B की आयु की दोगुनी है..." },
+    ammeter: { ...base, subject: "Science", text: "परिपथ में विद्युत धारा (current) को मापने के लिए किस उपकरण का उपयोग किया जाता है?" },
+    grammar: { ...base, subject: "English", text: "Neither the manager nor the employees was present in the meeting." },
+    nep: { ...base, subject: "Child Development", text: "राष्ट्रीय शिक्षा नीति 2020 के अनुसार नया ढांचा क्या है?" },
+    place: { ...base, text: "धोलावीरा स्थल वर्तमान भारतीय राज्य गुजरात में स्थित है?" },
+    unsg: { ...base, text: "वर्तमान में संयुक्त राष्ट्र के महासचिव कौन हैं?" },
     rejected: { ...base, status: "rejected", text: "वर्तमान में RBI के गवर्नर कौन हैं?" },
     notInTest: { ...base, text: "वर्तमान में ISRO के अध्यक्ष कौन हैं?" },
     draftOnly: { ...base, text: "वर्तमान में भारत के थल सेना प्रमुख कौन हैं?" },
@@ -76,7 +81,7 @@ async function api(method, p, { body, token } = {}) {
   const ids = {};
   for (const [k, q] of Object.entries(Q)) ids[k] = (await db.collection("questions").insertOne(q)).insertedId;
 
-  const inLive = ["cec", "recent", "year", "oldCheck", "newCheck", "timeless", "ageSum", "rejected"].map((k) => ids[k]);
+  const inLive = ["cec", "recent", "year", "oldCheck", "newCheck", "timeless", "ageSum", "rejected", "ammeter", "grammar", "nep", "place", "unsg"].map((k) => ids[k]);
   await db.collection("tests").insertOne({
     title: "Super TET Mock #1", type: "full_mock", examType: "SUPER_TET", questions: inLive,
     durationMinutes: 120, publishStatus: "published",
@@ -102,10 +107,15 @@ async function api(method, p, { body, token } = {}) {
   check("one confirmed ten days ago stays off", !has("newCheck"));
   check("a fact that cannot change stays off", !has("timeless"));
   check("'वर्तमान आयु' in a maths sum stays off", !has("ageSum"));
+  check("'वर्तमान में' (at present) is listed", has("unsg"));
+  check("electric current is not a dated fact", !has("ammeter"));
+  check("'was present' in an English grammar question stays off", !has("grammar"));
+  check("'NEP 2020' - the name of a policy - stays off", !has("nep"));
+  check("'वर्तमान भारतीय राज्य' (a place today) stays off", !has("place"));
   check("a rejected question stays off", !has("rejected"));
   check("a question in no test stays off", !has("notInTest"));
   check("a question only in an unpublished mock stays off", !has("draftOnly"));
-  check("the count matches", r.json.count === 4, String(r.json.count));
+  check("the count matches", r.json.count === 5, String(r.json.count));
   const cec = (r.json.questions || []).find((q) => String(q._id) === String(ids.cec));
   check("each one names the live tests holding it, not the archived ones",
     cec && cec.tests.length === 1 && cec.tests[0] === "Super TET Mock #1", JSON.stringify(cec && cec.tests));
@@ -116,7 +126,7 @@ async function api(method, p, { body, token } = {}) {
   r = await api("PATCH", `/questions/${ids.cec}/fact-checked`, { token: adminToken });
   check("the admin marks it still correct", r.status === 200 && r.json.question && r.json.question.factCheckedAt, JSON.stringify(r.json));
   r = await api("GET", "/questions/time-sensitive", { token: adminToken });
-  check("and it leaves the list", !(r.json.questions || []).some((q) => String(q._id) === String(ids.cec)) && r.json.count === 3, String(r.json.count));
+  check("and it leaves the list", !(r.json.questions || []).some((q) => String(q._id) === String(ids.cec)) && r.json.count === 4, String(r.json.count));
 
   r = await api("PATCH", `/questions/${new mongoose.Types.ObjectId()}/fact-checked`, { token: adminToken });
   check("an unknown question is a 404", r.status === 404, String(r.status));
