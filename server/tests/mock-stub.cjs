@@ -55,7 +55,9 @@ gemini.generateQuestions = async ({ examType, subject, difficulty, count, pyqExa
     n += 1;
     return {
       text: `AI ${subject} ${difficulty} #${n}`,
-      options: ["a", "b", "c", "d"],
+      // A different answer each time: one paper must not ask the same thing
+      // with the same answer twice (sameFactInPaper).
+      options: [`${n}1`, `${n}2`, `${n}3`, `${n}4`],
       correctIndex: 0,
       solution: "stub solution",
       // No topic: like the real model on a bad day, so the fallback runs.

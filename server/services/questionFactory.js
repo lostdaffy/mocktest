@@ -3,7 +3,7 @@ const RejectedQuestion = require("../models/RejectedQuestion");
 const Test = require("../models/Test");
 const Attempt = require("../models/Attempt");
 const { generateQuestions, repairQuestion } = require("./geminiService");
-const { runValidationPipelineBatch, questionKey, looksLikeRepeat } = require("./validationPipeline");
+const { runValidationPipelineBatch, questionKey, looksLikeRepeat, sameFactInPaper } = require("./validationPipeline");
 // Through the module, not destructured, so the test stub can stand in for it.
 const visualGen = require("./visualGenerator");
 const { visualSignature, figureKey } = require("./visuals");
@@ -49,9 +49,10 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
   // EVS section could both ask who chaired the Drafting Committee - Super TET
   // Mock #2 did.
   const paper = inTest.length
-    ? await Question.find({ _id: { $in: inTest } }).select("text textKey visual").lean()
+    ? await Question.find({ _id: { $in: inTest } }).select("text textKey visual options correctIndex").lean()
     : [];
-  const paperTexts = paper.filter((q) => !q.visual?.kind).map((q) => q.text);
+  const paperPlain = paper.filter((q) => !q.visual?.kind);
+  const paperTexts = paperPlain.map((q) => q.text);
   const acceptedKeys = new Set(paper.map((q) => figureKey(q.visual) || q.textKey || questionKey(q.text)));
   let repaired = 0;
   let discarded = 0;
@@ -189,6 +190,16 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
       if (reworded.repeat) {
         duplicates++;
         await drop(q, "reworded", `already asked as: ${String(reworded.of).slice(0, 120)}`);
+        continue;
+      }
+
+      // The same fact asked again elsewhere in the paper, with the same answer.
+      const twin = inTest.length && !q.visual?.kind
+        ? [...paperPlain, ...accepted, ...savedRound].find((p) => sameFactInPaper(q, p))
+        : null;
+      if (twin) {
+        duplicates++;
+        await drop(q, "reworded", `the paper already asks: ${String(twin.text).slice(0, 120)}`);
         continue;
       }
 

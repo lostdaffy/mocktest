@@ -181,6 +181,20 @@ async function api(method, p, { body, token } = {}) {
   check("a question the paper already has in another section is not added again",
     builtTexts.length === 2 && !builtTexts.includes(twin) && built.duplicates >= 1, JSON.stringify({ builtTexts, dup: built.duplicates }));
 
+  // ...and so is the same fact in other words with the same answer. That
+  // call used the stub's #1-#6; its next question is #7, answer "71".
+  const sameFact = await db.collection("questions").insertOne({
+    text: "Which EVS topic is easy and important?", textKey: questionKey("Which EVS topic is easy and important?"),
+    subject: "GK", topic: "GK", options: ["71", "b1", "c1", "d1"], correctIndex: 0, status: "published",
+  });
+  const built2 = await createVerifiedQuestions({
+    needed: 2, inTest: [sameFact.insertedId],
+    generateParams: { examType: "SUPER_TET", subject: "EVS", topic: "EVS", difficulty: "easy" },
+  });
+  const texts2 = (await db.collection("questions").find({ _id: { $in: built2.ids } }).toArray()).map((q) => q.text);
+  check("the same fact asked in other words, same answer, is not added either",
+    texts2.length === 2 && !texts2.includes("AI EVS easy #7") && built2.duplicates >= 1, JSON.stringify({ texts2, dup: built2.duplicates }));
+
   const student = await db.collection("users").insertOne({ name: "S", phone: "9111111111", role: "user", referralCode: "S1" });
   const sToken = jwt.sign({ id: student.insertedId.toString(), sessionId: "y" }, JWT_SECRET);
   const denied = await api("POST", "/exam-series/practice/fill-short", { token: sToken, body: {} });

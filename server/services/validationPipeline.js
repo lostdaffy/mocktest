@@ -83,6 +83,46 @@ function looksLikeRepeat(text, existingTexts = []) {
   return { repeat: false, of: null };
 }
 
+// Hindi grammar words, for sameFactInPaper only - looksLikeRepeat's 0.65 was
+// measured with them counted, so they stay out of its list.
+const HINDI_STOPWORDS = new Set(
+  "में से का की के है हैं को कौन सा सी किस किसे क्या होगा होती होता निम्नलिखित निम्न द्वारा लिए एक और था थी थे गया गई किया जाता जाती कीजिए चुनिए शब्द सही".split(" ")
+);
+const factWords = (text) => new Set([...contentWords(text)].filter((w) => !HINDI_STOPWORDS.has(w)));
+const quotedTerms = (text) =>
+  new Set((String(text || "").match(/['‘’"“”]([^'‘’"“”]{2,40})['‘’"“”]/g) || []).map((x) => x.slice(1, -1).trim()));
+const within = (a, b) => a.size > 0 && [...a].every((w) => b.has(w));
+
+/**
+ * Do two questions of ONE paper ask the same thing? Stricter about wording
+ * than looksLikeRepeat but it also needs the same answer, which is what makes
+ * it safe to use across subjects.
+ *
+ * Super TET Mock #1 asked who wrote 'कामायनी' twice, Mock #2 when 'समाजवादी'
+ * entered the Preamble in GK and again in EVS, and both the series
+ * 2, 6, 12, 20, 30 twice in other words. Measured on those two mocks (14,280
+ * pairs) it finds those 7 pairs and nothing else. Both need:
+ *   - the same correct answer (or one's words inside the other's: "गंगा" /
+ *     "गंगा नदी"), and
+ *   - the same three or more numbers, a term in quotes in common, or 40% of
+ *     the meaningful words.
+ */
+function sameFactInPaper(a, b) {
+  const ansA = String(a?.options?.[a?.correctIndex] ?? "").trim();
+  const ansB = String(b?.options?.[b?.correctIndex] ?? "").trim();
+  if (!ansA || !ansB) return false;
+  const wa = factWords(ansA);
+  const wb = factWords(ansB);
+  const sameAnswer = ansA === ansB || overlap(wa, wb) >= 0.6 || within(wa, wb) || within(wb, wa);
+  if (!sameAnswer) return false;
+
+  const na = String(a.text || "").match(/[0-9]+(?:\.[0-9]+)?/g) || [];
+  if (na.length >= 3 && numberSignature(a.text) === numberSignature(b.text)) return true;
+  const qb = quotedTerms(b.text);
+  if ([...quotedTerms(a.text)].some((t) => qb.has(t))) return true;
+  return overlap(factWords(a.text), factWords(b.text)) >= 0.4;
+}
+
 // Layer 1: cheap, instant rule-based checks. No AI call needed.
 //
 // These are deliberately strict. A student practising for a real exam is
@@ -297,6 +337,7 @@ async function runValidationPipeline(question) {
 module.exports = {
   ruleBasedCheck,
   looksLikeRepeat,
+  sameFactInPaper,
   numberSignature,
   runValidationPipeline,
   runValidationPipelineBatch,
