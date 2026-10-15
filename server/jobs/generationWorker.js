@@ -174,11 +174,15 @@ async function runGenerationTick() {
   // allowance has reset. The team chose to press Resume themselves.
   if (state.paused) return;
 
-  const job = await GenerationJob.findOneAndUpdate(
-    { status: "queued" },
-    { $set: { status: "running", startedAt: new Date() }, $inc: { attempts: 1 } },
-    { sort: { queuedAt: 1 }, new: true }
-  );
+  // Repairs first: a top-up is a test students may be sitting short right
+  // now, and it waits behind no new mock. Then everything in the order queued.
+  const claim = (filter) =>
+    GenerationJob.findOneAndUpdate(
+      filter,
+      { $set: { status: "running", startedAt: new Date() }, $inc: { attempts: 1 } },
+      { sort: { queuedAt: 1 }, new: true }
+    );
+  const job = (await claim({ status: "queued", kind: "top_up" })) || (await claim({ status: "queued" }));
   if (!job) return;
 
   running = true;

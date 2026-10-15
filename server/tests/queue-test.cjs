@@ -260,6 +260,29 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const backIn = await db.collection("generationjobs").findOne({});
   check("...with the attempt count reset so they get a fair try", backIn.status === "queued" && backIn.attempts === 0);
 
+  // ---- a repair goes before new content, whatever was queued first
+  await api("POST", "/generation/pause", { token });
+  await db.collection("generationjobs").deleteMany({});
+  await db.collection("generationjobs").insertOne({
+    kind: "practice", subject: "Maths", chapter: "Percentage", difficulty: "hard",
+    label: "new content queued first", status: "queued", attempts: 0, queuedAt: new Date(Date.now() - 600e3),
+  });
+  await db.collection("generationjobs").insertOne({
+    kind: "top_up", testId: new mongoose.Types.ObjectId(), label: "repair queued later",
+    status: "queued", attempts: 0, queuedAt: new Date(),
+  });
+  await api("POST", "/generation/resume", { token });
+  for (let i = 0; i < 40; i++) {
+    if ((await db.collection("generationjobs").countDocuments({ status: "queued" })) === 0) break;
+    await sleep(500);
+  }
+  const repair = await db.collection("generationjobs").findOne({ label: "repair queued later" });
+  const fresh = await db.collection("generationjobs").findOne({ label: "new content queued first" });
+  check("a top-up is picked up before new content queued earlier",
+    repair.startedAt && fresh.startedAt && repair.startedAt <= fresh.startedAt, `${repair.startedAt} vs ${fresh.startedAt}`);
+  await api("POST", "/generation/pause", { token });
+  await db.collection("generationjobs").deleteMany({});
+
   // ---- and a student cannot touch any of it
   const student = await db.collection("users").insertOne({ name: "S", phone: "9111111111", role: "user", referralCode: "S1" });
   const sToken = jwt.sign({ id: student.insertedId.toString(), sessionId: "y" }, JWT_SECRET);
