@@ -128,6 +128,19 @@ async function listExamMocks(req, res) {
   res.json({ mocks: lightMocks });
 }
 
+// The questions of the exam's other mocks (the latest twelve). A student who
+// sits ten Super TET mocks met 'कामायनी', 'परिश्रम ही सफलता की कुंजी' and
+// 5+3+3+4 in nearly every one: 87 same-fact pairs across the first seven.
+// New questions are checked against these as against their own paper.
+async function siblingMockQuestions(examStage, exceptId) {
+  const others = await Test.find({ examStage, type: "full_mock", _id: { $ne: exceptId } })
+    .sort({ createdAt: -1 })
+    .limit(12)
+    .select("questions")
+    .lean();
+  return others.flatMap((t) => t.questions || []);
+}
+
 // POST /api/exam-series/:examStage/generate-mock (admin)
 // Generates a NEW mock test for a SPECIFIC exam. Questions are generated
 // exam-specifically (strict content isolation) and tagged with examStage so
@@ -248,6 +261,8 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
   const tally = { verified: 0, repaired: 0, discarded: 0, duplicates: 0, short: 0 };
   const syllabusOffsets = new Map(); // per subject, so each batch moves along the syllabus
   const everyId = () => flatten();
+  const siblings = await siblingMockQuestions(examStage, test._id);
+  const checkAgainst = () => [...flatten(), ...siblings];
 
   // Small chunks (max 12 per call for quality and valid JSON), paused between
   // calls to stay under the free tier's per-minute limit. A batch that fails
@@ -266,7 +281,7 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
         // deleted if it cannot - nothing doubtful is kept.
         const built = await createVerifiedQuestions({
           needed: thisBatch,
-          inTest: everyId(),
+          inTest: checkAgainst(),
           tag: { examStage },
           generateParams: {
             examType: examStage,
@@ -326,7 +341,7 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
       try {
         const built = await createVerifiedQuestions({
           needed: want,
-          inTest: everyId(),
+          inTest: checkAgainst(),
           tag: { examStage, chapter: v.chapter },
           generateParams: {
             examType: examStage,
@@ -528,7 +543,7 @@ async function replaceInMock(test, removed, position) {
   try {
     const built = await createVerifiedQuestions({
       needed: 1,
-      inTest: test.questions,
+      inTest: [...test.questions, ...(await siblingMockQuestions(test.examStage, test._id))],
       tag: { examStage: test.examStage, ...(figure ? { chapter: removed.chapter } : {}) },
       generateParams: {
         examType: test.examStage,
@@ -1010,7 +1025,10 @@ async function addQuestionsToMock(req, res) {
     const pyqExamples = await getPyqStyleExamples(test.examStage, subject);
     const built = await createVerifiedQuestions({
       needed: batch,
-      inTest: test.questions.map((q) => q._id),
+      inTest: [
+        ...test.questions.map((q) => q._id),
+        ...(test.type === "full_mock" ? await siblingMockQuestions(test.examStage, test._id) : []),
+      ],
       tag: { examStage: test.examStage },
       generateParams: {
         examType: test.examStage,
