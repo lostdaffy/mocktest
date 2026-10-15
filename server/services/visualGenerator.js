@@ -82,7 +82,7 @@ Question kinds (use a mix):
       { "type": "none" }                    any other rule (then explain it fully in the solution)
 - "mirror": 1 problem figure, a mirror on its RIGHT; the answer is its mirror image. rule { "type": "mirror" }
 - "water": 1 problem figure, water BELOW it; the answer is its water image. rule { "type": "water" }
-- "odd_one_out": no problem figures; four answer figures, three follow a rule and one does not. rule { "type": "none" }
+- "odd_one_out": no problem figures; four answer figures, three follow a rule and one does not. rule { "type": "none" }. The odd one must differ in ONE visible way (number of shapes, which shapes, colour, size, position or facing) while the other three agree on it - and no other figure may stand out on any of those: if one of the three is the only black one, or the only one in different cells, that is a second answer and the question is thrown out.
 - "analogy": 3 problem figures (1 : 2 :: 3 : ?). rule { "type": "none" }
 
 Rules:

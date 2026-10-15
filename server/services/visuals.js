@@ -407,6 +407,50 @@ function waterPanel(p, grid) {
  * { ok: null, reason } - this kind of figure cannot be worked out in code
  *               (odd one out, a free pattern); the admin must check it by eye.
  */
+// Odd one out, by what a student can see in each figure. An option "stands
+// out" on a feature when the other three agree on it and it does not. The
+// marked option standing out alone is a checked answer; any OTHER option
+// standing out on any feature is a second answer a student could defend -
+// "Find the odd figure" with two white squares, two BLACK circles, two
+// stars and a circle-with-triangle has B (colour) as well as D (mixed
+// shapes), and one like it reached a test. Nothing standing out means the
+// rule is subtler than these features (a mirrored option, say): by eye.
+const ODD_FEATURES = {
+  "the number of shapes": (p) => String(p.elements.length),
+  "which shapes": (p) => p.elements.map((e) => e.shape).sort().join(","),
+  "one kind of shape or several": (p) => String(new Set(p.elements.map((e) => e.shape)).size === 1),
+  colour: (p) => p.elements.map(shownFill).sort().join(","),
+  "one colour or several": (p) => String(new Set(p.elements.map(shownFill)).size === 1),
+  size: (p) => p.elements.map((e) => (e.shape === "dot" ? "dot" : e.size)).sort().join(","),
+  position: (p) => p.elements.map((e) => `${e.row}${e.col}`).sort().join(","),
+  "which way the shapes face": (p) => p.elements.map((e) => `${e.shape}:${shownTurn(e)}`).sort().join(","),
+};
+function shownFill(e) {
+  return ["line", "plus", "cross", "dot"].includes(e.shape) ? "black" : e.fill;
+}
+function shownTurn(e) {
+  const sym = SYMMETRY[e.shape] || 360;
+  return sym === 1 ? 0 : mod(e.rotate, sym);
+}
+function checkOddOneOut(options, correctIndex) {
+  const standsOut = new Map(); // option -> features it stands out on
+  for (const [name, f] of Object.entries(ODD_FEATURES)) {
+    const values = options.map(f);
+    values.forEach((v, i) => {
+      const others = values.filter((_, j) => j !== i);
+      if (others.every((o) => o === others[0]) && v !== others[0]) {
+        standsOut.set(i, [...(standsOut.get(i) || []), name]);
+      }
+    });
+  }
+  const rival = [...standsOut.keys()].find((i) => i !== correctIndex);
+  if (rival !== undefined) {
+    return { ok: false, reason: `option ${"ABCD"[rival]} is also odd one out, by ${standsOut.get(rival)[0]}` };
+  }
+  if (standsOut.has(correctIndex)) return { ok: true };
+  return { ok: null, reason: "no simple feature sets one figure apart - check the answer by eye" };
+}
+
 function checkFigureAnswer(spec, correctIndex) {
   const { rule, grid, question, options, layout } = spec;
   let expected;
@@ -421,6 +465,8 @@ function checkFigureAnswer(spec, correctIndex) {
       }
     }
     expected = step(question[question.length - 1]);
+  } else if (layout === "odd_one_out") {
+    return checkOddOneOut(options, correctIndex);
   } else {
     return { ok: null, reason: "this kind of figure is not checked in code - check the answer by eye" };
   }

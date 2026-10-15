@@ -102,8 +102,21 @@ async function drainQueue(token) {
     V.checkFigureAnswer(V.normaliseFigure({ ...fig, question: [p1, p1, step(p1)] }), 1).ok === false);
   check("a mirror image is worked out",
     V.checkFigureAnswer(V.normaliseFigure({ layout: "mirror", grid: 3, question: [p1], options: [p1, V.mirrorPanel(p1, 3), step(p1), V.waterPanel(p1, 3)] }), 1).ok === true);
-  check("an odd-one-out is left to the admin's eye, not guessed",
-    V.checkFigureAnswer(V.normaliseFigure({ layout: "odd_one_out", grid: 3, question: [], options: [p1, step(p1), V.mirrorPanel(p1, 3), V.waterPanel(p1, 3)] }), 0).ok === null);
+  // Three turns of one figure and its mirror: nothing simple sets one apart.
+  check("an odd-one-out with a subtle rule is left to the admin's eye, not guessed",
+    V.checkFigureAnswer(V.normaliseFigure({ layout: "odd_one_out", grid: 3, question: [], options: [p1, step(p1), step(step(p1)), V.mirrorPanel(p1, 3)] }), 3).ok === null);
+  const circles = (cells) => ({ elements: cells.map(([row, col]) => ({ shape: "circle", row, col, fill: "white" })) });
+  const three = [[1, 1], [2, 2], [3, 3]];
+  check("an odd-one-out the features settle is checked in code",
+    V.checkFigureAnswer(V.normaliseFigure({ layout: "odd_one_out", grid: 3, question: [], options: [circles(three), circles([[1, 3], [2, 2], [3, 1]]), circles([[2, 1], [2, 2], [2, 3]]), circles([[1, 1], [1, 3], [3, 1], [3, 3]])] }), 3).ok === true);
+  // The one that reached a test: B is black where the rest are white, and D
+  // mixes shapes where the rest do not - two answers.
+  const pair = (shape, fill) => ({ elements: [{ shape, row: 1, col: 2, fill }, { shape, row: 3, col: 2, fill }] });
+  const twoAnswers = V.checkFigureAnswer(V.normaliseFigure({ layout: "odd_one_out", grid: 3, question: [], options: [
+    pair("square", "white"), pair("circle", "black"), pair("star", "white"),
+    { elements: [{ shape: "circle", row: 1, col: 2, fill: "white" }, { shape: "triangle", row: 3, col: 2, fill: "white" }] },
+  ] }), 3);
+  check("...and one with a second defensible answer is refused, naming it", twoAnswers.ok === false && /option B .* colour/.test(twoAnswers.reason), twoAnswers.reason);
   // A figure's identity is its figure, not its wording or option order.
   const mirrorA = { kind: "figure", figure: { spec: { layout: "mirror", grid: 3, question: [p1], options: [p1, V.mirrorPanel(p1, 3), step(p1), V.waterPanel(p1, 3)] } } };
   const mirrorB = { kind: "figure", figure: { spec: { layout: "mirror", grid: 3, question: [p1], options: [V.waterPanel(p1, 3), step(p1), V.mirrorPanel(p1, 3), p1] } } };
