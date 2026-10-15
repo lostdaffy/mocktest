@@ -65,6 +65,24 @@ export default function ChapterListScreen({
   const chapters =
     subject?.chapters || [];
 
+  // Chapters under their heading (Arithmetic, Advanced...), the headings in
+  // the order their first chapter comes. One heading or none: a plain list.
+  const groups = useMemo(() => {
+    const order = [];
+    const byHeading = new Map();
+    for (const chapter of chapters) {
+      const heading = chapter.category || "";
+      if (!byHeading.has(heading)) {
+        byHeading.set(heading, []);
+        order.push(heading);
+      }
+      byHeading.get(heading).push(chapter);
+    }
+    return order.map((heading) => ({ heading, chapters: byHeading.get(heading) }));
+  }, [chapters]);
+  const showHeadings =
+    groups.length > 1;
+
 
   /* =======================================================
      HIDE NATIVE HEADER
@@ -391,11 +409,25 @@ export default function ChapterListScreen({
             colors={colors}
           />
         ) : (
-          chapters.map(
-            (
-              chapter,
-              index
-            ) => (
+          groups.map((group, groupIndex) => {
+            const before = groups
+              .slice(0, groupIndex)
+              .reduce((n, g) => n + g.chapters.length, 0);
+            return (
+              <View key={group.heading || `group-${groupIndex}`}>
+                {showHeadings && (
+                  <Text
+                    style={[
+                      styles.groupHeading,
+                      { color: colors.slate },
+                    ]}
+                  >
+                    {group.heading || "More"}
+                  </Text>
+                )}
+                {group.chapters.map((chapter, i) => {
+                  const index = before + i;
+                  return (
               <ChapterCard
                 key={
                   chapter._id ||
@@ -433,8 +465,11 @@ export default function ChapterListScreen({
                   chapterCard
                 }
               />
-            )
-          )
+                  );
+                })}
+              </View>
+            );
+          })
         )}
 
       </ScrollView>
@@ -1618,6 +1653,29 @@ const styles =
 
       fontWeight:
         "800",
+    },
+
+
+    groupHeading: {
+      marginHorizontal:
+        spacing.lg,
+
+      marginTop: 8,
+
+      marginBottom: 8,
+
+      fontSize: 12,
+
+      lineHeight: 16,
+
+      fontWeight:
+        "800",
+
+      letterSpacing:
+        0.6,
+
+      textTransform:
+        "uppercase",
     },
 
 
