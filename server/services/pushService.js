@@ -19,9 +19,10 @@ function chunk(arr, size) {
 // to reject the whole batch over.
 async function sendPushNotifications(tokens, { title, body, data } = {}) {
   const validTokens = (tokens || []).filter((t) => typeof t === "string" && t.startsWith("ExponentPushToken"));
-  if (validTokens.length === 0) return { sent: 0 };
+  if (validTokens.length === 0) return { sent: 0, errors: [] };
 
   let sent = 0;
+  const errors = [];
   for (const batch of chunk(validTokens, CHUNK_SIZE)) {
     const messages = batch.map((to) => ({ to, title, body, data, sound: "default" }));
     try {
@@ -31,7 +32,9 @@ async function sendPushNotifications(tokens, { title, body, data } = {}) {
         body: JSON.stringify(messages),
       });
       if (!res.ok) {
-        console.error("Push send failed:", res.status, await res.text());
+        const text = await res.text();
+        console.error("Push send failed:", res.status, text);
+        errors.push(`Expo answered ${res.status}: ${text.slice(0, 200)}`);
         continue;
       }
       // Expo answers 200 even when a message failed; the failures are in
@@ -42,8 +45,13 @@ async function sendPushNotifications(tokens, { title, body, data } = {}) {
       const gone = [];
       tickets.forEach((t, i) => {
         if (t?.status === "ok") sent += 1;
-        else if (t?.details?.error === "DeviceNotRegistered") gone.push(batch[i]);
-        else if (t?.status === "error") console.error("Push ticket error:", t.details?.error || t.message);
+        else if (t?.details?.error === "DeviceNotRegistered") {
+          gone.push(batch[i]);
+          errors.push("DeviceNotRegistered");
+        } else if (t?.status === "error") {
+          console.error("Push ticket error:", t.details?.error || t.message);
+          errors.push(t.details?.error ? `${t.details.error}: ${t.message || ""}` : t.message || "error");
+        }
       });
       if (!tickets.length) sent += batch.length;
       if (gone.length) {
@@ -52,9 +60,10 @@ async function sendPushNotifications(tokens, { title, body, data } = {}) {
       }
     } catch (err) {
       console.error("Push send error:", err.message);
+      errors.push(err.message);
     }
   }
-  return { sent };
+  return { sent, errors };
 }
 
 module.exports = { sendPushNotifications };

@@ -421,7 +421,29 @@ async function deleteUser(req, res) {
   }
 }
 
+// POST /api/admin/users/:id/test-push
+// One notification to this one account's phone - to check a new build, or a
+// student's "I never get notifications". Never a broadcast.
+async function sendTestPush(req, res) {
+  const user = await User.findById(req.params.id).select("name pushToken pushError pushCheckedAt");
+  if (!user) return res.status(404).json({ message: "User not found" });
+  if (!user.pushToken) {
+    return res.status(409).json({
+      message: `No notification token on this account${user.pushError ? ` - ${user.pushError}` : " - the phone has not registered yet (open the app, log in, allow notifications)"}`,
+    });
+  }
+  const { sendPushNotifications } = require("../services/pushService");
+  const { sent, errors } = await sendPushNotifications([user.pushToken], {
+    title: "Rankveer test notification",
+    body: "Notifications are working on this phone.",
+    data: { kind: "test" },
+  });
+  if (sent) return res.json({ message: `Sent to ${user.name || "this account"}'s phone`, sent, checkedAt: user.pushCheckedAt });
+  res.status(502).json({ message: `Not delivered: ${(errors || []).join("; ") || "Expo did not accept it"}`, sent, errors });
+}
+
 module.exports = {
+  sendTestPush,
   searchUsers,
   getUserStats,
   exportUsersCsv,

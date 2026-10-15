@@ -532,6 +532,25 @@ export default function Users() {
                     >
                       {actionBusy === "logout" ? "Logging out..." : "Log out of all devices"}
                     </button>
+                    {detail.flags.hasPushToken && (
+                      <button
+                        onClick={async () => {
+                          setActionBusy("push");
+                          try {
+                            const res = await api.post("/admin/users/" + detailId + "/test-push");
+                            toast.success(res.data.message || "Sent");
+                          } catch (err) {
+                            toast.error(err.response?.data?.message || "Not delivered");
+                          } finally {
+                            setActionBusy("");
+                          }
+                        }}
+                        disabled={!!actionBusy}
+                        className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium disabled:opacity-50"
+                      >
+                        {actionBusy === "push" ? "Sending..." : "Send test notification"}
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         closeDetail();
