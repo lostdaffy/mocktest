@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
+import TimeSensitive from "../components/TimeSensitive";
 
 const REASON_LABELS = {
   wrong_answer: "Wrong answer",
@@ -128,6 +129,8 @@ export default function Reports() {
           ))}
         </div>
       )}
+
+      <TimeSensitive />
     </div>
   );
 }

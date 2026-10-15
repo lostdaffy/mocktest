@@ -56,6 +56,11 @@ const questionSchema = new mongoose.Schema(
     // against the bank before putting them in a test.
     textKey: { type: String, index: true },
 
+    // When a person last confirmed a fact that can go out of date ("who is
+    // the current CEC", "recently", a recent year) is still true. See
+    // GET /api/questions/time-sensitive.
+    factCheckedAt: { type: Date },
+
     // Repeat-detection / Exam Match Engine
     embedding: { type: [Number], select: false }, // vector for similarity search
     repeatCount: { type: Number, default: 0 }, // how many times a near-identical PYQ has appeared historically

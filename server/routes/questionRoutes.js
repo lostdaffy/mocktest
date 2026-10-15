@@ -25,6 +25,9 @@ router.get("/bookmarked", protect, asyncRoute(listBookmarked));
 
 // Admin routes - specific paths BEFORE "/:id" style so they don't get shadowed
 router.get("/stats", protect, adminOnly, asyncRoute(getStats));
+const timeSensitive = require("../controllers/timeSensitiveController");
+router.get("/time-sensitive", protect, adminOnly, asyncRoute(timeSensitive.listTimeSensitive));
+router.patch("/:id/fact-checked", protect, adminOnly, asyncRoute(timeSensitive.markFactChecked));
 router.post("/recheck", protect, adminOnly, asyncRoute(recheckReviewQueue));
 router.get("/reports", protect, adminOnly, asyncRoute(listReports));
 router.patch("/reports/:id/resolve", protect, adminOnly, asyncRoute(resolveReport));
