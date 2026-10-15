@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "86264867134",
+    "project_id": "rankveer-1bafe",
+    "storage_bucket": "rankveer-1bafe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:86264867134:android:b4c5797972b804f350e46f",
+        "android_client_info": {
+          "package_name": "com.satya.smarttestengine"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCN0buCBZHiazcB8y8mc6rJjVcxpBbBWqQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
