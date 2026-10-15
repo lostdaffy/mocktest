@@ -224,7 +224,23 @@ async function rekeyFigures(req, res) {
       else seen.set(k, id);
     }
   }
-  res.json({ figures: qs.length, rekeyed: changed, repeats });
+  // And any figure whose marked answer the code now refuses - an odd one out
+  // with a second defensible answer, made before that was checked.
+  const { checkFigureAnswer } = require("../services/visuals");
+  const full = await Question.find({ "visual.kind": "figure" }).select("visual correctIndex").lean();
+  const refused = [];
+  for (const q of full) {
+    let check;
+    try {
+      check = checkFigureAnswer(normaliseFigure(q.visual.figure.spec), q.correctIndex);
+    } catch (err) {
+      check = { ok: false, reason: err.message };
+    }
+    if (check.ok === false) {
+      refused.push({ question: q._id, reason: check.reason, tests: tests.filter((t) => t.questions.map(String).includes(String(q._id))).map((t) => ({ testId: t._id, title: t.title })) });
+    }
+  }
+  res.json({ figures: qs.length, rekeyed: changed, repeats, refused });
 }
 
 // POST /api/question-images/auto-attach (admin)
