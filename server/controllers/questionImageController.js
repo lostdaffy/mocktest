@@ -16,6 +16,18 @@ const MAGIC = [
   { mime: "image/webp", test: (b) => b.length > 12 && b.toString("ascii", 0, 4) === "RIFF" && b.toString("ascii", 8, 12) === "WEBP" },
 ];
 
+// A picture sent as a data URL, checked by its bytes, not its label.
+// Returns { mime, data } or an error message to show.
+function decodeImage(dataUrl) {
+  const m = /^data:(image\/(?:png|jpeg|webp));base64,(.+)$/s.exec(String(dataUrl || ""));
+  if (!m) return { error: "Send the picture as a PNG, JPEG or WebP image." };
+  const data = Buffer.from(m[2], "base64");
+  const real = MAGIC.find((x) => x.test(data));
+  if (!real) return { error: "That file is not a PNG, JPEG or WebP image." };
+  if (data.length > MAX_BYTES) return { error: `The picture is ${Math.round(data.length / 1024)} KB; the limit is ${MAX_BYTES / 1024} KB.` };
+  return { mime: real.mime, data };
+}
+
 const awaitingFilter = {
   "visual.kind": "figure",
   $or: [{ "visual.figure.imageId": { $exists: false } }, { "visual.figure.imageId": null }],
@@ -230,6 +242,7 @@ async function rekeyFigures(req, res) {
   const full = await Question.find({ "visual.kind": "figure" }).select("visual correctIndex").lean();
   const refused = [];
   for (const q of full) {
+    if (!q.visual?.figure?.spec) continue; // a past paper's own picture: nothing to check
     let check;
     try {
       check = checkFigureAnswer(normaliseFigure(q.visual.figure.spec), q.correctIndex);
@@ -255,4 +268,4 @@ async function autoAttach(req, res) {
   res.json({ message: `${attached} picture(s) drawn and attached; ${left} still need a person`, attached, left });
 }
 
-module.exports = { autoAttach, listFigures, getFigure, uploadFigure, removeFigure, serveImage, figureCard, rekeyFigures, MAX_BYTES };
+module.exports = { decodeImage, autoAttach, listFigures, getFigure, uploadFigure, removeFigure, serveImage, figureCard, rekeyFigures, MAX_BYTES };

@@ -12,11 +12,14 @@ const mongoose = require("mongoose");
 // survives a restart, the panel can show it, and a job that fails says why.
 const generationJobSchema = new mongoose.Schema(
   {
-    kind: { type: String, enum: ["practice", "mock", "daily_quiz", "top_up"], required: true },
+    kind: { type: String, enum: ["practice", "mock", "daily_quiz", "top_up", "pyq_extract"], required: true },
 
     // top_up: the practice test to fill up to its size (the old 12-question
     // tests, brought to 20).
     testId: { type: mongoose.Schema.Types.ObjectId, ref: "Test" },
+
+    // pyq_extract: the uploaded past paper to read (see services/pyqImport.js).
+    pyqImport: { type: mongoose.Schema.Types.ObjectId, ref: "PyqImport" },
 
     // practice: one topic of the chapter, when the test is for that topic
     // alone. Empty means the whole chapter.

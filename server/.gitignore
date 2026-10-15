@@ -56,3 +56,4 @@ backups/
 tests/gen-calls.jsonl
 tests/captured.jsonl
 tests/tmp-*.js
+tests/pyq-calls.jsonl

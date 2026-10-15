@@ -855,6 +855,7 @@ module.exports = {
   verifyQuestions,
   repairQuestion,
   callGemini,
+  callGeminiRaw,
   extractQuestionsFromPDF,
   // for the tests, and for a health screen that wants to say which model
   // the day's questions are being written by

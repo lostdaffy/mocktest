@@ -130,6 +130,10 @@ const FOREIGN_SCRIPT = /[Ͱ-ϿЀ-ӿ؀-ۿঀ-෿一-鿿]/;
 // 'pitraaदेशः'). The danda is left out: "HCF × LCM।" is a sentence ending.
 const LATIN_INSIDE_HINDI_WORD = /[ऀ-ॣ०-ॿ][A-Za-z]|[A-Za-z][ऀ-ॣ०-ॿ]/;
 
+// Any of these strings carrying another script or a glued Latin word.
+const hasMixedScript = (strings) =>
+  strings.filter(Boolean).map(String).some((s) => FOREIGN_SCRIPT.test(s) || LATIN_INSIDE_HINDI_WORD.test(s));
+
 // Layer 1: cheap, instant rule-based checks. No AI call needed.
 //
 // These are deliberately strict. A student practising for a real exam is
@@ -155,7 +159,9 @@ function ruleBasedCheck(q) {
     } catch (err) {
       issues.push(`chart unusable: ${err.message}`);
     }
-  } else if (q.visual?.kind === "figure") {
+  } else if (q.visual?.kind === "figure" && q.visual.figure?.spec) {
+    // A figure drawn in code is checked against its rule; a picture taken
+    // from a past paper has no spec, and its answer is the paper's.
     try {
       const check = checkFigureAnswer(normaliseFigure(q.visual.figure?.spec), q.correctIndex);
       if (check.ok === false) issues.push(`figure answer does not follow: ${check.reason}`);
@@ -357,4 +363,5 @@ module.exports = {
   runValidationPipelineBatch,
   shuffleOptions,
   questionKey,
+  hasMixedScript,
 };

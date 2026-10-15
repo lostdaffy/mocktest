@@ -65,6 +65,24 @@ async function runTopUpJob(job) {
   throw new Error(`${where} (${r.why || "the generator came up short"}) - try again in a minute to finish it.`);
 }
 
+// Reads an uploaded past paper. A last failure marks the upload failed with
+// its reason, so the PYQ page says so instead of showing it stuck at reading.
+async function runPyqJob(job) {
+  const { runImport } = require("../services/pyqImport");
+  const PyqImport = require("../models/PyqImport");
+  try {
+    return await runImport(job.pyqImport);
+  } catch (err) {
+    const message = err.message || String(err);
+    const goesBack = isDailyAllowanceGone(message) || (isWorthRetrying(message) && job.attempts < MAX_ATTEMPTS);
+    await PyqImport.updateOne(
+      { _id: job.pyqImport },
+      { $set: goesBack ? { error: message.slice(0, 300) } : { status: "failed", error: message.slice(0, 300) } }
+    );
+    throw err;
+  }
+}
+
 async function runDailyQuizJob(job) {
   const { generateQuizWithAI } = require("../services/dailyQuiz");
   return generateQuizWithAI(job.quizDate, { by: job.requestedBy || "auto" });
@@ -182,7 +200,11 @@ async function runGenerationTick() {
       { $set: { status: "running", startedAt: new Date() }, $inc: { attempts: 1 } },
       { sort: { queuedAt: 1 }, new: true }
     );
-  const job = (await claim({ status: "queued", kind: "top_up" })) || (await claim({ status: "queued" }));
+  const job =
+    (await claim({ status: "queued", kind: "top_up" })) ||
+    // then a past paper an admin is waiting to review
+    (await claim({ status: "queued", kind: "pyq_extract" })) ||
+    (await claim({ status: "queued" }));
   if (!job) return;
 
   running = true;
@@ -192,6 +214,7 @@ async function runGenerationTick() {
       job.kind === "practice" ? await runPracticeJob(job)
       : job.kind === "daily_quiz" ? await runDailyQuizJob(job)
       : job.kind === "top_up" ? await runTopUpJob(job)
+      : job.kind === "pyq_extract" ? await runPyqJob(job)
       : await runMockJob(job);
     job.status = "done";
     job.result = String(result).slice(0, 300);
