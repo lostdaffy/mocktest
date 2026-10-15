@@ -12,6 +12,7 @@ import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 import ManualQuestions from "../components/ManualQuestions";
+import { PyqImportList } from "../components/PyqImports";
 
 export default function PyqBank() {
   const toast = useToast();
@@ -20,11 +21,12 @@ export default function PyqBank() {
   const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [subject, setSubject] = useState("");
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [paperName, setPaperName] = useState("");
+  const [year, setYear] = useState("");
+  const [importsKey, setImportsKey] = useState(0);
   const [shift, setShift] = useState("");
   const [examDate, setExamDate] = useState("");
-  const [language, setLanguage] = useState("bilingual");
+  const [language, setLanguage] = useState("auto");
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState(null); // { type: 'success'|'error', text }
@@ -40,10 +42,10 @@ export default function PyqBank() {
   // For a paper the extractor cannot read - a poor scan, a photo, a paper
   // that exists only in print. Same year / shift / date as the upload above.
   async function startByHand() {
-    if (!examStage || !year) return toast.error("Pick the exam and the year first");
+    if (!examStage || !year) return toast.error("Pick the exam and type the year first");
     setStarting(true);
     try {
-      const res = await api.post("/pyq/paper", { examStage, year, shift, examDate, language });
+      const res = await api.post("/pyq/paper", { examStage, year, shift, examDate, language: language === "auto" ? "bilingual" : language });
       toast.success(res.data.message);
       await loadPapers();
       setWritingInto(res.data.test);
@@ -105,13 +107,23 @@ export default function PyqBank() {
     setUploadMsg(null);
     try {
       const pdfBase64 = await fileToBase64(file);
-      const res = await api.post("/pyq/upload", { examStage, subject, year, shift, examDate, language, pdfBase64 });
+      const res = await api.post("/pyq/import", {
+        examStage,
+        pdfBase64,
+        fileName: file.name,
+        title: paperName,
+        year: year || undefined,
+        shift,
+        examDate: examDate || undefined,
+        language: language === "auto" ? undefined : language,
+      });
       setUploadMsg({ type: "success", text: res.data.message });
       setFile(null);
-      setSubject("");
+      setPaperName("");
       setExamDate("");
       setShift("");
-      loadPapers();
+      setYear("");
+      setImportsKey((k) => k + 1);
     } catch (err) {
       setUploadMsg({ type: "error", text: err.response?.data?.message || "Upload failed" });
     } finally {
@@ -146,7 +158,7 @@ export default function PyqBank() {
       <PageHeader
         eyebrow="Content"
         title="PYQ Bank"
-        subtitle="Upload real previous-year papers as PDFs — Gemini extracts genuine questions straight from the PDF (it doesn't invent anything). A paper it can't read can be typed in or uploaded as a spreadsheet instead. If an answer key is missing you'll fill it in during review; publishing is only possible once every question's answer is confirmed."
+        subtitle="Upload a real previous-year paper as a PDF - English, Hindi or both, typed or scanned. It is read page by page in the queue, the other language is translated, and every answer is checked against an independent solve. You only look at what is flagged (or fix it in the CSV), then publish. Nothing reaches students before you publish."
       />
 
       <div className="rv-card p-6 mb-8">
@@ -168,19 +180,19 @@ export default function PyqBank() {
         <form onSubmit={handleUpload} className="flex flex-wrap items-end gap-4">
           <div>
             <label className="block text-sm font-medium text-ink-soft mb-1.5">
-              Subject <span className="text-slate-soft">(optional — leave blank for a mixed-subject paper)</span>
+              Paper name <span className="text-slate-soft">(blank = from the PDF)</span>
             </label>
             <input
               type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="e.g. Reasoning"
-              className="rv-input w-48"
+              value={paperName}
+              onChange={(e) => setPaperName(e.target.value)}
+              placeholder="Auto from PDF"
+              className="rv-input w-56"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-ink-soft mb-1.5">
-              Exam Date <span className="text-slate-soft">(optional, more exact than the year alone)</span>
+              Exam date <span className="text-slate-soft">(blank = from the PDF)</span>
             </label>
             <input
               type="date"
@@ -193,31 +205,32 @@ export default function PyqBank() {
             <label className="block text-sm font-medium text-ink-soft mb-1.5">Year</label>
             <input
               type="number"
-              required
               value={year}
               onChange={(e) => setYear(e.target.value)}
+              placeholder="Auto"
               className="rv-input w-24"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-ink-soft mb-1.5">
-              Shift <span className="text-slate-soft">(optional)</span>
+              Shift <span className="text-slate-soft">(blank = from the PDF)</span>
             </label>
             <input
               type="text"
               value={shift}
               onChange={(e) => setShift(e.target.value)}
-              placeholder="e.g. Shift 1"
+              placeholder="Auto from PDF"
               className="rv-input w-32"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink-soft mb-1.5">PDF Language</label>
+            <label className="block text-sm font-medium text-ink-soft mb-1.5">Language</label>
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
               className="rv-input w-36"
             >
+              <option value="auto">Auto-detect</option>
               <option value="bilingual">Bilingual (EN + HI)</option>
               <option value="english">English only</option>
               <option value="hindi">Hindi only</option>
@@ -236,7 +249,7 @@ export default function PyqBank() {
             disabled={uploading}
             className="rv-btn-primary"
           >
-            {uploading ? "Extracting..." : "Upload & Extract"}
+            {uploading ? "Uploading..." : "Upload PDF"}
           </button>
           <button
             type="button"
@@ -252,8 +265,7 @@ export default function PyqBank() {
         {uploading && (
           <div className="mt-4 bg-warn-light border border-warn-border text-warn text-sm rounded-lg px-4 py-3 flex items-center gap-3">
             <span className="inline-block w-4 h-4 border-2 border-warn-border border-t-warn rounded-full animate-spin" />
-            Reading the PDF and extracting questions — a large paper can take 1-2 minutes. Please don't close this
-            page.
+            Uploading the PDF. Reading happens in the queue after this - you can close the page once it says uploaded.
           </div>
         )}
 
@@ -269,6 +281,8 @@ export default function PyqBank() {
           </div>
         )}
       </div>
+
+      <PyqImportList examStage={examStage} reloadKey={importsKey} onPublished={loadPapers} />
 
       {loading ? (
         <p className="text-slate-soft">Loading...</p>
