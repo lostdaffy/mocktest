@@ -162,6 +162,30 @@ async function api(method, p, { body, token } = {}) {
   const freshQ = await db.collection("questions").findOne({ _id: oid(fresh[0]) });
   check("...from the same section", freshQ?.subject === "Maths", freshQ?.subject);
 
+  // ---- no allowance left: the hole goes into the queue, the queue stays put
+  await api("POST", "/exams", { token, body: {
+    examType: "NO_ALLOWANCE", displayName: "No Allowance Exam", durationMinutes: 60, examLevel: "ALLOWANCE_AFTER_0",
+    sections: [{ subject: "Maths", questionCount: 3, difficultyMix: { easy: 100, medium: 0, hard: 0 } }],
+  }});
+  const broke = await db.collection("tests").insertOne({
+    title: "No Allowance - Mock #1", type: "full_mock", examType: "NO_ALLOWANCE", examStage: "NO_ALLOWANCE",
+    questions: bankIds.slice(0, 3), publishStatus: "published", durationMinutes: 60,
+  });
+  const resumeAt = new Date(Date.now() + 3600e3);
+  await db.collection("queuestates").updateOne({ key: "generation" }, { $set: { paused: true, pausedReason: "allowance", resumableAfter: resumeAt } }, { upsert: true });
+  r = await api("DELETE", `/exam-series/mock/${broke.insertedId}/question/${String(bankIds[0])}`, { token });
+  check("with no allowance left the mock is one short...", r.json.remainingCount === 2 && r.json.short === 1, `${r.json.remainingCount}, ${r.json.message}`);
+  const topUp = await db.collection("generationjobs").findOne({ kind: "top_up", testId: broke.insertedId, status: "queued" });
+  check("...and a top-up for it is waiting in the queue", !!topUp, topUp?.label);
+  await db.collection("generationjobs").deleteMany({ testId: broke.insertedId });
+  r = await api("POST", "/generation/enqueue-short", { token, body: { testId: String(broke.insertedId) } });
+  check("a short published mock can be queued for a top-up", r.json.queued === 1, r.json.message);
+  const qs = await db.collection("queuestates").findOne({ key: "generation" });
+  check("asking for it again while the allowance is out leaves the queue paused for the user to resume",
+    qs.paused === true && +new Date(qs.resumableAfter) === +resumeAt, `${qs.paused} ${r.json.message}`);
+  await db.collection("queuestates").updateOne({ key: "generation" }, { $set: { paused: false }, $unset: { resumableAfter: "" } });
+  await db.collection("generationjobs").deleteMany({ testId: broke.insertedId });
+
   // ---- a question already in the paper under another section is a repeat
   // Super TET Mock #2 asked who chaired the Drafting Committee in GK and
   // again in EVS: the bank check looks at one subject only. Run in this
@@ -194,6 +218,24 @@ async function api(method, p, { body, token } = {}) {
   const texts2 = (await db.collection("questions").find({ _id: { $in: built2.ids } }).toArray()).map((q) => q.text);
   check("the same fact asked in other words, same answer, is not added either",
     texts2.length === 2 && !texts2.includes("AI EVS easy #7") && built2.duplicates >= 1, JSON.stringify({ texts2, dup: built2.duplicates }));
+
+  // ---- a PUBLISHED mock that lost questions to a review is refilled too,
+  //      section by section (the Super TET mocks were published mid-review)
+  const { refillTest } = require(path.join(SERVER, "services/testTopUp"));
+  const { findGaps } = require(path.join(SERVER, "services/generationGaps"));
+  let live = await db.collection("tests").findOne({ _id: mock.insertedId });
+  const pulled = [live.questions[2], live.questions[5], live.questions[9]];
+  await db.collection("tests").updateOne({ _id: mock.insertedId }, { $set: { publishStatus: "published" }, $pull: { questions: { $in: pulled } } });
+  const gaps = await findGaps();
+  check("a published mock short of its pattern is listed as short",
+    gaps.short.some((s) => String(s.testId) === String(mock.insertedId) && s.have === 9 && s.of === 12), JSON.stringify(gaps.short.filter((s) => s.level === "mock")));
+  const refilled = await refillTest(mock.insertedId);
+  live = await db.collection("tests").findOne({ _id: mock.insertedId });
+  check("...and refilling brings it back to the pattern's 12", refilled.filled && live.questions.length === 12, JSON.stringify(refilled));
+  const liveQs = await db.collection("questions").find({ _id: { $in: live.questions } }).toArray();
+  check("...every one in its section, none of the pulled ones back",
+    liveQs.length === 12 && liveQs.every((q) => q.subject === "Maths") && !live.questions.some((id) => pulled.map(String).includes(String(id))));
+  check("...and it stays published", live.publishStatus === "published");
 
   const student = await db.collection("users").insertOne({ name: "S", phone: "9111111111", role: "user", referralCode: "S1" });
   const sToken = jwt.sign({ id: student.insertedId.toString(), sessionId: "y" }, JWT_SECRET);

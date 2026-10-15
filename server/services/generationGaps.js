@@ -85,6 +85,14 @@ async function findGaps({ includeSubjects, excludeSubjects = [], mocksPerExam = 
       of: PRACTICE_TEST_SIZE,
       published: t.publishStatus === "published",
     }));
+  // A published mock that lost questions to a review: students are sitting
+  // it short. A draft one is the mock builder's to finish.
+  for (const t of tests) {
+    const of = t.type === "full_mock" && t.publishStatus === "published" ? paperSizeOf(patterns, t.examStage) : 0;
+    if (of && (t.questions || []).length < of) {
+      short.push({ testId: t._id, title: t.title, level: "mock", have: (t.questions || []).length, of, published: true });
+    }
+  }
 
   return { practice, mocks, short, levels: LEVELS };
 }

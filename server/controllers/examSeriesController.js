@@ -6,9 +6,14 @@ const Subject = require("../models/Subject");
 const RejectedQuestion = require("../models/RejectedQuestion");
 const Vacancy = require("../models/Vacancy");
 const QuestionImage = require("../models/QuestionImage");
+const GenerationJob = require("../models/GenerationJob");
 const { imagesPendingIn, hasVisuals, pendingImagesMessage } = require("../services/visuals");
 const { createVerifiedQuestions, qualityNote } = require("../services/questionFactory");
-const { refillTest, refillTests, refillNote, targetSize } = require("../services/testTopUp");
+// siblingMockQuestions: the exam's other mocks. A student who sits ten Super
+// TET mocks met 'कामायनी', 'परिश्रम ही सफलता की कुंजी' and 5+3+3+4 in nearly
+// every one - 87 same-fact pairs across the first seven - so a mock's new
+// questions are checked against them as against its own paper.
+const { refillTest, refillTests, refillNote, targetSize, siblingMockQuestions } = require("../services/testTopUp");
 
 // How much of every mock is made of REAL previous-year questions. The rest
 // is generated fresh. If the PYQ Bank doesn't have enough for a subject,
@@ -126,19 +131,6 @@ async function listExamMocks(req, res) {
     questions: new Array(m.questions?.length || 0), // keep .length working on client
   }));
   res.json({ mocks: lightMocks });
-}
-
-// The questions of the exam's other mocks (the latest twelve). A student who
-// sits ten Super TET mocks met 'कामायनी', 'परिश्रम ही सफलता की कुंजी' and
-// 5+3+3+4 in nearly every one: 87 same-fact pairs across the first seven.
-// New questions are checked against these as against their own paper.
-async function siblingMockQuestions(examStage, exceptId) {
-  const others = await Test.find({ examStage, type: "full_mock", _id: { $ne: exceptId } })
-    .sort({ createdAt: -1 })
-    .limit(12)
-    .select("questions")
-    .lean();
-  return others.flatMap((t) => t.questions || []);
 }
 
 // POST /api/exam-series/:examStage/generate-mock (admin)
@@ -613,6 +605,13 @@ async function removeQuestionFromMock(req, res) {
   const after = await Test.findById(test._id).select("questions").lean();
   const remaining = (after?.questions || test.questions).length;
   const short = Math.max(0, ((await targetSize(test)) || PRACTICE_TEST_SIZE) - remaining);
+
+  // No replacement now (the day's allowance, usually): the test is put in the
+  // queue to be filled, so the hole is not left for somebody to notice.
+  if (short && refilled.length && !refilled[0].added) {
+    const job = { kind: "top_up", testId: test._id, label: `Top up ${test.title} (${remaining} → ${remaining + short})` };
+    if (!(await GenerationJob.isAlreadyQueued(job))) await GenerationJob.create({ ...job, status: "queued" });
+  }
 
   res.json({
     message:

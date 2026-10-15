@@ -235,13 +235,18 @@ async function enqueueShort(req, res) {
     await GenerationJob.create({ ...job, batch, status: "queued" });
     queued++;
   }
-  if (queued) await unpause();
+  // Waiting out the day's allowance, a resume would only stop again at once:
+  // the work joins the line and starts when the queue is resumed.
+  const state = await QueueState.findOne({ key: "generation" }).lean();
+  const waitingForAllowance = state?.paused && state.resumableAfter && new Date(state.resumableAfter) > new Date();
+  if (queued && !waitingForAllowance) await unpause();
 
   res.status(201).json({
     message:
       `${queued} test(s) queued to be topped up` +
       (alreadyThere ? `, ${alreadyThere} were already waiting` : "") +
       (short.length > wanted.length ? `. ${short.length - wanted.length} more are short` : "") +
+      (queued && waitingForAllowance ? ". They start when the queue is resumed after the allowance resets" : "") +
       ". Follow it on the Generation page.",
     queued,
     alreadyThere,

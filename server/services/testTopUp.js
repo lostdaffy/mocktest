@@ -1,4 +1,5 @@
 const Test = require("../models/Test");
+const Question = require("../models/Question");
 const Subject = require("../models/Subject");
 const ExamPattern = require("../models/ExamPattern");
 const { createVerifiedQuestions } = require("./questionFactory");
@@ -91,10 +92,9 @@ async function refillTest(testId, { max } = {}) {
     return { title: test.title, added: 0, from, to: from, target, filled: true };
   }
 
-  // A mock is generated section by section; topping one up blind would skew
-  // the paper, so it is reported and left to "Add Questions".
+  if (test.type === "full_mock") return refillMock(test, { from, target, max });
   if (test.type !== "practice") {
-    return { title: test.title, added: 0, from, to: from, target, filled: false, why: "a mock is filled section by section" };
+    return { title: test.title, added: 0, from, to: from, target, filled: false, why: "only practice tests and mocks are refilled" };
   }
 
   const needed = Math.min(target - from, max || target);
@@ -146,6 +146,89 @@ async function refillTest(testId, { max } = {}) {
   };
 }
 
+// The questions of the exam's other mocks (the latest twelve), so a mock's
+// new questions are not the ones its siblings already ask.
+async function siblingMockQuestions(examStage, exceptId) {
+  const others = await Test.find({ examStage, type: "full_mock", _id: { $ne: exceptId } })
+    .sort({ createdAt: -1 })
+    .limit(12)
+    .select("questions")
+    .lean();
+  return others.flatMap((t) => t.questions || []);
+}
+
+/**
+ * A mock back to its pattern, section by section: each section short of its
+ * count gets that many at the section's own difficulty mix, checked against
+ * the whole paper and the exam's other mocks, and placed after the section's
+ * last question so the paper still reads in order. Works on a published mock:
+ * this repairs one that lost questions to a review, it does not edit it.
+ */
+async function refillMock(test, { from, target, max }) {
+  const report = (added, why) => ({ title: test.title, added, from, to: from + added, target, filled: from + added >= target, ...(why ? { why } : {}) });
+  const pattern = await ExamPattern.findOne({ examType: test.examStage }).lean();
+  if (!pattern?.sections?.length) return report(0, "no pattern for this exam");
+  const sectionOf = (subject) => pattern.sections.findIndex((s) => s.subject === subject || (s.sources || []).includes(subject));
+  const siblings = await siblingMockQuestions(test.examStage, test._id);
+
+  let budget = max || target;
+  let added = 0;
+  let why;
+  for (let k = 0; k < pattern.sections.length && budget > 0; k++) {
+    const section = pattern.sections[k];
+    const paper = (await Test.findById(test._id).select("questions").lean())?.questions || [];
+    const subjects = new Map((await Question.find({ _id: { $in: paper } }).select("subject").lean()).map((q) => [String(q._id), q.subject]));
+    const inSection = paper.filter((id) => sectionOf(subjects.get(String(id))) === k);
+    let short = Math.min(budget, Math.max(0, section.questionCount - inSection.length));
+    if (!short) continue;
+
+    const mix = section.difficultyMix || { easy: 30, medium: 50, hard: 20 };
+    const easy = Math.round((short * (mix.easy ?? 30)) / 100);
+    const medium = Math.round((short * (mix.medium ?? 50)) / 100);
+    const plan = Object.entries({ easy, medium, hard: Math.max(0, short - easy - medium) }).filter(([, n]) => n > 0);
+    for (const [difficulty, count] of plan) {
+      let left = count;
+      while (left > 0) {
+        const ask = Math.min(PRACTICE_BATCH, left);
+        const now = (await Test.findById(test._id).select("questions").lean())?.questions || [];
+        let built;
+        try {
+          built = await createVerifiedQuestions({
+            needed: ask,
+            inTest: [...now, ...siblings],
+            tag: { examStage: test.examStage },
+            generateParams: {
+              examType: test.examStage,
+              examDisplayName: pattern.displayName,
+              subject: section.subject,
+              topic: section.subject,
+              difficulty,
+              examLevel: pattern.examLevel,
+              syllabusTopics: (section.syllabus || []).length
+                ? [...section.syllabus].sort(() => Math.random() - 0.5).slice(0, 8)
+                : [],
+            },
+          });
+        } catch (err) {
+          why = err.message;
+          return report(added, why);
+        }
+        if (!built.ids.length) return report(added, "no replacement passed the checks");
+        // After the section's last question, so the section stays together.
+        const lastAt = now.reduce((at, id, i) => (sectionOf(subjects.get(String(id))) === k ? i : at), -1);
+        const position = lastAt >= 0 ? lastAt + 1 : now.length;
+        await Test.updateOne({ _id: test._id }, { $push: { questions: { $each: built.ids, $position: position } } });
+        for (const id of built.ids) subjects.set(String(id), section.subject);
+        added += built.ids.length;
+        budget -= built.ids.length;
+        left -= built.ids.length;
+        if (built.ids.length < ask) break;
+      }
+    }
+  }
+  return report(added, from + added >= target ? undefined : why || "the generator came up short - run it again");
+}
+
 /**
  * Fills several, one after another. Sequential on purpose: the free tier
  * allows about fifteen calls a minute and a dozen tests at once would spend
@@ -170,4 +253,4 @@ function refillNote(results) {
   );
 }
 
-module.exports = { refillTest, refillTests, refillNote, targetSize, generationParamsFor, PRACTICE_TEST_SIZE };
+module.exports = { refillTest, refillTests, refillNote, targetSize, generationParamsFor, siblingMockQuestions, PRACTICE_TEST_SIZE };
