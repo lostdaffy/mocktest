@@ -43,10 +43,18 @@ const POINTS_AT_A_PASSAGE = [
   // No \b on these: JavaScript word boundaries are defined on [A-Za-z0-9_],
   // so they never match beside Devanagari and quietly let every Hindi one
   // through - which is exactly what happened on the first attempt.
-  /गद्यांश\s*(के|में|का|की|से)/,
+  // A bracket and को count too, and a demonstrative in front points as
+  // surely as a postposition after. Super TET mocks went through with
+  // "पैसेज (अपठित गद्यांश) के अनुसार", "इस गद्यांश को पढ़कर" and
+  // "दिए गए गद्यांश या वाक्य के आधार पर" - and nothing to read.
+  /(गद्यांश|पद्यांश|काव्यांश|अवतरण)\)?\s*(के|में|का|की|से|को)/,
+  /(इस|उस|दिए\s*गए|दिये\s*गये|उपर्युक्त|उपरोक्त|निम्नलिखित|नीचे\s*दिए\s*गए)\s*(गद्यांश|पद्यांश|काव्यांश|अवतरण)/,
   /अनुच्छेद\s*(के|में|का|की|से)/,
-  /पद्यांश\s*(के|में|का|की|से)/,
 ];
+
+// अनुच्छेद is also an Article of the Constitution: "किस अनुच्छेद के तहत"
+// asks for a number, not about a paragraph.
+const ABOUT_THE_CONSTITUTION = /संविधान|article/i;
 
 // An indefinite passage sets the frame for the whole sentence, and anything
 // definite after it refers back to that frame, not to something on the screen:
@@ -73,9 +81,14 @@ const isComprehension = ({ chapter, topic, subject } = {}) =>
 const refersToAPassage = (text) => {
   const t = String(text || "");
   if (FRAMED_GENERICALLY.test(t)) return false;
-  return POINTS_AT_A_PASSAGE.some((re) => re.test(t));
+  return POINTS_AT_A_PASSAGE.some((re) => re.test(t) && !(/अनुच्छेद/.test(re.source) && ABOUT_THE_CONSTITUTION.test(t)));
 };
 
-const carriesItsPassage = (text) => String(text || "").trim().length >= CARRIES_A_PASSAGE;
+// Long enough to hold a passage, or quoting one: a doha is a whole
+// पद्यांश in under 150 characters.
+const carriesItsPassage = (text) => {
+  const t = String(text || "").trim();
+  return t.length >= CARRIES_A_PASSAGE || /['‘’"“”][^'‘’"“”]{20,}['‘’"“”]/.test(t);
+};
 
 module.exports = { isComprehension, refersToAPassage, carriesItsPassage, CARRIES_A_PASSAGE };

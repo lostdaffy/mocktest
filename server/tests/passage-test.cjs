@@ -101,6 +101,35 @@ check("'the author of Wings of Fire' is not mistaken for comprehension",
   !refused("Books, Awards & Sports", "Who is the author of the famous book 'Wings of Fire'?"));
 check("...nor 'the author of Godan'",
   !refused("Books, Awards & Sports", "Who is the author of the book 'Godan'?"));
+
+// From the Super TET mocks: pointed at a passage with a bracket, को, or a
+// demonstrative in front - and none to read.
+const superTet = [
+  "पैसेज (अपठित गद्यांश) के अनुसार, परिश्रम करने वाले व्यक्ति को अंत में क्या प्राप्त होता है?",
+  "दिए गए गद्यांश आधारित अंश के अनुसार, मनुष्य के जीवन की सबसे बड़ी पूंजी क्या होती है?",
+  "दिए गए गद्यांश या वाक्य के आधार पर शुद्ध वर्तनी वाला शब्द पहचानिए:",
+  "अजय जी, कृपया इस गद्यांश को पढ़कर बताएं कि लेखक के अनुसार आधुनिक शिक्षा प्रणाली की मूल विसंगति क्या है?",
+];
+check("Super TET's passage-less questions are refused", superTet.every((t) => refused("General Hindi", t)),
+  superTet.filter((t) => !refused("General Hindi", t))[0] || "all four refused");
+check("...but a doha quoted in full is a passage, however short",
+  !refused("General Hindi", "निम्नलिखित पद्यांश को पढ़कर बताइए कि इसमें किस रस की प्रधानता है? 'कहत, नटत, रीझत, खिझत, मिलत, खिलत, लजियात।'"));
+check("...and 'किस अनुच्छेद के तहत' is an Article of the Constitution, not a paragraph",
+  !refused("GK", "भारतीय संविधान के किस अनुच्छेद के तहत रिट जारी होती है?"));
+
+// ---------------------------------------------------------------------------
+// Another script leaking into the text
+// ---------------------------------------------------------------------------
+const mixed = (text, more = {}) =>
+  ruleBasedCheck({ ...sound, chapter: "General Hindi", topic: "x", text, ...more }).issues.some((i) => /mixed script/.test(i));
+check("Gujarati, Arabic, Bengali, Greek or a Latin word glued to Hindi is refused",
+  mixed("पुस्तक का संबंध पन्ने से है, उसी प्रकार 'ઘर' का संबंध किससे है?") &&
+  mixed("ओजोन परत का क्षرण करने वाली गैस कौन सी है?") &&
+  mixed("सही उत्तर क्या है?", { solution: "प्रśনাनुसार, 42% - 30% = 12% अतः उत्तर 750 है।" }) &&
+  mixed("सही उत्तर क्या है?", { solution: "प्रश्ναनुसार 12x = 180 अतः x = 15 है।" }) &&
+  mixed("कौन सा इनपुट डिवाइस है?", { options: ["स्कanner", "माउस", "मॉनिटर", "कीबोर्ड"] }));
+check("...but Hindi and English side by side, and a sentence ending '...LCM।', are fine",
+  !mixed("प्रोटीन का पाचन किस एंजाइम (Pepsin) से शुरू होता है?", { solution: "दो संख्याओं का गुणनफल = HCF × LCM। अतः उत्तर 60 है।" }));
 check("an ordinary maths question is untouched",
   !refused("Percentage", "A shopkeeper marks an item 20% above cost and gives a 10% discount. What is the profit percent?"));
 

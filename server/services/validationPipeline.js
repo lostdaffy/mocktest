@@ -123,6 +123,13 @@ function sameFactInPaper(a, b) {
   return overlap(factWords(a.text), factWords(b.text)) >= 0.4;
 }
 
+// Greek, Cyrillic, Arabic, the Indic scripts other than Devanagari, CJK.
+// Hindi and English are both fine; these never belong in a question here.
+const FOREIGN_SCRIPT = /[Ͱ-ϿЀ-ӿ؀-ۿঀ-෿一-鿿]/;
+// A Latin letter glued to a Devanagari letter, inside one word ('स्कanner',
+// 'pitraaदेशः'). The danda is left out: "HCF × LCM।" is a sentence ending.
+const LATIN_INSIDE_HINDI_WORD = /[ऀ-ॣ०-ॿ][A-Za-z]|[A-Za-z][ऀ-ॣ०-ॿ]/;
+
 // Layer 1: cheap, instant rule-based checks. No AI call needed.
 //
 // These are deliberately strict. A student practising for a real exam is
@@ -218,6 +225,13 @@ function ruleBasedCheck(q) {
   // those are answerable exactly as they stand.
   if (refersToAPassage(text)) {
     if (!carriesItsPassage(text)) issues.push("refers to a passage the question does not contain");
+  }
+
+  // Another script leaking in: 'ઘर', 'क्षرण', 'रूप سے', 'प्रśনাनुसार',
+  // 'स्कanner' - all from the first Super TET mocks, every one printed as is.
+  const written = [text, ...options, solution, q.textHi, ...(q.optionsHi || []), q.solutionHi].filter(Boolean).map(String);
+  if (written.some((s) => FOREIGN_SCRIPT.test(s) || LATIN_INSIDE_HINDI_WORD.test(s))) {
+    issues.push("mixed script: letters from another script inside the text");
   }
 
   return { passed: issues.length === 0, issues };
