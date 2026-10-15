@@ -444,6 +444,17 @@ ${shapeReminder}
 - Questions must be factually accurate and unambiguous.
 - Solutions must be short, correct, step-by-step.
 
+MISTAKES FOUND IN EARLIER BATCHES - never make these:
+- Only ONE option may be defensible. Before writing a "which is NOT / which is incorrect / odd one out" question, check every option: if two options satisfy it (two misspelt words, two non-synonyms, two cities that both qualify), rewrite it.
+- No "who is the current / वर्तमान में / हाल ही में X" questions about office-holders (CEC, CJI, ministers, governors, chiefs) or "latest" rankings - they go out of date. Ask a fixed fact instead (who was the first, which article, which year).
+- Current affairs only from events you are certain of, with the year stated in the question; never guess a theme, rank or winner.
+- Maths: the numbers given must be consistent with each other. HCF and LCM of a pair: the HCF must divide the LCM, and the other number (HCF x LCM / given number) must give back that HCF and LCM. Work every sum out fully and make sure the marked option is exactly that result.
+- Place value is the digit times its position (in 58439 the 4 is in the hundreds place: 400). Simple interest from two amounts: principal = first amount - (yearly interest x its years).
+- Kinship words: mother's brother's child is ममेरा/ममेरी, father's brother's child is चचेरा/चचेरी, daughter's daughter is नातिन (not पौत्री), son's daughter is पौत्री.
+- Hindi/Sanskrit: spell every word and form correctly (संस्कृत, वृक्षात्, कादम्बरी); never mix Latin letters into a Hindi word; a sandhi/samas/pratyay question must have exactly one option that fits the rule asked.
+- Never invent a book, title, epithet or "first" that you are not sure of. If unsure of a literary fact, choose a different, well-known one.
+- Do not ask the same fact twice in one batch, even in different words or with the answer and the question swapped.
+
 EVERY QUESTION MUST BE AS GOOD AS THE FIRST:
 - The LAST question must take the same effort as the first one. Do not get shorter, vaguer or more generic as you go.
 - Each question must test a DIFFERENT idea. Never re-use a question's structure with only the numbers or names swapped.

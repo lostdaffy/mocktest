@@ -3,6 +3,7 @@ const { isHindiMedium, hasDevanagari, isLanguageNeutral } = require("../utils/la
 const { refersToAPassage, carriesItsPassage } = require("../utils/comprehension");
 const { arguesWithItself } = require("../utils/selfDoubt");
 const { solutionReachesTheAnswer } = require("../utils/answerAgrees");
+const { checkArithmetic } = require("./mathCheck");
 const { normaliseChart, checkChartAnswer, normaliseFigure, checkFigureAnswer, visualSignature, figureKey } = require("./visuals");
 
 // "What is 15% of 240?" and "what is 15 % of 240" are the same question.
@@ -202,6 +203,11 @@ function ruleBasedCheck(q) {
   if (!solutionReachesTheAnswer(q)) {
     issues.push("the solution never arrives at the answer that is ticked");
   }
+
+  // The sums worked out in code (HCF/LCM pairs, place value, simple interest
+  // from two amounts) - see services/mathCheck.js.
+  const sums = checkArithmetic(q);
+  if (sums.ok === false) issues.push(`maths check: ${sums.reason}`);
 
   // The app is bilingual and most of these students read Hindi first. A
   // question without Hindi is half a question for them.
