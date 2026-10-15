@@ -2,6 +2,7 @@ const Test = require("../models/Test");
 const Question = require("../models/Question");
 const Subject = require("../models/Subject");
 const ExamPattern = require("../models/ExamPattern");
+const GenerationJob = require("../models/GenerationJob");
 const { createVerifiedQuestions } = require("./questionFactory");
 // A practice test holds PRACTICE_TEST_SIZE. A mock holds whatever its exam's
 // pattern adds up to.
@@ -236,7 +237,19 @@ async function refillMock(test, { from, target, max }) {
  */
 async function refillTests(testIds, { max } = {}) {
   const out = [];
-  for (const id of testIds) out.push(await refillTest(id, { max }));
+  for (const id of testIds) {
+    const r = await refillTest(id, { max });
+    out.push(r);
+    // Still short (the day's allowance, usually): into the queue, so the hole
+    // is filled when generation runs again rather than waiting to be noticed.
+    // Rejecting a stale fact left Super TET Mock #6 at 118 of 120 with only a
+    // line in the response saying so.
+    if (r.target && !r.filled && r.to < r.target) {
+      const job = { kind: "top_up", testId: id, label: `Top up ${r.title} (${r.to} → ${r.target})` };
+      if (!(await GenerationJob.isAlreadyQueued(job))) await GenerationJob.create({ ...job, status: "queued" });
+      r.queued = true;
+    }
+  }
   return out;
 }
 
@@ -248,7 +261,8 @@ function refillNote(results) {
   return (
     (added ? `. ${added} replacement${added === 1 ? "" : "s"} generated and added` : "") +
     (stuck.length
-      ? `. Still short: ${stuck.map((r) => `${r.title} (${r.to}/${r.target})`).join(", ")}`
+      ? `. Still short: ${stuck.map((r) => `${r.title} (${r.to}/${r.target})`).join(", ")}` +
+        (stuck.some((r) => r.queued) ? " - queued to be filled when generation runs" : "")
       : "")
   );
 }

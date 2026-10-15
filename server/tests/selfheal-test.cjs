@@ -183,6 +183,24 @@ async function api(method, p, { body, token } = {}) {
   const qs = await db.collection("queuestates").findOne({ key: "generation" });
   check("asking for it again while the allowance is out leaves the queue paused for the user to resume",
     qs.paused === true && +new Date(qs.resumableAfter) === +resumeAt, `${qs.paused} ${r.json.message}`);
+
+  // ---- Reject (a stale fact, say) with no allowance left: queued the same way
+  const stale = await db.collection("questions").insertOne({
+    text: "Who is the current Secretary-General of the UN?", textHi: "वर्तमान में संयुक्त राष्ट्र के महासचिव कौन हैं?",
+    options: ["Kofi Annan", "Antonio Guterres", "Trygve Lie", "Ban Ki-moon"], correctIndex: 1, solution: "s",
+    examType: ["NO_ALLOWANCE"], subject: "Maths", topic: "Current Affairs", difficulty: "easy", source: "ai_generated", status: "published",
+  });
+  const staleMock = await db.collection("tests").insertOne({
+    title: "No Allowance - Mock #2", type: "full_mock", examType: "NO_ALLOWANCE", examStage: "NO_ALLOWANCE",
+    questions: [...bankIds.slice(3, 5), stale.insertedId], publishStatus: "published", durationMinutes: 60,
+  });
+  r = await api("PATCH", `/questions/${stale.insertedId}/reject`, { token, body: { reason: "out of date" } });
+  const rejectTopUp = await db.collection("generationjobs").findOne({ kind: "top_up", testId: staleMock.insertedId, status: "queued" });
+  check("rejecting a question a mock can't replace today queues a top-up for that mock", !!rejectTopUp, r.json.message);
+  check("...and says so", /queued to be filled/.test(r.json.message || ""), r.json.message);
+  r = await api("PATCH", `/questions/${stale.insertedId}/reject`, { token, body: { reason: "again" } });
+  const jobs = await db.collection("generationjobs").countDocuments({ kind: "top_up", testId: staleMock.insertedId, status: "queued" });
+  check("...once, not again on a second press", jobs === 1, String(jobs));
   await db.collection("queuestates").updateOne({ key: "generation" }, { $set: { paused: false }, $unset: { resumableAfter: "" } });
   await db.collection("generationjobs").deleteMany({ testId: broke.insertedId });
 
