@@ -7,6 +7,7 @@ const { runValidationPipelineBatch, questionKey, looksLikeRepeat, sameFactInPape
 // Through the module, not destructured, so the test stub can stand in for it.
 const visualGen = require("./visualGenerator");
 const { visualSignature, figureKey } = require("./visuals");
+const { attachDrawings } = require("./figureImage");
 
 // How many extra to ask for each round. A round that asks for exactly what is
 // missing comes back short the moment anything is rejected, and the test ends
@@ -211,7 +212,12 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
 
     // Only the survivors are ever written. The bank holds questions a student
     // can be given, and nothing else.
-    if (savedRound.length) accepted.push(...(await Question.insertMany(savedRound)));
+    if (savedRound.length) {
+      const saved = await Question.insertMany(savedRound);
+      accepted.push(...saved);
+      // A figure whose answer the code has proved gets its picture now.
+      if (generateParams.visualKind === "figure") await attachDrawings(saved.map((q) => q._id));
+    }
   }
 
   return {

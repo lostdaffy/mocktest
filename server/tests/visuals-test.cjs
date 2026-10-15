@@ -218,6 +218,18 @@ async function drainQueue(token) {
   check("...the wrongly-marked one thrown out", figQs.every((q) => q.correctIndex === 0));
   check("...with the options named as figures", figQs[0].options.join() === "Figure (A),Figure (B),Figure (C),Figure (D)");
 
+  // A checked figure is drawn and attached as it is made - nobody uploads.
+  const drawn = await db.collection("questions").find({ _id: { $in: figTest.questions } }).toArray();
+  check("every checked figure has its reference drawing attached already",
+    drawn.every((q) => q.visual?.figure?.imageId && /automatic/.test(q.visual.figure.uploadedBy || "")), `${drawn.filter((q) => q.visual?.figure?.imageId).length}/20`);
+  const pic = await fetch(`${BASE}/question-images/${drawn[0].visual.figure.imageId}`);
+  const picBytes = Buffer.from(await pic.arrayBuffer());
+  check("...a real PNG the app can show", pic.status === 200 && pic.headers.get("content-type") === "image/png" && picBytes[0] === 0x89 && picBytes.length > 5000,
+    `${pic.status} ${pic.headers.get("content-type")} ${picBytes.length}`);
+  // The rest of this section is about pictures a person supplies, so take
+  // the drawings off again (which is also how a wrong picture is removed).
+  for (const q of drawn) await api("DELETE", `/question-images/question/${q._id}`, { token });
+
   r = await api("PATCH", `/exam-series/practice/${figTestId}/publish`, { token, body: { isFree: true } });
   check("it cannot be published while its pictures are missing", r.status === 400 && r.json.imagesPending === 20, `${r.status} ${r.json.message}`);
 

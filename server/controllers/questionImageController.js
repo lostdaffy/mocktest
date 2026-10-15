@@ -227,4 +227,16 @@ async function rekeyFigures(req, res) {
   res.json({ figures: qs.length, rekeyed: changed, repeats });
 }
 
-module.exports = { listFigures, getFigure, uploadFigure, removeFigure, serveImage, figureCard, rekeyFigures, MAX_BYTES };
+// POST /api/question-images/auto-attach (admin)
+//
+// Gives every checked figure still waiting for a picture its reference
+// drawing - the ones made before drawings went on by themselves.
+async function autoAttach(req, res) {
+  const { attachDrawings } = require("../services/figureImage");
+  const ids = await Question.find({ ...awaitingFilter, "visual.figure.answerCheck": "checked" }).distinct("_id");
+  const attached = await attachDrawings(ids);
+  const left = await Question.countDocuments(awaitingFilter);
+  res.json({ message: `${attached} picture(s) drawn and attached; ${left} still need a person`, attached, left });
+}
+
+module.exports = { autoAttach, listFigures, getFigure, uploadFigure, removeFigure, serveImage, figureCard, rekeyFigures, MAX_BYTES };
