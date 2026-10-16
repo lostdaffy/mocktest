@@ -141,8 +141,10 @@ function humanise(issue) {
  * warnings are added and the warnings returned. The order of the paper is the
  * order of the rows - a previous year paper must read as it was set.
  */
-async function addManualQuestions(testId, rows, { dryRun = false, source, strict = false, maxAdd } = {}) {
-  const test = await Test.findById(testId);
+async function addManualQuestions(testId, rows, { dryRun = false, source, strict = false, maxAdd, examTypes } = {}) {
+  // A test not created yet (a dry run of a spreadsheet that names new tests)
+  // comes in as an object, and is only checked against.
+  const test = testId && testId.virtual ? testId : await Test.findById(testId);
   if (!test) {
     const err = new Error("Test not found");
     err.status = 404;
@@ -189,6 +191,10 @@ async function addManualQuestions(testId, rows, { dryRun = false, source, strict
       strict,
     });
     question.textKey = questionKey(question.text);
+    // A practice question belongs to the exams its chapter is tagged for,
+    // the way the generator tags its own - not to "PRACTICE", which no mock
+    // ever asks for.
+    if (examTypes?.length) question.examType = [...examTypes];
     if (!question.chapter && test.topic) question.chapter = test.topic;
 
     const key = question.text.toLowerCase();
@@ -239,13 +245,54 @@ async function addPracticeCsv(rows, { dryRun = false } = {}) {
   if (!Array.isArray(rows) || !rows.length) throw Object.assign(new Error("No rows were sent"), { status: 400 });
   if (rows.length > 1500) throw Object.assign(new Error("At most 1500 rows at a time - split the file"), { status: 400 });
 
+  const Subject = require("../models/Subject");
+  const ExamPattern = require("../models/ExamPattern");
+  const LEVELS = { Easy: "easy", Medium: "medium", Hard: "hard", Advanced: "advanced" };
+  const chapterCache = new Map();
+  const chapterOf = async (subject, chapter) => {
+    const k = `${subject}|${chapter}`;
+    if (!chapterCache.has(k)) {
+      const doc = await Subject.findOne({ $or: [{ name: subject }, { aliases: subject }] }).lean();
+      const ch = (doc?.chapters || []).find((c) => c.name === chapter) || null;
+      let exams = ch?.exams?.length ? ch.exams : null;
+      if (ch && !exams) exams = (await ExamPattern.find({ isActive: true }).select("examType").lean()).map((e) => e.examType);
+      chapterCache.set(k, ch ? { subject: doc.name, chapter: ch, exams } : null);
+    }
+    return chapterCache.get(k);
+  };
+
   const groups = new Map();
   const unknown = [];
+  const created = new Map(); // title -> test, for tests this file makes
   for (let i = 0; i < rows.length; i++) {
     const ref = String(rows[i].test || "").trim();
     let test = null;
-    if (/^[a-f0-9]{24}$/i.test(ref)) test = await Test.findById(ref).select("title type questions subject topic examType").lean();
-    else if (ref) test = await Test.findOne({ title: ref, type: "practice" }).select("title type questions subject topic examType").lean();
+    if (/^[a-f0-9]{24}$/i.test(ref)) test = await Test.findById(ref).select("title type questions subject topic subtopic examType").lean();
+    else if (ref) test = created.get(ref) || (await Test.findOne({ title: ref, type: "practice" }).select("title type questions subject topic subtopic examType").lean());
+    // A test that does not exist yet is made, if its title is a practice
+    // test's title for a chapter and topic the catalog has:
+    // "Number System · Unit Digit · Easy #3".
+    const m = !test && ref.match(/^(.+?) · (.+?) · (Easy|Medium|Hard|Advanced) #(\d+)$/);
+    if (m) {
+      const info = await chapterOf(String(rows[i].subject || "").trim(), m[1]);
+      const sub = m[2] === "Mixed Practice" ? null : m[2];
+      if (!info) {
+        unknown.push({ row: i + 1, test: ref, errors: [`"${m[1]}" is not a chapter of "${rows[i].subject || "?"}" in Subjects`] });
+        continue;
+      }
+      if (sub && !(info.chapter.topics || []).includes(sub)) {
+        unknown.push({ row: i + 1, test: ref, errors: [`"${sub}" is not a topic of ${m[1]} - add it in Subjects first`] });
+        continue;
+      }
+      const fields = {
+        title: ref, type: "practice", examType: "PRACTICE", examStage: "PRACTICE", subject: info.subject, topic: m[1],
+        ...(sub ? { subtopic: sub } : {}), difficultyLevel: LEVELS[m[3]], seriesNumber: Number(m[4]),
+        questions: [], durationMinutes: 10, publishStatus: "draft", createdBy: "admin",
+      };
+      test = dryRun ? { ...fields, _id: `new:${ref}`, virtual: true, sectionRules: [] } : (await Test.create(fields)).toObject();
+      test.isNew = true;
+      created.set(ref, test);
+    }
     if (!test || test.type !== "practice") {
       unknown.push({ row: i + 1, test: ref, errors: [ref ? "no practice test with this id or title" : "the test column is empty"] });
       continue;
@@ -274,15 +321,24 @@ async function addPracticeCsv(rows, { dryRun = false } = {}) {
       }
     }
     const room = Math.max(0, PRACTICE_TEST_SIZE - (test.questions || []).length);
+    const info = await chapterOf(test.subject, test.topic);
     const r = keep.length
-      ? await addManualQuestions(test._id, keep, { dryRun, source: "manual", strict: true, maxAdd: room })
+      ? await addManualQuestions(test.virtual ? test : test._id, keep, { dryRun, source: "manual", strict: true, maxAdd: room, examTypes: info?.exams })
       : { wouldAdd: 0, added: 0, rejected: [], warned: [] };
+    // Full: a minute a question, and a test this file made goes live.
+    if (!dryRun && r.added) {
+      const size = (test.questions || []).length + r.added;
+      await Test.updateOne(
+        { _id: test._id },
+        { $set: { durationMinutes: Math.max(10, size), ...(test.isNew && size >= PRACTICE_TEST_SIZE ? { publishStatus: "published" } : {}) } }
+      );
+    }
     // Row numbers back to the file's, not the group's.
     for (const x of r.rejected) rejected.push({ ...x, row: keepNumbers[x.row - 1], test: test.title });
     for (const x of r.warned) warned.push({ ...x, row: keepNumbers[x.row - 1], test: test.title });
     wouldAdd += r.wouldAdd;
     added += r.added;
-    tests.push({ testId: test._id, title: test.title, had: (test.questions || []).length, after: (test.questions || []).length + r.wouldAdd, of: PRACTICE_TEST_SIZE });
+    tests.push({ testId: test._id, title: test.title, created: !!test.isNew, had: (test.questions || []).length, after: (test.questions || []).length + r.wouldAdd, of: PRACTICE_TEST_SIZE });
   }
   rejected.sort((a, b) => a.row - b.row);
   warned.sort((a, b) => a.row - b.row);

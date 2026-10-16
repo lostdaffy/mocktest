@@ -61,6 +61,29 @@ const check = (name, cond, detail = "") => {
   const added = await Question.findOne({ text: "Simplify: 10 + 6 / 3 x 2" }).lean();
   check("added questions carry their key, formula and chapter", added && added.textKey && added.formula && added.chapter === "Simplification" && added.status === "published");
 
+  // ---- a file can name tests that do not exist yet
+  const Subject = require(path.join(SERVER, "models/Subject"));
+  await Subject.create({ name: "Maths", isActive: true, chapters: [{ name: "Number System", topics: ["Number System", "Unit Digit"], exams: ["SSC_CGL", "RRB_GROUP_D"] }] });
+  const ud = (i, title = "Number System · Unit Digit · Easy #1") => ({
+    ...row(title, 100 + i), topic: "Unit Digit",
+    question: `What is the unit digit of ${2 + i} + ${3 + i} × 10?`, optionA: `${(2 + i) % 10}`, optionB: `${(3 + i) % 10}`, optionC: `${(4 + i) % 10}`, optionD: `${(5 + i) % 10}`, correct: "A",
+    formula: "", solution: `${3 + i} × 10 ends in 0, so the unit digit is that of ${2 + i}: ${(2 + i) % 10}.`, questionHi: `${2 + i} + ${3 + i} × 10 का इकाई अंक क्या है?`,
+    optionAHi: `${(2 + i) % 10}`, optionBHi: `${(3 + i) % 10}`, optionCHi: `${(4 + i) % 10}`, optionDHi: `${(5 + i) % 10}`, solutionHi: `इकाई अंक ${(2 + i) % 10} है।`,
+  });
+  const fresh = Array.from({ length: 20 }, (_, i) => ud(i * 10));
+  r = await addPracticeCsv(fresh, { dryRun: true });
+  check("a dry run of a new test creates nothing", r.wouldAdd === 20 && r.tests[0].created && !(await Test.exists({ title: "Number System · Unit Digit · Easy #1" })), JSON.stringify(r.rejected.slice(0, 2)));
+  r = await addPracticeCsv(fresh);
+  const made = await Test.findOne({ title: "Number System · Unit Digit · Easy #1" }).lean();
+  check("the test is made from its title and filled", made && made.subtopic === "Unit Digit" && made.topic === "Number System" && made.difficultyLevel === "easy" && made.seriesNumber === 1 && made.questions.length === 20,
+    JSON.stringify(made && { subtopic: made.subtopic, n: made.questions.length }));
+  check("...and goes live once it has all 20", made.publishStatus === "published" && made.durationMinutes === 20);
+  const tagged = await Question.findById(made.questions[0]).lean();
+  check("its questions carry the chapter's exams, not PRACTICE", tagged.examType.join() === "SSC_CGL,RRB_GROUP_D", tagged.examType.join());
+  r = await addPracticeCsv([ud(500, "Number System · Remainders · Easy #1"), ud(501, "Algebra · Mixed Practice · Easy #1")]);
+  check("a topic the chapter does not have is refused", /not a topic/.test(r.rejected[0]?.errors.join()), r.rejected[0]?.errors.join());
+  check("...and so is a chapter Subjects does not have", /not a chapter/.test(r.rejected[1]?.errors.join()), r.rejected[1]?.errors.join());
+
   await mongoose.disconnect();
   await mem.stop();
   const failed = results.filter((x) => !x.ok);
