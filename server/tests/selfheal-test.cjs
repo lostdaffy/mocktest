@@ -255,6 +255,15 @@ async function api(method, p, { body, token } = {}) {
     liveQs.length === 12 && liveQs.every((q) => q.subject === "Maths") && !live.questions.some((id) => pulled.map(String).includes(String(id))));
   check("...and it stays published", live.publishStatus === "published");
 
+  // ---- a practice build stopped by the day's allowance says so in the
+  //      queue's words, so the job goes back in instead of failing
+  await db.collection("subjects").insertOne({ name: "AllowanceGone", isActive: true, chapters: [{ name: "Anything", topics: ["Anything"] }] });
+  const { buildPracticeTest } = require(path.join(SERVER, "controllers/examSeriesController"));
+  let allowanceMsg = "";
+  try { await buildPracticeTest({ subject: "AllowanceGone", chapter: "Anything", difficulty: "easy" }); } catch (e) { allowanceMsg = e.message; }
+  check("a practice build with no allowance left reports the allowance, not 'rate limit or API issue'",
+    /every model has used its allowance/i.test(allowanceMsg), allowanceMsg);
+
   // ---- a mock that lost its figure questions gets figures back, not text
   //      questions in their place: the paper must not skip the topic.
   await db.collection("subjects").insertOne({

@@ -786,6 +786,7 @@ async function buildPracticeTest({ subject, chapter, subtopic, topics, difficult
     // against everything already in the bank - the first batch included - so
     // the second is not a reworded copy of the first.
     let allQuestionIds = [];
+    let lastError = "";
     let quality = { verified: 0, repaired: 0, discarded: 0, duplicates: 0, short: 0 };
     for (let batch = 0; allQuestionIds.length < PRACTICE_TEST_SIZE; batch++) {
       const ask = Math.min(PRACTICE_BATCH, PRACTICE_TEST_SIZE - allQuestionIds.length);
@@ -820,11 +821,18 @@ async function buildPracticeTest({ subject, chapter, subtopic, topics, difficult
         if (built.ids.length < ask) break;
       } catch (err) {
         console.log(`Practice generation fail (${chapter}/${difficulty}, batch ${batch + 1}): ${err.message}`);
+        lastError = err.message || "";
         break;
       }
     }
 
     if (allQuestionIds.length === 0) {
+      // The day's allowance has its own wording, which the queue reads to put
+      // the job back and pause. Swallowed into the line below, 46 queued
+      // chapters were marked failed one after another in four minutes.
+      if (/every model has used its allowance|PerDay|per day|quota exceeded/i.test(lastError)) {
+        throw new Error(`Every model has used its allowance for today - ${chapter} (${difficulty}) not built yet.`);
+      }
       throw new Error("No questions were generated (rate limit or API issue). Wait a minute and try again.");
     }
 

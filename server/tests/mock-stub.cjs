@@ -32,6 +32,12 @@ gemini.generateQuestions = async ({ examType, subject, difficulty, count, pyqExa
   // builder reaching for an HTTP response it no longer has.
   if (subject === "NothingComesBack") return [];
 
+  // The allowance gone before a practice test's first batch: the builder must
+  // say so in the words the queue reads, not "rate limit or API issue".
+  if (subject === "AllowanceGone") {
+    throw new Error("Every model has used its allowance for today (gemini-3.1-flash-lite). Generation can continue tomorrow.");
+  }
+
   // The day's allowance running out part way through a mock. An exam whose
   // level says ALLOWANCE_AFTER_<n> gets n batches and then the exact error
   // the real model rotation throws. This is how SSC CHSL was "done" at 9 of
