@@ -14,6 +14,7 @@ const { createVerifiedQuestions, qualityNote } = require("../services/questionFa
 // every one - 87 same-fact pairs across the first seven - so a mock's new
 // questions are checked against them as against its own paper.
 const { refillTest, refillTests, refillNote, targetSize, siblingMockQuestions } = require("../services/testTopUp");
+const { visualChaptersFor } = require("../services/visualPlan");
 
 // How much of every mock is made of REAL previous-year questions. The rest
 // is generated fresh. If the PYQ Bank doesn't have enough for a subject,
@@ -418,29 +419,6 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
  * syllabus names - by chapter name or by one of the chapter's topics, in the
  * section's own subject or one it draws from.
  */
-async function visualChaptersFor(pattern, syllabusOf) {
-  const subjects = await Subject.find({ isActive: true, "chapters.visual": { $in: ["chart", "figure"] } }).lean();
-  return pattern.sections.map((section) => {
-    const names = new Set(
-      (syllabusOf(section) || []).map((t) => String(typeof t === "string" ? t : t?.topic || "").trim().toLowerCase()).filter(Boolean)
-    );
-    if (!names.size) return [];
-    const inSection = [section.subject, ...(section.sources || [])].map((s) => s.toLowerCase());
-    const out = [];
-    for (const subj of subjects) {
-      const subjNames = [subj.name, ...(subj.aliases || [])].map((s) => s.toLowerCase());
-      if (!subjNames.some((n) => inSection.includes(n))) continue;
-      for (const ch of subj.chapters || []) {
-        if (!ch.visual) continue;
-        const keys = [ch.name, ...(ch.topics || [])].map((t) => t.toLowerCase());
-        if (keys.some((t) => names.has(t))) {
-          out.push({ kind: ch.visual, subject: subj.name, chapter: ch.name, topics: ch.topics?.length ? ch.topics : [ch.name] });
-        }
-      }
-    }
-    return out.slice(0, 2);
-  });
-}
 
 // POST /api/exam-series/:examStage/generate-mock (admin)
 // body: { vacancyId? } - a mock in that recruitment notice's series

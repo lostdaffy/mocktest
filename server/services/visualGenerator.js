@@ -79,15 +79,17 @@ Question kinds (use a mix):
 - "series": 3 to 5 problem figures that change by a rule; the answer is the next figure. Give the rule:
       { "type": "rotate", "by": 90 }        the whole box turns clockwise by 90/180/270 each step (positions AND shapes turn)
       { "type": "turn_shapes", "by": 45 }   every shape turns in place by a multiple of 45 each step
-      { "type": "none" }                    any other rule (then explain it fully in the solution)
+      Only these two rules - the answer is worked out by computer, and any other rule is thrown out.
 - "mirror": 1 problem figure, a mirror on its RIGHT; the answer is its mirror image. rule { "type": "mirror" }
 - "water": 1 problem figure, water BELOW it; the answer is its water image. rule { "type": "water" }
 - "odd_one_out": no problem figures; four answer figures, three follow a rule and one does not. rule { "type": "none" }. The odd one must differ in ONE visible way (number of shapes, which shapes, colour, size, position or facing) while the other three agree on it - and no other figure may stand out on any of those: if one of the three is the only black one, or the only one in different cells, that is a second answer and the question is thrown out.
-- "analogy": 3 problem figures (1 : 2 :: 3 : ?). rule { "type": "none" }
+- "analogy": 3 problem figures (1 : 2 :: 3 : ?). Figure 2 is figure 1 changed by ONE rule - { "type": "rotate", "by": 90|180|270 }, { "type": "turn_shapes", "by": 45..315 }, { "type": "mirror" } or { "type": "water" } - and the answer is figure 3 changed by the same rule. Give that rule.
 
 Rules:
 - Exactly 4 answer figures, all different, exactly one correct.
-- For rotate, turn_shapes, mirror and water the answer is CHECKED BY COMPUTER from the figures and the rule: the correct option must be exactly the result, and no wrong option may also be.
+- Every answer is CHECKED BY COMPUTER from the figures and the rule: the correct option must be exactly the result, and no wrong option may be what any other rotation, turn, mirror or water image of the figures gives. A question that fails is thrown out.
+- The rule must visibly change the figure (no shape that looks the same after the turn).
+- "correctIndex" is the position in "options": 0 = (A), 1 = (B), 2 = (C), 3 = (D). The solution names the answer as "Figure (A)"...(D), never "option 1".
 - Wrong options should be the classic traps: turned the wrong way, mirrored instead of rotated, one shape out of place.
 - "text" asks the question in words (e.g. "Which answer figure will come next in the series?"), with a Hindi translation in "textHi".
 - The solution explains the rule step by step, in English and Hindi.${
@@ -146,7 +148,7 @@ function buildVisualQuestions(kind, raw, { examType, subject, topic, difficulty,
         continue;
       }
       const check = checkFigureAnswer(spec, correctIndex);
-      if (check.ok === false) {
+      if (check.ok !== true) {
         rejected.push({ text: q?.text, reason: `figure check: ${check.reason}` });
         continue;
       }
@@ -156,7 +158,7 @@ function buildVisualQuestions(kind, raw, { examType, subject, topic, difficulty,
         correctIndex,
         options: [...FIGURE_OPTIONS],
         optionsHi: [...FIGURE_OPTIONS_HI],
-        visual: { kind: "figure", figure: { spec, answerCheck: check.ok ? "checked" : "by_eye" } },
+        visual: { kind: "figure", figure: { spec, answerCheck: "checked" } },
       });
     }
   }

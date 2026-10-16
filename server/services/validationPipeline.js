@@ -166,6 +166,9 @@ function ruleBasedCheck(q) {
     try {
       const check = checkFigureAnswer(normaliseFigure(q.visual.figure?.spec), q.correctIndex);
       if (check.ok === false) issues.push(`figure answer does not follow: ${check.reason}`);
+      // Not checkable is not good enough: a figure is only kept when code has
+      // worked its answer out from the figures themselves.
+      else if (check.ok !== true) issues.push(`figure answer not checked in code: ${check.reason}`);
     } catch (err) {
       issues.push(`figure unusable: ${err.message}`);
     }
@@ -255,6 +258,10 @@ function ruleBasedCheck(q) {
 function shuffleOptions(q) {
   if (!q.options || q.options.length !== 4) return q;
   if (q.correctIndex === undefined || q.correctIndex === null) return q;
+  // A figure's options are the boxes (A)-(D) in its picture, in that order.
+  // Shuffled, the app showed "A. Figure (C)" and a student who picked box A
+  // was marked wrong.
+  if (q.visual?.kind === "figure") return q;
 
   const order = [0, 1, 2, 3];
   for (let i = order.length - 1; i > 0; i--) {

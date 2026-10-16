@@ -268,4 +268,18 @@ async function autoAttach(req, res) {
   res.json({ message: `${attached} picture(s) drawn and attached; ${left} still need a person`, attached, left });
 }
 
-module.exports = { decodeImage, autoAttach, listFigures, getFigure, uploadFigure, removeFigure, serveImage, figureCard, rekeyFigures, MAX_BYTES };
+// POST /api/question-images/repair { apply } (admin)
+// Figure options back in picture order, answers re-checked in code - see
+// services/figureRepair.js. Without apply it only reports.
+async function repairFiguresRoute(req, res) {
+  const { repairFigures } = require("../services/figureRepair");
+  const r = await repairFigures({ apply: req.body?.apply === true });
+  res.json({
+    message:
+      `${r.looked} figure question(s): ${r.reordered} ${req.body?.apply === true ? "put back in picture order" : "out of picture order"}, ` +
+      `${r.checked} answer(s) checked in code, ${r.failed.length + r.notChecked.length} to replace`,
+    ...r,
+  });
+}
+
+module.exports = { repairFiguresRoute, decodeImage, autoAttach, listFigures, getFigure, uploadFigure, removeFigure, serveImage, figureCard, rekeyFigures, MAX_BYTES };

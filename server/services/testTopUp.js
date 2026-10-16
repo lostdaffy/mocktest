@@ -3,6 +3,7 @@ const Question = require("../models/Question");
 const Subject = require("../models/Subject");
 const ExamPattern = require("../models/ExamPattern");
 const GenerationJob = require("../models/GenerationJob");
+const { visualChaptersFor } = require("./visualPlan");
 const { createVerifiedQuestions } = require("./questionFactory");
 // A practice test holds PRACTICE_TEST_SIZE. A mock holds whatever its exam's
 // pattern adds up to.
@@ -175,12 +176,51 @@ async function refillMock(test, { from, target, max }) {
   let budget = max || target;
   let added = 0;
   let why;
+  const visualPlan = await visualChaptersFor(pattern, (section) => section.syllabus);
   for (let k = 0; k < pattern.sections.length && budget > 0; k++) {
     const section = pattern.sections[k];
     const paper = (await Test.findById(test._id).select("questions").lean())?.questions || [];
-    const subjects = new Map((await Question.find({ _id: { $in: paper } }).select("subject").lean()).map((q) => [String(q._id), q.subject]));
+    const docs = await Question.find({ _id: { $in: paper } }).select("subject chapter visual.kind").lean();
+    const subjects = new Map(docs.map((q) => [String(q._id), q.subject]));
     const inSection = paper.filter((id) => sectionOf(subjects.get(String(id))) === k);
     let short = Math.min(budget, Math.max(0, section.questionCount - inSection.length));
+    if (!short) continue;
+
+    // The section's figure and chart sets first: a figure question taken out
+    // comes back as a figure, so the paper does not lose the topic.
+    for (const v of visualPlan[k] || []) {
+      const have = docs.filter((q) => q.visual?.kind === v.kind && q.chapter === v.chapter && sectionOf(q.subject) === k).length;
+      const setSize = v.kind === "chart" ? 5 : 3;
+      const want = Math.min(short, setSize - have);
+      if (want < (v.kind === "chart" ? 3 : 1)) continue;
+      let built;
+      try {
+        built = await createVerifiedQuestions({
+          needed: want,
+          inTest: [...paper, ...siblings],
+          tag: { examStage: test.examStage, chapter: v.chapter },
+          generateParams: {
+            examType: test.examStage,
+            examDisplayName: pattern.displayName,
+            subject: v.subject,
+            topic: v.chapter,
+            difficulty: "medium",
+            examLevel: pattern.examLevel,
+            syllabusTopics: v.topics,
+            visualKind: v.kind,
+          },
+        });
+      } catch (err) {
+        return report(added, err.message);
+      }
+      if (!built.ids.length) return report(added, `no ${v.kind} question for ${v.chapter} passed the checks`);
+      const lastAt = paper.reduce((at, id, i) => (sectionOf(subjects.get(String(id))) === k ? i : at), -1);
+      await Test.updateOne({ _id: test._id }, { $push: { questions: { $each: built.ids, $position: lastAt >= 0 ? lastAt + 1 : paper.length } } });
+      for (const id of built.ids) subjects.set(String(id), v.subject);
+      added += built.ids.length;
+      budget -= built.ids.length;
+      short -= built.ids.length;
+    }
     if (!short) continue;
 
     const mix = section.difficultyMix || { easy: 30, medium: 50, hard: 20 };

@@ -255,6 +255,31 @@ async function api(method, p, { body, token } = {}) {
     liveQs.length === 12 && liveQs.every((q) => q.subject === "Maths") && !live.questions.some((id) => pulled.map(String).includes(String(id))));
   check("...and it stays published", live.publishStatus === "published");
 
+  // ---- a mock that lost its figure questions gets figures back, not text
+  //      questions in their place: the paper must not skip the topic.
+  await db.collection("subjects").insertOne({
+    name: "Reasoning", isActive: true, chapters: [{ name: "Figure Series", visual: "figure", topics: ["Figure Series"] }],
+  });
+  await db.collection("exampatterns").insertOne({
+    examType: "FIG_EXAM", displayName: "Figure Exam", durationMinutes: 30,
+    sections: [{ subject: "Reasoning", questionCount: 6, syllabus: ["Figure Series", "Coding-Decoding"], difficultyMix: { easy: 100, medium: 0, hard: 0 } }],
+  });
+  const plain = await db.collection("questions").insertMany([1, 2, 3].map((i) => ({
+    text: `Coding question ${i}`, subject: "Reasoning", topic: "Coding-Decoding", options: ["a", "b", "c", "d"], correctIndex: 0, status: "published",
+  })));
+  const figMock = await db.collection("tests").insertOne({
+    title: "Figure Exam - Mock #1", type: "full_mock", examType: "FIG_EXAM", examStage: "FIG_EXAM",
+    questions: Object.values(plain.insertedIds), publishStatus: "published", durationMinutes: 30,
+  });
+  const figRefill = await refillTest(figMock.insertedId);
+  const figPaper = await db.collection("tests").findOne({ _id: figMock.insertedId });
+  const figQs = await db.collection("questions").find({ _id: { $in: figPaper.questions }, "visual.kind": "figure" }).toArray();
+  check("a mock missing its figure set is refilled with figure questions first", figRefill.filled && figPaper.questions.length === 6 && figQs.length === 3,
+    JSON.stringify({ filled: figRefill.filled, have: figPaper.questions.length, figures: figQs.length, why: figRefill.why }));
+  check("...each one checked in code, its options in picture order",
+    figQs.every((q) => q.visual.figure.answerCheck === "checked" && q.options.join() === "Figure (A),Figure (B),Figure (C),Figure (D)"),
+    JSON.stringify(figQs.map((q) => [q.visual.figure.answerCheck, q.options.join("|")])));
+
   const student = await db.collection("users").insertOne({ name: "S", phone: "9111111111", role: "user", referralCode: "S1" });
   const sToken = jwt.sign({ id: student.insertedId.toString(), sessionId: "y" }, JWT_SECRET);
   const denied = await api("POST", "/exam-series/practice/fill-short", { token: sToken, body: {} });

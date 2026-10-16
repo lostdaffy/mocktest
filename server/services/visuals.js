@@ -451,11 +451,75 @@ function checkOddOneOut(options, correctIndex) {
   return { ok: null, reason: "no simple feature sets one figure apart - check the answer by eye" };
 }
 
+// The rule as a function from one box to the next, or null when the rule
+// is not one code can apply ("none").
+function ruleStep(rule, grid) {
+  if (rule.type === "rotate") return (p) => rotatePanel(p, rule.by, grid);
+  if (rule.type === "turn_shapes") return (p) => turnShapes(p, rule.by);
+  if (rule.type === "mirror") return (p) => mirrorPanel(p, grid);
+  if (rule.type === "water") return (p) => waterPanel(p, grid);
+  return null;
+}
+
+// Every rule a student could reasonably see, to find a second answer: if
+// figure 1 -> 2 also fits "mirror" and mirror makes option C of figure 3,
+// option C is defensible too, whatever rule the setter meant.
+function candidateRules() {
+  const out = [{ type: "mirror" }, { type: "water" }];
+  for (const by of [90, 180, 270]) out.push({ type: "rotate", by });
+  for (const by of [45, 90, 135, 180, 225, 270, 315]) out.push({ type: "turn_shapes", by });
+  return out;
+}
+
+// Another option some other fitting rule leads to, or -1.
+function rivalByOtherRule(spec, correctIndex) {
+  const { grid, question, options, layout } = spec;
+  for (const r of candidateRules()) {
+    const step = ruleStep(r, grid);
+    let next;
+    if (layout === "analogy") {
+      if (!samePanel(step(question[0]), question[1])) continue;
+      next = step(question[2]);
+    } else if (layout === "series") {
+      let fits = true;
+      for (let k = 1; k < question.length && fits; k++) fits = samePanel(step(question[k - 1]), question[k]);
+      if (!fits) continue;
+      next = step(question[question.length - 1]);
+    } else return -1;
+    const at = options.findIndex((o) => samePanel(o, next));
+    if (at >= 0 && at !== correctIndex) return at;
+  }
+  return -1;
+}
+
 function checkFigureAnswer(spec, correctIndex) {
+  const result = checkByRule(spec, correctIndex);
+  if (result.ok !== true) return result;
+  const { layout, question, grid, rule } = spec;
+  if (layout === "series" || layout === "analogy") {
+    // A rule that changes nothing ("turn a circle") fits every figure.
+    const step = ruleStep(rule, grid);
+    if (samePanel(step(question[0]), question[0])) return { ok: false, reason: "the rule leaves the figure unchanged, so any rule fits" };
+    const rival = rivalByOtherRule(spec, correctIndex);
+    if (rival >= 0) return { ok: false, reason: `another rule that fits the figures gives option ${"ABCD"[rival]}` };
+  }
+  return result;
+}
+
+function checkByRule(spec, correctIndex) {
   const { rule, grid, question, options, layout } = spec;
   let expected;
-  if (rule.type === "mirror") expected = mirrorPanel(question[0], grid);
-  else if (rule.type === "water") expected = waterPanel(question[0], grid);
+  if (layout === "analogy") {
+    // 1 : 2 :: 3 : ? - the rule must take figure 1 to figure 2, and the
+    // answer is what it makes of figure 3.
+    const step = ruleStep(rule, grid);
+    if (!step) return { ok: null, reason: "an analogy without a rule code can apply is not checked - check the answer by eye" };
+    if (!samePanel(step(question[0]), question[1])) {
+      return { ok: false, reason: "figure 2 is not what the stated rule makes of figure 1" };
+    }
+    expected = step(question[2]);
+  } else if (layout === "mirror") expected = mirrorPanel(question[0], grid);
+  else if (layout === "water") expected = waterPanel(question[0], grid);
   else if (layout === "series" && (rule.type === "rotate" || rule.type === "turn_shapes")) {
     const step = (p) => (rule.type === "rotate" ? rotatePanel(p, rule.by, grid) : turnShapes(p, rule.by));
     // The rule has to hold across the problem figures too, or it is not the rule.
