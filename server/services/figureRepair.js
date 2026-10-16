@@ -27,7 +27,7 @@ const letterOf = (label) => {
 };
 
 async function repairFigures({ apply = false } = {}) {
-  const figures = await Question.find({ "visual.kind": "figure", "visual.figure.spec": { $exists: true } })
+  const figures = await Question.find({ "visual.kind": "figure", "visual.figure.spec": { $exists: true }, status: { $ne: "rejected" } })
     .select("text options optionsHi correctIndex status visual")
     .lean();
 
