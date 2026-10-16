@@ -34,7 +34,7 @@ const EXAMPLE_ROWS = [
 
 // RFC 4180: quoted fields may hold commas, quotes ("") and line breaks - a
 // question with a comma in it is the normal case, not an edge case.
-function parseCsv(text) {
+export function parseCsv(text) {
   const rows = [];
   let row = [];
   let field = "";

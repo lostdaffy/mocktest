@@ -332,7 +332,15 @@ async function clearHistory(req, res) {
 
 // DELETE /api/generation/queue (admin) -> drops what has not started yet
 async function cancelQueued(req, res) {
-  const r = await GenerationJob.updateMany({ status: "queued" }, { $set: { status: "cancelled", finishedAt: new Date() } });
+  // ?only=practice-top-ups: just the top-ups of practice tests (they are being
+  // filled from a spreadsheet instead); everything else stays.
+  let filter = { status: "queued" };
+  if (req.query?.only === "practice-top-ups") {
+    const Test = require("../models/Test");
+    const practice = await Test.find({ type: "practice" }).distinct("_id");
+    filter = { status: "queued", kind: "top_up", testId: { $in: practice } };
+  }
+  const r = await GenerationJob.updateMany(filter, { $set: { status: "cancelled", finishedAt: new Date() } });
   res.json({ message: `${r.modifiedCount} waiting job(s) cancelled. Anything already built is untouched.`, cancelled: r.modifiedCount });
 }
 

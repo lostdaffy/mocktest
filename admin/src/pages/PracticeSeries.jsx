@@ -4,6 +4,7 @@ import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 import QuestionVisual from "../components/QuestionVisual";
+import PracticeCsvUpload from "../components/PracticeCsvUpload";
 import { useGenerationActivity, useGenerationFinished, useJobs } from "../context/GenerationActivity";
 
 const LEVELS = ["easy", "medium", "hard", "advanced"];
@@ -271,6 +272,8 @@ export default function PracticeSeries() {
           title="Subject Practice"
           subtitle="Pick a subject to see its chapters, then build Easy/Medium/Hard/Advanced tests for each one."
         />
+
+        <PracticeCsvUpload />
 
         {message && (
           <div className="mb-6 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3">

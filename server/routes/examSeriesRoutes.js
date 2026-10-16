@@ -24,7 +24,7 @@ const {
 } = require("../controllers/examSeriesController");
 const { protect, adminOnly } = require("../middleware/auth");
 const asyncRoute = require("../utils/asyncRoute");
-const { addManualQuestionsToMock } = require("../controllers/manualMockController");
+const { addManualQuestionsToMock, addPracticeCsvRoute } = require("../controllers/manualMockController");
 
 // Exam mock series (admin-only content management)
 router.get("/exams", protect, adminOnly, asyncRoute(listExams));
@@ -33,6 +33,7 @@ router.get("/mock/:testId/section-status", protect, adminOnly, asyncRoute(getMoc
 router.get("/subjects/list", protect, adminOnly, asyncRoute(listSubjectsForAdmin));
 router.post("/practice/generate", protect, adminOnly, asyncRoute(generatePracticeTest));
 router.post("/practice/fill-short", protect, adminOnly, asyncRoute(fillShortTests));
+router.post("/practice/manual-csv", protect, adminOnly, asyncRoute(addPracticeCsvRoute)); // a chapter's practice tests filled from one spreadsheet
 router.post("/practice/rename-all", protect, adminOnly, asyncRoute(renamePracticeTests));
 router.patch("/practice/:testId/publish", protect, adminOnly, asyncRoute(publishPracticeTest));
 router.patch("/practice/:testId/unpublish", protect, adminOnly, asyncRoute(unpublishPracticeTest));

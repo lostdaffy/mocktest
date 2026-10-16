@@ -66,4 +66,21 @@ async function addManualQuestionsToLive(req, res) {
   }
 }
 
-module.exports = { addManualQuestionsToMock, addManualQuestionsToLive };
+// POST /api/exam-series/practice/manual-csv { rows, dryRun } (admin)
+// Practice tests filled from one spreadsheet - see addPracticeCsv.
+async function addPracticeCsvRoute(req, res) {
+  try {
+    const { addPracticeCsv } = require("../services/manualQuestions");
+    const r = await addPracticeCsv(req.body?.rows, { dryRun: !!req.body?.dryRun });
+    res.json({
+      message: r.dryRun
+        ? `Checked ${r.checked} row(s): ${r.wouldAdd} would be added to ${r.tests.length} test(s), ${r.rejected.length} refused`
+        : `${r.added} question(s) added to ${r.tests.length} test(s); ${r.rejected.length} refused`,
+      ...r,
+    });
+  } catch (err) {
+    res.status(err.status || 500).json({ message: err.message });
+  }
+}
+
+module.exports = { addManualQuestionsToMock, addManualQuestionsToLive, addPracticeCsvRoute };

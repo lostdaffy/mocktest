@@ -1,6 +1,6 @@
 const Question = require("../models/Question");
 const Test = require("../models/Test");
-const { ruleBasedCheck } = require("./validationPipeline");
+const { ruleBasedCheck, questionKey } = require("./validationPipeline");
 
 // Questions a person typed or pasted in: a human-made mock, or a previous
 // year paper entered by hand. One implementation for both, because the rules
@@ -23,6 +23,9 @@ const { ruleBasedCheck } = require("./validationPipeline");
 // Real papers often carry no printed solution and a human mock may be
 // English-only, so these are warnings for a person, never refusals.
 const HARD_FAULTS = [/must have exactly 4 options/, /an option is empty/, /correctIndex out of range/];
+// A practice test filled from a spreadsheet is held to the gate's bar: these
+// are refused too, not just reported.
+const STRICT_FAULTS = [/duplicate options/, /maths check/, /maths working/, /solution never arrives/, /mixed script/];
 
 /**
  * The correct answer as a person writes it: A-D, or 1-4 where 1 is the FIRST
@@ -51,7 +54,7 @@ const clean = (v) => (v === undefined || v === null ? "" : String(v).trim());
  * Turns one incoming row into a question, plus what is wrong with it.
  * Nothing is saved here.
  */
-function prepareRow(row, { examType, source, subjectFallback, pyq }) {
+function prepareRow(row, { examType, source, subjectFallback, pyq, strict = false }) {
   const options = [row.optionA, row.optionB, row.optionC, row.optionD].map(clean);
   const optionsHi = [row.optionAHi, row.optionBHi, row.optionCHi, row.optionDHi].map(clean);
   const hasHindiOptions = optionsHi.some(Boolean);
@@ -71,6 +74,7 @@ function prepareRow(row, { examType, source, subjectFallback, pyq }) {
       : "medium",
     examType: [examType],
     examStage: examType,
+    ...(clean(row.formula) ? { formula: clean(row.formula) } : {}),
     source,
     status: "published",
     createdBy: "admin",
@@ -91,8 +95,9 @@ function prepareRow(row, { examType, source, subjectFallback, pyq }) {
   if (!question.subject) errors.push("no subject - say which section this belongs to");
 
   const { issues } = ruleBasedCheck(question);
-  const hard = issues.filter((i) => HARD_FAULTS.some((re) => re.test(i)));
-  const soft = issues.filter((i) => !HARD_FAULTS.some((re) => re.test(i)));
+  const faults = strict ? [...HARD_FAULTS, ...STRICT_FAULTS] : HARD_FAULTS;
+  const hard = issues.filter((i) => faults.some((re) => re.test(i)));
+  const soft = issues.filter((i) => !faults.some((re) => re.test(i)));
   errors.push(...hard.map(humanise));
 
   // The placeholder above is not a solution, so the gate's view of it is
@@ -136,7 +141,7 @@ function humanise(issue) {
  * warnings are added and the warnings returned. The order of the paper is the
  * order of the rows - a previous year paper must read as it was set.
  */
-async function addManualQuestions(testId, rows, { dryRun = false, source } = {}) {
+async function addManualQuestions(testId, rows, { dryRun = false, source, strict = false, maxAdd } = {}) {
   const test = await Test.findById(testId);
   if (!test) {
     const err = new Error("Test not found");
@@ -181,7 +186,10 @@ async function addManualQuestions(testId, rows, { dryRun = false, source } = {})
       source: resolvedSource,
       subjectFallback: test.subject,
       pyq,
+      strict,
     });
+    question.textKey = questionKey(question.text);
+    if (!question.chapter && test.topic) question.chapter = test.topic;
 
     const key = question.text.toLowerCase();
     if (key && existingTexts.has(key)) warnings.push("this exact question is already in this paper");
@@ -191,6 +199,7 @@ async function addManualQuestions(testId, rows, { dryRun = false, source } = {})
       warnings.push(`"${question.subject}" is not a section of this exam (${[...known].join(", ")})`);
     }
 
+    if (maxAdd !== undefined && accepted.length >= maxAdd) errors.push(`the test is full - it only needed ${maxAdd} more`);
     if (errors.length) {
       rejected.push({ row: rowNumber, text: question.text.slice(0, 80), errors });
       return;
@@ -219,4 +228,65 @@ async function addManualQuestions(testId, rows, { dryRun = false, source } = {})
   };
 }
 
-module.exports = { addManualQuestions, prepareRow, parseCorrect, parseCorrectIndex };
+// ---- practice tests from one spreadsheet
+//
+// Each row names its test in a "test" column (the test's id, or its exact
+// title), so one file can fill a whole chapter's tests. A test is filled up
+// to its size and no further; a question the bank already has (same wording)
+// is refused - a practice test should not repeat the bank.
+async function addPracticeCsv(rows, { dryRun = false } = {}) {
+  const { PRACTICE_TEST_SIZE } = require("../utils/practice");
+  if (!Array.isArray(rows) || !rows.length) throw Object.assign(new Error("No rows were sent"), { status: 400 });
+  if (rows.length > 1500) throw Object.assign(new Error("At most 1500 rows at a time - split the file"), { status: 400 });
+
+  const groups = new Map();
+  const unknown = [];
+  for (let i = 0; i < rows.length; i++) {
+    const ref = String(rows[i].test || "").trim();
+    let test = null;
+    if (/^[a-f0-9]{24}$/i.test(ref)) test = await Test.findById(ref).select("title type questions subject topic examType").lean();
+    else if (ref) test = await Test.findOne({ title: ref, type: "practice" }).select("title type questions subject topic examType").lean();
+    if (!test || test.type !== "practice") {
+      unknown.push({ row: i + 1, test: ref, errors: [ref ? "no practice test with this id or title" : "the test column is empty"] });
+      continue;
+    }
+    const key = String(test._id);
+    if (!groups.has(key)) groups.set(key, { test, rows: [], rowNumbers: [] });
+    groups.get(key).rows.push(rows[i]);
+    groups.get(key).rowNumbers.push(i + 1);
+  }
+
+  const tests = [];
+  const rejected = [...unknown];
+  const warned = [];
+  let wouldAdd = 0;
+  let added = 0;
+  for (const { test, rows: mine, rowNumbers } of groups.values()) {
+    const keep = [];
+    const keepNumbers = [];
+    for (let k = 0; k < mine.length; k++) {
+      const text = String(mine[k].question ?? mine[k].text ?? "").trim();
+      const exists = text && (await Question.exists({ textKey: questionKey(text), status: { $ne: "rejected" } }));
+      if (exists) rejected.push({ row: rowNumbers[k], test: test.title, text: text.slice(0, 80), errors: ["already in the question bank"] });
+      else {
+        keep.push(mine[k]);
+        keepNumbers.push(rowNumbers[k]);
+      }
+    }
+    const room = Math.max(0, PRACTICE_TEST_SIZE - (test.questions || []).length);
+    const r = keep.length
+      ? await addManualQuestions(test._id, keep, { dryRun, source: "manual", strict: true, maxAdd: room })
+      : { wouldAdd: 0, added: 0, rejected: [], warned: [] };
+    // Row numbers back to the file's, not the group's.
+    for (const x of r.rejected) rejected.push({ ...x, row: keepNumbers[x.row - 1], test: test.title });
+    for (const x of r.warned) warned.push({ ...x, row: keepNumbers[x.row - 1], test: test.title });
+    wouldAdd += r.wouldAdd;
+    added += r.added;
+    tests.push({ testId: test._id, title: test.title, had: (test.questions || []).length, after: (test.questions || []).length + r.wouldAdd, of: PRACTICE_TEST_SIZE });
+  }
+  rejected.sort((a, b) => a.row - b.row);
+  warned.sort((a, b) => a.row - b.row);
+  return { dryRun, checked: rows.length, wouldAdd, added, tests, rejected, warned };
+}
+
+module.exports = { addManualQuestions, addPracticeCsv, prepareRow, parseCorrect, parseCorrectIndex };
