@@ -16,6 +16,11 @@ const questionSchema = new mongoose.Schema(
     correctIndex: { type: Number, required: true, min: 0, max: 3 },
 
     solution: { type: String, required: true },
+
+    // Maths: the sum that gives the answer, using the question's numbers
+    // ("1200 * 12 * 3 / 100"). The gate runs it and checks the marked option
+    // is the result - see services/mathCheck.js checkFormula.
+    formula: { type: String },
     solutionHi: { type: String },
 
     // Tagging - this is what makes one question bank serve both
@@ -49,6 +54,10 @@ const questionSchema = new mongoose.Schema(
     timesAttempted: { type: Number, default: 0 },
     timesCorrect: { type: Number, default: 0 },
     wrongAnswerRate: { type: Number, default: 0 }, // auto-recalculated, used to flag confusing questions
+    // How many answers went to each option ({ "0": 12, "2": 3 }). A wrong
+    // key shows as the answers gathering on one other option - see
+    // services/answerSignals.js.
+    picks: { type: Map, of: Number },
 
     // The question text with case, spacing and punctuation stripped out, so
     // "What is 15% of 240?" and "what is 15 % of 240" are recognised as the

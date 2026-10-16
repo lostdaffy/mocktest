@@ -3,7 +3,12 @@ const { isHindiMedium, hasDevanagari, isLanguageNeutral } = require("../utils/la
 const { refersToAPassage, carriesItsPassage } = require("../utils/comprehension");
 const { arguesWithItself } = require("../utils/selfDoubt");
 const { solutionReachesTheAnswer } = require("../utils/answerAgrees");
-const { checkArithmetic } = require("./mathCheck");
+const { checkArithmetic, checkFormula, isNumberOption } = require("./mathCheck");
+const IS_MATHS = /^(math|गणित|quant|arith|numerical)/i;
+// Phrases that put a fact on today's date. "वर्तमान आयु" is a sum and
+// "वर्तमान भारतीय राज्य" a place on the map, so only "at present / currently /
+// recently" and "the current <office>" count.
+const DATED_PHRASE = /(हाल\s*ही\s*में|हाल\s*के\s*(वर्षों|दिनों)|वर्तमान\s*में|वर्तमान\s*(मुख्य|अध्यक्ष|राष्ट्रपति|प्रधान|राज्यपाल|महासचिव|गवर्नर|कप्तान|मंत्री|सचिव|निदेशक|आयुक्त|न्यायाधीश|सेनाध्यक्ष|प्रमुख)|\bcurrently\b|\bat present\b|\bpresently\b|\brecently\b|\bin recent years\b|\bcurrent (chief|president|prime|governor|secretary|ceo|chairman|chairperson|head|captain|minister|director|commissioner|speaker)|\bincumbent\b|\blatest\b)/i;
 const { normaliseChart, checkChartAnswer, normaliseFigure, checkFigureAnswer, visualSignature, figureKey } = require("./visuals");
 
 // "What is 15% of 240?" and "what is 15 % of 240" are the same question.
@@ -211,6 +216,26 @@ function ruleBasedCheck(q) {
   // from two amounts) - see services/mathCheck.js.
   const sums = checkArithmetic(q);
   if (sums.ok === false) issues.push(`maths check: ${sums.reason}`);
+
+  // Every other numeric maths question: the setter's own working, run in
+  // code. A freshly generated one with numeric options must carry it.
+  if (IS_MATHS.test(String(q.subject || ""))) {
+    const worked = checkFormula(q);
+    if (worked.ok === false) issues.push(`maths working: ${worked.reason}`);
+    else if (
+      worked.ok === null && worked.reason === "no formula" &&
+      q.status === "draft" && q.source === "ai_generated" &&
+      (q.options || []).every(isNumberOption)
+    ) {
+      issues.push("maths working: no formula, so the answer was not worked out in code");
+    }
+  }
+
+  // A fact dated "today" is wrong a few months later - and a new one is not
+  // let in at all (the old ones are on the admin's time-sensitive list).
+  if (q.status === "draft" && q.source === "ai_generated" && !IS_MATHS.test(String(q.subject || "")) && !/^(reason|तर्क)/i.test(String(q.subject || ""))) {
+    if ([q.text, q.textHi].some((t) => DATED_PHRASE.test(String(t || "")))) issues.push("time-bound fact: asks about 'now' or 'recently'");
+  }
 
   // The app is bilingual and most of these students read Hindi first. A
   // question without Hindi is half a question for them.

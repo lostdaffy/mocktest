@@ -373,9 +373,14 @@ async function start() {
   const { runDailyQuizTick } = require("./services/dailyQuiz");
   const { runReminders } = require("./services/engagement");
   // The daily quiz, then any reminder that is due (each goes out once a day).
+  const { sweepSuspectKeys } = require("./services/answerSignals");
   const quizTick = setInterval(() => {
     runDailyQuizTick().catch((e) => console.error("Daily quiz tick:", e.message));
     runReminders().catch((e) => console.error("Reminders:", e.message));
+    // A question whose answers point at another option is replaced.
+    sweepSuspectKeys()
+      .then((found) => found.length && console.log(`Answer signals: ${found.length} question(s) with a likely wrong key replaced`))
+      .catch((e) => console.error("Answer signals:", e.message));
   }, 5 * 60_000);
   setTimeout(() => runDailyQuizTick().catch(() => {}), 20_000);
 

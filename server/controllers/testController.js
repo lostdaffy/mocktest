@@ -689,7 +689,11 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
 
     const update = {
       $set: { wrongAnswerRate },
-      $inc: { timesAttempted: 1, ...(isCorrect ? { timesCorrect: 1 } : {}) },
+      $inc: {
+        timesAttempted: 1,
+        ...(isCorrect ? { timesCorrect: 1 } : {}),
+        ...(Number.isInteger(selectedIndex) && selectedIndex >= 0 && selectedIndex <= 3 ? { [`picks.${selectedIndex}`]: 1 } : {}),
+      },
     };
 
     if (wrongAnswerRate >= 0.8 && timesAttempted >= 20 && q.status === "published") {

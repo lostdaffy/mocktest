@@ -419,6 +419,11 @@ COMPREHENSION - each question must stand alone:
   // itself the model returns three options, or none, and the whole batch is
   // thrown away for a format fault rather than anything wrong with it - nine
   // of twenty-one questions on the first Error Spotting test.
+  const isMaths = /^(math|गणित|quant|arith|numerical)/i.test(String(subject || ""));
+  const formulaRule = isMaths
+    ? `
+- "formula": the plain arithmetic that gives the correct answer, written with ONLY the numbers that appear in the question (plus unit constants like 100, 60, 1000, 12, 365, 18/5) - e.g. "1200 * 12 * 3 / 100", "(450 - 360) / 360 * 100", "lcm(12, 18, 24)", "sqrt(144) + 3^2". Allowed: + - * / ^ ( ) sqrt cbrt pow abs round min max hcf lcm pi. No letters, no "x =", no units. It is run by a computer and must equal the marked option's number exactly; a question whose formula does not is thrown out. If the answer is not one number (a ratio like 3:4, an expression, a statement), set "formula" to "".`
+    : "";
   const shapeReminder = `- This holds for EVERY format, including "spot the error", "fill in the blank" and cloze questions: exactly 4 options and exactly 4 Hindi options, always.
 - Where the options are segment labels (A / B / C / D), still return all four as the four options, and repeat them as the four Hindi options.`;
 
@@ -478,9 +483,10 @@ ${avoidTexts.map((t, i) => `${i + 1}. ${t}`).join("\n")}`
     "correctIndex": 0,
     "solution": ${hindiMedium ? '"संक्षिप्त हल हिंदी में"' : '"short English solution"'},
     "solutionHi": "short Hindi solution",
-    "topic": "which ONE of the listed topics this question belongs to"
+    "topic": "which ONE of the listed topics this question belongs to"${isMaths ? `,
+    "formula": "1200 * 12 * 3 / 100"` : ""}
   }
-]`;
+]${formulaRule}`;
 
   const questions = await callGemini(prompt, { jsonMode: true });
 

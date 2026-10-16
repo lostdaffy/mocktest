@@ -207,6 +207,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     r.json.score === -2, `scored ${r.json.score}`);
   check("...and the result refuses to quote a single rate for a paper marked two ways",
     r.json.negativeMarking === null, String(r.json.negativeMarking));
+  // Where each answer went is counted per option (services/answerSignals.js).
+  await new Promise((res) => setTimeout(res, 300));
+  const counted = await db.collection("questions").findOne({ _id: ids[0] });
+  check("each answer is counted against the option picked", counted.picks && counted.picks["1"] === 1 && !counted.picks["0"], JSON.stringify(counted.picks));
 
   // A uniform paper must behave exactly as it did before.
   await api("POST", "/exams", { token: admin.token, body: {

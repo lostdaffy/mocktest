@@ -130,4 +130,128 @@ function checkArithmetic(q) {
   return { ok: null };
 }
 
-if (typeof module !== "undefined") module.exports = { checkArithmetic, numbersIn, optionValue };
+// ---- every other numeric maths question: the setter's working, run in code
+//
+// The generator writes, beside each numeric question, the sum that gives its
+// answer - "formula": "1200 * 12 * 3 / 100" - using only the numbers in the
+// question. Code works it out and checks the marked option is that number,
+// and that no other option is. A slip in the arithmetic, an answer key on
+// the wrong option, or options that do not contain the answer all show here,
+// in every chapter, not just the shapes above.
+
+// Constants a working may use without them appearing in the question: unit
+// conversions, percent, a dozen, days and degrees, pi as 22/7.
+const FREE_NUMBERS = new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 18, 22, 24, 30, 60, 100, 1000, 360, 365, 3600, 0.5]);
+
+function evaluateArithmetic(src) {
+  const toks = [];
+  const re = /\s*(?:(\d+(?:\.\d+)?)|([A-Za-z_]+)|(\*\*|[-+*/^(),%]))/y;
+  const s = String(src || "").replace(/×/g, "*").replace(/÷/g, "/");
+  let m;
+  re.lastIndex = 0;
+  while (re.lastIndex < s.length) {
+    m = re.exec(s);
+    if (!m) {
+      if (/^\s*$/.test(s.slice(re.lastIndex))) break;
+      throw new Error(`cannot read "${s.slice(re.lastIndex, re.lastIndex + 8)}"`);
+    }
+    if (m[1]) toks.push({ t: "num", v: Number(m[1]) });
+    else if (m[2]) toks.push({ t: "id", v: m[2].toLowerCase() });
+    else toks.push({ t: "op", v: m[3] === "**" ? "^" : m[3] });
+  }
+  let i = 0;
+  const peek = () => toks[i];
+  const take = (v) => {
+    const t = toks[i];
+    if (!t || (v && t.v !== v)) throw new Error(`expected ${v || "more"}`);
+    i++;
+    return t;
+  };
+  const FNS = {
+    sqrt: (x) => Math.sqrt(x), cbrt: (x) => Math.cbrt(x), abs: (x) => Math.abs(x), round: (x) => Math.round(x),
+    pow: (a, b) => Math.pow(a, b), min: (...a) => Math.min(...a), max: (...a) => Math.max(...a),
+    gcd: (...a) => a.reduce((x, y) => gcd(x, y)), hcf: (...a) => a.reduce((x, y) => gcd(x, y)), lcm: (...a) => a.reduce((x, y) => lcm(x, y)),
+  };
+  const used = [];
+  function primary() {
+    const t = peek();
+    if (!t) throw new Error("ends too early");
+    if (t.t === "num") { used.push(t.v); return take().v; }
+    if (t.v === "(") { take("("); const v = expr(); take(")"); return v; }
+    if (t.v === "-") { take("-"); return -power(); }
+    if (t.v === "+") { take("+"); return power(); }
+    if (t.t === "id") {
+      const name = take().v;
+      if (name === "pi") return Math.PI;
+      const fn = FNS[name];
+      if (!fn) throw new Error(`unknown function ${name}`);
+      take("(");
+      const args = [expr()];
+      while (peek()?.v === ",") { take(","); args.push(expr()); }
+      take(")");
+      return fn(...args);
+    }
+    throw new Error(`unexpected "${t.v}"`);
+  }
+  function power() {
+    const base = primary();
+    if (peek()?.v === "^") { take("^"); return Math.pow(base, power()); }
+    if (peek()?.v === "%") { take("%"); return base / 100; }
+    return base;
+  }
+  function term() {
+    let v = power();
+    while (peek() && (peek().v === "*" || peek().v === "/")) v = take().v === "*" ? v * power() : v / power();
+    return v;
+  }
+  function expr() {
+    let v = term();
+    while (peek() && (peek().v === "+" || peek().v === "-")) v = take().v === "+" ? v + term() : v - term();
+    return v;
+  }
+  const value = expr();
+  if (i !== toks.length) throw new Error(`unexpected "${toks[i].v}"`);
+  if (!Number.isFinite(value)) throw new Error("does not give a number");
+  return { value, used, operators: toks.filter((t) => t.t === "op" && t.v !== "(" && t.v !== ")" && t.v !== ",").length + toks.filter((t) => t.t === "id").length };
+}
+
+// An option rounded to one decimal place (33.3 for 33.333...) still matches;
+// 430 against a worked 432 does not.
+const near = (a, b) => Math.abs(a - b) <= Math.max(0.051, 0.0005 * Math.abs(b));
+
+/**
+ * { ok: true | false | null, reason } - null when there is no formula or the
+ * answer is not a single number (a ratio, an expression, a statement).
+ */
+// An option that is a number - "Rs 432", "₹ 1,200", "12.5%", "25 km/h",
+// "432 रुपये" - and not words with a number in them ("Option 2", "RIGHT
+// answer 1").
+function isNumberOption(opt) {
+  const s = String(opt || "").trim();
+  return optionValue(s) !== null && /^(?:rs\.?|inr|₹|\$)?\s*-?[\d,]*\.?\d+\s*(?:%|[a-zऀ-ॿ/²³ .]{0,14})$/i.test(s);
+}
+
+function checkFormula(q) {
+  const formula = String(q.formula || "").trim();
+  const values = (q.options || []).map(optionValue);
+  if (!formula) return { ok: null, reason: "no formula" };
+  if (!(q.options || []).every(isNumberOption)) return { ok: null, reason: "the options are not single numbers" };
+  let run;
+  try {
+    run = evaluateArithmetic(formula);
+  } catch (err) {
+    return { ok: false, reason: `the working "${formula}" cannot be run: ${err.message}` };
+  }
+  if (!run.operators) return { ok: false, reason: `the working "${formula}" is just a number, not a sum` };
+  const given = new Set([...numbersIn(q.text), ...numbersIn(q.textHi)].map((n) => +n.toFixed(6)));
+  const foreign = run.used.filter((n) => !given.has(+n.toFixed(6)) && !FREE_NUMBERS.has(n));
+  if (foreign.length) return { ok: false, reason: `the working uses ${foreign.join(", ")}, which the question does not give` };
+  const hits = values.map((v, k) => (near(v, run.value) ? k : -1)).filter((k) => k >= 0);
+  const shown = +run.value.toFixed(4);
+  if (!hits.length) return { ok: false, reason: `the working gives ${shown}, which is not among the options` };
+  if (hits.length > 1) return { ok: false, reason: `${shown} matches more than one option` };
+  if (hits[0] !== q.correctIndex) return { ok: false, reason: `the working gives ${shown} (option ${"ABCD"[hits[0]]}), not the marked option` };
+  return { ok: true };
+}
+
+if (typeof module !== "undefined") module.exports = { checkArithmetic, checkFormula, evaluateArithmetic, isNumberOption, numbersIn, optionValue };

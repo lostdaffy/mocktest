@@ -45,18 +45,12 @@ async function approveQuestion(req, res) {
 // was done.
 async function rejectQuestion(req, res) {
   const { reason } = req.body;
-  const q = await Question.findByIdAndUpdate(
-    req.params.id,
-    { status: "rejected", flagReason: reason || "Rejected by admin" },
-    { new: true }
-  );
-  if (!q) return res.status(404).json({ message: "Question not found" });
-
-  // Out of every test that was using it.
-  const affected = await Test.find({ questions: q._id }).select(`title questions publishStatus`).lean();
-  if (affected.length) {
-    await Test.updateMany({ questions: q._id }, { $pull: { questions: q._id } });
-  }
+  // Out of every test that was using it, and a replacement in its place -
+  // see services/questionRejection.js.
+  const { rejectAndHeal } = require("../services/questionRejection");
+  const done = await rejectAndHeal(req.params.id, reason);
+  if (!done) return res.status(404).json({ message: "Question not found" });
+  const { question: q, affected, refilled } = done;
 
   // A test that is now short is worth saying out loud - it is live, a
   // student can open it, and it has one question fewer than it claims.
@@ -68,10 +62,9 @@ async function rejectQuestion(req, res) {
     live: t.publishStatus === `published`,
   }));
 
-  // ...and another takes its place. Saying "now short - regenerate to fill"
-  // and leaving it there is how 26 live tests ended up serving fewer
-  // questions than they promised.
-  const refilled = affected.length ? await refillTests(affected.map((t) => t._id)) : [];
+  // (Another takes its place - saying "now short - regenerate to fill" and
+  // leaving it there is how 26 live tests ended up serving fewer questions
+  // than they promised.)
 
   res.json({
     message:

@@ -106,6 +106,10 @@ async function rollUpLiveStats() {
           _id: "$answers.question",
           attempted: { $sum: 1 },
           correct: { $sum: { $cond: ["$answers.isCorrect", 1, 0] } },
+          p0: { $sum: { $cond: [{ $eq: ["$answers.selectedIndex", 0] }, 1, 0] } },
+          p1: { $sum: { $cond: [{ $eq: ["$answers.selectedIndex", 1] }, 1, 0] } },
+          p2: { $sum: { $cond: [{ $eq: ["$answers.selectedIndex", 2] }, 1, 0] } },
+          p3: { $sum: { $cond: [{ $eq: ["$answers.selectedIndex", 3] }, 1, 0] } },
         },
       },
     ]);
@@ -113,7 +117,7 @@ async function rollUpLiveStats() {
     if (perQuestion.length) {
       await Question.bulkWrite(
         perQuestion.map((r) => ({
-          updateOne: { filter: { _id: r._id }, update: { $inc: { timesAttempted: r.attempted, timesCorrect: r.correct } } },
+          updateOne: { filter: { _id: r._id }, update: { $inc: { timesAttempted: r.attempted, timesCorrect: r.correct, "picks.0": r.p0, "picks.1": r.p1, "picks.2": r.p2, "picks.3": r.p3 } } },
         })),
         { ordered: false }
       );
