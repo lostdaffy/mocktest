@@ -201,6 +201,12 @@ async function runGenerationTick() {
       { sort: { queuedAt: 1 }, new: true }
     );
   const job =
+    // what the admin asked to come first
+    (await GenerationJob.findOneAndUpdate(
+      { status: "queued", priority: { $gt: 0 } },
+      { $set: { status: "running", startedAt: new Date() }, $inc: { attempts: 1 } },
+      { sort: { priority: -1, queuedAt: 1 }, new: true }
+    )) ||
     (await claim({ status: "queued", kind: "top_up" })) ||
     // then a past paper an admin is waiting to review
     (await claim({ status: "queued", kind: "pyq_extract" })) ||

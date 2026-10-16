@@ -283,6 +283,29 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await api("POST", "/generation/pause", { token });
   await db.collection("generationjobs").deleteMany({});
 
+  // ---- the exam the admin wants first goes first, top-ups included
+  const petTest = await db.collection("tests").insertOne({ title: "PET - Mock #1", type: "full_mock", examStage: "UPSSSC_PET", examType: "UPSSSC_PET", questions: [], publishStatus: "published" });
+  await db.collection("generationjobs").insertMany([
+    { kind: "top_up", testId: new mongoose.Types.ObjectId(), label: "other repair", status: "queued", attempts: 0, queuedAt: new Date(Date.now() - 900e3) },
+    { kind: "practice", subject: "Maths", chapter: "Percentage", difficulty: "hard", label: "other content", status: "queued", attempts: 0, queuedAt: new Date(Date.now() - 800e3) },
+    { kind: "top_up", testId: petTest.insertedId, label: "PET repair", status: "queued", attempts: 0, queuedAt: new Date() },
+  ]);
+  r = await api("POST", "/generation/prioritize", { token, body: { examType: "UPSSSC_PET" } });
+  check("prioritizing an exam moves its waiting jobs (top-ups of its tests too)", r.json.moved === 1, r.json.message);
+  r = await api("POST", "/generation/prioritize", { token, body: {} });
+  check("...and needs an exam", r.status === 400);
+  await api("POST", "/generation/resume", { token });
+  for (let i = 0; i < 40; i++) {
+    if ((await db.collection("generationjobs").countDocuments({ status: "queued" })) === 0) break;
+    await sleep(500);
+  }
+  const pet = await db.collection("generationjobs").findOne({ label: "PET repair" });
+  const otherRepair = await db.collection("generationjobs").findOne({ label: "other repair" });
+  check("the prioritized exam's job runs before work queued earlier", pet.startedAt && otherRepair.startedAt && pet.startedAt <= otherRepair.startedAt,
+    `${pet.startedAt} vs ${otherRepair.startedAt}`);
+  await api("POST", "/generation/pause", { token });
+  await db.collection("generationjobs").deleteMany({});
+
   // ---- and a student cannot touch any of it
   const student = await db.collection("users").insertOne({ name: "S", phone: "9111111111", role: "user", referralCode: "S1" });
   const sToken = jwt.sign({ id: student.insertedId.toString(), sessionId: "y" }, JWT_SECRET);

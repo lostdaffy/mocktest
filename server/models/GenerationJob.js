@@ -18,6 +18,10 @@ const generationJobSchema = new mongoose.Schema(
     // tests, brought to 20).
     testId: { type: mongoose.Schema.Types.ObjectId, ref: "Test" },
 
+    // Higher runs first. Set by POST /generation/prioritize when the admin
+    // wants one exam's work done before the rest of the queue.
+    priority: { type: Number, default: 0 },
+
     // pyq_extract: the uploaded past paper to read (see services/pyqImport.js).
     pyqImport: { type: mongoose.Schema.Types.ObjectId, ref: "PyqImport" },
 

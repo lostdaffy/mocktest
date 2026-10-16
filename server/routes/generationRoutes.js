@@ -12,6 +12,7 @@ const {
   retryFailed,
   clearHistory,
   cancelQueued,
+  prioritize,
 } = require("../controllers/generationController");
 const { protect, adminOnly } = require("../middleware/auth");
 const asyncRoute = require("../utils/asyncRoute");
@@ -22,6 +23,7 @@ router.get("/activity", protect, adminOnly, asyncRoute(activity));
 router.get("/gaps", protect, adminOnly, asyncRoute(listGaps));
 router.post("/enqueue", protect, adminOnly, asyncRoute(enqueue));
 router.post("/enqueue-short", protect, adminOnly, asyncRoute(enqueueShort));
+router.post("/prioritize", protect, adminOnly, asyncRoute(prioritize)); // one exam's waiting work first
 router.post("/enqueue-practice", protect, adminOnly, asyncRoute(enqueuePractice));
 router.post("/pause", protect, adminOnly, asyncRoute(pause));
 router.post("/resume", protect, adminOnly, asyncRoute(resume));

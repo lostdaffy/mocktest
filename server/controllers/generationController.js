@@ -336,4 +336,20 @@ async function cancelQueued(req, res) {
   res.json({ message: `${r.modifiedCount} waiting job(s) cancelled. Anything already built is untouched.`, cancelled: r.modifiedCount });
 }
 
-module.exports = { queueStatus, activity, listGaps, enqueue, enqueueShort, enqueuePractice, pause, resume, retryFailed, clearHistory, cancelQueued };
+// POST /api/generation/prioritize { examType } (admin)
+// Everything waiting for one exam - its mocks, and top-ups of its tests -
+// moves to the front of the queue. Changes nothing about what is built.
+async function prioritize(req, res) {
+  const examType = String(req.body?.examType || "").trim();
+  if (!examType) return res.status(400).json({ message: "Which exam? Send examType." });
+  const Test = require("../models/Test");
+  const tests = await Test.find({ $or: [{ examStage: examType }, { examType }] }).distinct("_id");
+  const r = await GenerationJob.updateMany(
+    { status: "queued", $or: [{ examType }, { testId: { $in: tests } }] },
+    { $set: { priority: 10 } }
+  );
+  res.json({ message: `${r.modifiedCount} waiting job(s) for ${examType} moved to the front`, moved: r.modifiedCount });
+}
+
+module.exports = {
+  prioritize, queueStatus, activity, listGaps, enqueue, enqueueShort, enqueuePractice, pause, resume, retryFailed, clearHistory, cancelQueued };
