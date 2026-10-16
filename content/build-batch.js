@@ -6,7 +6,8 @@
 //
 // Each question: { t: test title, q, qh, o: [4 options], oh?: [4 Hindi
 // options], a: index of the right option, s, sh: solutions, v: () => true
-// when the answer is worked out in code and agrees }.
+// when the answer is worked out in code and agrees, r?: id of the question
+// it replaces in that test, rr?: why }.
 const fs = require("fs");
 const path = require("path");
 
@@ -42,7 +43,7 @@ if (problems.length) {
   process.exit(1);
 }
 
-const COLS = ["test", "subject", "topic", "difficulty", "question", "optionA", "optionB", "optionC", "optionD", "correct", "formula", "solution", "questionHi", "optionAHi", "optionBHi", "optionCHi", "optionDHi", "solutionHi"];
+const COLS = ["test", "subject", "topic", "difficulty", "question", "optionA", "optionB", "optionC", "optionD", "correct", "formula", "solution", "questionHi", "optionAHi", "optionBHi", "optionCHi", "optionDHi", "solutionHi", "replaces", "replaceReason"];
 const level = (t) => (/· (Easy|Medium|Hard|Advanced) #/.exec(t) || [])[1];
 // The right answer goes to A, B, C, D in turn (the order of the other three
 // kept), so no letter is the "usual" answer.
@@ -68,6 +69,7 @@ const rows = qs.map((x) => {
     question: x.q, optionA: x.o[0], optionB: x.o[1], optionC: x.o[2], optionD: x.o[3], correct: "ABCD"[x.a],
     formula: x.f || "", solution: x.s,
     questionHi: x.qh, optionAHi: oh[0], optionBHi: oh[1], optionCHi: oh[2], optionDHi: oh[3], solutionHi: x.sh,
+    replaces: x.r || "", replaceReason: x.rr || "",
   };
 });
 const esc = (v) => { const s = String(v ?? ""); return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };

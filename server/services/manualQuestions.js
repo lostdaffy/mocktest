@@ -176,8 +176,12 @@ async function addManualQuestions(testId, rows, { dryRun = false, source, strict
     (await Question.find({ _id: { $in: test.questions } }).select("text").lean()).map((q) => q.text.trim().toLowerCase())
   );
   const seenInBatch = new Set();
+  const inTest = new Set((test.questions || []).map(String));
+  const replacedSeen = new Set();
 
   const accepted = [];
+  const replacing = []; // per accepted row: the id it takes the place of, or ""
+  const replaceReasons = [];
   const rejected = [];
   const warned = [];
 
@@ -205,29 +209,52 @@ async function addManualQuestions(testId, rows, { dryRun = false, source, strict
       warnings.push(`"${question.subject}" is not a section of this exam (${[...known].join(", ")})`);
     }
 
-    if (maxAdd !== undefined && accepted.length >= maxAdd) errors.push(`the test is full - it only needed ${maxAdd} more`);
+    // A row may name a question of this test it replaces: it takes that
+    // question's place and the old one is rejected - no hole, nothing asked
+    // of a model. Such a row needs no room.
+    const replaces = clean(row.replaces);
+    if (replaces) {
+      if (!inTest.has(replaces)) errors.push("the question it replaces is not in this test");
+      else if (replacedSeen.has(replaces)) errors.push("another row already replaces that question");
+    } else if (maxAdd !== undefined && replacing.filter((x) => !x).length >= maxAdd) {
+      errors.push(`the test is full - it only needed ${maxAdd} more`);
+    }
     if (errors.length) {
       rejected.push({ row: rowNumber, text: question.text.slice(0, 80), errors });
       return;
     }
     if (warnings.length) warned.push({ row: rowNumber, text: question.text.slice(0, 80), warnings });
+    if (replaces) replacedSeen.add(replaces);
     accepted.push(question);
+    replacing.push(replaces);
+    replaceReasons.push(clean(row.replaceReason));
   });
 
   let added = 0;
+  let replaced = 0;
   if (!dryRun && accepted.length) {
     const created = await Question.insertMany(accepted, { ordered: true });
+    const pushed = created.filter((_, k) => !replacing[k]);
     // $push keeps the paper in row order and avoids re-validating the whole
     // test document, which fails on tests created under an older schema.
-    await Test.updateOne({ _id: test._id }, { $push: { questions: { $each: created.map((q) => q._id) } } });
-    added = created.length;
+    if (pushed.length) await Test.updateOne({ _id: test._id }, { $push: { questions: { $each: pushed.map((q) => q._id) } } });
+    for (let k = 0; k < created.length; k++) {
+      if (!replacing[k]) continue;
+      // Into the same place in every test that held the old one.
+      await Test.updateMany({ questions: replacing[k] }, { $set: { "questions.$": created[k]._id } });
+      await Question.updateOne({ _id: replacing[k] }, { status: "rejected", flagReason: replaceReasons[k] || "Replaced by a checked question" });
+      replaced++;
+    }
+    added = pushed.length;
   }
 
   return {
     dryRun,
     checked: rows.length,
-    wouldAdd: accepted.length,
+    wouldAdd: replacing.filter((x) => !x).length,
+    wouldReplace: replacing.filter(Boolean).length,
     added,
+    replaced,
     rejected,
     warned,
     paperSize: test.questions.length + added,
@@ -239,7 +266,10 @@ async function addManualQuestions(testId, rows, { dryRun = false, source, strict
 // Each row names its test in a "test" column (the test's id, or its exact
 // title), so one file can fill a whole chapter's tests. A test is filled up
 // to its size and no further; a question the bank already has (same wording)
-// is refused - a practice test should not repeat the bank.
+// is refused - a practice test should not repeat the bank. A row with a
+// "replaces" column (a question id in that test) takes that question's place
+// and the old one is rejected, so a bad question is swapped out with no gap
+// and no model asked for a replacement.
 async function addPracticeCsv(rows, { dryRun = false } = {}) {
   const { PRACTICE_TEST_SIZE } = require("../utils/practice");
   if (!Array.isArray(rows) || !rows.length) throw Object.assign(new Error("No rows were sent"), { status: 400 });
@@ -308,6 +338,8 @@ async function addPracticeCsv(rows, { dryRun = false } = {}) {
   const warned = [];
   let wouldAdd = 0;
   let added = 0;
+  let wouldReplace = 0;
+  let replaced = 0;
   for (const { test, rows: mine, rowNumbers } of groups.values()) {
     const keep = [];
     const keepNumbers = [];
@@ -324,7 +356,7 @@ async function addPracticeCsv(rows, { dryRun = false } = {}) {
     const info = await chapterOf(test.subject, test.topic);
     const r = keep.length
       ? await addManualQuestions(test.virtual ? test : test._id, keep, { dryRun, source: "manual", strict: true, maxAdd: room, examTypes: info?.exams })
-      : { wouldAdd: 0, added: 0, rejected: [], warned: [] };
+      : { wouldAdd: 0, added: 0, wouldReplace: 0, replaced: 0, rejected: [], warned: [] };
     // Full: a minute a question, and a test this file made goes live.
     if (!dryRun && r.added) {
       const size = (test.questions || []).length + r.added;
@@ -338,11 +370,13 @@ async function addPracticeCsv(rows, { dryRun = false } = {}) {
     for (const x of r.warned) warned.push({ ...x, row: keepNumbers[x.row - 1], test: test.title });
     wouldAdd += r.wouldAdd;
     added += r.added;
-    tests.push({ testId: test._id, title: test.title, created: !!test.isNew, had: (test.questions || []).length, after: (test.questions || []).length + r.wouldAdd, of: PRACTICE_TEST_SIZE });
+    wouldReplace += r.wouldReplace;
+    replaced += r.replaced;
+    tests.push({ testId: test._id, title: test.title, created: !!test.isNew, had: (test.questions || []).length, after: (test.questions || []).length + r.wouldAdd, replaces: r.wouldReplace, of: PRACTICE_TEST_SIZE });
   }
   rejected.sort((a, b) => a.row - b.row);
   warned.sort((a, b) => a.row - b.row);
-  return { dryRun, checked: rows.length, wouldAdd, added, tests, rejected, warned };
+  return { dryRun, checked: rows.length, wouldAdd, added, wouldReplace, replaced, tests, rejected, warned };
 }
 
 module.exports = { addManualQuestions, addPracticeCsv, prepareRow, parseCorrect, parseCorrectIndex };

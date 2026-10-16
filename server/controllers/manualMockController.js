@@ -74,8 +74,8 @@ async function addPracticeCsvRoute(req, res) {
     const r = await addPracticeCsv(req.body?.rows, { dryRun: !!req.body?.dryRun });
     res.json({
       message: r.dryRun
-        ? `Checked ${r.checked} row(s): ${r.wouldAdd} would be added to ${r.tests.length} test(s), ${r.rejected.length} refused`
-        : `${r.added} question(s) added to ${r.tests.length} test(s); ${r.rejected.length} refused`,
+        ? `Checked ${r.checked} row(s): ${r.wouldAdd} would be added${r.wouldReplace ? `, ${r.wouldReplace} would replace a question` : ""} in ${r.tests.length} test(s), ${r.rejected.length} refused`
+        : `${r.added} question(s) added${r.replaced ? `, ${r.replaced} replaced` : ""} in ${r.tests.length} test(s); ${r.rejected.length} refused`,
       ...r,
     });
   } catch (err) {

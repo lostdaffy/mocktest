@@ -11,6 +11,8 @@ import { parseCsv } from "./ManualQuestions";
 const COLUMNS = [
   "test", "subject", "topic", "difficulty", "question", "optionA", "optionB", "optionC", "optionD", "correct",
   "formula", "solution", "questionHi", "optionAHi", "optionBHi", "optionCHi", "optionDHi", "solutionHi",
+  // Optional: the id of a question in that test this row takes the place of.
+  "replaces", "replaceReason",
 ];
 const norm = (h) => COLUMNS.find((c) => c.toLowerCase() === String(h).toLowerCase().replace(/[^a-z]/g, "")) || null;
 
@@ -119,7 +121,7 @@ export default function PracticeCsvUpload() {
                 {report.tests.map((t) => (
                   <div key={t.testId} className="flex justify-between gap-2">
                     <span className="text-slate truncate">{t.title}</span>
-                    <span className="text-ink shrink-0">{t.had} → {t.after} / {t.of}</span>
+                    <span className="text-ink shrink-0">{t.had} → {t.after} / {t.of}{t.replaces ? ` · ${t.replaces} replaced` : ""}</span>
                   </div>
                 ))}
               </div>
@@ -137,9 +139,9 @@ export default function PracticeCsvUpload() {
                   ))}
                 </div>
               )}
-              {report.dryRun && report.wouldAdd > 0 && (
+              {report.dryRun && report.wouldAdd + (report.wouldReplace || 0) > 0 && (
                 <button className="rv-btn-primary !px-3 !py-1.5 !text-[13px]" onClick={add} disabled={!!busy}>
-                  {busy === "add" ? "Adding..." : `Add ${report.wouldAdd} question(s)`}
+                  {busy === "add" ? "Adding..." : `Add ${report.wouldAdd + (report.wouldReplace || 0)} question(s)`}
                 </button>
               )}
             </div>

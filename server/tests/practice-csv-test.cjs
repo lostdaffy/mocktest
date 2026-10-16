@@ -84,6 +84,26 @@ const check = (name, cond, detail = "") => {
   check("a topic the chapter does not have is refused", /not a topic/.test(r.rejected[0]?.errors.join()), r.rejected[0]?.errors.join());
   check("...and so is a chapter Subjects does not have", /not a chapter/.test(r.rejected[1]?.errors.join()), r.rejected[1]?.errors.join());
 
+  // ---- a row can replace a question in its test, in place
+  const before = (await Test.findById(a._id).lean()).questions.map(String);
+  const victim = before[3];
+  const swap = [
+    { ...row(a.title, 60), replaces: victim, replaceReason: "wrong key" },
+    { ...row(a.title, 61), replaces: String(old[17]._id) }, // not in test A
+    { ...row(a.title, 62), replaces: victim }, // the same one twice
+  ];
+  r = await addPracticeCsv(swap, { dryRun: true });
+  check("a dry run of a replacement changes nothing", r.wouldReplace === 1 && r.wouldAdd === 0 && (await Test.findById(a._id).lean()).questions.map(String).join() === before.join(), JSON.stringify(r));
+  r = await addPracticeCsv(swap);
+  const after = (await Test.findById(a._id).lean()).questions.map(String);
+  const fresh3 = await Question.findOne({ text: "Simplify: 70 + 6 / 3 x 2" }).lean();
+  check("the new question takes the old one's place, the test stays at 20", after.length === 20 && fresh3 && after[3] === String(fresh3._id) && !after.includes(victim), after.length);
+  const gone = await Question.findById(victim).lean();
+  check("...and the old one is rejected with the reason given", gone.status === "rejected" && gone.flagReason === "wrong key", gone.status + " " + gone.flagReason);
+  const why2 = (n) => (r.rejected.find((x) => x.row === n)?.errors || []).join("; ");
+  check("a replacement for a question not in the test is refused", /not in this test/.test(why2(2)), why2(2));
+  check("...and so is a second replacement for the same question", /already replaces/.test(why2(3)), why2(3));
+
   await mongoose.disconnect();
   await mem.stop();
   const failed = results.filter((x) => !x.ok);
