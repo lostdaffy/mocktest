@@ -217,6 +217,8 @@ async function api(method, p, { body, token } = {}) {
 
   r = await fetch(`${BASE}/jobs/tick`, { method: "POST" });
   check("the outside scheduler's tick needs no login and answers", r.status === 200);
+  r = await fetch(`${BASE}/jobs/tick`);
+  check("...as a GET too (cron-job.org's default)", r.status === 200 && (await r.json()).ok === true);
 
   const passed = results.filter((x) => x.ok).length;
   console.log(`\n${passed}/${results.length} passed`);

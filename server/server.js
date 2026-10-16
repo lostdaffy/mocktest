@@ -313,7 +313,13 @@ app.use("/api/daily-quiz", require("./routes/dailyQuizRoutes"));
 app.use("/api/question-images", require("./routes/questionImageRoutes"));
 app.use("/api/vacancies", require("./routes/vacancyRoutes"));
 // Wakes the server and sends due reminders - see controllers/engagementController.
-app.post("/api/jobs/tick", require("./utils/asyncRoute")(require("./controllers/engagementController").jobsTick));
+// GET as well: cron-job.org calls with GET unless told otherwise, and a tick
+// is harmless (every reminder goes out at most once a day).
+{
+  const tick = require("./utils/asyncRoute")(require("./controllers/engagementController").jobsTick);
+  app.post("/api/jobs/tick", tick);
+  app.get("/api/jobs/tick", tick);
+}
 
 // Fallback error handler.
 //
