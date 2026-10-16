@@ -102,16 +102,23 @@ async function answerQuestionOfDay(userId, selectedIndex, now = new Date()) {
   if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex > 3) return { error: "Pick one of the four options" };
   const q = await Question.findById(entry.question).select("correctIndex").lean();
   if (!q) return { error: "There is no question today" };
+  // An upsert that only writes on insert, so a second answer never replaces or
+  // duplicates the first - even before the unique {user, date} index exists
+  // (Mongoose builds it in the background after startup).
   try {
-    await QotdAnswer.create({
-      user: userId,
-      date: entry.date,
-      question: entry.question,
-      selectedIndex,
-      correct: selectedIndex === q.correctIndex,
-    });
+    await QotdAnswer.updateOne(
+      { user: userId, date: entry.date },
+      {
+        $setOnInsert: {
+          question: entry.question,
+          selectedIndex,
+          correct: selectedIndex === q.correctIndex,
+        },
+      },
+      { upsert: true }
+    );
   } catch (err) {
-    if (err.code !== 11000) throw err; // already answered - keep the first
+    if (err.code !== 11000) throw err; // two answers at once - the other one was first
   }
   return questionOfDay(userId, now);
 }
