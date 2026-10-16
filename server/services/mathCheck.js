@@ -215,9 +215,14 @@ function evaluateArithmetic(src) {
   return { value, used, operators: toks.filter((t) => t.t === "op" && t.v !== "(" && t.v !== ")" && t.v !== ",").length + toks.filter((t) => t.t === "id").length };
 }
 
-// An option rounded to one decimal place (33.3 for 33.333...) still matches;
-// 430 against a worked 432 does not.
-const near = (a, b) => Math.abs(a - b) <= Math.max(0.051, 0.0005 * Math.abs(b));
+// An option matches when it is the worked value rounded to the places the
+// option is written to: "33.3" or "33.33" for 33.333..., but "0.8" is not
+// 0.75 and "430" is not 432.
+function near(option, value, worked) {
+  const m = String(option).replace(/,/g, "").match(/\d+(?:\.(\d+))?/);
+  const places = m && m[1] ? m[1].length : 0;
+  return Math.abs(value - worked) <= 0.5 * 10 ** -places + 1e-9;
+}
 
 /**
  * { ok: true | false | null, reason } - null when there is no formula or the
@@ -246,7 +251,7 @@ function checkFormula(q) {
   const given = new Set([...numbersIn(q.text), ...numbersIn(q.textHi)].map((n) => +n.toFixed(6)));
   const foreign = run.used.filter((n) => !given.has(+n.toFixed(6)) && !FREE_NUMBERS.has(n));
   if (foreign.length) return { ok: false, reason: `the working uses ${foreign.join(", ")}, which the question does not give` };
-  const hits = values.map((v, k) => (near(v, run.value) ? k : -1)).filter((k) => k >= 0);
+  const hits = values.map((v, k) => (near(q.options[k], v, run.value) ? k : -1)).filter((k) => k >= 0);
   const shown = +run.value.toFixed(4);
   if (!hits.length) return { ok: false, reason: `the working gives ${shown}, which is not among the options` };
   if (hits.length > 1) return { ok: false, reason: `${shown} matches more than one option` };
