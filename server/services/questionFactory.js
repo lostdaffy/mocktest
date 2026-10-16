@@ -54,6 +54,9 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
     : [];
   const paperPlain = paper.filter((q) => !q.visual?.kind);
   const paperTexts = paperPlain.map((q) => q.text);
+  const copiesReference = await require("./referenceLearning")
+    .referenceChecker(generateParams.examType, generateParams.subject)
+    .catch(() => () => ({ copy: false }));
   const acceptedKeys = new Set(paper.map((q) => figureKey(q.visual) || q.textKey || questionKey(q.text)));
   let repaired = 0;
   let discarded = 0;
@@ -182,6 +185,16 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
       if (exactInBank) {
         duplicates++;
         await drop(q, "duplicate", "already in the bank");
+        continue;
+      }
+
+      // A copy of one of the admin's reference questions, even with the
+      // numbers or a word changed, is thrown out: references teach the level,
+      // they are not a source of questions.
+      const copied = q.visual?.kind ? { copy: false } : copiesReference(q.text);
+      if (copied.copy) {
+        duplicates++;
+        await drop(q, "reference_copy", `copies a question from the reference "${copied.title}": ${String(copied.of).slice(0, 100)}`);
         continue;
       }
 

@@ -312,6 +312,7 @@ app.use("/api/generation", require("./routes/generationRoutes"));
 app.use("/api/daily-quiz", require("./routes/dailyQuizRoutes"));
 app.use("/api/question-images", require("./routes/questionImageRoutes"));
 app.use("/api/vacancies", require("./routes/vacancyRoutes"));
+app.use("/api/references", require("./routes/referenceRoutes"));
 // Wakes the server and sends due reminders - see controllers/engagementController.
 // GET as well: cron-job.org calls with GET unless told otherwise, and a tick
 // is harmless (every reminder goes out at most once a day).
@@ -374,9 +375,18 @@ async function start() {
   const { runReminders } = require("./services/engagement");
   // The daily quiz, then any reminder that is due (each goes out once a day).
   const { sweepSuspectKeys } = require("./services/answerSignals");
+  // Once a day the lessons from rejected questions are refreshed - one queue
+  // job, waiting its turn and its allowance like any other (services/lessons.js).
+  const queueDailyLessons = async () => {
+    const GenerationJob = require("./models/GenerationJob");
+    const day = new Date(Date.now() + 5.5 * 3600e3).toISOString().slice(0, 10);
+    const label = `Learn from rejected questions (${day})`;
+    if (!(await GenerationJob.exists({ kind: "lessons", label }))) await GenerationJob.create({ kind: "lessons", label, status: "queued", priority: 15 });
+  };
   const quizTick = setInterval(() => {
     runDailyQuizTick().catch((e) => console.error("Daily quiz tick:", e.message));
     runReminders().catch((e) => console.error("Reminders:", e.message));
+    queueDailyLessons().catch((e) => console.error("Lessons:", e.message));
     // A question whose answers point at another option is replaced.
     sweepSuspectKeys()
       .then((found) => found.length && console.log(`Answer signals: ${found.length} question(s) with a likely wrong key replaced`))

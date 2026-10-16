@@ -22,6 +22,7 @@ import Vacancies from "./pages/Vacancies";
 import PyqBank from "./pages/PyqBank";
 import Coupons from "./pages/Coupons";
 import Sessions from "./pages/Sessions";
+import AiReferences from "./pages/AiReferences";
 
 export default function App() {
   return (
@@ -101,6 +102,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <ManageQuestions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ai-references"
+              element={
+                <ProtectedRoute>
+                  <AiReferences />
                 </ProtectedRoute>
               }
             />

@@ -419,6 +419,21 @@ COMPREHENSION - each question must stand alone:
   // itself the model returns three options, or none, and the whole batch is
   // thrown away for a format fault rather than anything wrong with it - nine
   // of twenty-one questions on the first Error Spotting test.
+  // The standard the admin chose, learned from their reference papers -
+  // patterns only, never their questions (services/referenceLearning.js).
+  let referenceGuide = "";
+  try {
+    referenceGuide = await require("./referenceLearning").guidanceFor(examType, subject);
+  } catch (err) {
+    referenceGuide = "";
+  }
+  const referenceRule = referenceGuide
+    ? `
+
+LEVEL AND STYLE TO MATCH - learned from reference papers the team chose as their standard:
+${referenceGuide}
+Use this ONLY to match the level, the topic weight, the formats and the style. Write entirely NEW questions: never reuse a reference question, its numbers, names, dates or wording.`
+    : "";
   const isMaths = /^(math|गणित|quant|arith|numerical)/i.test(String(subject || ""));
   const formulaRule = isMaths
     ? `
@@ -442,7 +457,7 @@ ${difficultyInstruction}
 
 ${languageRules}${passageRules}
 
-QUALITY RULES:
+${referenceRule ? referenceRule.trim() + "\n\n" : ""}QUALITY RULES:
 - Each question has exactly 4 options, only ONE correct. Make wrong options plausible (not obviously wrong).
 - All four options must be about the SAME LENGTH and the same level of detail. Do not let the correct one be the longest, the most careful or the most qualified - a student who does not know the answer must have nothing to go on. If the right answer needs a condition spelled out, give the wrong ones a condition too.
 ${shapeReminder}

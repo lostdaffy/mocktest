@@ -19,6 +19,7 @@ import {
   RiCalendarCheckLine,
   RiImageLine,
   RiMegaphoneLine,
+  RiBrainLine,
 } from "@remixicon/react";
 
 // Grouped rather than one flat list of 11 - with this many destinations a
@@ -37,6 +38,7 @@ const NAV_GROUPS = [
       { to: "/daily-quiz", label: "Daily GK Quiz", Icon: RiCalendarCheckLine },
       { to: "/images-pending", label: "Images pending", Icon: RiImageLine },
       { to: "/pyq-bank", label: "PYQ Bank", Icon: RiFilePaperLine },
+      { to: "/ai-references", label: "AI References", Icon: RiBrainLine },
       { to: "/questions", label: "Question Review", Icon: RiQuestionnaireLine },
     ],
   },

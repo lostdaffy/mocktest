@@ -67,6 +67,29 @@ async function runTopUpJob(job) {
 
 // Reads an uploaded past paper. A last failure marks the upload failed with
 // its reason, so the PYQ page says so instead of showing it stuck at reading.
+// The day's lessons from rejected questions (services/lessons.js).
+async function runLessonsJob() {
+  const done = await require("../services/lessons").refreshLessons();
+  return done.length ? done.map((d) => `${d.subject}: ${d.lessons} lesson(s) from ${d.mistakes} mistake(s)`).join("; ") : "Too few rejected questions to learn from yet";
+}
+
+// Reads one of the admin's reference papers (services/referenceLearning.js).
+async function runReferenceJob(job) {
+  const { readReference } = require("../services/referenceLearning");
+  const ReferenceGuide = require("../models/ReferenceGuide");
+  try {
+    return await readReference(job.reference);
+  } catch (err) {
+    const message = err.message || String(err);
+    const goesBack = isDailyAllowanceGone(message) || (isWorthRetrying(message) && job.attempts < MAX_ATTEMPTS);
+    await ReferenceGuide.updateOne(
+      { _id: job.reference },
+      { $set: goesBack ? { status: "queued", error: message.slice(0, 300) } : { status: "failed", error: message.slice(0, 300) } }
+    );
+    throw err;
+  }
+}
+
 async function runPyqJob(job) {
   const { runImport } = require("../services/pyqImport");
   const PyqImport = require("../models/PyqImport");
@@ -221,6 +244,8 @@ async function runGenerationTick() {
       : job.kind === "daily_quiz" ? await runDailyQuizJob(job)
       : job.kind === "top_up" ? await runTopUpJob(job)
       : job.kind === "pyq_extract" ? await runPyqJob(job)
+      : job.kind === "reference_read" ? await runReferenceJob(job)
+      : job.kind === "lessons" ? await runLessonsJob()
       : await runMockJob(job);
     job.status = "done";
     job.result = String(result).slice(0, 300);
