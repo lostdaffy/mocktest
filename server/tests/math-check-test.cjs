@@ -54,6 +54,7 @@ const LEFT = [
   ["The HCF of two natural numbers is 12 and their sum is 144. How many such pairs of numbers are there?", ["2", "3", "4", "6"], 0],
   ["The LCM of two co-prime numbers is 391. If one of them is 17, what is the other?", ["19", "21", "23", "29"], 2],
   ["What is the LCM of the first ten natural numbers (1 to 10)?", ["2520", "5040", "1260", "3628800"], 0],
+  ["What is the unit digit of the LCM of 2¹⁰ and 3⁵?", ["2", "4", "6", "8"], 0],
 ];
 LEFT.forEach(([t, o, c], i) => {
   const r = run(t, o, c);
