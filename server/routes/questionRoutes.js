@@ -15,6 +15,7 @@ const {
   getStats,
   recheckReviewQueue,
   auditChapter,
+  getChapterHealth,
 } = require("../controllers/questionController");
 const { protect, adminOnly } = require("../middleware/auth");
 const asyncRoute = require("../utils/asyncRoute");
@@ -31,6 +32,7 @@ router.get("/time-sensitive", protect, adminOnly, asyncRoute(timeSensitive.listT
 router.patch("/:id/fact-checked", protect, adminOnly, asyncRoute(timeSensitive.markFactChecked));
 router.post("/recheck", protect, adminOnly, asyncRoute(recheckReviewQueue));
 router.post("/audit", protect, adminOnly, asyncRoute(auditChapter));
+router.get("/chapter-health", protect, adminOnly, asyncRoute(getChapterHealth));
 router.get("/reports", protect, adminOnly, asyncRoute(listReports));
 router.patch("/reports/:id/resolve", protect, adminOnly, asyncRoute(resolveReport));
 router.get("/", protect, adminOnly, asyncRoute(listQuestions));

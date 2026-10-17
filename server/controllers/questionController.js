@@ -6,6 +6,7 @@ const Subscription = require("../models/Subscription");
 const { runValidationPipeline } = require("../services/validationPipeline");
 const { recheckQuestions, auditPublished } = require("../services/questionFactory");
 const { refillTests, refillNote } = require("../services/testTopUp");
+const { chapterHealth } = require("../services/chapterHealth");
 
 // GET /api/questions?examType=&subject=&topic=&status=  (admin/browse use)
 async function listQuestions(req, res) {
@@ -126,6 +127,15 @@ async function auditChapter(req, res) {
   if (r.done) parts.push("chapter finished");
 
   res.json({ message: parts.join(", ") + refillNote(refilled), ...r, refilled });
+}
+
+// GET /api/questions/chapter-health?chapter= - the chapter's tests and live
+// questions against the whole architecture: tests per subtopic and level,
+// full and live, no repeats, every question through the rule gate again.
+async function getChapterHealth(req, res) {
+  const chapter = String(req.query.chapter || "").trim();
+  if (!chapter) return res.status(400).json({ message: "Choose a chapter" });
+  res.json(await chapterHealth(chapter));
 }
 
 // POST /api/questions (admin manual add, or used internally after AI generation)
@@ -289,6 +299,7 @@ async function getStats(req, res) {
 module.exports = {
   recheckReviewQueue,
   auditChapter,
+  getChapterHealth,
   listQuestions,
   approveQuestion,
   rejectQuestion,

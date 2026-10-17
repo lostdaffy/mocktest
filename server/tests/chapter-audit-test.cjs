@@ -114,6 +114,35 @@ async function api(method, p, { body, token } = {}) {
   check("...and finishes the chapter", r2.json.done === true, r2.json.message);
   check("another chapter is never touched", (await q(7))?.status === "published");
 
+  // ---- the chapter against the architecture
+  const extra = await db.collection("questions").insertMany([
+    { ...base, text: "What is the unit digit of 7^45 written out?", options: ["7", "9", "3", "1"], textKey: "k1" },
+    { ...base, text: "Find the unit digit of 7^45 when written out", options: ["7", "9", "3", "1"], textKey: "k2" },
+    { ...base, text: "What is $\\frac{1}{2}$ of the unit digit of 2^4?", options: ["3", "4", "5", "6"] },
+    { ...base, text: "Unit digit with a bad key", options: ["5", "5", "6", "7"] },
+  ]);
+  const ex = (i) => extra.insertedIds[i];
+  const short = await db.collection("tests").insertOne({
+    title: "Number System · Unit Digit · Hard #2", type: "practice", subject: "Maths",
+    difficultyLevel: "hard", questions: [ex(0), ex(1), ex(2)], publishStatus: "draft",
+  });
+  const h = await api("GET", "/questions/chapter-health?chapter=Number%20System", { token });
+  check("the chapter health check answers", h.status === 200, `${h.status}`);
+  check("...it counts the tests per subtopic and level",
+    h.json.grid?.["Unit Digit"]?.easy?.tests === 1 && h.json.grid?.["Unit Digit"]?.hard?.tests === 1, JSON.stringify(h.json.grid));
+  const sp = (h.json.testProblems || []).find((t) => String(t._id) === String(short.insertedId));
+  check("...a short test is named", sp?.problems.some((p) => /3 questions, not 20/.test(p)), JSON.stringify(sp));
+  check("...and one that is not live", sp?.problems.some((p) => /not published/.test(p)));
+  check("...and one that asks the same thing twice", sp?.problems.some((p) => /same thing twice/.test(p)));
+  check("...and one with questions graded for another level", sp?.problems.some((p) => /another level/.test(p)));
+  check("typeset maths left in a question is found", (h.json.latex || []).some((q) => String(q._id) === String(ex(2))));
+  check("a live question that fails the rule gate is found",
+    (h.json.ruleFailures || []).some((q) => String(q._id) === String(ex(3)) && q.issues.some((i) => /duplicate options/.test(i))));
+  check("the same question twice in the chapter is found",
+    (h.json.repeats || []).some((r) => [r.a._id, r.b._id].map(String).sort().join() === [ex(0), ex(1)].map(String).sort().join()),
+    JSON.stringify(h.json.repeats));
+  check("another chapter's question is not counted", !(h.json.ruleFailures || []).some((q) => String(q._id) === String(id(7))));
+
   // ---- guard rails
   const none = await api("POST", "/questions/audit", { token, body: {} });
   check("a chapter has to be named", none.status === 400, `${none.status}`);

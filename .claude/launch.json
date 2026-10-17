@@ -82,7 +82,7 @@
       "cwd": "admin",
       "port": 5174,
       "env": {
-        "VITE_API_URL": "http://localhost:5080/api"
+        "VITE_API_URL": "http://localhost:5056/api"
       }
     }
   ]
