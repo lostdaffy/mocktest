@@ -1,0 +1,130 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Question batch preview</title>
+<style>
+:root { --bg:#fff; --ink:#1b1b1f; --soft:#5d5f6b; --line:#e3e4ea; --ok:#127a3a; --okbg:#e7f6ec; --bad:#b42318; }
+@media (prefers-color-scheme: dark) { :root { --bg:#16171b; --ink:#ececf1; --soft:#a3a6b3; --line:#2c2e36; --ok:#5dd38c; --okbg:#173524; --bad:#ff8a80; } }
+body { background:var(--bg); color:var(--ink); font:15px/1.55 system-ui, sans-serif; margin:0; padding:16px; }
+h1 { font-size:18px; } .q { border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin:0 0 12px; }
+.n { font-size:13px; color:var(--soft); } .t { font-weight:600; } .ok { color:var(--ok); } .bad { color:var(--bad); font-weight:700; }
+.hi { color:var(--soft); } li.right { background:var(--okbg); color:var(--ok); font-weight:600; border-radius:4px; }
+.sol { font-size:14px; } ol { padding-left:22px; }
+</style></head><body><h1>20 questions - Number System · Unit Digit · Medium #1</h1>
+<div class="q">
+  <div class="n">1. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of (3967)¹⁵³ × (812)⁷⁴?</b><br><span class="hi">(3967)¹⁵³ × (812)⁷⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">4</li><li class="">6</li><li class="right">8 ✔</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> Powers of 7 repeat 7, 9, 3, 1. 153 ÷ 4 leaves 1, so 7¹⁵³ ends in 7. Powers of 2 repeat 2, 4, 8, 6. 74 ÷ 4 leaves 2, so 2⁷⁴ ends in 4. 7 × 4 = 28, so the unit digit is 8.<br><span class="hi">7 की घातों के इकाई अंक 7, 9, 3, 1 दोहराते हैं। 153 ÷ 4 का शेष 1 है, अतः 7¹⁵³ का इकाई अंक 7। 2 की घातें 2, 4, 8, 6 दोहराती हैं। 74 ÷ 4 का शेष 2 है, अतः 2⁷⁴ का इकाई अंक 4। 7 × 4 = 28, अतः इकाई अंक 8 है।</span></p>
+</div>
+<div class="q">
+  <div class="n">2. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 8⁶⁷ − 2⁴³?</b><br><span class="hi">8⁶⁷ − 2⁴³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">6</li><li class="right">4 ✔</li><li class="">0</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> Powers of 8 repeat 8, 4, 2, 6 and 67 ÷ 4 leaves 3, so 8⁶⁷ ends in 2. Powers of 2 repeat 2, 4, 8, 6 and 43 ÷ 4 leaves 3, so 2⁴³ ends in 8. 8⁶⁷ is the larger number, so subtract with a borrow: 12 − 8 = 4.<br><span class="hi">8 की घातें 8, 4, 2, 6 दोहराती हैं और 67 ÷ 4 का शेष 3 है, अतः 8⁶⁷ का इकाई अंक 2। 2 की घातें 2, 4, 8, 6 दोहराती हैं और 43 ÷ 4 का शेष 3 है, अतः 2⁴³ का इकाई अंक 8। 8⁶⁷ बड़ी संख्या है, इसलिए हासिल लेकर घटाएँ: 12 − 8 = 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">3. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1⁵ + 2⁵ + 3⁵ + ... + 10⁵?</b><br><span class="hi">1⁵ + 2⁵ + 3⁵ + ... + 10⁵ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">0</li><li class="">3</li><li class="right">5 ✔</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> Any number raised to the power 5 ends in the same digit as the number. So the unit digits are 1, 2, ..., 9, 0, which add to 45. The unit digit is 5.<br><span class="hi">किसी संख्या की घात 5 का इकाई अंक वही होता है जो उस संख्या का। अतः इकाई अंक 1, 2, ..., 9, 0 हैं, जिनका योग 45 है। इकाई अंक 5 है।</span></p>
+</div>
+<div class="q">
+  <div class="n">4. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of the product of all odd numbers from 1 to 99?</b><br><span class="hi">1 से 99 तक की सभी विषम संख्याओं के गुणनफल का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">9</li><li class="">1</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> The product contains 5 and has no factor 2 (all numbers are odd). An odd multiple of 5 always ends in 5.<br><span class="hi">गुणनफल में 5 है और कोई 2 नहीं है (सभी संख्याएँ विषम हैं)। 5 का कोई विषम गुणज सदैव 5 पर समाप्त होता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">5. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of the product of all prime numbers between 1 and 50?</b><br><span class="hi">1 और 50 के बीच की सभी अभाज्य संख्याओं के गुणनफल का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">5</li><li class="right">0 ✔</li><li class="">1</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> The primes include both 2 and 5, so the product is a multiple of 10 and ends in 0.<br><span class="hi">अभाज्य संख्याओं में 2 और 5 दोनों हैं, अतः गुणनफल 10 का गुणज है और 0 पर समाप्त होता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">6. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 4²⁰²⁵ + 9²⁰²⁵?</b><br><span class="hi">4²⁰²⁵ + 9²⁰²⁵ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">5</li><li class="">7</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> 4 and 9 raised to an odd power end in 4 and 9 respectively, and 2025 is odd. 4 + 9 = 13, so the unit digit is 3.<br><span class="hi">4 और 9 की विषम घातें क्रमशः 4 और 9 पर समाप्त होती हैं, और 2025 विषम है। 4 + 9 = 13, अतः इकाई अंक 3 है।</span></p>
+</div>
+<div class="q">
+  <div class="n">7. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1! + 2! + 3! + ... + 50!?</b><br><span class="hi">1! + 2! + 3! + ... + 50! का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">0</li><li class="right">3 ✔</li><li class="">5</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> From 5! onwards every factorial ends in 0. So only 1 + 2 + 6 + 24 = 33 matters, and the unit digit is 3.<br><span class="hi">5! से आगे हर क्रमगुणित 0 पर समाप्त होता है। अतः केवल 1 + 2 + 6 + 24 = 33 मायने रखता है, और इकाई अंक 3 है।</span></p>
+</div>
+<div class="q">
+  <div class="n">8. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 13¹³ × 17¹⁷ × 19¹⁹?</b><br><span class="hi">13¹³ × 17¹⁷ × 19¹⁹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">3</li><li class="">7</li><li class="right">9 ✔</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> 13 ÷ 4 and 17 ÷ 4 leave 1, so 3¹³ ends in 3 and 7¹⁷ ends in 7. 9 to an odd power ends in 9. 3 × 7 × 9 = 189, unit digit 9.<br><span class="hi">13 ÷ 4 और 17 ÷ 4 का शेष 1 है, अतः 3¹³ का इकाई अंक 3 और 7¹⁷ का 7। 9 की विषम घात 9 पर समाप्त होती है। 3 × 7 × 9 = 189, इकाई अंक 9।</span></p>
+</div>
+<div class="q">
+  <div class="n">9. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>The unit digit of 327 × 548 × 76N is 4, where N is a digit. Which of the following can N be?</b><br><span class="hi">327 × 548 × 76N का इकाई अंक 4 है, जहाँ N एक अंक है। निम्नलिखित में से N क्या हो सकता है?</span></p>
+  <ol type="A"><li class="">3</li><li class="right">4 ✔</li><li class="">5</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> 7 × 8 = 56 ends in 6, so we need 6 × N to end in 4. 6 × 3 = 18, 6 × 4 = 24, 6 × 5 = 30, 6 × 7 = 42: only N = 4 gives 4.<br><span class="hi">7 × 8 = 56 का इकाई अंक 6, अतः 6 × N का इकाई अंक 4 होना चाहिए। 6 × 3 = 18, 6 × 4 = 24, 6 × 5 = 30, 6 × 7 = 42: केवल N = 4 से 4 मिलता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">10. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 6²⁵⁶ − 4²⁵⁶?</b><br><span class="hi">6²⁵⁶ − 4²⁵⁶ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">2</li><li class="">4</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> Every power of 6 ends in 6. 4 to an even power ends in 6. 6 − 6 = 0.<br><span class="hi">6 की हर घात 6 पर समाप्त होती है। 4 की सम घात 6 पर समाप्त होती है। 6 − 6 = 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">11. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of (2137)⁷⁵³?</b><br><span class="hi">(2137)⁷⁵³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">1</li><li class="">3</li><li class="right">7 ✔</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> Only the 7 matters. 753 ÷ 4 leaves 1, so the unit digit is the first in the cycle 7, 9, 3, 1, which is 7.<br><span class="hi">केवल 7 मायने रखता है। 753 ÷ 4 का शेष 1 है, अतः इकाई अंक चक्र 7, 9, 3, 1 का पहला अंक, यानी 7 है।</span></p>
+</div>
+<div class="q">
+  <div class="n">12. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3⁷⁸ × 6⁴¹ × 7⁵⁸?</b><br><span class="hi">3⁷⁸ × 6⁴¹ × 7⁵⁸ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="right">6 ✔</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 78 ÷ 4 leaves 2, so 3⁷⁸ ends in 9. 6⁴¹ ends in 6. 58 ÷ 4 leaves 2, so 7⁵⁸ ends in 9. 9 × 6 × 9 = 486, unit digit 6.<br><span class="hi">78 ÷ 4 का शेष 2, अतः 3⁷⁸ का इकाई अंक 9। 6⁴¹ का 6। 58 ÷ 4 का शेष 2, अतः 7⁵⁸ का 9। 9 × 6 × 9 = 486, इकाई अंक 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">13. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 7¹⁰⁰?</b><br><span class="hi">7¹⁰⁰ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="">49</li><li class="">43</li><li class="right">01 ✔</li><li class="">07</li></ol>
+  <p class="sol"><b>Solution:</b> 7⁴ = 2401 ends in 01. 7¹⁰⁰ = (7⁴)²⁵, and any power of a number ending in 01 also ends in 01.<br><span class="hi">7⁴ = 2401, जिसके अंतिम दो अंक 01 हैं। 7¹⁰⁰ = (7⁴)²⁵, और 01 पर समाप्त होने वाली संख्या की हर घात भी 01 पर समाप्त होती है।</span></p>
+</div>
+<div class="q">
+  <div class="n">14. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many of the numbers 2⁵⁰, 3⁵⁰, 7⁵⁰ and 8⁵⁰ have 9 as their unit digit?</b><br><span class="hi">संख्याओं 2⁵⁰, 3⁵⁰, 7⁵⁰ और 8⁵⁰ में से कितनी का इकाई अंक 9 है?</span></p>
+  <ol type="A"><li class="">1</li><li class="right">2 ✔</li><li class="">3</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> 50 ÷ 4 leaves 2, so take the second digit of each cycle: 2 → 4, 3 → 9, 7 → 9, 8 → 4. Two of them (3⁵⁰ and 7⁵⁰) end in 9.<br><span class="hi">50 ÷ 4 का शेष 2 है, अतः हर चक्र का दूसरा अंक लें: 2 → 4, 3 → 9, 7 → 9, 8 → 4। इनमें से दो (3⁵⁰ और 7⁵⁰) का इकाई अंक 9 है।</span></p>
+</div>
+<div class="q">
+  <div class="n">15. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 99⁹⁹ − 19¹⁹?</b><br><span class="hi">99⁹⁹ − 19¹⁹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">8</li><li class="">2</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 9 raised to an odd power ends in 9. Both 99⁹⁹ and 19¹⁹ end in 9, so their difference ends in 0.<br><span class="hi">9 की विषम घात 9 पर समाप्त होती है। 99⁹⁹ और 19¹⁹ दोनों 9 पर समाप्त होते हैं, अतः उनका अंतर 0 पर समाप्त होता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">16. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 4¹ + 4² + 4³ + ... + 4¹⁰?</b><br><span class="hi">4¹ + 4² + 4³ + ... + 4¹⁰ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">4</li><li class="">6</li><li class="right">0 ✔</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> Powers of 4 end in 4 and 6 alternately. Five pairs of (4 + 6) = 5 × 10 = 50, so the unit digit is 0.<br><span class="hi">4 की घातें बारी-बारी से 4 और 6 पर समाप्त होती हैं। (4 + 6) के पाँच जोड़े = 5 × 10 = 50, अतः इकाई अंक 0 है।</span></p>
+</div>
+<div class="q">
+  <div class="n">17. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of the product 1 × 2 × 3 × ... × 75?</b><br><span class="hi">गुणनफल 1 × 2 × 3 × ... × 75 के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="">15</li><li class="right">18 ✔</li><li class="">17</li><li class="">20</li></ol>
+  <p class="sol"><b>Solution:</b> Each zero needs a 5 (there are more than enough 2s). Fives in 75!: ⌊75/5⌋ + ⌊75/25⌋ = 15 + 3 = 18.<br><span class="hi">हर शून्य के लिए एक 5 चाहिए (2 पर्याप्त हैं)। 75! में 5 की संख्या: ⌊75/5⌋ + ⌊75/25⌋ = 15 + 3 = 18।</span></p>
+</div>
+<div class="q">
+  <div class="n">18. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 5 × 10 × 15 × 20 × ... × 100?</b><br><span class="hi">5 × 10 × 15 × 20 × ... × 100 के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="">24</li><li class="">20</li><li class="right">18 ✔</li><li class="">22</li></ol>
+  <p class="sol"><b>Solution:</b> The product is 5²⁰ × (1 × 2 × ... × 20) = 5²⁰ × 20!. Fives: 20 + 4 = 24. Twos come only from 20!: 10 + 5 + 2 + 1 = 18. Zeros = the smaller count = 18.<br><span class="hi">गुणनफल = 5²⁰ × (1 × 2 × ... × 20) = 5²⁰ × 20!। 5 की संख्या: 20 + 4 = 24। 2 केवल 20! से आते हैं: 10 + 5 + 2 + 1 = 18। शून्य = कम वाली संख्या = 18।</span></p>
+</div>
+<div class="q">
+  <div class="n">19. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For any natural number n, what is the unit digit of 6ⁿ + 5ⁿ?</b><br><span class="hi">किसी भी प्राकृत संख्या n के लिए 6ⁿ + 5ⁿ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">5</li><li class="">6</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> Every power of 6 ends in 6 and every power of 5 ends in 5. 6 + 5 = 11, so the unit digit is always 1.<br><span class="hi">6 की हर घात 6 पर और 5 की हर घात 5 पर समाप्त होती है। 6 + 5 = 11, अतः इकाई अंक सदैव 1 है।</span></p>
+</div>
+<div class="q">
+  <div class="n">20. <span class="t">Number System · Unit Digit · Medium #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of (1235)²⁰ × (3874)³¹ × (5677)⁴³?</b><br><span class="hi">(1235)²⁰ × (3874)³¹ × (5677)⁴³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">5</li><li class="right">0 ✔</li><li class="">4</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> (1235)²⁰ ends in 5 and (3874)³¹ is even (4 to an odd power ends in 4). A number ending in 5 times an even number ends in 0.<br><span class="hi">(1235)²⁰ का इकाई अंक 5 है और (3874)³¹ सम है (4 की विषम घात 4 पर समाप्त)। 5 पर समाप्त संख्या × सम संख्या का इकाई अंक 0 होता है।</span></p>
+</div></body></html>

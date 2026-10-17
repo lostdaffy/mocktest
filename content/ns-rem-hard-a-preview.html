@@ -1,0 +1,610 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Question batch preview</title>
+<style>
+:root { --bg:#fff; --ink:#1b1b1f; --soft:#5d5f6b; --line:#e3e4ea; --ok:#127a3a; --okbg:#e7f6ec; --bad:#b42318; }
+@media (prefers-color-scheme: dark) { :root { --bg:#16171b; --ink:#ececf1; --soft:#a3a6b3; --line:#2c2e36; --ok:#5dd38c; --okbg:#173524; --bad:#ff8a80; } }
+body { background:var(--bg); color:var(--ink); font:15px/1.55 system-ui, sans-serif; margin:0; padding:16px; }
+h1 { font-size:18px; } .q { border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin:0 0 12px; }
+.n { font-size:13px; color:var(--soft); } .t { font-weight:600; } .ok { color:var(--ok); } .bad { color:var(--bad); font-weight:700; }
+.hi { color:var(--soft); } li.right { background:var(--okbg); color:var(--ok); font-weight:600; border-radius:4px; }
+.sol { font-size:14px; } ol { padding-left:22px; }
+</style></head><body><h1>100 questions - Number System · Remainder Theorem · Hard #1, Number System · Remainder Theorem · Hard #2, Number System · Remainder Theorem · Hard #3, Number System · Remainder Theorem · Hard #4, Number System · Remainder Theorem · Hard #5</h1>
+<div class="q">
+  <div class="n">1. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2¹⁰⁰ is divided by 13?</b><br><span class="hi">2¹⁰⁰ को 13 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">1</li><li class="">9</li><li class="">12</li></ol>
+  <p class="sol"><b>Solution:</b> 13 is prime, so 2¹² leaves 1 (Fermat). 100 = 12 × 8 + 4, so 2¹⁰⁰ leaves the same as 2⁴ = 16 = 13 + 3: the remainder is 3.<br><span class="hi">13 अभाज्य है, अतः 2¹² का शेष 1 (फ़र्मा)। 100 = 12 × 8 + 4, अतः 2¹⁰⁰ का शेष 2⁴ = 16 = 13 + 3 जैसा: 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">2. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 3¹⁰⁰ is divided by 17?</b><br><span class="hi">3¹⁰⁰ को 17 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">13 ✔</li><li class="">1</li><li class="">4</li><li class="">16</li></ol>
+  <p class="sol"><b>Solution:</b> 17 is prime, so 3¹⁶ leaves 1. 100 = 16 × 6 + 4, so 3¹⁰⁰ leaves the same as 3⁴ = 81 = 17 × 4 + 13: the remainder is 13.<br><span class="hi">17 अभाज्य है, अतः 3¹⁶ का शेष 1। 100 = 16 × 6 + 4, अतः 3¹⁰⁰ का शेष 3⁴ = 81 = 17 × 4 + 13 जैसा: 13।</span></p>
+</div>
+<div class="q">
+  <div class="n">3. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 5⁵⁰ is divided by 11?</b><br><span class="hi">5⁵⁰ को 11 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">5</li><li class="">3</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 5⁵ = 3125 = 11 × 284 + 1 leaves 1, and 50 = 5 × 10, so 5⁵⁰ = (5⁵)¹⁰ leaves 1.<br><span class="hi">5⁵ = 3125 = 11 × 284 + 1 का शेष 1, और 50 = 5 × 10, अतः 5⁵⁰ = (5⁵)¹⁰ का शेष 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">4. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 7⁶⁵ is divided by 13?</b><br><span class="hi">7⁶⁵ को 13 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">11 ✔</li><li class="">7</li><li class="">1</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> 7¹² leaves 1 (Fermat) and 65 = 12 × 5 + 5, so we need 7⁵: 7² = 49 → 10, 7⁴ → 10² = 100 → 9, 7⁵ → 9 × 7 = 63 → 11. The remainder is 11.<br><span class="hi">7¹² का शेष 1 (फ़र्मा) और 65 = 12 × 5 + 5, अतः 7⁵ चाहिए: 7² = 49 → 10, 7⁴ → 10² = 100 → 9, 7⁵ → 9 × 7 = 63 → 11। शेषफल 11।</span></p>
+</div>
+<div class="q">
+  <div class="n">5. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2¹⁰⁰ is divided by 15?</b><br><span class="hi">2¹⁰⁰ को 15 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">4</li><li class="">8</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> 2⁴ = 16 = 15 + 1 leaves 1, and 100 = 4 × 25, so 2¹⁰⁰ = (2⁴)²⁵ leaves 1.<br><span class="hi">2⁴ = 16 = 15 + 1 का शेष 1, और 100 = 4 × 25, अतः 2¹⁰⁰ = (2⁴)²⁵ का शेष 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">6. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 7¹⁰¹ is divided by 24?</b><br><span class="hi">7¹⁰¹ को 24 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">1</li><li class="">17</li><li class="">23</li></ol>
+  <p class="sol"><b>Solution:</b> 7² = 49 = 24 × 2 + 1 leaves 1. 7¹⁰¹ = (7²)⁵⁰ × 7 leaves 7.<br><span class="hi">7² = 49 = 24 × 2 + 1 का शेष 1। 7¹⁰¹ = (7²)⁵⁰ × 7 का शेष 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">7. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 111111 (six 1s) is divided by 13?</b><br><span class="hi">111111 (छह बार 1) को 13 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">1</li><li class="">6</li><li class="">11</li></ol>
+  <p class="sol"><b>Solution:</b> 111111 = 111 × 1001 and 1001 = 7 × 11 × 13, so 111111 is a multiple of 13. The remainder is 0.<br><span class="hi">111111 = 111 × 1001 और 1001 = 7 × 11 × 13, अतः 111111, 13 का गुणज। शेषफल 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">8. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 1111111 (seven 1s) is divided by 7?</b><br><span class="hi">1111111 (सात बार 1) को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">0</li><li class="">6</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> 111111 (six 1s) is a multiple of 7, so 1111111 = 111111 × 10 + 1 leaves 1.<br><span class="hi">111111 (छह बार 1), 7 का गुणज है, अतः 1111111 = 111111 × 10 + 1 का शेष 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">9. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>The number 123456789101112 is formed by writing 1 to 12 one after another. What is the remainder when it is divided by 8?</b><br><span class="hi">संख्या 123456789101112, 1 से 12 तक लगातार लिखकर बनी है। इसे 8 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">4</li><li class="">2</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> For 8 only the last three digits matter: 112 = 8 × 14. The remainder is 0.<br><span class="hi">8 के लिए केवल अंतिम तीन अंक मायने रखते हैं: 112 = 8 × 14। शेषफल 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">10. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when x³ + 2x + 5 is divided by (x − 2)?</b><br><span class="hi">x³ + 2x + 5 को (x − 2) से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">17 ✔</li><li class="">13</li><li class="">9</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> By the remainder theorem the remainder is the value at x = 2: 2³ + 2 × 2 + 5 = 8 + 4 + 5 = 17.<br><span class="hi">शेषफल प्रमेय से शेषफल x = 2 पर मान है: 2³ + 2 × 2 + 5 = 8 + 4 + 5 = 17।</span></p>
+</div>
+<div class="q">
+  <div class="n">11. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when x¹⁰⁰ + 1 is divided by (x + 1)?</b><br><span class="hi">x¹⁰⁰ + 1 को (x + 1) से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">0</li><li class="">1</li><li class="">−1</li></ol>
+  <p class="sol"><b>Solution:</b> Put x = −1: (−1)¹⁰⁰ + 1 = 1 + 1 = 2. The remainder is 2.<br><span class="hi">x = −1 रखें: (−1)¹⁰⁰ + 1 = 1 + 1 = 2। शेषफल 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">12. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>When x³ + kx + 6 is divided by (x − 2), the remainder is 4. What is the value of k?</b><br><span class="hi">x³ + kx + 6 को (x − 2) से भाग देने पर शेषफल 4 आता है। k का मान क्या है?</span></p>
+  <ol type="A"><li class="right">−5 ✔</li><li class="">5</li><li class="">−3</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> The remainder is the value at x = 2: 8 + 2k + 6 = 4, so 2k = −10 and k = −5.<br><span class="hi">शेषफल x = 2 पर मान है: 8 + 2k + 6 = 4, अतः 2k = −10 और k = −5।</span></p>
+</div>
+<div class="q">
+  <div class="n">13. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest natural number which leaves remainders 1, 2 and 3 when divided by 3, 4 and 5 respectively?</b><br><span class="hi">वह सबसे छोटी प्राकृत संख्या कौन-सी है जो 3, 4 और 5 से भाग देने पर क्रमशः 1, 2 और 3 शेष छोड़ती है?</span></p>
+  <ol type="A"><li class="right">58 ✔</li><li class="">62</li><li class="">118</li><li class="">57</li></ol>
+  <p class="sol"><b>Solution:</b> Each remainder is 2 less than its divisor, so the number + 2 is a multiple of LCM(3, 4, 5) = 60. The smallest number is 60 − 2 = 58.<br><span class="hi">हर शेषफल अपने भाजक से 2 कम, अतः संख्या + 2, LCM(3, 4, 5) = 60 का गुणज। सबसे छोटी संख्या 60 − 2 = 58।</span></p>
+</div>
+<div class="q">
+  <div class="n">14. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest natural number which leaves a remainder of 2 when divided by 5 and a remainder of 3 when divided by 7?</b><br><span class="hi">वह सबसे छोटी प्राकृत संख्या कौन-सी है जो 5 से भाग देने पर शेष 2 और 7 से भाग देने पर शेष 3 छोड़ती है?</span></p>
+  <ol type="A"><li class="right">17 ✔</li><li class="">12</li><li class="">27</li><li class="">52</li></ol>
+  <p class="sol"><b>Solution:</b> Numbers leaving 3 on division by 7: 3, 10, 17, 24, ... Their remainders on division by 5 are 3, 0, 2, ... so the first that works is 17.<br><span class="hi">7 से शेष 3 वाली संख्याएँ: 3, 10, 17, 24, ... इनके 5 से शेष 3, 0, 2, ... अतः पहली सही संख्या 17।</span></p>
+</div>
+<div class="q">
+  <div class="n">15. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 22! is divided by 23?</b><br><span class="hi">22! को 23 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">22 ✔</li><li class="">1</li><li class="">0</li><li class="">11</li></ol>
+  <p class="sol"><b>Solution:</b> 23 is prime, so by Wilson's theorem (23 − 1)! = 22! leaves −1, i.e. 23 − 1 = 22.<br><span class="hi">23 अभाज्य है, अतः विल्सन प्रमेय से (23 − 1)! = 22! का शेष −1, यानी 23 − 1 = 22।</span></p>
+</div>
+<div class="q">
+  <div class="n">16. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>A number is divided by 3, the quotient by 4 and the next quotient by 5, leaving remainders 2, 3 and 4 respectively. What is the remainder when the number is divided by 60?</b><br><span class="hi">एक संख्या को 3 से, भागफल को 4 से और अगले भागफल को 5 से भाग देने पर क्रमशः 2, 3 और 4 शेष बचते हैं। संख्या को 60 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">59 ✔</li><li class="">29</li><li class="">39</li><li class="">49</li></ol>
+  <p class="sol"><b>Solution:</b> Work backwards: the last quotient is 5k + 4, the one before is 4(5k + 4) + 3 = 20k + 19, and the number is 3(20k + 19) + 2 = 60k + 59. The remainder is 59.<br><span class="hi">उल्टा चलें: अंतिम भागफल 5k + 4, उससे पहला 4(5k + 4) + 3 = 20k + 19, और संख्या 3(20k + 19) + 2 = 60k + 59। शेषफल 59।</span></p>
+</div>
+<div class="q">
+  <div class="n">17. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 1! + 2! + 3! + ... + 100! is divided by 13?</b><br><span class="hi">1! + 2! + 3! + ... + 100! को 13 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">9 ✔</li><li class="">0</li><li class="">3</li><li class="">12</li></ol>
+  <p class="sol"><b>Solution:</b> From 13! on every term is a multiple of 13, so only 1! to 12! matter. Working each factorial's remainder (1, 2, 6, 11, 3, 5, 9, 7, 11, 6, 1, 12) and adding gives 74 = 13 × 5 + 9. The remainder is 9.<br><span class="hi">13! से आगे हर पद 13 का गुणज, अतः केवल 1! से 12! मायने रखते हैं। हर क्रमगुणित के शेष (1, 2, 6, 11, 3, 5, 9, 7, 11, 6, 1, 12) जोड़ने पर 74 = 13 × 5 + 9। शेषफल 9।</span></p>
+</div>
+<div class="q">
+  <div class="n">18. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2^(2⁵) is divided by 7?</b><br><span class="hi">2^(2⁵) को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">1</li><li class="">2</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> 2^(2⁵) = 2³². 2³ leaves 1 on division by 7, and 32 = 3 × 10 + 2, so 2³² leaves 2² = 4.<br><span class="hi">2^(2⁵) = 2³²। 2³ का 7 से शेष 1, और 32 = 3 × 10 + 2, अतः 2³² का शेष 2² = 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">19. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 31³¹ + 32³² is divided by 3?</b><br><span class="hi">31³¹ + 32³² को 3 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">0</li><li class="">1</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> 31 leaves 1, so 31³¹ leaves 1. 32 leaves 2, i.e. −1, and 32 is even, so 32³² leaves 1. 1 + 1 = 2.<br><span class="hi">31 का शेष 1, अतः 31³¹ का शेष 1। 32 का शेष 2, यानी −1, और 32 सम, अतः 32³² का शेष 1। 1 + 1 = 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">20. <span class="t">Number System · Remainder Theorem · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 12¹³ + 13¹² is divided by 11?</b><br><span class="hi">12¹³ + 13¹² को 11 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">2</li><li class="">1</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> 12 leaves 1, so 12¹³ leaves 1. 13 leaves 2, and 2¹⁰ leaves 1 (Fermat), so 13¹² leaves 2² = 4. 1 + 4 = 5.<br><span class="hi">12 का शेष 1, अतः 12¹³ का शेष 1। 13 का शेष 2, और 2¹⁰ का शेष 1 (फ़र्मा), अतः 13¹² का शेष 2² = 4। 1 + 4 = 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">21. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2⁵⁵ is divided by 11?</b><br><span class="hi">2⁵⁵ को 11 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">10 ✔</li><li class="">1</li><li class="">2</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 2¹⁰ = 1024 leaves 1 on division by 11. 55 = 10 × 5 + 5, so 2⁵⁵ leaves the same as 2⁵ = 32 = 11 × 2 + 10: the remainder is 10.<br><span class="hi">2¹⁰ = 1024 का 11 से शेष 1। 55 = 10 × 5 + 5, अतः 2⁵⁵ का शेष 2⁵ = 32 = 11 × 2 + 10 जैसा: 10।</span></p>
+</div>
+<div class="q">
+  <div class="n">22. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 3⁵⁰ is divided by 13?</b><br><span class="hi">3⁵⁰ को 13 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">9 ✔</li><li class="">1</li><li class="">3</li><li class="">12</li></ol>
+  <p class="sol"><b>Solution:</b> 3³ = 27 leaves 1 on division by 13. 50 = 3 × 16 + 2, so 3⁵⁰ leaves 3² = 9.<br><span class="hi">3³ = 27 का 13 से शेष 1। 50 = 3 × 16 + 2, अतः 3⁵⁰ का शेष 3² = 9।</span></p>
+</div>
+<div class="q">
+  <div class="n">23. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 6⁵⁰ is divided by 17?</b><br><span class="hi">6⁵⁰ को 17 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">1</li><li class="">6</li><li class="">16</li></ol>
+  <p class="sol"><b>Solution:</b> 17 is prime, so 6¹⁶ leaves 1. 50 = 16 × 3 + 2, so 6⁵⁰ leaves 6² = 36 = 17 × 2 + 2: the remainder is 2.<br><span class="hi">17 अभाज्य है, अतः 6¹⁶ का शेष 1। 50 = 16 × 3 + 2, अतः 6⁵⁰ का शेष 6² = 36 = 17 × 2 + 2: 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">24. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 10⁵⁰ is divided by 7?</b><br><span class="hi">10⁵⁰ को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">1</li><li class="">3</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> 10⁶ leaves 1 on division by 7. 50 = 6 × 8 + 2, so 10⁵⁰ leaves 10² = 100 = 7 × 14 + 2: the remainder is 2.<br><span class="hi">10⁶ का 7 से शेष 1। 50 = 6 × 8 + 2, अतः 10⁵⁰ का शेष 10² = 100 = 7 × 14 + 2: 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">25. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2⁵⁰ is divided by 21?</b><br><span class="hi">2⁵⁰ को 21 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">1</li><li class="">16</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> 2⁶ = 64 = 21 × 3 + 1 leaves 1. 50 = 6 × 8 + 2, so 2⁵⁰ leaves 2² = 4.<br><span class="hi">2⁶ = 64 = 21 × 3 + 1 का शेष 1। 50 = 6 × 8 + 2, अतः 2⁵⁰ का शेष 2² = 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">26. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 5⁵¹ is divided by 24?</b><br><span class="hi">5⁵¹ को 24 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">1</li><li class="">19</li><li class="">23</li></ol>
+  <p class="sol"><b>Solution:</b> 5² = 25 = 24 + 1 leaves 1. 5⁵¹ = (5²)²⁵ × 5 leaves 5.<br><span class="hi">5² = 25 = 24 + 1 का शेष 1। 5⁵¹ = (5²)²⁵ × 5 का शेष 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">27. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when the number made of twelve 1s (111...1) is divided by 7?</b><br><span class="hi">बारह 1 से बनी संख्या (111...1) को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">1</li><li class="">4</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> 111111 (six 1s) is a multiple of 7, and the twelve-1s number is 111111 × 1000001. So the remainder is 0.<br><span class="hi">111111 (छह बार 1), 7 का गुणज है, और बारह 1 वाली संख्या 111111 × 1000001 है। अतः शेषफल 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">28. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when the number made of a hundred 3s (333...3) is divided by 9?</b><br><span class="hi">सौ 3 से बनी संख्या (333...3) को 9 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">0</li><li class="">6</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> Its digit sum is 100 × 3 = 300, and 300 = 9 × 33 + 3. The remainder is 3.<br><span class="hi">इसके अंकों का योग 100 × 3 = 300, और 300 = 9 × 33 + 3। शेषफल 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">29. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 12345678910 is divided by 9?</b><br><span class="hi">12345678910 को 9 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">0</li><li class="">4</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> Digit sum: 1 + 2 + ... + 9 + 1 + 0 = 46, and 46 = 9 × 5 + 1. The remainder is 1.<br><span class="hi">अंकों का योग: 1 + 2 + ... + 9 + 1 + 0 = 46, और 46 = 9 × 5 + 1। शेषफल 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">30. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2x³ − 3x² + x − 5 is divided by (x − 1)?</b><br><span class="hi">2x³ − 3x² + x − 5 को (x − 1) से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">−5 ✔</li><li class="">5</li><li class="">−6</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> Put x = 1: 2 − 3 + 1 − 5 = −5. The remainder is −5.<br><span class="hi">x = 1 रखें: 2 − 3 + 1 − 5 = −5। शेषफल −5।</span></p>
+</div>
+<div class="q">
+  <div class="n">31. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when x⁵¹ + 51 is divided by (x + 1)?</b><br><span class="hi">x⁵¹ + 51 को (x + 1) से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">50 ✔</li><li class="">52</li><li class="">0</li><li class="">51</li></ol>
+  <p class="sol"><b>Solution:</b> Put x = −1: (−1)⁵¹ + 51 = −1 + 51 = 50.<br><span class="hi">x = −1 रखें: (−1)⁵¹ + 51 = −1 + 51 = 50।</span></p>
+</div>
+<div class="q">
+  <div class="n">32. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>When x² + ax + 3 is divided by (x − 2), the remainder is 5. What is the value of a?</b><br><span class="hi">x² + ax + 3 को (x − 2) से भाग देने पर शेषफल 5 आता है। a का मान क्या है?</span></p>
+  <ol type="A"><li class="right">−1 ✔</li><li class="">1</li><li class="">−2</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> The remainder is the value at x = 2: 4 + 2a + 3 = 5, so 2a = −2 and a = −1.<br><span class="hi">शेषफल x = 2 पर मान है: 4 + 2a + 3 = 5, अतः 2a = −2 और a = −1।</span></p>
+</div>
+<div class="q">
+  <div class="n">33. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest number which leaves remainders 4, 5, 6 and 7 when divided by 5, 6, 7 and 8 respectively?</b><br><span class="hi">वह सबसे छोटी संख्या कौन-सी है जो 5, 6, 7 और 8 से भाग देने पर क्रमशः 4, 5, 6 और 7 शेष छोड़ती है?</span></p>
+  <ol type="A"><li class="right">839 ✔</li><li class="">841</li><li class="">419</li><li class="">1679</li></ol>
+  <p class="sol"><b>Solution:</b> Each remainder is 1 less than its divisor, so the number + 1 is a multiple of LCM(5, 6, 7, 8) = 840. The smallest number is 840 − 1 = 839.<br><span class="hi">हर शेषफल अपने भाजक से 1 कम, अतः संख्या + 1, LCM(5, 6, 7, 8) = 840 का गुणज। सबसे छोटी संख्या 840 − 1 = 839।</span></p>
+</div>
+<div class="q">
+  <div class="n">34. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest natural number which leaves remainders 1, 2 and 3 when divided by 4, 5 and 7 respectively?</b><br><span class="hi">वह सबसे छोटी प्राकृत संख्या कौन-सी है जो 4, 5 और 7 से भाग देने पर क्रमशः 1, 2 और 3 शेष छोड़ती है?</span></p>
+  <ol type="A"><li class="right">17 ✔</li><li class="">37</li><li class="">57</li><li class="">157</li></ol>
+  <p class="sol"><b>Solution:</b> Numbers leaving 3 on division by 7: 3, 10, 17, ... 17 leaves 2 on division by 5 and 1 on division by 4. So the answer is 17.<br><span class="hi">7 से शेष 3 वाली संख्याएँ: 3, 10, 17, ... 17 का 5 से शेष 2 और 4 से शेष 1। अतः उत्तर 17।</span></p>
+</div>
+<div class="q">
+  <div class="n">35. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 16! is divided by 17?</b><br><span class="hi">16! को 17 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">16 ✔</li><li class="">1</li><li class="">0</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 17 is prime, so by Wilson's theorem 16! leaves −1, i.e. 16.<br><span class="hi">17 अभाज्य है, अतः विल्सन प्रमेय से 16! का शेष −1, यानी 16।</span></p>
+</div>
+<div class="q">
+  <div class="n">36. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>A number is divided by 2, the quotient by 3 and the next quotient by 5, leaving remainders 1, 2 and 3 respectively. What is the remainder when the number is divided by 30?</b><br><span class="hi">एक संख्या को 2 से, भागफल को 3 से और अगले भागफल को 5 से भाग देने पर क्रमशः 1, 2 और 3 शेष बचते हैं। संख्या को 30 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">23 ✔</li><li class="">13</li><li class="">17</li><li class="">29</li></ol>
+  <p class="sol"><b>Solution:</b> Last quotient = 5k + 3; before that 3(5k + 3) + 2 = 15k + 11; the number = 2(15k + 11) + 1 = 30k + 23. The remainder is 23.<br><span class="hi">अंतिम भागफल = 5k + 3; उससे पहले 3(5k + 3) + 2 = 15k + 11; संख्या = 2(15k + 11) + 1 = 30k + 23। शेषफल 23।</span></p>
+</div>
+<div class="q">
+  <div class="n">37. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 1! + 2! + 3! + ... + 100! is divided by 11?</b><br><span class="hi">1! + 2! + 3! + ... + 100! को 11 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">1</li><li class="">5</li><li class="">10</li></ol>
+  <p class="sol"><b>Solution:</b> From 11! on every term is a multiple of 11. 1! + 2! + ... + 10! = 4037913 = 11 × 367083, so the remainder is 0.<br><span class="hi">11! से आगे हर पद 11 का गुणज। 1! + 2! + ... + 10! = 4037913 = 11 × 367083, अतः शेषफल 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">38. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 3^(3³) is divided by 5?</b><br><span class="hi">3^(3³) को 5 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">3</li><li class="">4</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> 3^(3³) = 3²⁷. 3⁴ leaves 1 on division by 5, and 27 = 4 × 6 + 3, so 3²⁷ leaves 3³ = 27, i.e. 2.<br><span class="hi">3^(3³) = 3²⁷। 3⁴ का 5 से शेष 1, और 27 = 4 × 6 + 3, अतः 3²⁷ का शेष 3³ = 27, यानी 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">39. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2¹⁰⁰ − 1 is divided by 3?</b><br><span class="hi">2¹⁰⁰ − 1 को 3 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">1</li><li class="">2</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> 2 is −1 on division by 3 and 100 is even, so 2¹⁰⁰ leaves 1 and 2¹⁰⁰ − 1 leaves 0.<br><span class="hi">3 से भाग पर 2 यानी −1 और 100 सम, अतः 2¹⁰⁰ का शेष 1 और 2¹⁰⁰ − 1 का 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">40. <span class="t">Number System · Remainder Theorem · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 19¹⁹ + 20²⁰ is divided by 21?</b><br><span class="hi">19¹⁹ + 20²⁰ को 21 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">20 ✔</li><li class="">0</li><li class="">1</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> 20 is −1, so 20²⁰ leaves 1. 19 is −2, so 19¹⁹ leaves −2¹⁹; 2⁶ = 64 leaves 1, and 19 = 6 × 3 + 1, so 2¹⁹ leaves 2 and 19¹⁹ leaves −2. Total −2 + 1 = −1, i.e. 20.<br><span class="hi">20 यानी −1, अतः 20²⁰ का शेष 1। 19 यानी −2, अतः 19¹⁹ का शेष −2¹⁹; 2⁶ = 64 का शेष 1, और 19 = 6 × 3 + 1, अतः 2¹⁹ का शेष 2 और 19¹⁹ का −2। कुल −2 + 1 = −1, यानी 20।</span></p>
+</div>
+<div class="q">
+  <div class="n">41. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 3⁴¹ is divided by 41?</b><br><span class="hi">3⁴¹ को 41 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">1</li><li class="">9</li><li class="">40</li></ol>
+  <p class="sol"><b>Solution:</b> 41 is prime, so 3⁴⁰ leaves 1 (Fermat), and 3⁴¹ = 3⁴⁰ × 3 leaves 3.<br><span class="hi">41 अभाज्य है, अतः 3⁴⁰ का शेष 1 (फ़र्मा), और 3⁴¹ = 3⁴⁰ × 3 का शेष 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">42. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2⁴³ is divided by 41?</b><br><span class="hi">2⁴³ को 41 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">8 ✔</li><li class="">1</li><li class="">2</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> 41 is prime, so 2⁴⁰ leaves 1, and 2⁴³ = 2⁴⁰ × 2³ leaves 8.<br><span class="hi">41 अभाज्य है, अतः 2⁴⁰ का शेष 1, और 2⁴³ = 2⁴⁰ × 2³ का शेष 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">43. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 7³² is divided by 31?</b><br><span class="hi">7³² को 31 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">18 ✔</li><li class="">7</li><li class="">1</li><li class="">49</li></ol>
+  <p class="sol"><b>Solution:</b> 31 is prime, so 7³⁰ leaves 1, and 7³² leaves 7² = 49 = 31 + 18. The remainder is 18.<br><span class="hi">31 अभाज्य है, अतः 7³⁰ का शेष 1, और 7³² का शेष 7² = 49 = 31 + 18। शेषफल 18।</span></p>
+</div>
+<div class="q">
+  <div class="n">44. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 5¹⁰² is divided by 101?</b><br><span class="hi">5¹⁰² को 101 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">25 ✔</li><li class="">5</li><li class="">1</li><li class="">100</li></ol>
+  <p class="sol"><b>Solution:</b> 101 is prime, so 5¹⁰⁰ leaves 1, and 5¹⁰² leaves 5² = 25.<br><span class="hi">101 अभाज्य है, अतः 5¹⁰⁰ का शेष 1, और 5¹⁰² का शेष 5² = 25।</span></p>
+</div>
+<div class="q">
+  <div class="n">45. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 4¹⁰⁰ is divided by 33?</b><br><span class="hi">4¹⁰⁰ को 33 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">4</li><li class="">16</li><li class="">31</li></ol>
+  <p class="sol"><b>Solution:</b> 4⁵ = 1024 = 33 × 31 + 1 leaves 1, and 100 = 5 × 20, so 4¹⁰⁰ leaves 1.<br><span class="hi">4⁵ = 1024 = 33 × 31 + 1 का शेष 1, और 100 = 5 × 20, अतः 4¹⁰⁰ का शेष 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">46. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 9¹⁰¹ is divided by 80?</b><br><span class="hi">9¹⁰¹ को 80 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">9 ✔</li><li class="">1</li><li class="">81</li><li class="">71</li></ol>
+  <p class="sol"><b>Solution:</b> 9² = 81 = 80 + 1 leaves 1, so 9¹⁰¹ = (9²)⁵⁰ × 9 leaves 9.<br><span class="hi">9² = 81 = 80 + 1 का शेष 1, अतः 9¹⁰¹ = (9²)⁵⁰ × 9 का शेष 9।</span></p>
+</div>
+<div class="q">
+  <div class="n">47. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when the number made of eighteen 1s is divided by 13?</b><br><span class="hi">अठारह 1 से बनी संख्या को 13 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">1</li><li class="">6</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 111111 (six 1s) = 111 × 1001 is a multiple of 13, and eighteen 1s = 111111 × 1000001000001. So the remainder is 0.<br><span class="hi">111111 (छह बार 1) = 111 × 1001, 13 का गुणज है, और अठारह 1 = 111111 × 1000001000001। अतः शेषफल 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">48. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when the number made of twenty 9s (999...9) is divided by 7?</b><br><span class="hi">बीस 9 से बनी संख्या (999...9) को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">0</li><li class="">2</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> The number is 10²⁰ − 1. 10⁶ leaves 1 on division by 7 and 20 = 6 × 3 + 2, so 10²⁰ leaves 10² = 100, i.e. 2. Then 10²⁰ − 1 leaves 1.<br><span class="hi">संख्या 10²⁰ − 1 है। 10⁶ का 7 से शेष 1 और 20 = 6 × 3 + 2, अतः 10²⁰ का शेष 10² = 100, यानी 2। तब 10²⁰ − 1 का शेष 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">49. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>The number 1234567891011...1920 is formed by writing 1 to 20 one after another. What is the remainder when it is divided by 9?</b><br><span class="hi">संख्या 1234567891011...1920, 1 से 20 तक लगातार लिखकर बनी है। इसे 9 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">0</li><li class="">1</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> Each block leaves the same remainder on division by 9 as its digit sum, so the number leaves the same as 1 + 2 + ... + 20 = 210, and 210 = 9 × 23 + 3. The remainder is 3.<br><span class="hi">9 से भाग पर हर खंड अपने अंक योग जितना शेष छोड़ता है, अतः संख्या का शेष 1 + 2 + ... + 20 = 210 जैसा, और 210 = 9 × 23 + 3। शेषफल 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">50. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when x⁴ − 3x³ + 2x − 7 is divided by (x + 1)?</b><br><span class="hi">x⁴ − 3x³ + 2x − 7 को (x + 1) से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">−5 ✔</li><li class="">−9</li><li class="">5</li><li class="">−7</li></ol>
+  <p class="sol"><b>Solution:</b> Put x = −1: 1 + 3 − 2 − 7 = −5. The remainder is −5.<br><span class="hi">x = −1 रखें: 1 + 3 − 2 − 7 = −5। शेषफल −5।</span></p>
+</div>
+<div class="q">
+  <div class="n">51. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when x²⁰²³ is divided by (x − 1)?</b><br><span class="hi">x²⁰²³ को (x − 1) से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">0</li><li class="">−1</li><li class="">2023</li></ol>
+  <p class="sol"><b>Solution:</b> Put x = 1: 1²⁰²³ = 1. The remainder is 1.<br><span class="hi">x = 1 रखें: 1²⁰²³ = 1। शेषफल 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">52. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If 2x³ + ax² + 11x + a + 3 is exactly divisible by (2x − 1), what is the value of a?</b><br><span class="hi">यदि 2x³ + ax² + 11x + a + 3, (2x − 1) से पूर्णतः विभाज्य है, तो a का मान क्या है?</span></p>
+  <ol type="A"><li class="right">−7 ✔</li><li class="">7</li><li class="">−5</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> The value at x = 1/2 must be 0: 2/8 + a/4 + 11/2 + a + 3 = 0, i.e. 1/4 + 11/2 + 3 + 5a/4 = 0, so 5a/4 = −35/4 and a = −7.<br><span class="hi">x = 1/2 पर मान 0 हो: 2/8 + a/4 + 11/2 + a + 3 = 0, यानी 1/4 + 11/2 + 3 + 5a/4 = 0, अतः 5a/4 = −35/4 और a = −7।</span></p>
+</div>
+<div class="q">
+  <div class="n">53. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest number which leaves remainders 4, 7 and 10 when divided by 6, 9 and 12 respectively?</b><br><span class="hi">वह सबसे छोटी संख्या कौन-सी है जो 6, 9 और 12 से भाग देने पर क्रमशः 4, 7 और 10 शेष छोड़ती है?</span></p>
+  <ol type="A"><li class="right">34 ✔</li><li class="">36</li><li class="">70</li><li class="">38</li></ol>
+  <p class="sol"><b>Solution:</b> Each remainder is 2 less than its divisor, so the number + 2 is a multiple of LCM(6, 9, 12) = 36. The smallest number is 36 − 2 = 34.<br><span class="hi">हर शेषफल अपने भाजक से 2 कम, अतः संख्या + 2, LCM(6, 9, 12) = 36 का गुणज। सबसे छोटी संख्या 36 − 2 = 34।</span></p>
+</div>
+<div class="q">
+  <div class="n">54. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest natural number which leaves a remainder of 3 when divided by 4 and a remainder of 5 when divided by 6?</b><br><span class="hi">वह सबसे छोटी प्राकृत संख्या कौन-सी है जो 4 से भाग देने पर शेष 3 और 6 से भाग देने पर शेष 5 छोड़ती है?</span></p>
+  <ol type="A"><li class="right">11 ✔</li><li class="">23</li><li class="">15</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> Both remainders are 1 less than the divisors, so the number + 1 is a multiple of LCM(4, 6) = 12. The smallest number is 11.<br><span class="hi">दोनों शेषफल भाजक से 1 कम, अतः संख्या + 1, LCM(4, 6) = 12 का गुणज। सबसे छोटी संख्या 11।</span></p>
+</div>
+<div class="q">
+  <div class="n">55. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 10! is divided by 11?</b><br><span class="hi">10! को 11 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">10 ✔</li><li class="">1</li><li class="">0</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 11 is prime, so by Wilson's theorem 10! leaves −1, i.e. 10. (10! = 3628800 = 11 × 329890 + 10.)<br><span class="hi">11 अभाज्य है, अतः विल्सन प्रमेय से 10! का शेष −1, यानी 10। (10! = 3628800 = 11 × 329890 + 10।)</span></p>
+</div>
+<div class="q">
+  <div class="n">56. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>A number is divided by 5, the quotient by 3 and the next quotient by 2, leaving remainders 2, 1 and 1 respectively. What is the remainder when the number is divided by 30?</b><br><span class="hi">एक संख्या को 5 से, भागफल को 3 से और अगले भागफल को 2 से भाग देने पर क्रमशः 2, 1 और 1 शेष बचते हैं। संख्या को 30 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">22 ✔</li><li class="">12</li><li class="">7</li><li class="">17</li></ol>
+  <p class="sol"><b>Solution:</b> Last quotient = 2k + 1; before that 3(2k + 1) + 1 = 6k + 4; the number = 5(6k + 4) + 2 = 30k + 22. The remainder is 22.<br><span class="hi">अंतिम भागफल = 2k + 1; उससे पहले 3(2k + 1) + 1 = 6k + 4; संख्या = 5(6k + 4) + 2 = 30k + 22। शेषफल 22।</span></p>
+</div>
+<div class="q">
+  <div class="n">57. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 1 × 2 + 2 × 3 + 3 × 4 + ... + 10 × 11 is divided by 7?</b><br><span class="hi">1 × 2 + 2 × 3 + 3 × 4 + ... + 10 × 11 को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">0</li><li class="">3</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> The sum is 10 × 11 × 12 / 3 = 440, and 440 = 7 × 62 + 6. The remainder is 6.<br><span class="hi">योग 10 × 11 × 12 / 3 = 440, और 440 = 7 × 62 + 6। शेषफल 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">58. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 5^(5⁵) is divided by 3?</b><br><span class="hi">5^(5⁵) को 3 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">1</li><li class="">0</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 5 leaves 2, i.e. −1, on division by 3, and 5⁵ is odd, so the number leaves −1, i.e. 2.<br><span class="hi">5 का 3 से शेष 2, यानी −1, और 5⁵ विषम, अतः संख्या का शेष −1, यानी 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">59. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2³⁰ + 3³⁰ is divided by 7?</b><br><span class="hi">2³⁰ + 3³⁰ को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">0</li><li class="">1</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 2³ leaves 1, so 2³⁰ leaves 1. 3⁶ leaves 1, so 3³⁰ = (3⁶)⁵ leaves 1. 1 + 1 = 2.<br><span class="hi">2³ का शेष 1, अतः 2³⁰ का 1। 3⁶ का शेष 1, अतः 3³⁰ = (3⁶)⁵ का 1। 1 + 1 = 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">60. <span class="t">Number System · Remainder Theorem · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 999 × 1001 × 1003 is divided by 1000?</b><br><span class="hi">999 × 1001 × 1003 को 1000 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">997 ✔</li><li class="">3</li><li class="">999</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> On division by 1000 the numbers leave −1, 1 and 3, so the product leaves −3, i.e. 1000 − 3 = 997.<br><span class="hi">1000 से भाग पर संख्याओं के शेष −1, 1 और 3, अतः गुणनफल का शेष −3, यानी 1000 − 3 = 997।</span></p>
+</div>
+<div class="q">
+  <div class="n">61. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2²⁰⁰⁰ is divided by 13?</b><br><span class="hi">2²⁰⁰⁰ को 13 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">9 ✔</li><li class="">1</li><li class="">3</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> 2¹² leaves 1 (Fermat), and 2000 = 12 × 166 + 8, so 2²⁰⁰⁰ leaves 2⁸ = 256 = 13 × 19 + 9. The remainder is 9.<br><span class="hi">2¹² का शेष 1 (फ़र्मा), और 2000 = 12 × 166 + 8, अतः 2²⁰⁰⁰ का शेष 2⁸ = 256 = 13 × 19 + 9। शेषफल 9।</span></p>
+</div>
+<div class="q">
+  <div class="n">62. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 3²⁰⁰¹ is divided by 11?</b><br><span class="hi">3²⁰⁰¹ को 11 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">1</li><li class="">9</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 3⁵ = 243 leaves 1 on division by 11, and 2001 = 5 × 400 + 1, so 3²⁰⁰¹ leaves 3.<br><span class="hi">3⁵ = 243 का 11 से शेष 1, और 2001 = 5 × 400 + 1, अतः 3²⁰⁰¹ का शेष 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">63. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 5²⁰⁰⁰ is divided by 7?</b><br><span class="hi">5²⁰⁰⁰ को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">1</li><li class="">2</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 5⁶ leaves 1, and 2000 = 6 × 333 + 2, so 5²⁰⁰⁰ leaves 5² = 25 = 7 × 3 + 4. The remainder is 4.<br><span class="hi">5⁶ का शेष 1, और 2000 = 6 × 333 + 2, अतः 5²⁰⁰⁰ का शेष 5² = 25 = 7 × 3 + 4। शेषफल 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">64. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 7²⁰⁰⁰ is divided by 9?</b><br><span class="hi">7²⁰⁰⁰ को 9 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">1</li><li class="">7</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> 7³ = 343 leaves 1 on division by 9, and 2000 = 3 × 666 + 2, so 7²⁰⁰⁰ leaves 7² = 49 = 9 × 5 + 4. The remainder is 4.<br><span class="hi">7³ = 343 का 9 से शेष 1, और 2000 = 3 × 666 + 2, अतः 7²⁰⁰⁰ का शेष 7² = 49 = 9 × 5 + 4। शेषफल 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">65. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2²⁰⁰³ is divided by 9?</b><br><span class="hi">2²⁰⁰³ को 9 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">8</li><li class="">4</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> 2⁶ = 64 leaves 1 on division by 9, and 2003 = 6 × 333 + 5, so 2²⁰⁰³ leaves 2⁵ = 32 = 9 × 3 + 5. The remainder is 5.<br><span class="hi">2⁶ = 64 का 9 से शेष 1, और 2003 = 6 × 333 + 5, अतः 2²⁰⁰³ का शेष 2⁵ = 32 = 9 × 3 + 5। शेषफल 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">66. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 11²⁰⁰⁰ is divided by 120?</b><br><span class="hi">11²⁰⁰⁰ को 120 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">11</li><li class="">121</li><li class="">119</li></ol>
+  <p class="sol"><b>Solution:</b> 11² = 121 = 120 + 1 leaves 1, so 11²⁰⁰⁰ = (11²)¹⁰⁰⁰ leaves 1.<br><span class="hi">11² = 121 = 120 + 1 का शेष 1, अतः 11²⁰⁰⁰ = (11²)¹⁰⁰⁰ का शेष 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">67. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 1010101 is divided by 7?</b><br><span class="hi">1010101 को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">0</li><li class="">3</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> 7 × 144300 = 1010100, so 1010101 = 7 × 144300 + 1. The remainder is 1.<br><span class="hi">7 × 144300 = 1010100, अतः 1010101 = 7 × 144300 + 1। शेषफल 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">68. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when the number made of twelve 7s (777...7) is divided by 13?</b><br><span class="hi">बारह 7 से बनी संख्या (777...7) को 13 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">7</li><li class="">1</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> 777...7 (twelve 7s) = 7 × 111...1 (twelve 1s), and 111111 is a multiple of 13 (111111 = 111 × 1001). So the number is a multiple of 13: the remainder is 0.<br><span class="hi">777...7 (बारह 7) = 7 × 111...1 (बारह 1), और 111111, 13 का गुणज (111111 = 111 × 1001)। अतः संख्या 13 का गुणज: शेषफल 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">69. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2¹⁰ + 3¹⁰ + 4¹⁰ is divided by 11?</b><br><span class="hi">2¹⁰ + 3¹⁰ + 4¹⁰ को 11 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">0</li><li class="">1</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 11 is prime, so a¹⁰ leaves 1 for each a not divisible by 11 (Fermat). The sum leaves 1 + 1 + 1 = 3.<br><span class="hi">11 अभाज्य है, अतः 11 से अविभाज्य हर a के लिए a¹⁰ का शेष 1 (फ़र्मा)। योग का शेष 1 + 1 + 1 = 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">70. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when x³ − 6x² + 11x − 6 is divided by (x − 4)?</b><br><span class="hi">x³ − 6x² + 11x − 6 को (x − 4) से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">0</li><li class="">−6</li><li class="">10</li></ol>
+  <p class="sol"><b>Solution:</b> Put x = 4: 64 − 96 + 44 − 6 = 6. The remainder is 6.<br><span class="hi">x = 4 रखें: 64 − 96 + 44 − 6 = 6। शेषफल 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">71. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when x⁹⁹ + 99 is divided by (x + 1)?</b><br><span class="hi">x⁹⁹ + 99 को (x + 1) से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">98 ✔</li><li class="">100</li><li class="">0</li><li class="">99</li></ol>
+  <p class="sol"><b>Solution:</b> Put x = −1: (−1)⁹⁹ + 99 = −1 + 99 = 98.<br><span class="hi">x = −1 रखें: (−1)⁹⁹ + 99 = −1 + 99 = 98।</span></p>
+</div>
+<div class="q">
+  <div class="n">72. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>When x³ − 2x² + kx + 4 is divided by (x − 3), the remainder is 10. What is the value of k?</b><br><span class="hi">x³ − 2x² + kx + 4 को (x − 3) से भाग देने पर शेषफल 10 आता है। k का मान क्या है?</span></p>
+  <ol type="A"><li class="right">−1 ✔</li><li class="">1</li><li class="">−3</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> The remainder is the value at x = 3: 27 − 18 + 3k + 4 = 10, so 3k = −3 and k = −1.<br><span class="hi">शेषफल x = 3 पर मान है: 27 − 18 + 3k + 4 = 10, अतः 3k = −3 और k = −1।</span></p>
+</div>
+<div class="q">
+  <div class="n">73. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the largest three-digit number which leaves a remainder of 1 when divided by 2, 3, 4, 5 and 6?</b><br><span class="hi">तीन अंकों की वह सबसे बड़ी संख्या कौन-सी है जो 2, 3, 4, 5 और 6 से भाग देने पर शेष 1 छोड़ती है?</span></p>
+  <ol type="A"><li class="right">961 ✔</li><li class="">901</li><li class="">991</li><li class="">949</li></ol>
+  <p class="sol"><b>Solution:</b> The number is (a multiple of LCM(2, ..., 6) = 60) + 1. The largest three-digit multiple of 60 is 960, so the answer is 961.<br><span class="hi">संख्या = (LCM(2, ..., 6) = 60 का गुणज) + 1। 60 का सबसे बड़ा तीन अंकों का गुणज 960, अतः उत्तर 961।</span></p>
+</div>
+<div class="q">
+  <div class="n">74. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest natural number which leaves remainders 2, 3 and 2 when divided by 3, 5 and 7 respectively?</b><br><span class="hi">वह सबसे छोटी प्राकृत संख्या कौन-सी है जो 3, 5 और 7 से भाग देने पर क्रमशः 2, 3 और 2 शेष छोड़ती है?</span></p>
+  <ol type="A"><li class="right">23 ✔</li><li class="">128</li><li class="">53</li><li class="">38</li></ol>
+  <p class="sol"><b>Solution:</b> Leaving 2 on division by both 3 and 7 means the number is 21k + 2: 2, 23, 44, ... 23 leaves 3 on division by 5. So the answer is 23.<br><span class="hi">3 और 7 दोनों से शेष 2, अतः संख्या 21k + 2: 2, 23, 44, ... 23 का 5 से शेष 3। अतः उत्तर 23।</span></p>
+</div>
+<div class="q">
+  <div class="n">75. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 28! is divided by 29?</b><br><span class="hi">28! को 29 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">28 ✔</li><li class="">1</li><li class="">0</li><li class="">14</li></ol>
+  <p class="sol"><b>Solution:</b> 29 is prime, so by Wilson's theorem 28! leaves −1, i.e. 28.<br><span class="hi">29 अभाज्य है, अतः विल्सन प्रमेय से 28! का शेष −1, यानी 28।</span></p>
+</div>
+<div class="q">
+  <div class="n">76. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>A number divided successively by 4 and 7 leaves remainders 3 and 5 respectively. What is the remainder when it is divided by 28?</b><br><span class="hi">एक संख्या को क्रमशः 4 और 7 से भाग देने पर शेष 3 और 5 बचते हैं। उसे 28 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">23 ✔</li><li class="">15</li><li class="">8</li><li class="">19</li></ol>
+  <p class="sol"><b>Solution:</b> The quotient is 7k + 5, so the number = 4(7k + 5) + 3 = 28k + 23. The remainder is 23.<br><span class="hi">भागफल 7k + 5, अतः संख्या = 4(7k + 5) + 3 = 28k + 23। शेषफल 23।</span></p>
+</div>
+<div class="q">
+  <div class="n">77. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 1² + 2² + 3² + ... + 50² is divided by 13?</b><br><span class="hi">1² + 2² + 3² + ... + 50² को 13 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">12 ✔</li><li class="">0</li><li class="">1</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> The sum is 50 × 51 × 101 / 6 = 42925, and 13 × 3301 = 42913, so the remainder is 42925 − 42913 = 12.<br><span class="hi">योग 50 × 51 × 101 / 6 = 42925, और 13 × 3301 = 42913, अतः शेषफल 42925 − 42913 = 12।</span></p>
+</div>
+<div class="q">
+  <div class="n">78. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 4^(4⁴) is divided by 3?</b><br><span class="hi">4^(4⁴) को 3 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">0</li><li class="">2</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> 4 leaves 1 on division by 3, so every power of 4 leaves 1.<br><span class="hi">4 का 3 से शेष 1, अतः 4 की हर घात का शेष 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">79. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 7¹⁰⁰ + 3¹⁰⁰ is divided by 4?</b><br><span class="hi">7¹⁰⁰ + 3¹⁰⁰ को 4 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">0</li><li class="">1</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> 7 and 3 both leave −1 on division by 4, and 100 is even, so each power leaves 1. 1 + 1 = 2.<br><span class="hi">7 और 3 दोनों का 4 से शेष −1, और 100 सम, अतः हर घात का शेष 1। 1 + 1 = 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">80. <span class="t">Number System · Remainder Theorem · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 1997 × 1998 × 1999 is divided by 2000?</b><br><span class="hi">1997 × 1998 × 1999 को 2000 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1994 ✔</li><li class="">6</li><li class="">1997</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> On division by 2000 the numbers leave −3, −2 and −1, so the product leaves (−3)(−2)(−1) = −6, i.e. 2000 − 6 = 1994.<br><span class="hi">2000 से भाग पर संख्याओं के शेष −3, −2 और −1, अतः गुणनफल का शेष (−3)(−2)(−1) = −6, यानी 2000 − 6 = 1994।</span></p>
+</div>
+<div class="q">
+  <div class="n">81. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2⁹⁹ is divided by 17?</b><br><span class="hi">2⁹⁹ को 17 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">8 ✔</li><li class="">1</li><li class="">2</li><li class="">16</li></ol>
+  <p class="sol"><b>Solution:</b> 2⁴ = 16 leaves −1, so 2⁸ leaves 1. 99 = 8 × 12 + 3, so 2⁹⁹ leaves 2³ = 8.<br><span class="hi">2⁴ = 16 का शेष −1, अतः 2⁸ का शेष 1। 99 = 8 × 12 + 3, अतः 2⁹⁹ का शेष 2³ = 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">82. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 3⁹⁹ is divided by 25?</b><br><span class="hi">3⁹⁹ को 25 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">17 ✔</li><li class="">7</li><li class="">3</li><li class="">22</li></ol>
+  <p class="sol"><b>Solution:</b> 3⁵ = 243 leaves 243 − 225 = 18, i.e. −7, and 3¹⁰ leaves 49, i.e. −1. So 3²⁰ leaves 1 and 3⁹⁹ = (3²⁰)⁴ × 3¹⁹ needs 3¹⁹ = 3¹⁰ × 3⁵ × 3⁴ → (−1)(−7)(81 → 6) = 42 → 17. The remainder is 17.<br><span class="hi">3⁵ = 243 का शेष 243 − 225 = 18, यानी −7, और 3¹⁰ का 49, यानी −1। अतः 3²⁰ का शेष 1 और 3⁹⁹ = (3²⁰)⁴ × 3¹⁹ के लिए 3¹⁹ = 3¹⁰ × 3⁵ × 3⁴ → (−1)(−7)(81 → 6) = 42 → 17। शेषफल 17।</span></p>
+</div>
+<div class="q">
+  <div class="n">83. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 5⁹⁸ is divided by 13?</b><br><span class="hi">5⁹⁸ को 13 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">12 ✔</li><li class="">1</li><li class="">5</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 5² = 25 leaves −1 on division by 13, so 5⁴ leaves 1. 98 = 4 × 24 + 2, so 5⁹⁸ leaves 5², i.e. −1 = 12.<br><span class="hi">5² = 25 का 13 से शेष −1, अतः 5⁴ का शेष 1। 98 = 4 × 24 + 2, अतः 5⁹⁸ का शेष 5², यानी −1 = 12।</span></p>
+</div>
+<div class="q">
+  <div class="n">84. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 7⁹⁹ is divided by 8?</b><br><span class="hi">7⁹⁹ को 8 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">1</li><li class="">3</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 7 = 8 − 1 leaves −1, and 99 is odd, so 7⁹⁹ leaves −1, i.e. 7.<br><span class="hi">7 = 8 − 1 का शेष −1, और 99 विषम, अतः 7⁹⁹ का शेष −1, यानी 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">85. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 9⁹⁹ is divided by 7?</b><br><span class="hi">9⁹⁹ को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">2</li><li class="">4</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> 9 leaves 2 on division by 7, so 9⁹⁹ leaves the same as 2⁹⁹. 2³ leaves 1 and 99 = 3 × 33, so the remainder is 1.<br><span class="hi">9 का 7 से शेष 2, अतः 9⁹⁹ का शेष 2⁹⁹ जैसा। 2³ का शेष 1 और 99 = 3 × 33, अतः शेषफल 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">86. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 10⁹⁹ is divided by 7?</b><br><span class="hi">10⁹⁹ को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">1</li><li class="">3</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> 10⁶ leaves 1 on division by 7, and 99 = 6 × 16 + 3, so 10⁹⁹ leaves 10³ = 1000 = 7 × 142 + 6. The remainder is 6.<br><span class="hi">10⁶ का 7 से शेष 1, और 99 = 6 × 16 + 3, अतः 10⁹⁹ का शेष 10³ = 1000 = 7 × 142 + 6। शेषफल 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">87. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when the number made of a hundred 1s is divided by 3?</b><br><span class="hi">सौ 1 से बनी संख्या को 3 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">0</li><li class="">2</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> Its digit sum is 100, and 100 = 3 × 33 + 1. The remainder is 1.<br><span class="hi">इसके अंकों का योग 100, और 100 = 3 × 33 + 1। शेषफल 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">88. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when the number made of a hundred 2s is divided by 9?</b><br><span class="hi">सौ 2 से बनी संख्या को 9 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">0</li><li class="">4</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> Its digit sum is 200, and 200 = 9 × 22 + 2. The remainder is 2.<br><span class="hi">इसके अंकों का योग 200, और 200 = 9 × 22 + 2। शेषफल 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">89. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 1¹⁰⁰ + 2¹⁰⁰ + 3¹⁰⁰ + 4¹⁰⁰ is divided by 5?</b><br><span class="hi">1¹⁰⁰ + 2¹⁰⁰ + 3¹⁰⁰ + 4¹⁰⁰ को 5 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">0</li><li class="">1</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> a⁴ leaves 1 on division by 5 for a = 1, 2, 3, 4 (Fermat), and 100 is a multiple of 4, so each term leaves 1. 1 + 1 + 1 + 1 = 4.<br><span class="hi">a = 1, 2, 3, 4 के लिए a⁴ का 5 से शेष 1 (फ़र्मा), और 100, 4 का गुणज, अतः हर पद का शेष 1। 1 + 1 + 1 + 1 = 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">90. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when x⁴ + x³ + x² + x + 1 is divided by (x − 1)?</b><br><span class="hi">x⁴ + x³ + x² + x + 1 को (x − 1) से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">0</li><li class="">1</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> Put x = 1: 1 + 1 + 1 + 1 + 1 = 5.<br><span class="hi">x = 1 रखें: 1 + 1 + 1 + 1 + 1 = 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">91. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when x²⁰²⁵ − 1 is divided by (x + 1)?</b><br><span class="hi">x²⁰²⁵ − 1 को (x + 1) से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">−2 ✔</li><li class="">0</li><li class="">2</li><li class="">−1</li></ol>
+  <p class="sol"><b>Solution:</b> Put x = −1: (−1)²⁰²⁵ − 1 = −1 − 1 = −2.<br><span class="hi">x = −1 रखें: (−1)²⁰²⁵ − 1 = −1 − 1 = −2।</span></p>
+</div>
+<div class="q">
+  <div class="n">92. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If (x − 1) is a factor of x³ + ax² + 2x − 1, what is the value of a?</b><br><span class="hi">यदि (x − 1), x³ + ax² + 2x − 1 का एक गुणनखंड है, तो a का मान क्या है?</span></p>
+  <ol type="A"><li class="right">−2 ✔</li><li class="">2</li><li class="">−1</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> A factor leaves remainder 0, so the value at x = 1 is 0: 1 + a + 2 − 1 = 0, so a = −2.<br><span class="hi">गुणनखंड का शेष 0, अतः x = 1 पर मान 0: 1 + a + 2 − 1 = 0, अतः a = −2।</span></p>
+</div>
+<div class="q">
+  <div class="n">93. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest number which leaves a remainder of 1 when divided by 2, 3, 4, 5 and 6, and is exactly divisible by 13?</b><br><span class="hi">वह सबसे छोटी संख्या कौन-सी है जो 2, 3, 4, 5 और 6 से भाग देने पर शेष 1 छोड़ती है और 13 से पूर्णतः विभाज्य है?</span></p>
+  <ol type="A"><li class="right">481 ✔</li><li class="">361</li><li class="">301</li><li class="">421</li></ol>
+  <p class="sol"><b>Solution:</b> The number is 60k + 1. 60 leaves 8 on division by 13, so we need 8k + 1 to be a multiple of 13: k = 8 gives 65 = 13 × 5. Number = 480 + 1 = 481 (= 13 × 37).<br><span class="hi">संख्या 60k + 1 है। 60 का 13 से शेष 8, अतः 8k + 1, 13 का गुणज हो: k = 8 पर 65 = 13 × 5। संख्या = 480 + 1 = 481 (= 13 × 37)।</span></p>
+</div>
+<div class="q">
+  <div class="n">94. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest natural number which leaves remainders 4, 5 and 6 when divided by 5, 6 and 7 respectively?</b><br><span class="hi">वह सबसे छोटी प्राकृत संख्या कौन-सी है जो 5, 6 और 7 से भाग देने पर क्रमशः 4, 5 और 6 शेष छोड़ती है?</span></p>
+  <ol type="A"><li class="right">209 ✔</li><li class="">211</li><li class="">419</li><li class="">104</li></ol>
+  <p class="sol"><b>Solution:</b> Each remainder is 1 less than the divisor, so the number + 1 is a multiple of LCM(5, 6, 7) = 210. The answer is 209.<br><span class="hi">हर शेषफल भाजक से 1 कम, अतः संख्या + 1, LCM(5, 6, 7) = 210 का गुणज। उत्तर 209।</span></p>
+</div>
+<div class="q">
+  <div class="n">95. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 30! is divided by 31?</b><br><span class="hi">30! को 31 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">30 ✔</li><li class="">1</li><li class="">0</li><li class="">15</li></ol>
+  <p class="sol"><b>Solution:</b> 31 is prime, so by Wilson's theorem 30! leaves −1, i.e. 30.<br><span class="hi">31 अभाज्य है, अतः विल्सन प्रमेय से 30! का शेष −1, यानी 30।</span></p>
+</div>
+<div class="q">
+  <div class="n">96. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>A number leaves a remainder of 3 when divided by 6, and the quotient leaves a remainder of 1 when divided by 4. What is the remainder when the number is divided by 8?</b><br><span class="hi">एक संख्या को 6 से भाग देने पर शेषफल 3 आता है, और भागफल को 4 से भाग देने पर शेषफल 1। संख्या को 8 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">3</li><li class="">5</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> Number = 6(4k + 1) + 3 = 24k + 9. 24k is a multiple of 8 and 9 = 8 + 1, so the remainder is 1.<br><span class="hi">संख्या = 6(4k + 1) + 3 = 24k + 9। 24k, 8 का गुणज और 9 = 8 + 1, अतः शेषफल 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">97. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 1 + 2 + 2² + 2³ + ... + 2²⁰ is divided by 7?</b><br><span class="hi">1 + 2 + 2² + 2³ + ... + 2²⁰ को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">1</li><li class="">3</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> The sum is 2²¹ − 1. 2²¹ = (2³)⁷ leaves 1 on division by 7, so 2²¹ − 1 leaves 0.<br><span class="hi">योग 2²¹ − 1 है। 2²¹ = (2³)⁷ का 7 से शेष 1, अतः 2²¹ − 1 का 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">98. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 6^(6⁶) is divided by 5?</b><br><span class="hi">6^(6⁶) को 5 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">6</li><li class="">0</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> 6 leaves 1 on division by 5, so every power of 6 leaves 1.<br><span class="hi">6 का 5 से शेष 1, अतः 6 की हर घात का शेष 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">99. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 1001¹⁰⁰¹ + 999⁹⁹⁹ is divided by 1000?</b><br><span class="hi">1001¹⁰⁰¹ + 999⁹⁹⁹ को 1000 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">2</li><li class="">998</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> 1001 leaves 1 and 999 leaves −1 on division by 1000. 1¹⁰⁰¹ + (−1)⁹⁹⁹ = 1 − 1 = 0.<br><span class="hi">1000 से भाग पर 1001 का शेष 1 और 999 का −1। 1¹⁰⁰¹ + (−1)⁹⁹⁹ = 1 − 1 = 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">100. <span class="t">Number System · Remainder Theorem · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 1 × 3 × 5 × 7 × 9 × 11 is divided by 13?</b><br><span class="hi">1 × 3 × 5 × 7 × 9 × 11 को 13 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">8 ✔</li><li class="">1</li><li class="">5</li><li class="">12</li></ol>
+  <p class="sol"><b>Solution:</b> Step by step on division by 13: 3 × 5 = 15 → 2; 2 × 7 = 14 → 1; 1 × 9 = 9; 9 × 11 = 99 → 99 − 91 = 8. The remainder is 8 (10395 = 13 × 799 + 8).<br><span class="hi">13 से भाग पर क्रम से: 3 × 5 = 15 → 2; 2 × 7 = 14 → 1; 1 × 9 = 9; 9 × 11 = 99 → 99 − 91 = 8। शेषफल 8 (10395 = 13 × 799 + 8)।</span></p>
+</div></body></html>

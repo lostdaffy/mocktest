@@ -1,0 +1,610 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Question batch preview</title>
+<style>
+:root { --bg:#fff; --ink:#1b1b1f; --soft:#5d5f6b; --line:#e3e4ea; --ok:#127a3a; --okbg:#e7f6ec; --bad:#b42318; }
+@media (prefers-color-scheme: dark) { :root { --bg:#16171b; --ink:#ececf1; --soft:#a3a6b3; --line:#2c2e36; --ok:#5dd38c; --okbg:#173524; --bad:#ff8a80; } }
+body { background:var(--bg); color:var(--ink); font:15px/1.55 system-ui, sans-serif; margin:0; padding:16px; }
+h1 { font-size:18px; } .q { border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin:0 0 12px; }
+.n { font-size:13px; color:var(--soft); } .t { font-weight:600; } .ok { color:var(--ok); } .bad { color:var(--bad); font-weight:700; }
+.hi { color:var(--soft); } li.right { background:var(--okbg); color:var(--ok); font-weight:600; border-radius:4px; }
+.sol { font-size:14px; } ol { padding-left:22px; }
+</style></head><body><h1>100 questions - Number System · Unit Digit · Hard #1, Number System · Unit Digit · Hard #2, Number System · Unit Digit · Hard #3, Number System · Unit Digit · Hard #4, Number System · Unit Digit · Hard #5</h1>
+<div class="q">
+  <div class="n">1. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 3⁴⁷?</b><br><span class="hi">3⁴⁷ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">87 ✔</li><li class="">27</li><li class="">67</li><li class="">47</li></ol>
+  <p class="sol"><b>Solution:</b> 3²⁰ = 3486784401 ends in 01, so 3⁴⁷ ends like 3⁷ = 2187 (47 = 20 × 2 + 7). The last two digits are 87.<br><span class="hi">3²⁰ = 3486784401 के अंतिम दो अंक 01, अतः 3⁴⁷ के अंतिम अंक 3⁷ = 2187 जैसे (47 = 20 × 2 + 7)। अंतिम दो अंक 87।</span></p>
+</div>
+<div class="q">
+  <div class="n">2. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 7⁸³?</b><br><span class="hi">7⁸³ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">43 ✔</li><li class="">07</li><li class="">49</li><li class="">01</li></ol>
+  <p class="sol"><b>Solution:</b> 7⁴ = 2401 ends in 01, and 83 = 4 × 20 + 3, so 7⁸³ ends like 7³ = 343. The last two digits are 43.<br><span class="hi">7⁴ = 2401 के अंतिम अंक 01, और 83 = 4 × 20 + 3, अतः 7⁸³ के अंतिम अंक 7³ = 343 जैसे। अंतिम दो अंक 43।</span></p>
+</div>
+<div class="q">
+  <div class="n">3. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 11⁵⁶?</b><br><span class="hi">11⁵⁶ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">61 ✔</li><li class="">56</li><li class="">11</li><li class="">51</li></ol>
+  <p class="sol"><b>Solution:</b> 11^n = (10 + 1)^n ends like 1 + 10n. For n = 56: 1 + 560 = 561, so the last two digits are 61.<br><span class="hi">11^n = (10 + 1)^n के अंतिम अंक 1 + 10n जैसे। n = 56 पर: 1 + 560 = 561, अतः अंतिम दो अंक 61।</span></p>
+</div>
+<div class="q">
+  <div class="n">4. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 2⁴⁵?</b><br><span class="hi">2⁴⁵ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">32 ✔</li><li class="">52</li><li class="">12</li><li class="">72</li></ol>
+  <p class="sol"><b>Solution:</b> 2²⁰ = 1048576 ends in 76, and 76 × 76 = 5776 ends in 76 too, so 2⁴⁰ ends in 76. 2⁴⁵ = 2⁴⁰ × 2⁵ → 76 × 32 = 2432 → 32.<br><span class="hi">2²⁰ = 1048576 के अंतिम अंक 76, और 76 × 76 = 5776 भी 76 पर, अतः 2⁴⁰ के अंतिम अंक 76। 2⁴⁵ = 2⁴⁰ × 2⁵ → 76 × 32 = 2432 → 32।</span></p>
+</div>
+<div class="q">
+  <div class="n">5. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 9⁸⁷?</b><br><span class="hi">9⁸⁷ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">69 ✔</li><li class="">29</li><li class="">89</li><li class="">49</li></ol>
+  <p class="sol"><b>Solution:</b> 9¹⁰ = 3486784401 ends in 01, and 87 = 10 × 8 + 7, so 9⁸⁷ ends like 9⁷ = 4782969. The last two digits are 69.<br><span class="hi">9¹⁰ = 3486784401 के अंतिम अंक 01, और 87 = 10 × 8 + 7, अतः 9⁸⁷ के अंतिम अंक 9⁷ = 4782969 जैसे। अंतिम दो अंक 69।</span></p>
+</div>
+<div class="q">
+  <div class="n">6. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 5 × 10 × 15 × 20 × ... × 200?</b><br><span class="hi">5 × 10 × 15 × 20 × ... × 200 के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">38 ✔</li><li class="">40</li><li class="">49</li><li class="">48</li></ol>
+  <p class="sol"><b>Solution:</b> The product is 5⁴⁰ × (1 × 2 × ... × 40) = 5⁴⁰ × 40!. Zeros need pairs of 2 and 5. 2s come only from 40!: 20 + 10 + 5 + 2 + 1 = 38. 5s are far more (40 + 9), so there are 38 zeros.<br><span class="hi">गुणनफल 5⁴⁰ × (1 × 2 × ... × 40) = 5⁴⁰ × 40! है। शून्य के लिए 2 और 5 के जोड़े चाहिए। 2 केवल 40! से: 20 + 10 + 5 + 2 + 1 = 38। 5 बहुत अधिक (40 + 9), अतः 38 शून्य।</span></p>
+</div>
+<div class="q">
+  <div class="n">7. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 150!?</b><br><span class="hi">150! के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">37 ✔</li><li class="">30</li><li class="">36</li><li class="">38</li></ol>
+  <p class="sol"><b>Solution:</b> [150/5] + [150/25] + [150/125] = 30 + 6 + 1 = 37.<br><span class="hi">[150/5] + [150/25] + [150/125] = 30 + 6 + 1 = 37।</span></p>
+</div>
+<div class="q">
+  <div class="n">8. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of (1! + 2! + 3! + ... + 100!)²?</b><br><span class="hi">(1! + 2! + 3! + ... + 100!)² का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">9 ✔</li><li class="">3</li><li class="">1</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> From 5! on every factorial ends in 0, so the sum ends like 1 + 2 + 6 + 24 = 33, i.e. in 3. Its square ends like 3² = 9.<br><span class="hi">5! से आगे हर क्रमगुणित 0 पर समाप्त, अतः योग का इकाई अंक 1 + 2 + 6 + 24 = 33 जैसा, यानी 3। इसके वर्ग का 3² = 9 जैसा।</span></p>
+</div>
+<div class="q">
+  <div class="n">9. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of (2 + 1)(2² + 1)(2⁴ + 1)(2⁸ + 1)?</b><br><span class="hi">(2 + 1)(2² + 1)(2⁴ + 1)(2⁸ + 1) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">1</li><li class="">3</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> Multiplying by (2 − 1) = 1 changes nothing and makes the product collapse: (2 − 1)(2 + 1)(2² + 1)(2⁴ + 1)(2⁸ + 1) = 2¹⁶ − 1 = 65535. The unit digit is 5.<br><span class="hi">(2 − 1) = 1 से गुणा कुछ नहीं बदलता और गुणनफल सिमट जाता है: (2 − 1)(2 + 1)(2² + 1)(2⁴ + 1)(2⁸ + 1) = 2¹⁶ − 1 = 65535। इकाई अंक 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">10. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3 + 3² + 3³ + ... + 3²⁰²³?</b><br><span class="hi">3 + 3² + 3³ + ... + 3²⁰²³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">9 ✔</li><li class="">0</li><li class="">3</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> The unit digits repeat 3, 9, 7, 1 (sum 20). 2023 = 4 × 505 + 3, so there are 505 full cycles (ending in 0) and then 3 + 9 + 7 = 19. The unit digit is 9.<br><span class="hi">इकाई अंक 3, 9, 7, 1 (योग 20) दोहराते हैं। 2023 = 4 × 505 + 3, अतः 505 पूरे चक्र (0) और फिर 3 + 9 + 7 = 19। इकाई अंक 9।</span></p>
+</div>
+<div class="q">
+  <div class="n">11. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many of the numbers 1¹, 2², 3³, ..., 20²⁰ end in 6?</b><br><span class="hi">संख्याओं 1¹, 2², 3³, ..., 20²⁰ में से कितनी 6 पर समाप्त होती हैं?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">4</li><li class="">5</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> Check each: 4⁴, 6⁶, 8⁸, 12¹², 14¹⁴ and 16¹⁶ end in 6 (the rest end in 1, 4, 7, 5, 3, 9, 0, 2 or 8 - e.g. 2² = 4, 18¹⁸ → 4). So 6 numbers.<br><span class="hi">हर एक जाँचें: 4⁴, 6⁶, 8⁸, 12¹², 14¹⁴ और 16¹⁶ का इकाई अंक 6 (बाकी 1, 4, 7, 5, 3, 9, 0, 2 या 8 पर - जैसे 2² = 4, 18¹⁸ → 4)। अतः 6 संख्याएँ।</span></p>
+</div>
+<div class="q">
+  <div class="n">12. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of the product of all prime numbers less than 100?</b><br><span class="hi">100 से छोटी सभी अभाज्य संख्याओं के गुणनफल का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">5</li><li class="">1</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> The primes include both 2 and 5, so the product is a multiple of 10 and ends in 0.<br><span class="hi">अभाज्यों में 2 और 5 दोनों हैं, अतः गुणनफल 10 का गुणज है और 0 पर समाप्त होता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">13. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of the product of all odd prime numbers less than 100?</b><br><span class="hi">100 से छोटी सभी विषम अभाज्य संख्याओं के गुणनफल का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">0</li><li class="">1</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> The product contains 5 and only odd numbers, so it is an odd multiple of 5, which always ends in 5.<br><span class="hi">गुणनफल में 5 और केवल विषम संख्याएँ हैं, अतः यह 5 का विषम गुणज है, जो सदैव 5 पर समाप्त होता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">14. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1⁴ + 2⁴ + 3⁴ + ... + 100⁴?</b><br><span class="hi">1⁴ + 2⁴ + 3⁴ + ... + 100⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">3</li><li class="">5</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> Fourth powers of 1 to 10 end in 1, 6, 1, 6, 5, 6, 1, 6, 1, 0, adding to 33. The pattern repeats in each group of ten, so the sum ends like 10 × 33 = 330: the unit digit is 0.<br><span class="hi">1 से 10 की चौथी घातों के इकाई अंक 1, 6, 1, 6, 5, 6, 1, 6, 1, 0, योग 33। यह हर दस के समूह में दोहराता है, अतः योग का इकाई अंक 10 × 33 = 330 जैसा: 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">15. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the tens digit of 3¹⁰?</b><br><span class="hi">3¹⁰ का दहाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">9</li><li class="">0</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 3¹⁰ = 59049, so the tens digit is 4.<br><span class="hi">3¹⁰ = 59049, अतः दहाई अंक 4 है।</span></p>
+</div>
+<div class="q">
+  <div class="n">16. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the tens digit of 7⁸?</b><br><span class="hi">7⁸ का दहाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">4</li><li class="">8</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> 7⁴ = 2401 ends in 01, so 7⁸ = (7⁴)² ends in 01 too (7⁸ = 5764801). The tens digit is 0.<br><span class="hi">7⁴ = 2401 के अंतिम अंक 01, अतः 7⁸ = (7⁴)² भी 01 पर (7⁸ = 5764801)। दहाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">17. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest two-digit number x for which 7^x ends in 3?</b><br><span class="hi">वह सबसे छोटी दो अंकों की संख्या x कौन-सी है जिसके लिए 7^x का इकाई अंक 3 है?</span></p>
+  <ol type="A"><li class="right">11 ✔</li><li class="">10</li><li class="">13</li><li class="">15</li></ol>
+  <p class="sol"><b>Solution:</b> 7^x ends in 3 when x leaves 3 on division by 4. The two-digit numbers like that are 11, 15, 19, ..., so the smallest is 11.<br><span class="hi">7^x का इकाई अंक 3 तब है जब x का 4 से शेष 3 हो। ऐसी दो अंकों की संख्याएँ 11, 15, 19, ..., अतः सबसे छोटी 11।</span></p>
+</div>
+<div class="q">
+  <div class="n">18. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2^(3⁵)?</b><br><span class="hi">2^(3⁵) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="">6</li><li class="right">8 ✔</li></ol>
+  <p class="sol"><b>Solution:</b> 3⁵ = 243 = 4 × 60 + 3, so 2²⁴³ ends like 2³ = 8.<br><span class="hi">3⁵ = 243 = 4 × 60 + 3, अतः 2²⁴³ का इकाई अंक 2³ = 8 जैसा।</span></p>
+</div>
+<div class="q">
+  <div class="n">19. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 4^(5⁶)?</b><br><span class="hi">4^(5⁶) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">6</li><li class="">2</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 5⁶ is odd, and 4 to an odd power ends in 4.<br><span class="hi">5⁶ विषम है, और 4 की विषम घात 4 पर समाप्त होती है।</span></p>
+</div>
+<div class="q">
+  <div class="n">20. <span class="t">Number System · Unit Digit · Hard #1</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 13^(17¹⁹)?</b><br><span class="hi">13^(17¹⁹) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">1</li><li class="right">3 ✔</li><li class="">7</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> Powers of 3 repeat every 4, so we need 17¹⁹ on division by 4. 17 leaves 1, so 17¹⁹ leaves 1. The number ends like 3¹: the unit digit is 3.<br><span class="hi">3 की घातें हर 4 पर दोहराती हैं, अतः 17¹⁹ का 4 से शेष चाहिए। 17 का शेष 1, अतः 17¹⁹ का शेष 1। इकाई अंक 3¹ जैसा: 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">21. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 13²⁰?</b><br><span class="hi">13²⁰ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">01 ✔</li><li class="">69</li><li class="">49</li><li class="">21</li></ol>
+  <p class="sol"><b>Solution:</b> Work with the last two digits: 13² = 169 → 69; 13⁴ → 69² = 4761 → 61; 13⁵ → 61 × 13 = 793 → 93; 13¹⁰ → 93² = 8649 → 49; 13²⁰ → 49² = 2401 → 01.<br><span class="hi">अंतिम दो अंकों से काम करें: 13² = 169 → 69; 13⁴ → 69² = 4761 → 61; 13⁵ → 61 × 13 = 793 → 93; 13¹⁰ → 93² = 8649 → 49; 13²⁰ → 49² = 2401 → 01।</span></p>
+</div>
+<div class="q">
+  <div class="n">22. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 21⁴⁷?</b><br><span class="hi">21⁴⁷ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">41 ✔</li><li class="">21</li><li class="">47</li><li class="">61</li></ol>
+  <p class="sol"><b>Solution:</b> 21^n = (20 + 1)^n ends like 1 + 20n. For n = 47: 1 + 940 = 941, so the last two digits are 41.<br><span class="hi">21^n = (20 + 1)^n के अंतिम अंक 1 + 20n जैसे। n = 47 पर: 1 + 940 = 941, अतः अंतिम दो अंक 41।</span></p>
+</div>
+<div class="q">
+  <div class="n">23. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 31³¹?</b><br><span class="hi">31³¹ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">31 ✔</li><li class="">61</li><li class="">91</li><li class="">01</li></ol>
+  <p class="sol"><b>Solution:</b> 31^n = (30 + 1)^n ends like 1 + 30n. For n = 31: 1 + 930 = 931, so the last two digits are 31.<br><span class="hi">31^n = (30 + 1)^n के अंतिम अंक 1 + 30n जैसे। n = 31 पर: 1 + 930 = 931, अतः अंतिम दो अंक 31।</span></p>
+</div>
+<div class="q">
+  <div class="n">24. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 2¹⁰⁰?</b><br><span class="hi">2¹⁰⁰ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">76 ✔</li><li class="">24</li><li class="">36</li><li class="">56</li></ol>
+  <p class="sol"><b>Solution:</b> 2²⁰ = 1048576 ends in 76, and any power of a number ending in 76 ends in 76. 2¹⁰⁰ = (2²⁰)⁵, so the last two digits are 76.<br><span class="hi">2²⁰ = 1048576 के अंतिम अंक 76, और 76 पर समाप्त संख्या की हर घात 76 पर। 2¹⁰⁰ = (2²⁰)⁵, अतः अंतिम दो अंक 76।</span></p>
+</div>
+<div class="q">
+  <div class="n">25. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 99⁹⁹?</b><br><span class="hi">99⁹⁹ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">99 ✔</li><li class="">01</li><li class="">09</li><li class="">91</li></ol>
+  <p class="sol"><b>Solution:</b> 99 = 100 − 1, so its odd powers end in 99 and even powers in 01. 99 is odd, so the last two digits are 99.<br><span class="hi">99 = 100 − 1, अतः इसकी विषम घातें 99 पर और सम घातें 01 पर समाप्त। 99 विषम है, अतः अंतिम दो अंक 99।</span></p>
+</div>
+<div class="q">
+  <div class="n">26. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 25! × 50!?</b><br><span class="hi">25! × 50! के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">18 ✔</li><li class="">16</li><li class="">12</li><li class="">20</li></ol>
+  <p class="sol"><b>Solution:</b> 25! has 5 + 1 = 6 fives and 50! has 10 + 2 = 12. Total 18 fives, with more than enough 2s, so 18 zeros.<br><span class="hi">25! में 5 + 1 = 6 पाँच और 50! में 10 + 2 = 12। कुल 18 पाँच, 2 पर्याप्त से अधिक, अतः 18 शून्य।</span></p>
+</div>
+<div class="q">
+  <div class="n">27. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 10 × 20 × 30 × ... × 500?</b><br><span class="hi">10 × 20 × 30 × ... × 500 के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">62 ✔</li><li class="">50</li><li class="">60</li><li class="">112</li></ol>
+  <p class="sol"><b>Solution:</b> The product is 10⁵⁰ × 50!. 10⁵⁰ gives 50 zeros and 50! gives 10 + 2 = 12 more. Total 62.<br><span class="hi">गुणनफल 10⁵⁰ × 50! है। 10⁵⁰ से 50 शून्य और 50! से 10 + 2 = 12 और। कुल 62।</span></p>
+</div>
+<div class="q">
+  <div class="n">28. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1¹ + 2² + 3³ + ... + 20²⁰?</b><br><span class="hi">1¹ + 2² + 3³ + ... + 20²⁰ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">7</li><li class="">1</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> Unit digits of k^k for k = 1 to 10: 1, 4, 7, 6, 5, 6, 3, 6, 9, 0 (sum 47). For k = 11 to 20: 1, 6, 3, 6, 5, 6, 7, 4, 9, 0 (sum 47). 47 + 47 = 94, so the unit digit is 4.<br><span class="hi">k = 1 से 10 के लिए k^k के इकाई अंक: 1, 4, 7, 6, 5, 6, 3, 6, 9, 0 (योग 47)। k = 11 से 20: 1, 6, 3, 6, 5, 6, 7, 4, 9, 0 (योग 47)। 47 + 47 = 94, अतः इकाई अंक 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">29. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 7^(7⁷)?</b><br><span class="hi">7^(7⁷) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">1</li><li class="right">3 ✔</li><li class="">7</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> We need 7⁷ on division by 4. 7 leaves −1, and 7 is odd, so 7⁷ leaves −1, i.e. 3. The number ends like 7³ = 343: the unit digit is 3.<br><span class="hi">7⁷ का 4 से शेष चाहिए। 7 का शेष −1, और 7 विषम, अतः 7⁷ का शेष −1, यानी 3। इकाई अंक 7³ = 343 जैसा: 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">30. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 9^(8⁷)?</b><br><span class="hi">9^(8⁷) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">9</li><li class="">3</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> 8⁷ is even, and 9 to an even power ends in 1.<br><span class="hi">8⁷ सम है, और 9 की सम घात 1 पर समाप्त होती है।</span></p>
+</div>
+<div class="q">
+  <div class="n">31. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2 + 2² + 2³ + ... + 2¹⁰⁰?</b><br><span class="hi">2 + 2² + 2³ + ... + 2¹⁰⁰ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">2</li><li class="">4</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> The unit digits repeat 2, 4, 8, 6 (sum 20). 100 terms make 25 full cycles, so the sum ends in 0. (Or: the sum is 2¹⁰¹ − 2, and 2¹⁰¹ ends in 2.)<br><span class="hi">इकाई अंक 2, 4, 8, 6 (योग 20) दोहराते हैं। 100 पद 25 पूरे चक्र, अतः योग का इकाई अंक 0। (या: योग 2¹⁰¹ − 2 है, और 2¹⁰¹ का इकाई अंक 2।)</span></p>
+</div>
+<div class="q">
+  <div class="n">32. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of the product 1¹ × 2² × 3³ × ... × 10¹⁰?</b><br><span class="hi">गुणनफल 1¹ × 2² × 3³ × ... × 10¹⁰ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">6</li><li class="">4</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> The product contains 10¹⁰, so it ends in 0.<br><span class="hi">गुणनफल में 10¹⁰ है, अतः यह 0 पर समाप्त होता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">33. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of the product of all the odd numbers from 1 to 99 that are not multiples of 5?</b><br><span class="hi">1 से 99 तक की उन सभी विषम संख्याओं के गुणनफल का इकाई अंक क्या है जो 5 की गुणज नहीं हैं?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">9</li><li class="">3</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> In every ten (like 1, 3, 7, 9 or 11, 13, 17, 19) the unit digits are 1, 3, 7, 9, whose product 189 ends in 9. There are 10 such groups, so the product ends like 9¹⁰, i.e. in 1.<br><span class="hi">हर दस में (जैसे 1, 3, 7, 9 या 11, 13, 17, 19) इकाई अंक 1, 3, 7, 9 हैं, जिनका गुणनफल 189 का इकाई अंक 9। ऐसे 10 समूह हैं, अतः गुणनफल का इकाई अंक 9¹⁰ जैसा, यानी 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">34. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of (2² + 1)(2⁴ + 1)(2⁸ + 1)(2¹⁶ + 1)?</b><br><span class="hi">(2² + 1)(2⁴ + 1)(2⁸ + 1)(2¹⁶ + 1) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">7</li><li class="">1</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> The factors are 5, 17, 257 and 65537. The first is 5 and all are odd, so the product is an odd multiple of 5 and ends in 5.<br><span class="hi">गुणनखंड 5, 17, 257 और 65537 हैं। पहला 5 है और सब विषम, अतः गुणनफल 5 का विषम गुणज है और 5 पर समाप्त होता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">35. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If n is a multiple of 4, what is the unit digit of 2^n + 3^n + 7^n + 8^n?</b><br><span class="hi">यदि n, 4 का गुणज है, तो 2^n + 3^n + 7^n + 8^n का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">0</li><li class="">6</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> For n a multiple of 4: 2^n and 8^n end in 6, 3^n and 7^n end in 1. 6 + 1 + 1 + 6 = 14, so the unit digit is 4.<br><span class="hi">n के 4 का गुणज होने पर: 2^n और 8^n का इकाई अंक 6, 3^n और 7^n का 1। 6 + 1 + 1 + 6 = 14, अतः इकाई अंक 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">36. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2² + 4⁴ + 6⁶ + 8⁸?</b><br><span class="hi">2² + 4⁴ + 6⁶ + 8⁸ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 2² = 4, 4⁴ = 256 (6), 6⁶ ends in 6, and 8⁸ ends like 8⁴ (6). 4 + 6 + 6 + 6 = 22, so the unit digit is 2.<br><span class="hi">2² = 4, 4⁴ = 256 (6), 6⁶ का 6, और 8⁸ का 8⁴ जैसा (6)। 4 + 6 + 6 + 6 = 22, अतः इकाई अंक 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">37. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3^(3^(3³))?</b><br><span class="hi">3^(3^(3³)) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">1</li><li class="">3</li><li class="right">7 ✔</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 3³ = 27, so the exponent is 3²⁷. 3 leaves −1 on division by 4 and 27 is odd, so 3²⁷ leaves 3. The number ends like 3³ = 27: the unit digit is 7.<br><span class="hi">3³ = 27, अतः घातांक 3²⁷ है। 3 का 4 से शेष −1 और 27 विषम, अतः 3²⁷ का शेष 3। इकाई अंक 3³ = 27 जैसा: 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">38. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many values of n from 1 to 100 does 3^n end in 7?</b><br><span class="hi">1 से 100 तक n के कितने मानों के लिए 3^n का इकाई अंक 7 है?</span></p>
+  <ol type="A"><li class="right">25 ✔</li><li class="">24</li><li class="">33</li><li class="">50</li></ol>
+  <p class="sol"><b>Solution:</b> 3^n ends in 7 when n leaves 3 on division by 4: n = 3, 7, 11, ..., 99. That is (99 − 3) ÷ 4 + 1 = 25 values.<br><span class="hi">3^n का इकाई अंक 7 तब है जब n का 4 से शेष 3 हो: n = 3, 7, 11, ..., 99। यानी (99 − 3) ÷ 4 + 1 = 25 मान।</span></p>
+</div>
+<div class="q">
+  <div class="n">39. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 12! ÷ 10!?</b><br><span class="hi">12! ÷ 10! का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 12! ÷ 10! = 12 × 11 = 132. The unit digit is 2.<br><span class="hi">12! ÷ 10! = 12 × 11 = 132। इकाई अंक 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">40. <span class="t">Number System · Unit Digit · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of (7!)⁷?</b><br><span class="hi">(7!)⁷ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 7! = 5040 ends in 0, so every power of it ends in 0.<br><span class="hi">7! = 5040 का इकाई अंक 0, अतः इसकी हर घात 0 पर समाप्त।</span></p>
+</div>
+<div class="q">
+  <div class="n">41. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 3¹⁰⁰?</b><br><span class="hi">3¹⁰⁰ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">01 ✔</li><li class="">81</li><li class="">21</li><li class="">41</li></ol>
+  <p class="sol"><b>Solution:</b> 3²⁰ = 3486784401 ends in 01, and 3¹⁰⁰ = (3²⁰)⁵, so it ends in 01.<br><span class="hi">3²⁰ = 3486784401 के अंतिम अंक 01, और 3¹⁰⁰ = (3²⁰)⁵, अतः यह 01 पर समाप्त।</span></p>
+</div>
+<div class="q">
+  <div class="n">42. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 7²⁰²³?</b><br><span class="hi">7²⁰²³ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">43 ✔</li><li class="">07</li><li class="">49</li><li class="">01</li></ol>
+  <p class="sol"><b>Solution:</b> 7⁴ = 2401 ends in 01, and 2023 = 4 × 505 + 3, so 7²⁰²³ ends like 7³ = 343. The last two digits are 43.<br><span class="hi">7⁴ = 2401 के अंतिम अंक 01, और 2023 = 4 × 505 + 3, अतः 7²⁰²³ के अंतिम अंक 7³ = 343 जैसे। अंतिम दो अंक 43।</span></p>
+</div>
+<div class="q">
+  <div class="n">43. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 41²⁰?</b><br><span class="hi">41²⁰ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">01 ✔</li><li class="">41</li><li class="">81</li><li class="">21</li></ol>
+  <p class="sol"><b>Solution:</b> 41^n = (40 + 1)^n ends like 1 + 40n. For n = 20: 1 + 800 = 801, so the last two digits are 01.<br><span class="hi">41^n = (40 + 1)^n के अंतिम अंक 1 + 40n जैसे। n = 20 पर: 1 + 800 = 801, अतः अंतिम दो अंक 01।</span></p>
+</div>
+<div class="q">
+  <div class="n">44. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 8²⁰?</b><br><span class="hi">8²⁰ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">76 ✔</li><li class="">24</li><li class="">56</li><li class="">36</li></ol>
+  <p class="sol"><b>Solution:</b> 8²⁰ = 2⁶⁰ = (2²⁰)³. 2²⁰ ends in 76, and powers of a number ending in 76 end in 76. The last two digits are 76.<br><span class="hi">8²⁰ = 2⁶⁰ = (2²⁰)³। 2²⁰ के अंतिम अंक 76, और 76 पर समाप्त संख्या की घातें 76 पर। अंतिम दो अंक 76।</span></p>
+</div>
+<div class="q">
+  <div class="n">45. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 51⁵¹?</b><br><span class="hi">51⁵¹ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">51 ✔</li><li class="">01</li><li class="">11</li><li class="">61</li></ol>
+  <p class="sol"><b>Solution:</b> 51^n = (50 + 1)^n ends like 1 + 50n. For n = 51: 1 + 2550 = 2551, so the last two digits are 51.<br><span class="hi">51^n = (50 + 1)^n के अंतिम अंक 1 + 50n जैसे। n = 51 पर: 1 + 2550 = 2551, अतः अंतिम दो अंक 51।</span></p>
+</div>
+<div class="q">
+  <div class="n">46. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 91 × 92 × 93 × ... × 100?</b><br><span class="hi">91 × 92 × 93 × ... × 100 के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">2</li><li class="">4</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> Only 95 (= 5 × 19) and 100 (= 2² × 5²) contain 5s: 1 + 2 = 3 fives. There are plenty of 2s, so 3 zeros.<br><span class="hi">केवल 95 (= 5 × 19) और 100 (= 2² × 5²) में 5 हैं: 1 + 2 = 3 पाँच। 2 पर्याप्त हैं, अतः 3 शून्य।</span></p>
+</div>
+<div class="q">
+  <div class="n">47. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 2¹⁰ × 5¹⁵ × 10⁵?</b><br><span class="hi">2¹⁰ × 5¹⁵ × 10⁵ के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">15 ✔</li><li class="">20</li><li class="">10</li><li class="">30</li></ol>
+  <p class="sol"><b>Solution:</b> 2s: 10 + 5 = 15. 5s: 15 + 5 = 20. Each zero needs one of each, so there are 15 zeros.<br><span class="hi">2: 10 + 5 = 15। 5: 15 + 5 = 20। हर शून्य को दोनों में से एक-एक चाहिए, अतः 15 शून्य।</span></p>
+</div>
+<div class="q">
+  <div class="n">48. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the tens digit of 6²⁰?</b><br><span class="hi">6²⁰ का दहाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">3</li><li class="">5</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 6⁵ = 7776 ends in 76, and powers of a number ending in 76 end in 76. 6²⁰ = (6⁵)⁴ ends in 76, so the tens digit is 7.<br><span class="hi">6⁵ = 7776 के अंतिम अंक 76, और 76 पर समाप्त संख्या की घातें 76 पर। 6²⁰ = (6⁵)⁴ के अंतिम अंक 76, अतः दहाई अंक 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">49. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 1¹ × 2² × 3³ × ... × 10¹⁰?</b><br><span class="hi">1¹ × 2² × 3³ × ... × 10¹⁰ के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">15 ✔</li><li class="">10</li><li class="">20</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 5s come from 5⁵ (five) and 10¹⁰ (ten): 15 in all. 2s are far more (2², 4⁴, 6⁶, 8⁸, 10¹⁰), so there are 15 zeros.<br><span class="hi">5 आते हैं 5⁵ (पाँच) और 10¹⁰ (दस) से: कुल 15। 2 बहुत अधिक (2², 4⁴, 6⁶, 8⁸, 10¹⁰), अतः 15 शून्य।</span></p>
+</div>
+<div class="q">
+  <div class="n">50. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2²⁰²³ + 4²⁰²³ + 6²⁰²³ + 8²⁰²³?</b><br><span class="hi">2²⁰²³ + 4²⁰²³ + 6²⁰²³ + 8²⁰²³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 2023 = 4 × 505 + 3. 2²⁰²³ → 8, 4²⁰²³ → 4 (odd power), 6²⁰²³ → 6, 8²⁰²³ → 8³ → 2. 8 + 4 + 6 + 2 = 20, so the unit digit is 0.<br><span class="hi">2023 = 4 × 505 + 3। 2²⁰²³ → 8, 4²⁰²³ → 4 (विषम घात), 6²⁰²³ → 6, 8²⁰²³ → 8³ → 2। 8 + 4 + 6 + 2 = 20, अतः इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">51. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many natural numbers x less than 20 does 2^x end in 4?</b><br><span class="hi">20 से छोटी कितनी प्राकृत संख्याओं x के लिए 2^x का इकाई अंक 4 है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">4</li><li class="">6</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 2^x ends in 4 when x leaves 2 on division by 4: x = 2, 6, 10, 14, 18. So 5 values.<br><span class="hi">2^x का इकाई अंक 4 तब है जब x का 4 से शेष 2 हो: x = 2, 6, 10, 14, 18। अतः 5 मान।</span></p>
+</div>
+<div class="q">
+  <div class="n">52. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the tens digit of 2²⁰?</b><br><span class="hi">2²⁰ का दहाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">5</li><li class="">4</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> 2¹⁰ = 1024, so 2²⁰ = 1024² = 1048576. The tens digit is 7.<br><span class="hi">2¹⁰ = 1024, अतः 2²⁰ = 1024² = 1048576। दहाई अंक 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">53. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1³ + 2³ + 3³ + ... + 100³?</b><br><span class="hi">1³ + 2³ + 3³ + ... + 100³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">5</li><li class="">1</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> Sum of the first n cubes = (n(n + 1)/2)² = 5050², which ends in 0.<br><span class="hi">पहले n घनों का योग = (n(n + 1)/2)² = 5050², जो 0 पर समाप्त होता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">54. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 9^(9^(9⁹))?</b><br><span class="hi">9^(9^(9⁹)) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">9 ✔</li><li class="">1</li><li class="">3</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> The exponent 9^(9⁹) is an odd number (any power of 9 is odd), and 9 to an odd power ends in 9.<br><span class="hi">घातांक 9^(9⁹) विषम है (9 की हर घात विषम), और 9 की विषम घात 9 पर समाप्त होती है।</span></p>
+</div>
+<div class="q">
+  <div class="n">55. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1! + 2! + 3! + ... + 1000!?</b><br><span class="hi">1! + 2! + 3! + ... + 1000! का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">0</li><li class="">9</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> Every factorial from 5! on ends in 0, so only 1 + 2 + 6 + 24 = 33 counts. The unit digit is 3.<br><span class="hi">5! से आगे हर क्रमगुणित 0 पर समाप्त, अतः केवल 1 + 2 + 6 + 24 = 33 गिना जाता है। इकाई अंक 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">56. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For every natural number n ≥ 2, what is the unit digit of 3^(2^n)?</b><br><span class="hi">हर प्राकृत संख्या n ≥ 2 के लिए 3^(2^n) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">3</li><li class="">7</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> For n ≥ 2, 2^n is a multiple of 4, so 3^(2^n) ends like 3⁴ = 81: the unit digit is 1.<br><span class="hi">n ≥ 2 के लिए 2^n, 4 का गुणज है, अतः 3^(2^n) का इकाई अंक 3⁴ = 81 जैसा: 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">57. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For every natural number n, what is the unit digit of 2^(5^n)?</b><br><span class="hi">हर प्राकृत संख्या n के लिए 2^(5^n) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 5^n always leaves 1 on division by 4 (5 = 4 + 1). So 2^(5^n) ends like 2¹: the unit digit is 2.<br><span class="hi">5^n का 4 से शेष सदैव 1 (5 = 4 + 1)। अतः 2^(5^n) का इकाई अंक 2¹ जैसा: 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">58. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2¹ × 3² × 4³ × 5⁴ × 6⁵ × 7⁶ × 8⁷ × 9⁸?</b><br><span class="hi">2¹ × 3² × 4³ × 5⁴ × 6⁵ × 7⁶ × 8⁷ × 9⁸ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">5</li><li class="">6</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> The product contains 5⁴ and even factors like 2¹, so it is a multiple of 10 and ends in 0.<br><span class="hi">गुणनफल में 5⁴ और 2¹ जैसे सम गुणनखंड हैं, अतः यह 10 का गुणज है और 0 पर समाप्त होता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">59. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 14! − 12!?</b><br><span class="hi">14! − 12! का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">6</li><li class="">4</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> Both 14! and 12! contain 2 × 5 and end in 0, so their difference also ends in 0.<br><span class="hi">14! और 12! दोनों में 2 × 5 है और दोनों 0 पर समाप्त, अतः अंतर भी 0 पर समाप्त।</span></p>
+</div>
+<div class="q">
+  <div class="n">60. <span class="t">Number System · Unit Digit · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 6^(6⁶) − 5^(5⁵)?</b><br><span class="hi">6^(6⁶) − 5^(5⁵) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">0</li><li class="">5</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> Every power of 6 ends in 6 and every power of 5 ends in 5, and the first number is far larger. So the difference ends in 6 − 5 = 1.<br><span class="hi">6 की हर घात 6 पर और 5 की हर घात 5 पर समाप्त होती है, और पहली संख्या बहुत बड़ी है। अतः अंतर का इकाई अंक 6 − 5 = 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">61. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 17²⁵?</b><br><span class="hi">17²⁵ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">57 ✔</li><li class="">17</li><li class="">37</li><li class="">77</li></ol>
+  <p class="sol"><b>Solution:</b> 17² = 289 → 89; 17⁴ → 89² = 7921 → 21; 17⁵ → 21 × 17 = 357 → 57; 17¹⁰ → 57² = 3249 → 49; 17²⁰ → 49² = 2401 → 01. So 17²⁵ = 17²⁰ × 17⁵ → 01 × 57 = 57.<br><span class="hi">17² = 289 → 89; 17⁴ → 89² = 7921 → 21; 17⁵ → 21 × 17 = 357 → 57; 17¹⁰ → 57² = 3249 → 49; 17²⁰ → 49² = 2401 → 01। अतः 17²⁵ = 17²⁰ × 17⁵ → 01 × 57 = 57।</span></p>
+</div>
+<div class="q">
+  <div class="n">62. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 6²⁵?</b><br><span class="hi">6²⁵ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">76 ✔</li><li class="">56</li><li class="">36</li><li class="">16</li></ol>
+  <p class="sol"><b>Solution:</b> 6⁵ = 7776 ends in 76, and powers of a number ending in 76 end in 76. 6²⁵ = (6⁵)⁵, so the last two digits are 76.<br><span class="hi">6⁵ = 7776 के अंतिम अंक 76, और 76 पर समाप्त संख्या की घातें 76 पर। 6²⁵ = (6⁵)⁵, अतः अंतिम दो अंक 76।</span></p>
+</div>
+<div class="q">
+  <div class="n">63. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 12¹⁰?</b><br><span class="hi">12¹⁰ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">24 ✔</li><li class="">44</li><li class="">64</li><li class="">84</li></ol>
+  <p class="sol"><b>Solution:</b> 12² = 144 → 44; 12⁴ → 44² = 1936 → 36; 12⁵ → 36 × 12 = 432 → 32; 12¹⁰ → 32² = 1024 → 24.<br><span class="hi">12² = 144 → 44; 12⁴ → 44² = 1936 → 36; 12⁵ → 36 × 12 = 432 → 32; 12¹⁰ → 32² = 1024 → 24।</span></p>
+</div>
+<div class="q">
+  <div class="n">64. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 5¹⁰⁰?</b><br><span class="hi">5¹⁰⁰ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">25 ✔</li><li class="">75</li><li class="">05</li><li class="">00</li></ol>
+  <p class="sol"><b>Solution:</b> From 5² = 25 on, every power of 5 ends in 25 (125, 625, 3125, ...). So 5¹⁰⁰ ends in 25.<br><span class="hi">5² = 25 से आगे 5 की हर घात 25 पर समाप्त होती है (125, 625, 3125, ...)। अतः 5¹⁰⁰ के अंतिम अंक 25।</span></p>
+</div>
+<div class="q">
+  <div class="n">65. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 4⁹⁹?</b><br><span class="hi">4⁹⁹ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">44 ✔</li><li class="">64</li><li class="">24</li><li class="">84</li></ol>
+  <p class="sol"><b>Solution:</b> 4⁹⁹ = 2¹⁹⁸. 2²⁰ ends in 76, so 2¹⁸⁰ = (2²⁰)⁹ ends in 76. 2¹⁹⁸ = 2¹⁸⁰ × 2¹⁸ → 76 × 44 (2¹⁸ = 262144) = 3344 → 44.<br><span class="hi">4⁹⁹ = 2¹⁹⁸। 2²⁰ के अंतिम अंक 76, अतः 2¹⁸⁰ = (2²⁰)⁹ के 76। 2¹⁹⁸ = 2¹⁸⁰ × 2¹⁸ → 76 × 44 (2¹⁸ = 262144) = 3344 → 44।</span></p>
+</div>
+<div class="q">
+  <div class="n">66. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 125!?</b><br><span class="hi">125! के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">31 ✔</li><li class="">25</li><li class="">30</li><li class="">28</li></ol>
+  <p class="sol"><b>Solution:</b> [125/5] + [125/25] + [125/125] = 25 + 5 + 1 = 31.<br><span class="hi">[125/5] + [125/25] + [125/125] = 25 + 5 + 1 = 31।</span></p>
+</div>
+<div class="q">
+  <div class="n">67. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 40! − 39!?</b><br><span class="hi">40! − 39! के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">8 ✔</li><li class="">9</li><li class="">7</li><li class="">10</li></ol>
+  <p class="sol"><b>Solution:</b> 40! − 39! = 39! × (40 − 1) = 39! × 39. 39 adds no 2 or 5, so the zeros are those of 39!: [39/5] + [39/25] = 7 + 1 = 8.<br><span class="hi">40! − 39! = 39! × (40 − 1) = 39! × 39। 39 कोई 2 या 5 नहीं जोड़ता, अतः शून्य 39! जितने: [39/5] + [39/25] = 7 + 1 = 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">68. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 50! × 50?</b><br><span class="hi">50! × 50 के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">14 ✔</li><li class="">12</li><li class="">13</li><li class="">15</li></ol>
+  <p class="sol"><b>Solution:</b> 50! has 10 + 2 = 12 fives, and 50 = 2 × 5² adds 2 more: 14 fives. There are plenty of 2s, so 14 zeros.<br><span class="hi">50! में 10 + 2 = 12 पाँच, और 50 = 2 × 5² से 2 और: 14 पाँच। 2 पर्याप्त हैं, अतः 14 शून्य।</span></p>
+</div>
+<div class="q">
+  <div class="n">69. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1¹ + 2² + 3³ + ... + 9⁹?</b><br><span class="hi">1¹ + 2² + 3³ + ... + 9⁹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">3</li><li class="">1</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> Unit digits: 1, 4, 7 (27), 6 (256), 5, 6, 3 (7⁷), 6 (8⁸), 9 (9⁹). They add to 47, so the unit digit is 7.<br><span class="hi">इकाई अंक: 1, 4, 7 (27), 6 (256), 5, 6, 3 (7⁷), 6 (8⁸), 9 (9⁹)। इनका योग 47, अतः इकाई अंक 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">70. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 8^(8⁸)?</b><br><span class="hi">8^(8⁸) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="right">6 ✔</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 8⁸ is a multiple of 4, so 8^(8⁸) ends like 8⁴ = 4096: the unit digit is 6.<br><span class="hi">8⁸, 4 का गुणज है, अतः 8^(8⁸) का इकाई अंक 8⁴ = 4096 जैसा: 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">71. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2^(2²⁰²³)?</b><br><span class="hi">2^(2²⁰²³) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="right">6 ✔</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 2²⁰²³ is a multiple of 4, so 2^(2²⁰²³) ends like 2⁴ = 16: the unit digit is 6.<br><span class="hi">2²⁰²³, 4 का गुणज है, अतः 2^(2²⁰²³) का इकाई अंक 2⁴ = 16 जैसा: 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">72. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 7^(2²) + 3^(2³)?</b><br><span class="hi">7^(2²) + 3^(2³) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 7^(2²) = 7⁴ = 2401 ends in 1, and 3^(2³) = 3⁸ = 6561 ends in 1. 1 + 1 = 2.<br><span class="hi">7^(2²) = 7⁴ = 2401 का इकाई अंक 1, और 3^(2³) = 3⁸ = 6561 का 1। 1 + 1 = 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">73. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 13! ÷ 11!?</b><br><span class="hi">13! ÷ 11! का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="right">6 ✔</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 13! ÷ 11! = 13 × 12 = 156. The unit digit is 6.<br><span class="hi">13! ÷ 11! = 13 × 12 = 156। इकाई अंक 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">74. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If n is a multiple of 4, what is the unit digit of 7^n − 3^n?</b><br><span class="hi">यदि n, 4 का गुणज है, तो 7^n − 3^n का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> For n a multiple of 4, both 7^n and 3^n end in 1, so 7^n − 3^n ends in 0.<br><span class="hi">n के 4 का गुणज होने पर 7^n और 3^n दोनों 1 पर समाप्त, अतः 7^n − 3^n का इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">75. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many of the squares 1², 2², 3², ..., 100² end in 9?</b><br><span class="hi">वर्गों 1², 2², 3², ..., 100² में से कितने 9 पर समाप्त होते हैं?</span></p>
+  <ol type="A"><li class="right">20 ✔</li><li class="">10</li><li class="">25</li><li class="">30</li></ol>
+  <p class="sol"><b>Solution:</b> n² ends in 9 exactly when n ends in 3 or 7. From 1 to 100 there are 10 numbers ending in 3 and 10 ending in 7: 20 in all.<br><span class="hi">n² ठीक तब 9 पर समाप्त होता है जब n, 3 या 7 पर समाप्त हो। 1 से 100 तक 3 पर समाप्त 10 और 7 पर समाप्त 10: कुल 20।</span></p>
+</div>
+<div class="q">
+  <div class="n">76. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2¹ × 2² × 2³ × ... × 2²⁰?</b><br><span class="hi">2¹ × 2² × 2³ × ... × 2²⁰ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="right">4 ✔</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> The product is 2^(1 + 2 + ... + 20) = 2²¹⁰. 210 = 4 × 52 + 2, so it ends like 2² = 4.<br><span class="hi">गुणनफल 2^(1 + 2 + ... + 20) = 2²¹⁰ है। 210 = 4 × 52 + 2, अतः इकाई अंक 2² = 4 जैसा।</span></p>
+</div>
+<div class="q">
+  <div class="n">77. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1 + 4 + 4² + 4³ + ... + 4²⁰?</b><br><span class="hi">1 + 4 + 4² + 4³ + ... + 4²⁰ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">5</li><li class="">0</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> After the first 1, the 20 terms 4, 4², ..., 4²⁰ end in 4, 6, 4, 6, ...: ten pairs of 4 + 6 = 10. So the sum ends like 1 + 0: the unit digit is 1.<br><span class="hi">पहले 1 के बाद, 20 पद 4, 4², ..., 4²⁰ के इकाई अंक 4, 6, 4, 6, ...: दस जोड़े 4 + 6 = 10। अतः योग का इकाई अंक 1 + 0 जैसा: 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">78. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 5^(5⁵) + 6^(6⁶)?</b><br><span class="hi">5^(5⁵) + 6^(6⁶) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">5</li><li class="">6</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> Every power of 5 ends in 5 and every power of 6 ends in 6. 5 + 6 = 11, so the unit digit is 1.<br><span class="hi">5 की हर घात 5 पर और 6 की हर घात 6 पर समाप्त होती है। 5 + 6 = 11, अतः इकाई अंक 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">79. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the tens digit of 13³?</b><br><span class="hi">13³ का दहाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">9 ✔</li><li class="">1</li><li class="">7</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> 13³ = 13 × 169 = 2197, so the tens digit is 9.<br><span class="hi">13³ = 13 × 169 = 2197, अतः दहाई अंक 9।</span></p>
+</div>
+<div class="q">
+  <div class="n">80. <span class="t">Number System · Unit Digit · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 11! + 12! + 13! + ... + 20!?</b><br><span class="hi">11! + 12! + 13! + ... + 20! का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">1</li><li class="">5</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> Every factorial from 5! on ends in 0, so a sum of such factorials ends in 0.<br><span class="hi">5! से आगे हर क्रमगुणित 0 पर समाप्त, अतः ऐसे क्रमगुणितों का योग भी 0 पर।</span></p>
+</div>
+<div class="q">
+  <div class="n">81. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 19²⁰²³?</b><br><span class="hi">19²⁰²³ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">59 ✔</li><li class="">19</li><li class="">39</li><li class="">79</li></ol>
+  <p class="sol"><b>Solution:</b> 19² = 361 → 61; 19⁴ → 61² = 3721 → 21; 19⁵ → 21 × 19 = 399 → 99; 19¹⁰ → 99² → 01. So 19²⁰²³ = (19¹⁰)²⁰² × 19³ → 19³ = 6859 → 59.<br><span class="hi">19² = 361 → 61; 19⁴ → 61² = 3721 → 21; 19⁵ → 21 × 19 = 399 → 99; 19¹⁰ → 99² → 01। अतः 19²⁰²³ = (19¹⁰)²⁰² × 19³ → 19³ = 6859 → 59।</span></p>
+</div>
+<div class="q">
+  <div class="n">82. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 23⁴?</b><br><span class="hi">23⁴ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">41 ✔</li><li class="">29</li><li class="">81</li><li class="">61</li></ol>
+  <p class="sol"><b>Solution:</b> 23² = 529 → 29, and 29² = 841 → 41. So 23⁴ ends in 41 (23⁴ = 279841).<br><span class="hi">23² = 529 → 29, और 29² = 841 → 41। अतः 23⁴ के अंतिम अंक 41 (23⁴ = 279841)।</span></p>
+</div>
+<div class="q">
+  <div class="n">83. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 2²⁰²³?</b><br><span class="hi">2²⁰²³ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">08 ✔</li><li class="">48</li><li class="">28</li><li class="">68</li></ol>
+  <p class="sol"><b>Solution:</b> Every 2^(20k) (k ≥ 1) ends in 76. 2023 = 20 × 101 + 3, so 2²⁰²³ → 76 × 2³ = 608 → 08.<br><span class="hi">हर 2^(20k) (k ≥ 1) के अंतिम अंक 76। 2023 = 20 × 101 + 3, अतः 2²⁰²³ → 76 × 2³ = 608 → 08।</span></p>
+</div>
+<div class="q">
+  <div class="n">84. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 3²⁰²³?</b><br><span class="hi">3²⁰²³ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">27 ✔</li><li class="">87</li><li class="">47</li><li class="">67</li></ol>
+  <p class="sol"><b>Solution:</b> 3²⁰ ends in 01, and 2023 = 20 × 101 + 3, so 3²⁰²³ ends like 3³ = 27.<br><span class="hi">3²⁰ के अंतिम अंक 01, और 2023 = 20 × 101 + 3, अतः 3²⁰²³ के अंतिम अंक 3³ = 27 जैसे।</span></p>
+</div>
+<div class="q">
+  <div class="n">85. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 77⁷⁷?</b><br><span class="hi">77⁷⁷ के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">97 ✔</li><li class="">77</li><li class="">17</li><li class="">37</li></ol>
+  <p class="sol"><b>Solution:</b> 77² = 5929 → 29; 77⁴ → 29² = 841 → 41; 77⁵ → 41 × 77 = 3157 → 57; 77¹⁰ → 57² → 49; 77²⁰ → 49² → 01. 77 = 20 × 3 + 17, and 77¹⁷ = 77¹⁰ × 77⁵ × 77² → 49 × 57 × 29 → 93 × 29 → 2697 → 97.<br><span class="hi">77² = 5929 → 29; 77⁴ → 29² = 841 → 41; 77⁵ → 41 × 77 = 3157 → 57; 77¹⁰ → 57² → 49; 77²⁰ → 49² → 01। 77 = 20 × 3 + 17, और 77¹⁷ = 77¹⁰ × 77⁵ × 77² → 49 × 57 × 29 → 93 × 29 → 2697 → 97।</span></p>
+</div>
+<div class="q">
+  <div class="n">86. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 400!?</b><br><span class="hi">400! के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">99 ✔</li><li class="">80</li><li class="">96</li><li class="">100</li></ol>
+  <p class="sol"><b>Solution:</b> [400/5] + [400/25] + [400/125] = 80 + 16 + 3 = 99.<br><span class="hi">[400/5] + [400/25] + [400/125] = 80 + 16 + 3 = 99।</span></p>
+</div>
+<div class="q">
+  <div class="n">87. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 3⁵ × 5³ × 2⁴?</b><br><span class="hi">3⁵ × 5³ × 2⁴ के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">4</li><li class="">5</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> There are three 5s and four 2s, so three pairs: 3 zeros. (3⁵ × 5³ × 2⁴ = 486000.)<br><span class="hi">तीन 5 और चार 2 हैं, अतः तीन जोड़े: 3 शून्य। (3⁵ × 5³ × 2⁴ = 486000।)</span></p>
+</div>
+<div class="q">
+  <div class="n">88. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of (5!)!?</b><br><span class="hi">(5!)! के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">28 ✔</li><li class="">24</li><li class="">29</li><li class="">30</li></ol>
+  <p class="sol"><b>Solution:</b> 5! = 120, so we need the zeros of 120!: [120/5] + [120/25] = 24 + 4 = 28.<br><span class="hi">5! = 120, अतः 120! के शून्य चाहिए: [120/5] + [120/25] = 24 + 4 = 28।</span></p>
+</div>
+<div class="q">
+  <div class="n">89. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of (1!)² + (2!)² + (3!)² + ... + (10!)²?</b><br><span class="hi">(1!)² + (2!)² + (3!)² + ... + (10!)² का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">3</li><li class="">1</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> From 5! on the squares end in 0. 1² + 2² + 6² + 24² = 1 + 4 + 36 + 576 = 617, so the unit digit is 7.<br><span class="hi">5! से आगे वर्ग 0 पर समाप्त। 1² + 2² + 6² + 24² = 1 + 4 + 36 + 576 = 617, अतः इकाई अंक 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">90. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2^(3⁴)?</b><br><span class="hi">2^(3⁴) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 3⁴ = 81 = 4 × 20 + 1, so 2⁸¹ ends like 2¹: the unit digit is 2.<br><span class="hi">3⁴ = 81 = 4 × 20 + 1, अतः 2⁸¹ का इकाई अंक 2¹ जैसा: 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">91. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1 × 3 × 7 × 9 × 11 × 13 × 17 × 19?</b><br><span class="hi">1 × 3 × 7 × 9 × 11 × 13 × 17 × 19 का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">9</li><li class="">3</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> 1 × 3 × 7 × 9 = 189 ends in 9, and 11 × 13 × 17 × 19 also ends like 1 × 3 × 7 × 9, i.e. in 9. 9 × 9 = 81, so the unit digit is 1.<br><span class="hi">1 × 3 × 7 × 9 = 189 का इकाई अंक 9, और 11 × 13 × 17 × 19 का भी 1 × 3 × 7 × 9 जैसा, यानी 9। 9 × 9 = 81, अतः इकाई अंक 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">92. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 999⁹⁹⁹ × 777⁷⁷⁷?</b><br><span class="hi">999⁹⁹⁹ × 777⁷⁷⁷ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">1</li><li class="right">3 ✔</li><li class="">7</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 999⁹⁹⁹ ends in 9 (odd power of 9). 777 = 4 × 194 + 1, so 777⁷⁷⁷ ends in 7. 9 × 7 = 63: the unit digit is 3.<br><span class="hi">999⁹⁹⁹ का इकाई अंक 9 (9 की विषम घात)। 777 = 4 × 194 + 1, अतः 777⁷⁷⁷ का 7। 9 × 7 = 63: इकाई अंक 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">93. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If n is the sum of the first 20 odd natural numbers, what is the unit digit of 2^n?</b><br><span class="hi">यदि n पहली 20 विषम प्राकृत संख्याओं का योग है, तो 2^n का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="right">6 ✔</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> n = 20² = 400, a multiple of 4. So 2⁴⁰⁰ ends like 2⁴ = 16: the unit digit is 6.<br><span class="hi">n = 20² = 400, जो 4 का गुणज है। अतः 2⁴⁰⁰ का इकाई अंक 2⁴ = 16 जैसा: 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">94. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3^(1!) + 3^(2!) + 3^(3!) + 3^(4!)?</b><br><span class="hi">3^(1!) + 3^(2!) + 3^(3!) + 3^(4!) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> The exponents are 1, 2, 6 and 24. 3¹ → 3, 3² → 9, 3⁶ → 9 (6 leaves 2), 3²⁴ → 1. 3 + 9 + 9 + 1 = 22, so the unit digit is 2.<br><span class="hi">घातांक 1, 2, 6 और 24 हैं। 3¹ → 3, 3² → 9, 3⁶ → 9 (6 का शेष 2), 3²⁴ → 1। 3 + 9 + 9 + 1 = 22, अतः इकाई अंक 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">95. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 4^(3³) + 9^(2²)?</b><br><span class="hi">4^(3³) + 9^(2²) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">3</li><li class="">7</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> 3³ = 27 is odd, so 4²⁷ ends in 4. 2² = 4 is even, so 9⁴ ends in 1. 4 + 1 = 5.<br><span class="hi">3³ = 27 विषम है, अतः 4²⁷ का इकाई अंक 4। 2² = 4 सम है, अतः 9⁴ का 1। 4 + 1 = 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">96. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many values of n from 1 to 50 does 2^n + 3^n end in 5?</b><br><span class="hi">1 से 50 तक n के कितने मानों के लिए 2^n + 3^n का इकाई अंक 5 है?</span></p>
+  <ol type="A"><li class="right">25 ✔</li><li class="">12</li><li class="">13</li><li class="">50</li></ol>
+  <p class="sol"><b>Solution:</b> By the remainder of n on division by 4: 1 gives 2 + 3 = 5, 2 gives 4 + 9 = 13, 3 gives 8 + 7 = 15, 0 gives 6 + 1 = 7. So the sum ends in 5 exactly for odd n: 25 values.<br><span class="hi">n के 4 से शेष के अनुसार: 1 पर 2 + 3 = 5, 2 पर 4 + 9 = 13, 3 पर 8 + 7 = 15, 0 पर 6 + 1 = 7। अतः योग ठीक विषम n पर 5 पर समाप्त: 25 मान।</span></p>
+</div>
+<div class="q">
+  <div class="n">97. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1¹ + 2² + 3³ + ... + 15¹⁵?</b><br><span class="hi">1¹ + 2² + 3³ + ... + 15¹⁵ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">8 ✔</li><li class="">7</li><li class="">2</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> k = 1 to 10 give unit digits adding to 47 (1, 4, 7, 6, 5, 6, 3, 6, 9, 0). k = 11 to 15 give 1, 6, 3, 6, 5 (sum 21). 47 + 21 = 68, so the unit digit is 8.<br><span class="hi">k = 1 से 10 के इकाई अंकों का योग 47 (1, 4, 7, 6, 5, 6, 3, 6, 9, 0)। k = 11 से 15: 1, 6, 3, 6, 5 (योग 21)। 47 + 21 = 68, अतः इकाई अंक 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">98. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If p is a prime number greater than 5, what is the unit digit of p⁴?</b><br><span class="hi">यदि p, 5 से बड़ी एक अभाज्य संख्या है, तो p⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">6</li><li class="">9</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> A prime above 5 ends in 1, 3, 7 or 9. The fourth powers 1⁴, 3⁴ = 81, 7⁴ = 2401, 9⁴ = 6561 all end in 1. So p⁴ always ends in 1.<br><span class="hi">5 से बड़ा अभाज्य 1, 3, 7 या 9 पर समाप्त होता है। चौथी घातें 1⁴, 3⁴ = 81, 7⁴ = 2401, 9⁴ = 6561 सभी 1 पर। अतः p⁴ सदैव 1 पर समाप्त।</span></p>
+</div>
+<div class="q">
+  <div class="n">99. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of (3⁴)⁵ × (7⁴)³?</b><br><span class="hi">(3⁴)⁵ × (7⁴)³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">3</li><li class="">7</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 3⁴ = 81 and 7⁴ = 2401 both end in 1, so all their powers end in 1. The product ends in 1.<br><span class="hi">3⁴ = 81 और 7⁴ = 2401 दोनों 1 पर समाप्त, अतः इनकी सब घातें 1 पर। गुणनफल का इकाई अंक 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">100. <span class="t">Number System · Unit Digit · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2^(n) + 1, where n = 4⁴?</b><br><span class="hi">2^n + 1 का इकाई अंक क्या है, जहाँ n = 4⁴ है?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">5</li><li class="">3</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> n = 4⁴ = 256, a multiple of 4, so 2²⁵⁶ ends in 6 and 2²⁵⁶ + 1 ends in 7.<br><span class="hi">n = 4⁴ = 256, 4 का गुणज, अतः 2²⁵⁶ का इकाई अंक 6 और 2²⁵⁶ + 1 का 7।</span></p>
+</div></body></html>

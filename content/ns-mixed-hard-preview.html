@@ -1,0 +1,442 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Question batch preview</title>
+<style>
+:root { --bg:#fff; --ink:#1b1b1f; --soft:#5d5f6b; --line:#e3e4ea; --ok:#127a3a; --okbg:#e7f6ec; --bad:#b42318; }
+@media (prefers-color-scheme: dark) { :root { --bg:#16171b; --ink:#ececf1; --soft:#a3a6b3; --line:#2c2e36; --ok:#5dd38c; --okbg:#173524; --bad:#ff8a80; } }
+body { background:var(--bg); color:var(--ink); font:15px/1.55 system-ui, sans-serif; margin:0; padding:16px; }
+h1 { font-size:18px; } .q { border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin:0 0 12px; }
+.n { font-size:13px; color:var(--soft); } .t { font-weight:600; } .ok { color:var(--ok); } .bad { color:var(--bad); font-weight:700; }
+.hi { color:var(--soft); } li.right { background:var(--okbg); color:var(--ok); font-weight:600; border-radius:4px; }
+.sol { font-size:14px; } ol { padding-left:22px; }
+</style></head><body><h1>72 questions - Number System · Mixed Practice · Hard #2, Number System · Mixed Practice · Hard #3, Number System · Mixed Practice · Hard #4, Number System · Mixed Practice · Hard #5, Number System · Mixed Practice · Hard #6, Number System · Mixed Practice · Hard #7, Number System · Mixed Practice · Hard #8, Number System · Mixed Practice · Hard #9, Number System · Mixed Practice · Hard #10</h1>
+<div class="q">
+  <div class="n">1. <span class="t">Number System · Mixed Practice · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If the five-digit number 5x2y4 is divisible by 72, what is the value of (x + y)?</b><br><span class="hi">यदि पाँच अंकों की संख्या 5x2y4, 72 से विभाज्य है, तो (x + y) का मान क्या है?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">9</li><li class="">16</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 72 = 8 × 9. For 9: 5 + x + 2 + y + 4 = 11 + x + y must be a multiple of 9, so x + y = 7 or 16. For 8: 2y4 must be a multiple of 8, true for y = 2 and y = 6 (224, 264). x + y = 16 would need x ≥ 10 for these y, so x + y = 7 (x = 5, y = 2 or x = 1, y = 6: 55224 = 72 × 767, 51264 = 72 × 712).<br><span class="hi">72 = 8 × 9। 9 के लिए: 5 + x + 2 + y + 4 = 11 + x + y, 9 का गुणज हो, अतः x + y = 7 या 16। 8 के लिए: 2y4, 8 का गुणज हो, जो y = 2 और y = 6 (224, 264) पर सही है। इन y के साथ x + y = 16 के लिए x ≥ 10 चाहिए, अतः x + y = 7 (x = 5, y = 2 या x = 1, y = 6: 55224 = 72 × 767, 51264 = 72 × 712)।</span></p>
+</div>
+<div class="q">
+  <div class="n">2. <span class="t">Number System · Mixed Practice · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 3^2029?</b><br><span class="hi">3^2029 के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">83 ✔</li><li class="">43</li><li class="">23</li><li class="">03</li></ol>
+  <p class="sol"><b>Solution:</b> 3^20 = 3486784401 ends in 01, so the last two digits of powers of 3 repeat every 20. 2029 = 20 × 101 + 9, so 3^2029 ends like 3^9 = 19683: the last two digits are 83.<br><span class="hi">3^20 = 3486784401 के अंतिम दो अंक 01 हैं, अतः 3 की घातों के अंतिम दो अंक हर 20 पर दोहराते हैं। 2029 = 20 × 101 + 9, अतः 3^2029 के अंतिम दो अंक 3^9 = 19683 जैसे: 83।</span></p>
+</div>
+<div class="q">
+  <div class="n">3. <span class="t">Number System · Mixed Practice · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2^89 is divided by 9?</b><br><span class="hi">2^89 को 9 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="">2</li><li class="right">5 ✔</li><li class="">7</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 2^3 = 8 leaves −1 on division by 9, so 2^6 leaves 1. 89 = 6 × 14 + 5, so 2^89 leaves the same as 2^5 = 32 = 9 × 3 + 5. Remainder 5.<br><span class="hi">2^3 = 8 का 9 से शेष −1, अतः 2^6 का शेष 1। 89 = 6 × 14 + 5, अतः 2^89 का शेष 2^5 = 32 = 9 × 3 + 5 जैसा। शेषफल 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">4. <span class="t">Number System · Mixed Practice · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the product of all the divisors of 36?</b><br><span class="hi">36 के सभी भाजकों का गुणनफल क्या है?</span></p>
+  <ol type="A"><li class="right">6^9 ✔</li><li class="">6^8</li><li class="">36^9</li><li class="">6^18</li></ol>
+  <p class="sol"><b>Solution:</b> 36 has 9 divisors, and they pair up to give 36 each (1 × 36, 2 × 18, 3 × 12, 4 × 9, with 6 alone). Product = 36^(9/2) = (6^2)^(9/2) = 6^9.<br><span class="hi">36 के 9 भाजक हैं, जो जोड़ों में 36 देते हैं (1 × 36, 2 × 18, 3 × 12, 4 × 9, और 6 अकेला)। गुणनफल = 36^(9/2) = (6^2)^(9/2) = 6^9।</span></p>
+</div>
+<div class="q">
+  <div class="n">5. <span class="t">Number System · Mixed Practice · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of the product 1 × 3 × 5 × 7 × ... × 99 (all odd numbers from 1 to 99)?</b><br><span class="hi">गुणनफल 1 × 3 × 5 × 7 × ... × 99 (1 से 99 तक की सभी विषम संख्याएँ) के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">12</li><li class="">24</li><li class="">10</li></ol>
+  <p class="sol"><b>Solution:</b> A zero at the end needs a factor 10 = 2 × 5. Every number in the product is odd, so there is no factor 2 at all, and the product ends in 5, not 0. Number of zeros = 0.<br><span class="hi">अंत में शून्य के लिए 10 = 2 × 5 गुणनखंड चाहिए। गुणनफल की हर संख्या विषम है, अतः कोई 2 नहीं, और गुणनफल 5 पर समाप्त होता है, 0 पर नहीं। शून्यों की संख्या = 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">6. <span class="t">Number System · Mixed Practice · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>In how many ways can 1800 be written as a product of two natural numbers (order not counted)?</b><br><span class="hi">1800 को दो प्राकृत संख्याओं के गुणनफल के रूप में कितने तरीकों से लिखा जा सकता है (क्रम नहीं गिना जाता)?</span></p>
+  <ol type="A"><li class="right">18 ✔</li><li class="">36</li><li class="">17</li><li class="">12</li></ol>
+  <p class="sol"><b>Solution:</b> 1800 = 2^3 × 3^2 × 5^2 has (3 + 1)(2 + 1)(2 + 1) = 36 divisors. Each pair (d, 1800/d) is counted twice, and 1800 is not a perfect square, so there are 36 ÷ 2 = 18 ways.<br><span class="hi">1800 = 2^3 × 3^2 × 5^2 के (3 + 1)(2 + 1)(2 + 1) = 36 भाजक हैं। हर युग्म (d, 1800/d) दो बार गिना जाता है, और 1800 पूर्ण वर्ग नहीं, अतः 36 ÷ 2 = 18 तरीके।</span></p>
+</div>
+<div class="q">
+  <div class="n">7. <span class="t">Number System · Mixed Practice · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest three-digit number which leaves remainders 2, 3 and 4 when divided by 3, 4 and 5 respectively?</b><br><span class="hi">तीन अंकों की वह सबसे छोटी संख्या कौन-सी है जिसे 3, 4 और 5 से भाग देने पर क्रमशः 2, 3 और 4 शेष बचते हैं?</span></p>
+  <ol type="A"><li class="right">119 ✔</li><li class="">109</li><li class="">179</li><li class="">121</li></ol>
+  <p class="sol"><b>Solution:</b> Each remainder is 1 less than its divisor, so the number + 1 is a multiple of LCM(3, 4, 5) = 60: the number is 60k − 1. k = 2 gives 119, the first three-digit one.<br><span class="hi">हर शेषफल अपने भाजक से 1 कम है, अतः संख्या + 1, LCM(3, 4, 5) = 60 का गुणज है: संख्या 60k − 1 है। k = 2 पर 119, पहली तीन अंकों वाली।</span></p>
+</div>
+<div class="q">
+  <div class="n">8. <span class="t">Number System · Mixed Practice · Hard #2</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Find the value of 1/(2 × 5) + 1/(5 × 8) + 1/(8 × 11) + ... + 1/(29 × 32).</b><br><span class="hi">1/(2 × 5) + 1/(5 × 8) + 1/(8 × 11) + ... + 1/(29 × 32) का मान ज्ञात कीजिए।</span></p>
+  <ol type="A"><li class="right">5/32 ✔</li><li class="">15/32</li><li class="">5/16</li><li class="">1/6</li></ol>
+  <p class="sol"><b>Solution:</b> Each term 1/(k(k + 3)) = (1/3)(1/k − 1/(k + 3)), so the middle terms cancel: (1/3)(1/2 − 1/32) = (1/3)(15/32) = 5/32.<br><span class="hi">हर पद 1/(k(k + 3)) = (1/3)(1/k − 1/(k + 3)), अतः बीच के पद कट जाते हैं: (1/3)(1/2 − 1/32) = (1/3)(15/32) = 5/32।</span></p>
+</div>
+<div class="q">
+  <div class="n">9. <span class="t">Number System · Mixed Practice · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If the six-digit number 52a16b is divisible by 99, what is the value of (a + b)?</b><br><span class="hi">यदि छह अंकों की संख्या 52a16b, 99 से विभाज्य है, तो (a + b) का मान क्या है?</span></p>
+  <ol type="A"><li class="right">13 ✔</li><li class="">9</li><li class="">11</li><li class="">15</li></ol>
+  <p class="sol"><b>Solution:</b> For 99, the sum of two-digit blocks from the right must be a multiple of 99: 52 + a1 + 6b. With a = 8 and b = 5: 52 + 81 + 65 = 198 = 2 × 99. No other digits work, so 528165 = 99 × 5335 and a + b = 13.<br><span class="hi">99 के लिए दाईं ओर से दो-दो अंकों के खंडों का योग 99 का गुणज हो: 52 + a1 + 6b। a = 8 और b = 5 पर: 52 + 81 + 65 = 198 = 2 × 99। कोई अन्य अंक काम नहीं करते, अतः 528165 = 99 × 5335 और a + b = 13।</span></p>
+</div>
+<div class="q">
+  <div class="n">10. <span class="t">Number System · Mixed Practice · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 3^256 is divided by 82?</b><br><span class="hi">3^256 को 82 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">3</li><li class="">9</li><li class="">81</li></ol>
+  <p class="sol"><b>Solution:</b> 3^4 = 81 leaves −1 on division by 82, so 3^8 leaves 1. 256 = 8 × 32, so 3^256 leaves 1.<br><span class="hi">3^4 = 81 का 82 से शेष −1, अतः 3^8 का शेष 1। 256 = 8 × 32, अतः 3^256 का शेष 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">11. <span class="t">Number System · Mixed Practice · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 13^(4^7)?</b><br><span class="hi">13^(4^7) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">3</li><li class="">7</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> Only 3 raised to 4^7 matters. Powers of 3 repeat their unit digit every 4, and 4^7 is a multiple of 4, so the unit digit is that of 3^4 = 81, i.e. 1.<br><span class="hi">केवल 3 की घात 4^7 मायने रखती है। 3 की घातों का इकाई अंक हर 4 पर दोहराता है, और 4^7, 4 का गुणज है, अतः इकाई अंक 3^4 = 81 जैसा, यानी 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">12. <span class="t">Number System · Mixed Practice · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors does 10! have?</b><br><span class="hi">10! के कितने गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">270 ✔</li><li class="">240</li><li class="">192</li><li class="">300</li></ol>
+  <p class="sol"><b>Solution:</b> 10! = 2^8 × 3^4 × 5^2 × 7 (powers: 5 + 2 + 1 = 8, 3 + 1 = 4, 2, 1). Number of factors = 9 × 5 × 3 × 2 = 270.<br><span class="hi">10! = 2^8 × 3^4 × 5^2 × 7 (घातें: 5 + 2 + 1 = 8, 3 + 1 = 4, 2, 1)। गुणनखंडों की संख्या = 9 × 5 × 3 × 2 = 270।</span></p>
+</div>
+<div class="q">
+  <div class="n">13. <span class="t">Number System · Mixed Practice · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the highest power of 15 that divides 100! exactly?</b><br><span class="hi">15 की वह अधिकतम घात क्या है जो 100! को पूर्णतः विभाजित करती है?</span></p>
+  <ol type="A"><li class="right">24 ✔</li><li class="">48</li><li class="">22</li><li class="">26</li></ol>
+  <p class="sol"><b>Solution:</b> 15 = 3 × 5. Powers of 5 in 100!: 20 + 4 = 24. Powers of 3: 33 + 11 + 3 + 1 = 48. The scarcer prime decides: the highest power of 15 is 24.<br><span class="hi">15 = 3 × 5। 100! में 5 की घात: 20 + 4 = 24। 3 की घात: 33 + 11 + 3 + 1 = 48। कम वाला अभाज्य तय करता है: 15 की अधिकतम घात 24 है।</span></p>
+</div>
+<div class="q">
+  <div class="n">14. <span class="t">Number System · Mixed Practice · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the value of 0.343434... + 0.656565...?</b><br><span class="hi">0.343434... + 0.656565... का मान क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">0.99</li><li class="">99/100</li><li class="">1.01</li></ol>
+  <p class="sol"><b>Solution:</b> 0.3434... = 34/99 and 0.6565... = 65/99. Sum = 99/99 = 1 exactly (not 0.99).<br><span class="hi">0.3434... = 34/99 और 0.6565... = 65/99। योग = 99/99 = ठीक 1 (0.99 नहीं)।</span></p>
+</div>
+<div class="q">
+  <div class="n">15. <span class="t">Number System · Mixed Practice · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>The number N = 2^3 × 3^a × 5 has exactly 24 factors. What is the value of a?</b><br><span class="hi">संख्या N = 2^3 × 3^a × 5 के ठीक 24 गुणनखंड हैं। a का मान क्या है?</span></p>
+  <ol type="A"><li class="">1</li><li class="right">2 ✔</li><li class="">3</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> Number of factors = (3 + 1)(a + 1)(1 + 1) = 8(a + 1) = 24, so a + 1 = 3 and a = 2.<br><span class="hi">गुणनखंडों की संख्या = (3 + 1)(a + 1)(1 + 1) = 8(a + 1) = 24, अतः a + 1 = 3 और a = 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">16. <span class="t">Number System · Mixed Practice · Hard #3</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Three bells ring at intervals of 12, 18 and 30 minutes. If they ring together at 9:00 AM, when will they next ring together?</b><br><span class="hi">तीन घंटियाँ 12, 18 और 30 मिनट के अंतराल पर बजती हैं। यदि वे सुबह 9:00 बजे एक साथ बजती हैं, तो अगली बार एक साथ कब बजेंगी?</span></p>
+  <ol type="A"><li class="right">12:00 noon <span class="hi">/ दोपहर 12:00 बजे</span> ✔</li><li class="">11:00 AM <span class="hi">/ सुबह 11:00 बजे</span></li><li class="">12:30 PM <span class="hi">/ दोपहर 12:30 बजे</span></li><li class="">1:00 PM <span class="hi">/ दोपहर 1:00 बजे</span></li></ol>
+  <p class="sol"><b>Solution:</b> They ring together again after LCM(12, 18, 30) = 180 minutes = 3 hours, i.e. at 12:00 noon.<br><span class="hi">वे LCM(12, 18, 30) = 180 मिनट = 3 घंटे बाद फिर साथ बजेंगी, यानी दोपहर 12:00 बजे।</span></p>
+</div>
+<div class="q">
+  <div class="n">17. <span class="t">Number System · Mixed Practice · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 8^35 is divided by 9?</b><br><span class="hi">8^35 को 9 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="">1</li><li class="right">8 ✔</li><li class="">4</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> 8 = 9 − 1 leaves −1 on division by 9. 35 is odd, so 8^35 leaves (−1)^35 = −1, i.e. 9 − 1 = 8.<br><span class="hi">8 = 9 − 1 का 9 से शेष −1। 35 विषम है, अतः 8^35 का शेष (−1)^35 = −1, यानी 9 − 1 = 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">18. <span class="t">Number System · Mixed Practice · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 11^47?</b><br><span class="hi">11^47 के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">71 ✔</li><li class="">47</li><li class="">11</li><li class="">41</li></ol>
+  <p class="sol"><b>Solution:</b> 11^n = (10 + 1)^n = 1 + 10n + (multiples of 100), so its last two digits are those of 1 + 10n. For n = 47: 1 + 470 = 471, so the last two digits are 71.<br><span class="hi">11^n = (10 + 1)^n = 1 + 10n + (100 के गुणज), अतः इसके अंतिम दो अंक 1 + 10n के जैसे हैं। n = 47 पर: 1 + 470 = 471, अतः अंतिम दो अंक 71।</span></p>
+</div>
+<div class="q">
+  <div class="n">19. <span class="t">Number System · Mixed Practice · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For every natural number n, what is the largest number that always divides (7^(2n) − 4^(2n))?</b><br><span class="hi">हर प्राकृत संख्या n के लिए, वह सबसे बड़ी संख्या कौन-सी है जो (7^(2n) − 4^(2n)) को सदैव विभाजित करती है?</span></p>
+  <ol type="A"><li class="right">33 ✔</li><li class="">66</li><li class="">99</li><li class="">45</li></ol>
+  <p class="sol"><b>Solution:</b> 7^(2n) − 4^(2n) = 49^n − 16^n, and a^n − b^n is always divisible by a − b = 33. For n = 1 the value is exactly 33, so no larger number always divides it.<br><span class="hi">7^(2n) − 4^(2n) = 49^n − 16^n, और a^n − b^n सदैव a − b = 33 से विभाज्य है। n = 1 पर मान ठीक 33 है, अतः इससे बड़ी कोई संख्या सदैव विभाजित नहीं करती।</span></p>
+</div>
+<div class="q">
+  <div class="n">20. <span class="t">Number System · Mixed Practice · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the sum of all the divisors of 864 (= 2^5 × 3^3)?</b><br><span class="hi">864 (= 2^5 × 3^3) के सभी भाजकों का योग क्या है?</span></p>
+  <ol type="A"><li class="right">2520 ✔</li><li class="">2400</li><li class="">1728</li><li class="">2016</li></ol>
+  <p class="sol"><b>Solution:</b> Sum of divisors = (1 + 2 + 4 + 8 + 16 + 32)(1 + 3 + 9 + 27) = 63 × 40 = 2520.<br><span class="hi">भाजकों का योग = (1 + 2 + 4 + 8 + 16 + 32)(1 + 3 + 9 + 27) = 63 × 40 = 2520।</span></p>
+</div>
+<div class="q">
+  <div class="n">21. <span class="t">Number System · Mixed Practice · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 1000 are divisible by 7 but not by 11?</b><br><span class="hi">1 से 1000 तक कितनी संख्याएँ 7 से विभाज्य हैं परंतु 11 से नहीं?</span></p>
+  <ol type="A"><li class="right">130 ✔</li><li class="">142</li><li class="">128</li><li class="">131</li></ol>
+  <p class="sol"><b>Solution:</b> Multiples of 7: [1000/7] = 142. Those also divisible by 11 are multiples of 77: [1000/77] = 12. Answer: 142 − 12 = 130.<br><span class="hi">7 के गुणज: [1000/7] = 142। जो 11 से भी विभाज्य हैं, वे 77 के गुणज: [1000/77] = 12। उत्तर: 142 − 12 = 130।</span></p>
+</div>
+<div class="q">
+  <div class="n">22. <span class="t">Number System · Mixed Practice · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>A number leaves a remainder of 3 when divided by 7, and the quotient leaves a remainder of 2 when divided by 5. What is the remainder when the number is divided by 35?</b><br><span class="hi">एक संख्या को 7 से भाग देने पर शेषफल 3 आता है, और भागफल को 5 से भाग देने पर शेषफल 2 आता है। संख्या को 35 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">17 ✔</li><li class="">13</li><li class="">5</li><li class="">23</li></ol>
+  <p class="sol"><b>Solution:</b> Number = 7q + 3 with q = 5k + 2. So the number = 7(5k + 2) + 3 = 35k + 17. Remainder on division by 35 = 17.<br><span class="hi">संख्या = 7q + 3, जहाँ q = 5k + 2। अतः संख्या = 7(5k + 2) + 3 = 35k + 17। 35 से भाग देने पर शेषफल = 17।</span></p>
+</div>
+<div class="q">
+  <div class="n">23. <span class="t">Number System · Mixed Practice · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 5^5 × 10^10 × 15^15 × 20^20?</b><br><span class="hi">5^5 × 10^10 × 15^15 × 20^20 के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">50 ✔</li><li class="">40</li><li class="">45</li><li class="">70</li></ol>
+  <p class="sol"><b>Solution:</b> Count 2s and 5s. 2s: 10^10 gives 10 and 20^20 = 2^40 × 5^20 gives 40, total 50. 5s: 5 + 10 + 15 + 20 = 50. Pairs = 50, so 50 zeros.<br><span class="hi">2 और 5 गिनें। 2: 10^10 से 10 और 20^20 = 2^40 × 5^20 से 40, कुल 50। 5: 5 + 10 + 15 + 20 = 50। जोड़े = 50, अतः 50 शून्य।</span></p>
+</div>
+<div class="q">
+  <div class="n">24. <span class="t">Number System · Mixed Practice · Hard #4</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the least number which leaves a remainder of 1 when divided by 2, 3, 4, 5 and 6, but is exactly divisible by 11?</b><br><span class="hi">वह न्यूनतम संख्या कौन-सी है जो 2, 3, 4, 5 और 6 से भाग देने पर शेष 1 छोड़ती है, परंतु 11 से पूर्णतः विभाज्य है?</span></p>
+  <ol type="A"><li class="right">121 ✔</li><li class="">61</li><li class="">181</li><li class="">241</li></ol>
+  <p class="sol"><b>Solution:</b> The number is 60k + 1 (LCM of 2 to 6 = 60). Try k = 1, 2, ...: 61 = 11 × 5 + 6 (no), 121 = 11 × 11 (yes). Answer 121.<br><span class="hi">संख्या 60k + 1 है (2 से 6 का LCM = 60)। k = 1, 2, ... आज़माएँ: 61 = 11 × 5 + 6 (नहीं), 121 = 11 × 11 (हाँ)। उत्तर 121।</span></p>
+</div>
+<div class="q">
+  <div class="n">25. <span class="t">Number System · Mixed Practice · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2^2023 + 3^2023?</b><br><span class="hi">2^2023 + 3^2023 का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">1</li><li class="">3</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 2023 = 4 × 505 + 3. So 2^2023 ends like 2^3 = 8 and 3^2023 ends like 3^3 = 27, i.e. 7. 8 + 7 = 15, so the unit digit is 5.<br><span class="hi">2023 = 4 × 505 + 3। अतः 2^2023 का इकाई अंक 2^3 = 8 जैसा और 3^2023 का 3^3 = 27 जैसा, यानी 7। 8 + 7 = 15, अतः इकाई अंक 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">26. <span class="t">Number System · Mixed Practice · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2^2002 is divided by 13?</b><br><span class="hi">2^2002 को 13 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">10 ✔</li><li class="">4</li><li class="">3</li><li class="">12</li></ol>
+  <p class="sol"><b>Solution:</b> 13 is prime, so 2^12 leaves 1 (Fermat). 2002 = 12 × 166 + 10, so 2^2002 leaves the same as 2^10 = 1024 = 13 × 78 + 10. Remainder 10.<br><span class="hi">13 अभाज्य है, अतः 2^12 का शेष 1 (फ़र्मा)। 2002 = 12 × 166 + 10, अतः 2^2002 का शेष 2^10 = 1024 = 13 × 78 + 10 जैसा। शेषफल 10।</span></p>
+</div>
+<div class="q">
+  <div class="n">27. <span class="t">Number System · Mixed Practice · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the largest value of k for which 3^k divides 50! exactly?</b><br><span class="hi">k का वह अधिकतम मान क्या है जिसके लिए 3^k, 50! को पूर्णतः विभाजित करता है?</span></p>
+  <ol type="A"><li class="">16</li><li class="right">22 ✔</li><li class="">21</li><li class="">24</li></ol>
+  <p class="sol"><b>Solution:</b> Powers of 3 in 50! = [50/3] + [50/9] + [50/27] = 16 + 5 + 1 = 22.<br><span class="hi">50! में 3 की घात = [50/3] + [50/9] + [50/27] = 16 + 5 + 1 = 22।</span></p>
+</div>
+<div class="q">
+  <div class="n">28. <span class="t">Number System · Mixed Practice · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the sum of all the three-digit numbers that can be formed with the digits 1, 2 and 3, each used exactly once?</b><br><span class="hi">अंकों 1, 2 और 3 को केवल एक-एक बार प्रयोग करके बनने वाली सभी तीन अंकों की संख्याओं का योग क्या है?</span></p>
+  <ol type="A"><li class="right">1332 ✔</li><li class="">1221</li><li class="">1443</li><li class="">666</li></ol>
+  <p class="sol"><b>Solution:</b> There are 6 numbers, and each digit appears twice in each place. Sum = (1 + 2 + 3) × 2 × 111 = 6 × 222 = 1332.<br><span class="hi">6 संख्याएँ बनती हैं, और हर अंक हर स्थान पर दो बार आता है। योग = (1 + 2 + 3) × 2 × 111 = 6 × 222 = 1332।</span></p>
+</div>
+<div class="q">
+  <div class="n">29. <span class="t">Number System · Mixed Practice · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many pairs of natural numbers have HCF 9 and LCM 270?</b><br><span class="hi">कितने प्राकृत संख्या-युग्मों का HCF 9 और LCM 270 है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">3</li><li class="right">4 ✔</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> Let the numbers be 9a and 9b with a, b co-prime. LCM = 9ab = 270, so ab = 30. Co-prime pairs with product 30: (1, 30), (2, 15), (3, 10), (5, 6). So 4 pairs.<br><span class="hi">माना संख्याएँ 9a और 9b हैं, a, b सह-अभाज्य। LCM = 9ab = 270, अतः ab = 30। गुणनफल 30 वाले सह-अभाज्य युग्म: (1, 30), (2, 15), (3, 10), (5, 6)। अतः 4 युग्म।</span></p>
+</div>
+<div class="q">
+  <div class="n">30. <span class="t">Number System · Mixed Practice · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many two-digit perfect squares leave a remainder of 1 when divided by 3?</b><br><span class="hi">दो अंकों के कितने पूर्ण वर्ग 3 से भाग देने पर शेष 1 छोड़ते हैं?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">6</li><li class="">3</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> The two-digit squares are 16, 25, 36, 49, 64, 81. A square leaves 0 when its root is a multiple of 3 (36, 81) and 1 otherwise. So 16, 25, 49 and 64: 4 squares.<br><span class="hi">दो अंकों के वर्ग 16, 25, 36, 49, 64, 81 हैं। वर्ग का शेष 0 होता है जब मूल 3 का गुणज हो (36, 81), अन्यथा 1। अतः 16, 25, 49 और 64: 4 वर्ग।</span></p>
+</div>
+<div class="q">
+  <div class="n">31. <span class="t">Number System · Mixed Practice · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>p, q and r are three consecutive odd numbers with p &lt; q &lt; r and p + q + r = 147. What is the value of p × r?</b><br><span class="hi">p, q और r तीन क्रमागत विषम संख्याएँ हैं, p &lt; q &lt; r और p + q + r = 147। p × r का मान क्या है?</span></p>
+  <ol type="A"><li class="right">2397 ✔</li><li class="">2401</li><li class="">2303</li><li class="">2499</li></ol>
+  <p class="sol"><b>Solution:</b> The middle number q = 147 ÷ 3 = 49, so p = 47 and r = 51. p × r = 47 × 51 = 49^2 − 4 = 2397.<br><span class="hi">बीच की संख्या q = 147 ÷ 3 = 49, अतः p = 47 और r = 51। p × r = 47 × 51 = 49^2 − 4 = 2397।</span></p>
+</div>
+<div class="q">
+  <div class="n">32. <span class="t">Number System · Mixed Practice · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If the seven-digit number 8a5146b is divisible by 72, what is the value of (a + b)?</b><br><span class="hi">यदि सात अंकों की संख्या 8a5146b, 72 से विभाज्य है, तो (a + b) का मान क्या है?</span></p>
+  <ol type="A"><li class="right">12 ✔</li><li class="">8</li><li class="">14</li><li class="">10</li></ol>
+  <p class="sol"><b>Solution:</b> 72 = 8 × 9. For 8: 46b must be a multiple of 8, and only 464 is (b = 4). For 9: 8 + a + 5 + 1 + 4 + 6 + 4 = 28 + a must be a multiple of 9, so a = 8. Check: 8851464 = 72 × 122937. a + b = 12.<br><span class="hi">72 = 8 × 9। 8 के लिए: 46b, 8 का गुणज हो, जो केवल 464 है (b = 4)। 9 के लिए: 8 + a + 5 + 1 + 4 + 6 + 4 = 28 + a, 9 का गुणज हो, अतः a = 8। जाँच: 8851464 = 72 × 122937। a + b = 12।</span></p>
+</div>
+<div class="q">
+  <div class="n">33. <span class="t">Number System · Mixed Practice · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the largest four-digit number which leaves a remainder of 5 when divided by 12, 15, 20 and 35?</b><br><span class="hi">चार अंकों की वह सबसे बड़ी संख्या कौन-सी है जिसे 12, 15, 20 और 35 से भाग देने पर शेषफल 5 बचता है?</span></p>
+  <ol type="A"><li class="right">9665 ✔</li><li class="">9245</li><li class="">9995</li><li class="">9455</li></ol>
+  <p class="sol"><b>Solution:</b> LCM of 12, 15, 20 and 35 = 420. 9999 ÷ 420 = 23 remainder 339, so the largest four-digit multiple is 420 × 23 = 9660. Add 5: 9665.<br><span class="hi">12, 15, 20 और 35 का LCM = 420। 9999 ÷ 420 = 23, शेष 339, अतः सबसे बड़ा चार अंकों का गुणज 420 × 23 = 9660। 5 जोड़ें: 9665।</span></p>
+</div>
+<div class="q">
+  <div class="n">34. <span class="t">Number System · Mixed Practice · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 5^100 is divided by 7?</b><br><span class="hi">5^100 को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">4</li><li class="">5</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> 7 is prime, so 5^6 leaves 1. 100 = 6 × 16 + 4, so 5^100 leaves the same as 5^4 = 625 = 7 × 89 + 2. Remainder 2.<br><span class="hi">7 अभाज्य है, अतः 5^6 का शेष 1। 100 = 6 × 16 + 4, अतः 5^100 का शेष 5^4 = 625 = 7 × 89 + 2 जैसा। शेषफल 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">35. <span class="t">Number System · Mixed Practice · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1^4 + 2^4 + 3^4 + ... + 99^4?</b><br><span class="hi">1^4 + 2^4 + 3^4 + ... + 99^4 का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">3</li><li class="">5</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> Unit digits of k^4 for k = 1 to 10 are 1, 6, 1, 6, 5, 6, 1, 6, 1, 0, adding to 33. The pattern repeats every 10: 1 to 90 gives 9 × 33 = 297 and 91 to 99 gives another 33. 297 + 33 = 330, so the unit digit is 0.<br><span class="hi">k = 1 से 10 के लिए k^4 के इकाई अंक 1, 6, 1, 6, 5, 6, 1, 6, 1, 0 हैं, योग 33। यह हर 10 पर दोहराता है: 1 से 90 तक 9 × 33 = 297 और 91 से 99 तक और 33। 297 + 33 = 330, अतः इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">36. <span class="t">Number System · Mixed Practice · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors of 1200 are perfect squares?</b><br><span class="hi">1200 के कितने गुणनखंड पूर्ण वर्ग हैं?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">4</li><li class="">8</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 1200 = 2^4 × 3 × 5^2. A square factor uses even powers: 2^0, 2^2, 2^4 (3 ways), 3^0 only (1 way), 5^0, 5^2 (2 ways). 3 × 1 × 2 = 6.<br><span class="hi">1200 = 2^4 × 3 × 5^2। वर्ग गुणनखंड में सम घातें: 2^0, 2^2, 2^4 (3 तरीके), केवल 3^0 (1 तरीका), 5^0, 5^2 (2 तरीके)। 3 × 1 × 2 = 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">37. <span class="t">Number System · Mixed Practice · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the highest power of 2 that divides 50! exactly?</b><br><span class="hi">2 की वह अधिकतम घात क्या है जो 50! को पूर्णतः विभाजित करती है?</span></p>
+  <ol type="A"><li class="right">47 ✔</li><li class="">25</li><li class="">48</li><li class="">46</li></ol>
+  <p class="sol"><b>Solution:</b> [50/2] + [50/4] + [50/8] + [50/16] + [50/32] = 25 + 12 + 6 + 3 + 1 = 47.<br><span class="hi">[50/2] + [50/4] + [50/8] + [50/16] + [50/32] = 25 + 12 + 6 + 3 + 1 = 47।</span></p>
+</div>
+<div class="q">
+  <div class="n">38. <span class="t">Number System · Mixed Practice · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>N = 1 × 2 × 3 × ... × 30. What is the largest value of k for which 6^k divides N?</b><br><span class="hi">N = 1 × 2 × 3 × ... × 30 है। k का वह अधिकतम मान क्या है जिसके लिए 6^k, N को विभाजित करता है?</span></p>
+  <ol type="A"><li class="right">14 ✔</li><li class="">26</li><li class="">15</li><li class="">13</li></ol>
+  <p class="sol"><b>Solution:</b> 6 = 2 × 3. Powers of 2 in 30!: 15 + 7 + 3 + 1 = 26. Powers of 3: 10 + 3 + 1 = 14. The smaller count decides, so k = 14.<br><span class="hi">6 = 2 × 3। 30! में 2 की घात: 15 + 7 + 3 + 1 = 26। 3 की घात: 10 + 3 + 1 = 14। छोटी संख्या तय करती है, अतः k = 14।</span></p>
+</div>
+<div class="q">
+  <div class="n">39. <span class="t">Number System · Mixed Practice · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>The LCM of two numbers is 1386 and their HCF is 33. If one of the numbers is 99, what is the other?</b><br><span class="hi">दो संख्याओं का LCM 1386 है और उनका HCF 33 है। यदि एक संख्या 99 है, तो दूसरी क्या है?</span></p>
+  <ol type="A"><li class="right">462 ✔</li><li class="">396</li><li class="">231</li><li class="">528</li></ol>
+  <p class="sol"><b>Solution:</b> Other number = HCF × LCM ÷ 99 = 33 × 1386 ÷ 99 = 462. Check: 99 = 3^2 × 11 and 462 = 2 × 3 × 7 × 11 give HCF 33 and LCM 1386.<br><span class="hi">दूसरी संख्या = HCF × LCM ÷ 99 = 33 × 1386 ÷ 99 = 462। जाँच: 99 = 3^2 × 11 और 462 = 2 × 3 × 7 × 11 से HCF 33 और LCM 1386।</span></p>
+</div>
+<div class="q">
+  <div class="n">40. <span class="t">Number System · Mixed Practice · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest four-digit number which leaves a remainder of 11 when divided by 18, 24 and 32?</b><br><span class="hi">चार अंकों की वह सबसे छोटी संख्या कौन-सी है जिसे 18, 24 और 32 से भाग देने पर शेषफल 11 बचता है?</span></p>
+  <ol type="A"><li class="right">1163 ✔</li><li class="">1307</li><li class="">1451</li><li class="">875</li></ol>
+  <p class="sol"><b>Solution:</b> LCM of 18, 24 and 32 = 288, so the number is 288k + 11. 288 × 3 + 11 = 875 is too small; 288 × 4 + 11 = 1163 is the first four-digit one.<br><span class="hi">18, 24 और 32 का LCM = 288, अतः संख्या 288k + 11 है। 288 × 3 + 11 = 875 छोटी है; 288 × 4 + 11 = 1163 पहली चार अंकों वाली है।</span></p>
+</div>
+<div class="q">
+  <div class="n">41. <span class="t">Number System · Mixed Practice · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 123456789 is divided by 11?</b><br><span class="hi">123456789 को 11 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">6</li><li class="">1</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> Alternate sum from the right: 9 − 8 + 7 − 6 + 5 − 4 + 3 − 2 + 1 = 5. A number leaves the same remainder on division by 11 as this sum, so the remainder is 5.<br><span class="hi">दाईं ओर से एकांतर योग: 9 − 8 + 7 − 6 + 5 − 4 + 3 − 2 + 1 = 5। संख्या का 11 से शेष इस योग के शेष के बराबर है, अतः शेषफल 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">42. <span class="t">Number System · Mixed Practice · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What are the last two digits of 2^543?</b><br><span class="hi">2^543 के अंतिम दो अंक क्या हैं?</span></p>
+  <ol type="A"><li class="right">08 ✔</li><li class="">48</li><li class="">68</li><li class="">28</li></ol>
+  <p class="sol"><b>Solution:</b> 2^10 = 1024 → 24, so 2^20 → 24^2 = 576 → 76. Since 76 × 76 = 5776 also ends in 76, every 2^(20k) ends in 76. 543 = 20 × 27 + 3, so 2^543 → 76 × 2^3 = 608 → 08.<br><span class="hi">2^10 = 1024 → 24, अतः 2^20 → 24^2 = 576 → 76। 76 × 76 = 5776 भी 76 पर समाप्त, अतः हर 2^(20k) के अंतिम अंक 76। 543 = 20 × 27 + 3, अतः 2^543 → 76 × 2^3 = 608 → 08।</span></p>
+</div>
+<div class="q">
+  <div class="n">43. <span class="t">Number System · Mixed Practice · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 1! + 2! + 3! + ... + 100! is divided by 7?</b><br><span class="hi">1! + 2! + 3! + ... + 100! को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">0</li><li class="">3</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> From 7! on every term is a multiple of 7. 1! + 2! + ... + 6! = 1 + 2 + 6 + 24 + 120 + 720 = 873, and 873 = 7 × 124 + 5. Remainder 5.<br><span class="hi">7! से आगे हर पद 7 का गुणज है। 1! + 2! + ... + 6! = 1 + 2 + 6 + 24 + 120 + 720 = 873, और 873 = 7 × 124 + 5। शेषफल 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">44. <span class="t">Number System · Mixed Practice · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 100 have exactly three divisors?</b><br><span class="hi">1 से 100 तक कितनी संख्याओं के ठीक तीन भाजक हैं?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">3</li><li class="">5</li><li class="">25</li></ol>
+  <p class="sol"><b>Solution:</b> A number has exactly three divisors only when it is the square of a prime (1, p, p^2). Squares of primes up to 100: 4, 9, 25, 49. So 4 numbers.<br><span class="hi">किसी संख्या के ठीक तीन भाजक तभी होते हैं जब वह किसी अभाज्य का वर्ग हो (1, p, p^2)। 100 तक अभाज्यों के वर्ग: 4, 9, 25, 49। अतः 4 संख्याएँ।</span></p>
+</div>
+<div class="q">
+  <div class="n">45. <span class="t">Number System · Mixed Practice · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many pairs of positive integers (x, y) satisfy 3x + 5y = 100?</b><br><span class="hi">धनात्मक पूर्णांकों के कितने युग्म (x, y) समीकरण 3x + 5y = 100 को संतुष्ट करते हैं?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">7</li><li class="">5</li><li class="">20</li></ol>
+  <p class="sol"><b>Solution:</b> 100 − 5y must be a positive multiple of 3, so y leaves 2 on division by 3 and y &lt; 20: y = 2, 5, 8, 11, 14, 17, giving x = 30, 25, 20, 15, 10, 5. So 6 pairs.<br><span class="hi">100 − 5y, 3 का धनात्मक गुणज हो, अतः y का 3 से शेष 2 और y &lt; 20: y = 2, 5, 8, 11, 14, 17, जिससे x = 30, 25, 20, 15, 10, 5। अतः 6 युग्म।</span></p>
+</div>
+<div class="q">
+  <div class="n">46. <span class="t">Number System · Mixed Practice · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest number by which 6912 must be divided so that the quotient is a perfect square?</b><br><span class="hi">6912 को किस सबसे छोटी संख्या से भाग दिया जाए कि भागफल पूर्ण वर्ग हो?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">2</li><li class="">6</li><li class="">12</li></ol>
+  <p class="sol"><b>Solution:</b> 6912 = 2^8 × 3^3. The power of 3 is odd, so divide by 3: 6912 ÷ 3 = 2304 = 2^8 × 3^2 = 48^2.<br><span class="hi">6912 = 2^8 × 3^3। 3 की घात विषम है, अतः 3 से भाग दें: 6912 ÷ 3 = 2304 = 2^8 × 3^2 = 48^2।</span></p>
+</div>
+<div class="q">
+  <div class="n">47. <span class="t">Number System · Mixed Practice · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Three numbers are in the ratio 3 : 4 : 5 and their LCM is 1200. What is their HCF?</b><br><span class="hi">तीन संख्याएँ 3 : 4 : 5 के अनुपात में हैं और उनका LCM 1200 है। उनका HCF क्या है?</span></p>
+  <ol type="A"><li class="right">20 ✔</li><li class="">40</li><li class="">10</li><li class="">60</li></ol>
+  <p class="sol"><b>Solution:</b> Let the numbers be 3h, 4h and 5h, where h is the HCF (3, 4, 5 have no common factor). LCM = 60h = 1200, so h = 20. The numbers are 60, 80 and 100.<br><span class="hi">माना संख्याएँ 3h, 4h और 5h हैं, जहाँ h HCF है (3, 4, 5 का कोई उभयनिष्ठ गुणनखंड नहीं)। LCM = 60h = 1200, अतः h = 20। संख्याएँ 60, 80 और 100 हैं।</span></p>
+</div>
+<div class="q">
+  <div class="n">48. <span class="t">Number System · Mixed Practice · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the sum of all the natural numbers from 1 to 100 that are multiples of 3 or 4?</b><br><span class="hi">1 से 100 तक की उन सभी प्राकृत संख्याओं का योग क्या है जो 3 या 4 की गुणज हैं?</span></p>
+  <ol type="A"><li class="right">2551 ✔</li><li class="">2983</li><li class="">2435</li><li class="">2652</li></ol>
+  <p class="sol"><b>Solution:</b> Multiples of 3: 3 × (1 + ... + 33) = 3 × 561 = 1683. Of 4: 4 × (1 + ... + 25) = 4 × 325 = 1300. Of 12 (counted twice): 12 × (1 + ... + 8) = 12 × 36 = 432. Sum = 1683 + 1300 − 432 = 2551.<br><span class="hi">3 के गुणज: 3 × (1 + ... + 33) = 3 × 561 = 1683। 4 के: 4 × (1 + ... + 25) = 4 × 325 = 1300। 12 के (दो बार गिने): 12 × (1 + ... + 8) = 12 × 36 = 432। योग = 1683 + 1300 − 432 = 2551।</span></p>
+</div>
+<div class="q">
+  <div class="n">49. <span class="t">Number System · Mixed Practice · Hard #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many four-digit palindromes (numbers of the form abba, like 4774) are divisible by 7?</b><br><span class="hi">चार अंकों के कितने पैलिंड्रोम (abba रूप की संख्याएँ, जैसे 4774) 7 से विभाज्य हैं?</span></p>
+  <ol type="A"><li class="right">18 ✔</li><li class="">9</li><li class="">14</li><li class="">20</li></ol>
+  <p class="sol"><b>Solution:</b> abba = 1001a + 110b. 1001 = 7 × 143 is divisible by 7, and 110 is not, so b must be a multiple of 7: b = 0 or 7. a can be 1 to 9. Count = 9 × 2 = 18.<br><span class="hi">abba = 1001a + 110b। 1001 = 7 × 143, 7 से विभाज्य है, और 110 नहीं, अतः b, 7 का गुणज हो: b = 0 या 7। a, 1 से 9 तक। संख्या = 9 × 2 = 18।</span></p>
+</div>
+<div class="q">
+  <div class="n">50. <span class="t">Number System · Mixed Practice · Hard #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 32^32 is divided by 7?</b><br><span class="hi">32^32 को 7 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">4</li><li class="">1</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 32 = 7 × 4 + 4 leaves 4, and 4^3 = 64 leaves 1. 32 = 3 × 10 + 2, so 32^32 leaves the same as 4^2 = 16, i.e. 2.<br><span class="hi">32 = 7 × 4 + 4 का शेष 4, और 4^3 = 64 का शेष 1। 32 = 3 × 10 + 2, अतः 32^32 का शेष 4^2 = 16 जैसा, यानी 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">51. <span class="t">Number System · Mixed Practice · Hard #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of the product of all the odd prime numbers less than 50?</b><br><span class="hi">50 से छोटी सभी विषम अभाज्य संख्याओं के गुणनफल का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">0</li><li class="">1</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> The product contains 5 and only odd numbers, so it is an odd multiple of 5. An odd multiple of 5 always ends in 5.<br><span class="hi">गुणनफल में 5 है और केवल विषम संख्याएँ हैं, अतः यह 5 का विषम गुणज है। 5 का विषम गुणज सदैव 5 पर समाप्त होता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">52. <span class="t">Number System · Mixed Practice · Hard #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of (100! − 99!)?</b><br><span class="hi">(100! − 99!) के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">22 ✔</li><li class="">24</li><li class="">23</li><li class="">21</li></ol>
+  <p class="sol"><b>Solution:</b> 100! − 99! = 99! × (100 − 1) = 99! × 99. 99 adds no 2 or 5, so the zeros are those of 99!: [99/5] + [99/25] = 19 + 3 = 22.<br><span class="hi">100! − 99! = 99! × (100 − 1) = 99! × 99। 99 कोई 2 या 5 नहीं जोड़ता, अतः शून्य 99! जितने: [99/5] + [99/25] = 19 + 3 = 22।</span></p>
+</div>
+<div class="q">
+  <div class="n">53. <span class="t">Number System · Mixed Practice · Hard #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>The product of any four consecutive even numbers is always divisible by:</b><br><span class="hi">किन्हीं चार क्रमागत सम संख्याओं का गुणनफल सदैव किससे विभाज्य होता है?</span></p>
+  <ol type="A"><li class="right">384 ✔</li><li class="">768</li><li class="">960</li><li class="">1152</li></ol>
+  <p class="sol"><b>Solution:</b> (2k)(2k + 2)(2k + 4)(2k + 6) = 16 × k(k + 1)(k + 2)(k + 3), and the product of four consecutive numbers is divisible by 24. So 16 × 24 = 384 always divides it; for 2 × 4 × 6 × 8 = 384 nothing larger does.<br><span class="hi">(2k)(2k + 2)(2k + 4)(2k + 6) = 16 × k(k + 1)(k + 2)(k + 3), और चार क्रमागत संख्याओं का गुणनफल 24 से विभाज्य है। अतः 16 × 24 = 384 सदैव विभाजित करता है; 2 × 4 × 6 × 8 = 384 के लिए इससे बड़ा कोई नहीं।</span></p>
+</div>
+<div class="q">
+  <div class="n">54. <span class="t">Number System · Mixed Practice · Hard #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the value of 0.4777... + 0.5333... (in each, only the last digit repeats)?</b><br><span class="hi">0.4777... + 0.5333... का मान क्या है (प्रत्येक में केवल अंतिम अंक दोहराता है)?</span></p>
+  <ol type="A"><li class="right">91/90 ✔</li><li class="">1</li><li class="">101/99</li><li class="">10/9</li></ol>
+  <p class="sol"><b>Solution:</b> 0.4777... = (47 − 4)/90 = 43/90 and 0.5333... = (53 − 5)/90 = 48/90. Sum = 91/90.<br><span class="hi">0.4777... = (47 − 4)/90 = 43/90 और 0.5333... = (53 − 5)/90 = 48/90। योग = 91/90।</span></p>
+</div>
+<div class="q">
+  <div class="n">55. <span class="t">Number System · Mixed Practice · Hard #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>N = 2^4 × 3^2 × 5^3 × 7. What is the sum of all the factors of N that are multiples of 35?</b><br><span class="hi">N = 2^4 × 3^2 × 5^3 × 7 है। N के उन सभी गुणनखंडों का योग क्या है जो 35 के गुणज हैं?</span></p>
+  <ol type="A"><li class="right">437255 ✔</li><li class="">468720</li><li class="">62465</li><li class="">353780</li></ol>
+  <p class="sol"><b>Solution:</b> A multiple of 35 needs at least one 5 and the 7. Sum = (1 + 2 + 4 + 8 + 16)(1 + 3 + 9)(5 + 25 + 125)(7) = 31 × 13 × 155 × 7 = 437255.<br><span class="hi">35 के गुणज में कम से कम एक 5 और 7 चाहिए। योग = (1 + 2 + 4 + 8 + 16)(1 + 3 + 9)(5 + 25 + 125)(7) = 31 × 13 × 155 × 7 = 437255।</span></p>
+</div>
+<div class="q">
+  <div class="n">56. <span class="t">Number System · Mixed Practice · Hard #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>When n is divided by 4, the remainder is 3. What is the remainder when (n^2 + 2n) is divided by 4?</b><br><span class="hi">n को 4 से भाग देने पर शेषफल 3 आता है। (n^2 + 2n) को 4 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">1</li><li class="">2</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> Replace n by its remainder 3: 3^2 + 2 × 3 = 9 + 6 = 15, and 15 = 4 × 3 + 3. Remainder 3.<br><span class="hi">n के स्थान पर उसका शेष 3 रखें: 3^2 + 2 × 3 = 9 + 6 = 15, और 15 = 4 × 3 + 3। शेषफल 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">57. <span class="t">Number System · Mixed Practice · Hard #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If the six-digit number 1a119b is divisible by 88, what is the value of a × b?</b><br><span class="hi">यदि छह अंकों की संख्या 1a119b, 88 से विभाज्य है, तो a × b का मान क्या है?</span></p>
+  <ol type="A"><li class="right">16 ✔</li><li class="">14</li><li class="">18</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> 88 = 8 × 11. For 8: 19b must be a multiple of 8, and only 192 is (b = 2). For 11: (2 + 1 + a) − (9 + 1 + 1) = a − 8 must be 0, so a = 8. Check: 181192 = 88 × 2059. a × b = 16.<br><span class="hi">88 = 8 × 11। 8 के लिए: 19b, 8 का गुणज हो, जो केवल 192 है (b = 2)। 11 के लिए: (2 + 1 + a) − (9 + 1 + 1) = a − 8 = 0, अतः a = 8। जाँच: 181192 = 88 × 2059। a × b = 16।</span></p>
+</div>
+<div class="q">
+  <div class="n">58. <span class="t">Number System · Mixed Practice · Hard #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 7^99 is divided by 2400?</b><br><span class="hi">7^99 को 2400 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">343 ✔</li><li class="">7</li><li class="">49</li><li class="">2058</li></ol>
+  <p class="sol"><b>Solution:</b> 7^4 = 2401 = 2400 + 1 leaves 1. 99 = 4 × 24 + 3, so 7^99 leaves the same as 7^3 = 343.<br><span class="hi">7^4 = 2401 = 2400 + 1 का शेष 1। 99 = 4 × 24 + 3, अतः 7^99 का शेष 7^3 = 343 जैसा।</span></p>
+</div>
+<div class="q">
+  <div class="n">59. <span class="t">Number System · Mixed Practice · Hard #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 4^1 + 4^2 + 4^3 + ... + 4^101?</b><br><span class="hi">4^1 + 4^2 + 4^3 + ... + 4^101 का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">0</li><li class="">6</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> Odd powers of 4 end in 4 and even powers end in 6. The first 100 terms make 50 pairs ending 4 + 6 = 10, i.e. 0. The last term 4^101 adds 4, so the unit digit is 4.<br><span class="hi">4 की विषम घातें 4 पर और सम घातें 6 पर समाप्त होती हैं। पहले 100 पद 50 जोड़े बनाते हैं, हर जोड़ा 4 + 6 = 10, यानी 0। अंतिम पद 4^101 से 4 जुड़ता है, अतः इकाई अंक 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">60. <span class="t">Number System · Mixed Practice · Hard #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many divisors of 4320 are multiples of 12?</b><br><span class="hi">4320 के कितने भाजक 12 के गुणज हैं?</span></p>
+  <ol type="A"><li class="right">24 ✔</li><li class="">48</li><li class="">18</li><li class="">32</li></ol>
+  <p class="sol"><b>Solution:</b> 4320 = 2^5 × 3^3 × 5. A multiple of 12 needs 2^2 or more (2^2 to 2^5: 4 ways), 3^1 or more (3 ways), and 5^0 or 5^1 (2 ways). 4 × 3 × 2 = 24.<br><span class="hi">4320 = 2^5 × 3^3 × 5। 12 के गुणज में 2^2 या अधिक (2^2 से 2^5: 4 तरीके), 3^1 या अधिक (3 तरीके), और 5^0 या 5^1 (2 तरीके)। 4 × 3 × 2 = 24।</span></p>
+</div>
+<div class="q">
+  <div class="n">61. <span class="t">Number System · Mixed Practice · Hard #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3^(3^3)?</b><br><span class="hi">3^(3^3) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">3</li><li class="">9</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> 3^3 = 27, so the number is 3^27. 27 = 4 × 6 + 3, so 3^27 ends like 3^3 = 27, i.e. 7.<br><span class="hi">3^3 = 27, अतः संख्या 3^27 है। 27 = 4 × 6 + 3, अतः 3^27 का इकाई अंक 3^3 = 27 जैसा, यानी 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">62. <span class="t">Number System · Mixed Practice · Hard #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>A two-digit number is 7 times the sum of its digits. If its digits are reversed, the number decreases by 18. What is the number?</b><br><span class="hi">दो अंकों की एक संख्या अपने अंकों के योग की 7 गुना है। अंक उलटने पर संख्या 18 कम हो जाती है। संख्या क्या है?</span></p>
+  <ol type="A"><li class="right">42 ✔</li><li class="">63</li><li class="">84</li><li class="">21</li></ol>
+  <p class="sol"><b>Solution:</b> 10a + b = 7(a + b) gives 3a = 6b, so a = 2b. Reversing reduces it by 9(a − b) = 18, so a − b = 2. Then b = 2 and a = 4: the number is 42 (7 × 6 = 42, 42 − 24 = 18).<br><span class="hi">10a + b = 7(a + b) से 3a = 6b, अतः a = 2b। उलटने पर 9(a − b) = 18 घटता है, अतः a − b = 2। तब b = 2 और a = 4: संख्या 42 है (7 × 6 = 42, 42 − 24 = 18)।</span></p>
+</div>
+<div class="q">
+  <div class="n">63. <span class="t">Number System · Mixed Practice · Hard #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest number that is divisible by every natural number from 1 to 10?</b><br><span class="hi">वह सबसे छोटी संख्या कौन-सी है जो 1 से 10 तक की हर प्राकृत संख्या से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">2520 ✔</li><li class="">5040</li><li class="">1260</li><li class="">3628800</li></ol>
+  <p class="sol"><b>Solution:</b> Take the highest power of each prime up to 10: 2^3 (from 8), 3^2 (from 9), 5 and 7. LCM = 8 × 9 × 5 × 7 = 2520.<br><span class="hi">10 तक हर अभाज्य की सबसे बड़ी घात लें: 2^3 (8 से), 3^2 (9 से), 5 और 7। LCM = 8 × 9 × 5 × 7 = 2520।</span></p>
+</div>
+<div class="q">
+  <div class="n">64. <span class="t">Number System · Mixed Practice · Hard #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If 1^3 + 2^3 + 3^3 + ... + n^3 = 44100, what is the value of n?</b><br><span class="hi">यदि 1^3 + 2^3 + 3^3 + ... + n^3 = 44100 है, तो n का मान क्या है?</span></p>
+  <ol type="A"><li class="right">20 ✔</li><li class="">21</li><li class="">19</li><li class="">22</li></ol>
+  <p class="sol"><b>Solution:</b> The sum of the first n cubes is (n(n + 1)/2)^2 = 44100 = 210^2, so n(n + 1)/2 = 210 and n(n + 1) = 420 = 20 × 21. n = 20.<br><span class="hi">पहले n घनों का योग (n(n + 1)/2)^2 = 44100 = 210^2, अतः n(n + 1)/2 = 210 और n(n + 1) = 420 = 20 × 21। n = 20।</span></p>
+</div>
+<div class="q">
+  <div class="n">65. <span class="t">Number System · Mixed Practice · Hard #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the remainder when 2^99 is divided by 99?</b><br><span class="hi">2^99 को 99 से भाग देने पर शेषफल क्या होगा?</span></p>
+  <ol type="A"><li class="right">17 ✔</li><li class="">8</li><li class="">50</li><li class="">35</li></ol>
+  <p class="sol"><b>Solution:</b> Split 99 = 9 × 11. Mod 9: 2^6 leaves 1, and 99 = 6 × 16 + 3, so 2^99 leaves 2^3 = 8. Mod 11: 2^10 leaves 1, so 2^99 leaves 2^9 = 512 = 11 × 46 + 6, i.e. 6. The number below 99 that leaves 8 on division by 9 and 6 on division by 11 is 17.<br><span class="hi">99 = 9 × 11 में तोड़ें। 9 से: 2^6 का शेष 1, और 99 = 6 × 16 + 3, अतः 2^99 का शेष 2^3 = 8। 11 से: 2^10 का शेष 1, अतः 2^99 का शेष 2^9 = 512 = 11 × 46 + 6, यानी 6। 99 से छोटी वह संख्या जिसका 9 से शेष 8 और 11 से शेष 6 है, 17 है।</span></p>
+</div>
+<div class="q">
+  <div class="n">66. <span class="t">Number System · Mixed Practice · Hard #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many zeros are there at the end of 625!?</b><br><span class="hi">625! के अंत में कितने शून्य हैं?</span></p>
+  <ol type="A"><li class="right">156 ✔</li><li class="">155</li><li class="">125</li><li class="">150</li></ol>
+  <p class="sol"><b>Solution:</b> [625/5] + [625/25] + [625/125] + [625/625] = 125 + 25 + 5 + 1 = 156.<br><span class="hi">[625/5] + [625/25] + [625/125] + [625/625] = 125 + 25 + 5 + 1 = 156।</span></p>
+</div>
+<div class="q">
+  <div class="n">67. <span class="t">Number System · Mixed Practice · Hard #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2^1 × 3^2 × 4^3 × 5^4 × 6^5?</b><br><span class="hi">2^1 × 3^2 × 4^3 × 5^4 × 6^5 का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">5</li><li class="">6</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> The product contains 5^4 and even factors such as 2, so it is a multiple of 10. The unit digit is 0.<br><span class="hi">गुणनफल में 5^4 और 2 जैसे सम गुणनखंड हैं, अतः यह 10 का गुणज है। इकाई अंक 0 है।</span></p>
+</div>
+<div class="q">
+  <div class="n">68. <span class="t">Number System · Mixed Practice · Hard #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest number which leaves remainders 5 and 9 when divided by 12 and 16 respectively?</b><br><span class="hi">वह सबसे छोटी संख्या कौन-सी है जिसे 12 और 16 से भाग देने पर क्रमशः 5 और 9 शेष बचते हैं?</span></p>
+  <ol type="A"><li class="right">41 ✔</li><li class="">53</li><li class="">89</li><li class="">29</li></ol>
+  <p class="sol"><b>Solution:</b> 12 − 5 = 7 and 16 − 9 = 7, so the number + 7 is a multiple of LCM(12, 16) = 48. Smallest number = 48 − 7 = 41.<br><span class="hi">12 − 5 = 7 और 16 − 9 = 7, अतः संख्या + 7, LCM(12, 16) = 48 का गुणज है। सबसे छोटी संख्या = 48 − 7 = 41।</span></p>
+</div>
+<div class="q">
+  <div class="n">69. <span class="t">Number System · Mixed Practice · Hard #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many three-digit numbers are divisible by 5 or by 9, but not by both?</b><br><span class="hi">तीन अंकों की कितनी संख्याएँ 5 या 9 से विभाज्य हैं, परंतु दोनों से नहीं?</span></p>
+  <ol type="A"><li class="right">240 ✔</li><li class="">260</li><li class="">280</li><li class="">220</li></ol>
+  <p class="sol"><b>Solution:</b> Three-digit multiples of 5: 180. Of 9: 100. Of both (45): 20 (135 to 990). Exactly one of them: 180 + 100 − 2 × 20 = 240.<br><span class="hi">5 के तीन अंकों के गुणज: 180। 9 के: 100। दोनों (45) के: 20 (135 से 990)। केवल एक के: 180 + 100 − 2 × 20 = 240।</span></p>
+</div>
+<div class="q">
+  <div class="n">70. <span class="t">Number System · Mixed Practice · Hard #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>The sum of the squares of three consecutive natural numbers is 434. What is the middle number?</b><br><span class="hi">तीन क्रमागत प्राकृत संख्याओं के वर्गों का योग 434 है। बीच की संख्या क्या है?</span></p>
+  <ol type="A"><li class="right">12 ✔</li><li class="">11</li><li class="">13</li><li class="">14</li></ol>
+  <p class="sol"><b>Solution:</b> (m − 1)^2 + m^2 + (m + 1)^2 = 3m^2 + 2 = 434, so m^2 = 144 and m = 12 (11^2 + 12^2 + 13^2 = 121 + 144 + 169 = 434).<br><span class="hi">(m − 1)^2 + m^2 + (m + 1)^2 = 3m^2 + 2 = 434, अतः m^2 = 144 और m = 12 (11^2 + 12^2 + 13^2 = 121 + 144 + 169 = 434)।</span></p>
+</div>
+<div class="q">
+  <div class="n">71. <span class="t">Number System · Mixed Practice · Hard #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>N = 2^3 × 3^4 × 5^2. How many factors of N are divisible by 30 but not by 60?</b><br><span class="hi">N = 2^3 × 3^4 × 5^2 है। N के कितने गुणनखंड 30 से विभाज्य हैं परंतु 60 से नहीं?</span></p>
+  <ol type="A"><li class="right">8 ✔</li><li class="">16</li><li class="">24</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> Divisible by 30 but not by 60 means exactly one factor of 2, at least one 3 and at least one 5: 1 × 4 × 2 = 8.<br><span class="hi">30 से विभाज्य पर 60 से नहीं, यानी ठीक एक 2, कम से कम एक 3 और कम से कम एक 5: 1 × 4 × 2 = 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">72. <span class="t">Number System · Mixed Practice · Hard #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>The recurring decimal 0.999... (9 repeating) is equal to:</b><br><span class="hi">आवर्ती दशमलव 0.999... (9 दोहराता है) किसके बराबर है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">0.99</li><li class="">9/10</li><li class="">99/100</li></ol>
+  <p class="sol"><b>Solution:</b> Let x = 0.999... Then 10x = 9.999..., so 10x − x = 9, 9x = 9 and x = 1. A recurring 9 is exactly 1.<br><span class="hi">माना x = 0.999... तब 10x = 9.999..., अतः 10x − x = 9, 9x = 9 और x = 1। आवर्ती 9 ठीक 1 के बराबर है।</span></p>
+</div></body></html>

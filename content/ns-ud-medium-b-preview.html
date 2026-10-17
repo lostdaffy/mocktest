@@ -1,0 +1,610 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Question batch preview</title>
+<style>
+:root { --bg:#fff; --ink:#1b1b1f; --soft:#5d5f6b; --line:#e3e4ea; --ok:#127a3a; --okbg:#e7f6ec; --bad:#b42318; }
+@media (prefers-color-scheme: dark) { :root { --bg:#16171b; --ink:#ececf1; --soft:#a3a6b3; --line:#2c2e36; --ok:#5dd38c; --okbg:#173524; --bad:#ff8a80; } }
+body { background:var(--bg); color:var(--ink); font:15px/1.55 system-ui, sans-serif; margin:0; padding:16px; }
+h1 { font-size:18px; } .q { border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin:0 0 12px; }
+.n { font-size:13px; color:var(--soft); } .t { font-weight:600; } .ok { color:var(--ok); } .bad { color:var(--bad); font-weight:700; }
+.hi { color:var(--soft); } li.right { background:var(--okbg); color:var(--ok); font-weight:600; border-radius:4px; }
+.sol { font-size:14px; } ol { padding-left:22px; }
+</style></head><body><h1>100 questions - Number System · Unit Digit · Medium #6, Number System · Unit Digit · Medium #7, Number System · Unit Digit · Medium #8, Number System · Unit Digit · Medium #9, Number System · Unit Digit · Medium #10</h1>
+<div class="q">
+  <div class="n">1. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1 × 2 + 2 × 3 + 3 × 4 + ... + 20 × 21?</b><br><span class="hi">1 × 2 + 2 × 3 + 3 × 4 + ... + 20 × 21 का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">2</li><li class="">4</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> 1 × 2 + 2 × 3 + ... + n(n + 1) = n(n + 1)(n + 2)/3 = 20 × 21 × 22 / 3 = 3080. The unit digit is 0.<br><span class="hi">1 × 2 + 2 × 3 + ... + n(n + 1) = n(n + 1)(n + 2)/3 = 20 × 21 × 22 / 3 = 3080। इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">2. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of the sum of the first 50 odd natural numbers?</b><br><span class="hi">पहली 50 विषम प्राकृत संख्याओं के योग का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">5</li><li class="">1</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> The sum of the first n odd numbers is n² = 50² = 2500. The unit digit is 0.<br><span class="hi">पहली n विषम संख्याओं का योग n² = 50² = 2500 है। इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">3. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many digits d from 0 to 9 does d² end in d itself?</b><br><span class="hi">0 से 9 तक कितने अंकों d के लिए d² का इकाई अंक स्वयं d होता है?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">2</li><li class="">3</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 0² = 0, 1² = 1, 5² = 25 and 6² = 36 end in the same digit; no other digit does. So 4 digits.<br><span class="hi">0² = 0, 1² = 1, 5² = 25 और 6² = 36 उसी अंक पर समाप्त होते हैं; कोई अन्य अंक नहीं। अतः 4 अंक।</span></p>
+</div>
+<div class="q">
+  <div class="n">4. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of the product of the first 20 odd natural numbers?</b><br><span class="hi">पहली 20 विषम प्राकृत संख्याओं के गुणनफल का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">0</li><li class="">1</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> The product includes 5 and has no even factor, so it is an odd multiple of 5 and ends in 5.<br><span class="hi">गुणनफल में 5 है और कोई सम गुणनखंड नहीं, अतः यह 5 का विषम गुणज है और 5 पर समाप्त होता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">5. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2²⁴ + 3²⁴?</b><br><span class="hi">2²⁴ + 3²⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">5</li><li class="">3</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> 24 is a multiple of 4: 2²⁴ ends like 2⁴ (6) and 3²⁴ like 3⁴ (1). 6 + 1 = 7.<br><span class="hi">24, 4 का गुणज है: 2²⁴ का इकाई अंक 2⁴ जैसा (6) और 3²⁴ का 3⁴ जैसा (1)। 6 + 1 = 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">6. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1¹⁰⁰ + 2¹⁰⁰ + 3¹⁰⁰ + 4¹⁰⁰?</b><br><span class="hi">1¹⁰⁰ + 2¹⁰⁰ + 3¹⁰⁰ + 4¹⁰⁰ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">0</li><li class="">2</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> 100 is a multiple of 4, so the terms end in 1, 6, 1 and 6. 1 + 6 + 1 + 6 = 14, so the unit digit is 4.<br><span class="hi">100, 4 का गुणज है, अतः पदों के इकाई अंक 1, 6, 1 और 6। 1 + 6 + 1 + 6 = 14, अतः इकाई अंक 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">7. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 7⁴⁸ − 3⁴⁸?</b><br><span class="hi">7⁴⁸ − 3⁴⁸ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 48 is a multiple of 4, so both 7⁴⁸ and 3⁴⁸ end in 1. The difference ends in 0.<br><span class="hi">48, 4 का गुणज है, अतः 7⁴⁸ और 3⁴⁸ दोनों 1 पर समाप्त। अंतर का इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">8. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3^(4⁵)?</b><br><span class="hi">3^(4⁵) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">3</li><li class="">7</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> The exponent 4⁵ is a multiple of 4, and powers of 3 repeat every 4, so the number ends like 3⁴ = 81: the unit digit is 1.<br><span class="hi">घातांक 4⁵, 4 का गुणज है, और 3 की घातें हर 4 पर दोहराती हैं, अतः इकाई अंक 3⁴ = 81 जैसा: 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">9. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 5! + 7!?</b><br><span class="hi">5! + 7! का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">5</li><li class="">2</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 5! = 120 and 7! = 5040 both end in 0, so their sum (5160) ends in 0.<br><span class="hi">5! = 120 और 7! = 5040 दोनों 0 पर समाप्त, अतः योग (5160) का इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">10. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1! + 2! + 3! + ... + 10!?</b><br><span class="hi">1! + 2! + 3! + ... + 10! का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">0</li><li class="">9</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> From 5! on every factorial ends in 0. 1 + 2 + 6 + 24 = 33, so the unit digit is 3.<br><span class="hi">5! से आगे हर क्रमगुणित 0 पर समाप्त होता है। 1 + 2 + 6 + 24 = 33, अतः इकाई अंक 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">11. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2²⁰²⁴?</b><br><span class="hi">2²⁰²⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="right">6 ✔</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 2024 is a multiple of 4, so 2²⁰²⁴ ends like 2⁴ = 16: the unit digit is 6.<br><span class="hi">2024, 4 का गुणज है, अतः 2²⁰²⁴ का इकाई अंक 2⁴ = 16 जैसा: 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">12. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 4²⁰²⁴ + 5²⁰²⁴ + 6²⁰²⁴?</b><br><span class="hi">4²⁰²⁴ + 5²⁰²⁴ + 6²⁰²⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">5</li><li class="">6</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> 4 to an even power ends in 6, powers of 5 end in 5, powers of 6 end in 6. 6 + 5 + 6 = 17, so the unit digit is 7.<br><span class="hi">4 की सम घात 6 पर, 5 की घातें 5 पर, 6 की घातें 6 पर समाप्त। 6 + 5 + 6 = 17, अतः इकाई अंक 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">13. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 13²⁴ × 17²⁵?</b><br><span class="hi">13²⁴ × 17²⁵ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">1</li><li class="">3</li><li class="right">7 ✔</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 24 is a multiple of 4, so 13²⁴ ends in 1; 25 = 4 × 6 + 1, so 17²⁵ ends in 7. 1 × 7 = 7.<br><span class="hi">24, 4 का गुणज है, अतः 13²⁴ का इकाई अंक 1; 25 = 4 × 6 + 1, अतः 17²⁵ का 7। 1 × 7 = 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">14. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2⁴¹ × 5 + 1?</b><br><span class="hi">2⁴¹ × 5 + 1 का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">0</li><li class="">6</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 2⁴¹ × 5 is an even number times 5, so it ends in 0. Adding 1 gives a unit digit of 1.<br><span class="hi">2⁴¹ × 5 एक सम संख्या गुणा 5 है, अतः 0 पर समाप्त। 1 जोड़ने पर इकाई अंक 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">15. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If n is odd, what is the unit digit of 9^n + 4^n?</b><br><span class="hi">यदि n विषम है, तो 9^n + 4^n का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">5</li><li class="">0</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> For odd n, 9^n ends in 9 and 4^n ends in 4. 9 + 4 = 13, so the unit digit is 3.<br><span class="hi">विषम n के लिए 9^n का इकाई अंक 9 और 4^n का 4। 9 + 4 = 13, अतः इकाई अंक 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">16. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For any natural number n, what is the unit digit of 5^n + 6^n + 1?</b><br><span class="hi">किसी भी प्राकृत संख्या n के लिए 5^n + 6^n + 1 का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">1</li><li class="">0</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> 5^n always ends in 5 and 6^n always ends in 6. 5 + 6 + 1 = 12, so the unit digit is 2 for every n.<br><span class="hi">5^n सदैव 5 पर और 6^n सदैव 6 पर समाप्त होता है। 5 + 6 + 1 = 12, अतः हर n के लिए इकाई अंक 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">17. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For any natural number n, what is the unit digit of 7^(4n + 2)?</b><br><span class="hi">किसी भी प्राकृत संख्या n के लिए 7^(4n + 2) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">1</li><li class="">3</li><li class="">7</li><li class="right">9 ✔</li></ol>
+  <p class="sol"><b>Solution:</b> 4n + 2 always leaves 2 on division by 4, so 7^(4n + 2) ends like 7² = 49: the unit digit is 9.<br><span class="hi">4n + 2 का 4 से शेष सदैव 2 है, अतः 7^(4n + 2) का इकाई अंक 7² = 49 जैसा: 9।</span></p>
+</div>
+<div class="q">
+  <div class="n">18. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2^(4n + 3) × 3^(4n + 1), where n is a natural number?</b><br><span class="hi">2^(4n + 3) × 3^(4n + 1) का इकाई अंक क्या है, जहाँ n एक प्राकृत संख्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="right">4 ✔</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 2^(4n + 3) ends like 2³ = 8 and 3^(4n + 1) like 3¹ = 3. 8 × 3 = 24, so the unit digit is 4.<br><span class="hi">2^(4n + 3) का इकाई अंक 2³ = 8 जैसा और 3^(4n + 1) का 3¹ = 3 जैसा। 8 × 3 = 24, अतः इकाई अंक 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">19. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest natural number n greater than 1 for which 3^n ends in 3?</b><br><span class="hi">1 से बड़ी वह सबसे छोटी प्राकृत संख्या n कौन-सी है जिसके लिए 3^n का इकाई अंक 3 है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">4</li><li class="">9</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> The unit digits of 3², 3³, 3⁴ are 9, 7, 1, and 3⁵ = 243 ends in 3 again. So n = 5.<br><span class="hi">3², 3³, 3⁴ के इकाई अंक 9, 7, 1 हैं, और 3⁵ = 243 फिर 3 पर समाप्त। अतः n = 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">20. <span class="t">Number System · Unit Digit · Medium #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many of the numbers 2¹, 2², 2³, ..., 2²⁰ end in 6?</b><br><span class="hi">संख्याओं 2¹, 2², 2³, ..., 2²⁰ में से कितनी 6 पर समाप्त होती हैं?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">4</li><li class="">10</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> 2^n ends in 6 exactly when n is a multiple of 4: n = 4, 8, 12, 16, 20. So 5 numbers.<br><span class="hi">2^n ठीक तब 6 पर समाप्त होता है जब n, 4 का गुणज हो: n = 4, 8, 12, 16, 20। अतः 5 संख्याएँ।</span></p>
+</div>
+<div class="q">
+  <div class="n">21. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 11¹ + 12² + 13³ + 14⁴?</b><br><span class="hi">11¹ + 12² + 13³ + 14⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">8 ✔</li><li class="">6</li><li class="">4</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> The terms end in 1, 4, 7 and 6 (1¹, 2², 3³ = 27, 4⁴ = 256). 1 + 4 + 7 + 6 = 18, so the unit digit is 8.<br><span class="hi">पदों के इकाई अंक 1, 4, 7 और 6 (1¹, 2², 3³ = 27, 4⁴ = 256)। 1 + 4 + 7 + 6 = 18, अतः इकाई अंक 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">22. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1993¹⁹⁹⁴ + 1994¹⁹⁹³?</b><br><span class="hi">1993¹⁹⁹⁴ + 1994¹⁹⁹³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">5</li><li class="">7</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 1994 = 4 × 498 + 2, so 1993¹⁹⁹⁴ ends like 3² (9). 1993 is odd, so 1994¹⁹⁹³ ends in 4. 9 + 4 = 13: the unit digit is 3.<br><span class="hi">1994 = 4 × 498 + 2, अतः 1993¹⁹⁹⁴ का इकाई अंक 3² जैसा (9)। 1993 विषम है, अतः 1994¹⁹⁹³ का 4। 9 + 4 = 13: इकाई अंक 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">23. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For any natural number n, what is the unit digit of 6^n − 5^n?</b><br><span class="hi">किसी भी प्राकृत संख्या n के लिए 6^n − 5^n का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">0</li><li class="">5</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> 6^n always ends in 6 and 5^n in 5, and 6^n is the larger. So the difference ends in 6 − 5 = 1.<br><span class="hi">6^n सदैव 6 पर और 5^n 5 पर समाप्त, और 6^n बड़ा है। अतः अंतर का इकाई अंक 6 − 5 = 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">24. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For any natural number n, what is the unit digit of 4^(2n)?</b><br><span class="hi">किसी भी प्राकृत संख्या n के लिए 4^(2n) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">4</li><li class="">2</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 4^(2n) = 16^n, and every power of 16 ends in 6. (4 to any even power ends in 6.)<br><span class="hi">4^(2n) = 16^n, और 16 की हर घात 6 पर समाप्त होती है। (4 की हर सम घात 6 पर।)</span></p>
+</div>
+<div class="q">
+  <div class="n">25. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3⁵ × 5³ × 7⁷?</b><br><span class="hi">3⁵ × 5³ × 7⁷ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">0</li><li class="">1</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> All the factors are odd and one is a power of 5, so the product is an odd multiple of 5 and ends in 5.<br><span class="hi">सभी गुणनखंड विषम हैं और एक 5 की घात है, अतः गुणनफल 5 का विषम गुणज है और 5 पर समाप्त होता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">26. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For any natural number n, what is the unit digit of 9^(2n + 1) + 1?</b><br><span class="hi">किसी भी प्राकृत संख्या n के लिए 9^(2n + 1) + 1 का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">1</li><li class="">9</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> 2n + 1 is odd, so 9^(2n + 1) ends in 9, and adding 1 gives a number ending in 0.<br><span class="hi">2n + 1 विषम है, अतः 9^(2n + 1) का इकाई अंक 9, और 1 जोड़ने पर 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">27. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For any natural number n, what is the unit digit of 8^(4n)?</b><br><span class="hi">किसी भी प्राकृत संख्या n के लिए 8^(4n) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="right">6 ✔</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 4n is a multiple of 4, so 8^(4n) ends like 8⁴ = 4096: the unit digit is 6.<br><span class="hi">4n, 4 का गुणज है, अतः 8^(4n) का इकाई अंक 8⁴ = 4096 जैसा: 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">28. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1¹⁰⁰¹ + 2¹⁰⁰¹ + 3¹⁰⁰¹ + 4¹⁰⁰¹?</b><br><span class="hi">1¹⁰⁰¹ + 2¹⁰⁰¹ + 3¹⁰⁰¹ + 4¹⁰⁰¹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 1001 = 4 × 250 + 1, so each term ends like its first power: 1, 2, 3 and 4. 1 + 2 + 3 + 4 = 10, so the unit digit is 0.<br><span class="hi">1001 = 4 × 250 + 1, अतः हर पद का इकाई अंक उसकी पहली घात जैसा: 1, 2, 3 और 4। 1 + 2 + 3 + 4 = 10, अतः इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">29. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 73⁷³ − 37³⁷?</b><br><span class="hi">73⁷³ − 37³⁷ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">4</li><li class="">0</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> 73 and 37 both leave 1 on division by 4, so 73⁷³ ends in 3 and 37³⁷ ends in 7. 73⁷³ is larger, so subtract with a borrow: 13 − 7 = 6.<br><span class="hi">73 और 37 दोनों का 4 से शेष 1, अतः 73⁷³ का इकाई अंक 3 और 37³⁷ का 7। 73⁷³ बड़ा है, अतः हासिल लेकर घटाएँ: 13 − 7 = 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">30. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If n = 1 + 2 + 3 + ... + 10, what is the unit digit of 2^n?</b><br><span class="hi">यदि n = 1 + 2 + 3 + ... + 10 है, तो 2^n का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="">6</li><li class="right">8 ✔</li></ol>
+  <p class="sol"><b>Solution:</b> n = 10 × 11 / 2 = 55. 55 = 4 × 13 + 3, so 2⁵⁵ ends like 2³ = 8.<br><span class="hi">n = 10 × 11 / 2 = 55। 55 = 4 × 13 + 3, अतः 2⁵⁵ का इकाई अंक 2³ = 8 जैसा।</span></p>
+</div>
+<div class="q">
+  <div class="n">31. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 7^(1 + 2 + 3 + ... + 8)?</b><br><span class="hi">7^(1 + 2 + 3 + ... + 8) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">3</li><li class="">7</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 1 + 2 + ... + 8 = 36, a multiple of 4. So 7³⁶ ends like 7⁴ = 2401: the unit digit is 1.<br><span class="hi">1 + 2 + ... + 8 = 36, जो 4 का गुणज है। अतः 7³⁶ का इकाई अंक 7⁴ = 2401 जैसा: 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">32. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3^(10!)?</b><br><span class="hi">3^(10!) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">3</li><li class="">7</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 10! is a multiple of 4, so 3^(10!) ends like 3⁴ = 81: the unit digit is 1.<br><span class="hi">10!, 4 का गुणज है, अतः 3^(10!) का इकाई अंक 3⁴ = 81 जैसा: 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">33. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 4^(3!) + 9^(5!)?</b><br><span class="hi">4^(3!) + 9^(5!) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">5</li><li class="">3</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> 3! = 6 is even, so 4⁶ ends in 6. 5! = 120 is even, so 9¹²⁰ ends in 1. 6 + 1 = 7.<br><span class="hi">3! = 6 सम है, अतः 4⁶ का इकाई अंक 6। 5! = 120 सम है, अतः 9¹²⁰ का 1। 6 + 1 = 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">34. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 12¹² × 13¹³ × 14¹⁴?</b><br><span class="hi">12¹² × 13¹³ × 14¹⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="">6</li><li class="right">8 ✔</li></ol>
+  <p class="sol"><b>Solution:</b> 12¹² ends like 2⁴ (6); 13 = 4 × 3 + 1, so 13¹³ ends in 3; 14¹⁴ ends in 6 (even power of 4). 6 × 3 × 6 = 108: the unit digit is 8.<br><span class="hi">12¹² का इकाई अंक 2⁴ जैसा (6); 13 = 4 × 3 + 1, अतः 13¹³ का 3; 14¹⁴ का 6 (4 की सम घात)। 6 × 3 × 6 = 108: इकाई अंक 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">35. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2^(2²) × 3^(3³)?</b><br><span class="hi">2^(2²) × 3^(3³) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 2^(2²) = 2⁴ = 16 ends in 6. 3^(3³) = 3²⁷, and 27 = 4 × 6 + 3, so it ends like 3³ (7). 6 × 7 = 42: the unit digit is 2.<br><span class="hi">2^(2²) = 2⁴ = 16 का इकाई अंक 6। 3^(3³) = 3²⁷, और 27 = 4 × 6 + 3, अतः इकाई अंक 3³ जैसा (7)। 6 × 7 = 42: इकाई अंक 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">36. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2¹ × 2² × 2³ × ... × 2¹⁰?</b><br><span class="hi">2¹ × 2² × 2³ × ... × 2¹⁰ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="">6</li><li class="right">8 ✔</li></ol>
+  <p class="sol"><b>Solution:</b> The product is 2^(1 + 2 + ... + 10) = 2⁵⁵. 55 = 4 × 13 + 3, so it ends like 2³ = 8.<br><span class="hi">गुणनफल 2^(1 + 2 + ... + 10) = 2⁵⁵ है। 55 = 4 × 13 + 3, अतः इकाई अंक 2³ = 8 जैसा।</span></p>
+</div>
+<div class="q">
+  <div class="n">37. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 41⁴¹ × 42⁴² × 43⁴³?</b><br><span class="hi">41⁴¹ × 42⁴² × 43⁴³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="">6</li><li class="right">8 ✔</li></ol>
+  <p class="sol"><b>Solution:</b> 41⁴¹ ends in 1. 42 = 4 × 10 + 2, so 42⁴² ends like 2² (4). 43 = 4 × 10 + 3, so 43⁴³ ends like 3³ (7). 1 × 4 × 7 = 28: the unit digit is 8.<br><span class="hi">41⁴¹ का इकाई अंक 1। 42 = 4 × 10 + 2, अतः 42⁴² का 2² जैसा (4)। 43 = 4 × 10 + 3, अतः 43⁴³ का 3³ जैसा (7)। 1 × 4 × 7 = 28: इकाई अंक 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">38. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 9¹ × 9² × 9³ × 9⁴ × 9⁵?</b><br><span class="hi">9¹ × 9² × 9³ × 9⁴ × 9⁵ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">9 ✔</li><li class="">1</li><li class="">3</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> The product is 9^(1 + 2 + 3 + 4 + 5) = 9¹⁵, an odd power of 9, so it ends in 9.<br><span class="hi">गुणनफल 9^(1 + 2 + 3 + 4 + 5) = 9¹⁵ है, 9 की विषम घात, अतः 9 पर समाप्त।</span></p>
+</div>
+<div class="q">
+  <div class="n">39. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>x ends in 3 and y ends in 7. What is the unit digit of x⁴ + y⁴?</b><br><span class="hi">x का इकाई अंक 3 और y का 7 है। x⁴ + y⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">0</li><li class="">1</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> 3⁴ = 81 and 7⁴ = 2401 both end in 1, so x⁴ + y⁴ ends in 1 + 1 = 2.<br><span class="hi">3⁴ = 81 और 7⁴ = 2401 दोनों 1 पर समाप्त, अतः x⁴ + y⁴ का इकाई अंक 1 + 1 = 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">40. <span class="t">Number System · Unit Digit · Medium #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1² + 3² + 5² + 7² + 9²?</b><br><span class="hi">1² + 3² + 5² + 7² + 9² का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">0</li><li class="">1</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 1 + 9 + 25 + 49 + 81 = 165. The unit digit is 5.<br><span class="hi">1 + 9 + 25 + 49 + 81 = 165। इकाई अंक 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">41. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2² + 4² + 6² + ... + 20²?</b><br><span class="hi">2² + 4² + 6² + ... + 20² का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> The sum is 4 × (1² + 2² + ... + 10²) = 4 × 385 = 1540. The unit digit is 0.<br><span class="hi">योग 4 × (1² + 2² + ... + 10²) = 4 × 385 = 1540 है। इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">42. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3¹ × 3² × 3³ × 3⁴?</b><br><span class="hi">3¹ × 3² × 3³ × 3⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">1</li><li class="">3</li><li class="">7</li><li class="right">9 ✔</li></ol>
+  <p class="sol"><b>Solution:</b> The product is 3^(1 + 2 + 3 + 4) = 3¹⁰. 10 = 4 × 2 + 2, so it ends like 3² = 9.<br><span class="hi">गुणनफल 3^(1 + 2 + 3 + 4) = 3¹⁰ है। 10 = 4 × 2 + 2, अतः इकाई अंक 3² = 9 जैसा।</span></p>
+</div>
+<div class="q">
+  <div class="n">43. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of (3!)³ + (4!)⁴?</b><br><span class="hi">(3!)³ + (4!)⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> (3!)³ = 6³ = 216 ends in 6. (4!)⁴ = 24⁴ ends in 6 (even power of 4). 6 + 6 = 12: the unit digit is 2.<br><span class="hi">(3!)³ = 6³ = 216 का इकाई अंक 6। (4!)⁴ = 24⁴ का 6 (4 की सम घात)। 6 + 6 = 12: इकाई अंक 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">44. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2² × 4⁴ × 6⁶ × 8⁸?</b><br><span class="hi">2² × 4⁴ × 6⁶ × 8⁸ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="right">4 ✔</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 2² = 4, 4⁴ ends in 6, 6⁶ ends in 6, 8⁸ ends like 8⁴ (6). 4 × 6 × 6 × 6 = 864: the unit digit is 4.<br><span class="hi">2² = 4, 4⁴ का इकाई अंक 6, 6⁶ का 6, 8⁸ का 8⁴ जैसा (6)। 4 × 6 × 6 × 6 = 864: इकाई अंक 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">45. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3³ × 5⁵ × 7⁷ × 9⁹?</b><br><span class="hi">3³ × 5⁵ × 7⁷ × 9⁹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">0</li><li class="">3</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> Every factor is odd and 5⁵ is among them, so the product is an odd multiple of 5 and ends in 5.<br><span class="hi">हर गुणनखंड विषम है और 5⁵ उनमें है, अतः गुणनफल 5 का विषम गुणज है और 5 पर समाप्त होता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">46. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Which of the following has 2 as its unit digit: 2²⁵, 8²⁵, 12²⁶ or 32²⁸?</b><br><span class="hi">निम्नलिखित में से किसका इकाई अंक 2 है: 2²⁵, 8²⁵, 12²⁶ या 32²⁸?</span></p>
+  <ol type="A"><li class="right">2²⁵ ✔</li><li class="">8²⁵</li><li class="">12²⁶</li><li class="">32²⁸</li></ol>
+  <p class="sol"><b>Solution:</b> 25 = 4 × 6 + 1, so 2²⁵ ends in 2 and 8²⁵ in 8. 26 leaves 2, so 12²⁶ ends in 4. 28 is a multiple of 4, so 32²⁸ ends in 6. Only 2²⁵ ends in 2.<br><span class="hi">25 = 4 × 6 + 1, अतः 2²⁵ का इकाई अंक 2 और 8²⁵ का 8। 26 का शेष 2, अतः 12²⁶ का 4। 28, 4 का गुणज है, अतः 32²⁸ का 6। केवल 2²⁵ का इकाई अंक 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">47. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1 + 2 + 2² + 2³ + ... + 2⁹?</b><br><span class="hi">1 + 2 + 2² + 2³ + ... + 2⁹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">1</li><li class="">7</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 1 + 2 + ... + 2⁹ = 2¹⁰ − 1 = 1023. The unit digit is 3.<br><span class="hi">1 + 2 + ... + 2⁹ = 2¹⁰ − 1 = 1023। इकाई अंक 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">48. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1 + 3 + 3² + ... + 3⁹?</b><br><span class="hi">1 + 3 + 3² + ... + 3⁹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">0</li><li class="">3</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> The sum is (3¹⁰ − 1)/2 = (59049 − 1)/2 = 29524. The unit digit is 4.<br><span class="hi">योग (3¹⁰ − 1)/2 = (59049 − 1)/2 = 29524 है। इकाई अंक 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">49. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 21³ + 22³ + 23³ + 24³?</b><br><span class="hi">21³ + 22³ + 23³ + 24³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> The cubes end in 1, 8, 7 and 4. 1 + 8 + 7 + 4 = 20, so the unit digit is 0.<br><span class="hi">घनों के इकाई अंक 1, 8, 7 और 4। 1 + 8 + 7 + 4 = 20, अतः इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">50. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of (2¹⁰ − 1)(2¹⁰ + 1)?</b><br><span class="hi">(2¹⁰ − 1)(2¹⁰ + 1) का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">3</li><li class="">1</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> (2¹⁰ − 1)(2¹⁰ + 1) = 2²⁰ − 1. 2²⁰ ends like 2⁴ (6), so 2²⁰ − 1 ends in 5. (1023 × 1025 = 1048575.)<br><span class="hi">(2¹⁰ − 1)(2¹⁰ + 1) = 2²⁰ − 1। 2²⁰ का इकाई अंक 2⁴ जैसा (6), अतः 2²⁰ − 1 का 5। (1023 × 1025 = 1048575।)</span></p>
+</div>
+<div class="q">
+  <div class="n">51. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 7¹⁰⁰ + 7¹⁰¹?</b><br><span class="hi">7¹⁰⁰ + 7¹⁰¹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">8 ✔</li><li class="">1</li><li class="">7</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> 7¹⁰⁰ ends in 1 (100 is a multiple of 4) and 7¹⁰¹ in 7. 1 + 7 = 8.<br><span class="hi">7¹⁰⁰ का इकाई अंक 1 (100, 4 का गुणज) और 7¹⁰¹ का 7। 1 + 7 = 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">52. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3²⁵ + 3²⁶ + 3²⁷ + 3²⁸?</b><br><span class="hi">3²⁵ + 3²⁶ + 3²⁷ + 3²⁸ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">3</li><li class="">9</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> Four consecutive powers of 3 end in 3, 9, 7, 1 in some order, which add to 20. The unit digit is 0.<br><span class="hi">3 की चार क्रमागत घातें किसी क्रम में 3, 9, 7, 1 पर समाप्त होती हैं, जिनका योग 20। इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">53. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of (18⁴ × 18⁵) ÷ 18⁷?</b><br><span class="hi">(18⁴ × 18⁵) ÷ 18⁷ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="right">4 ✔</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> (18⁴ × 18⁵) ÷ 18⁷ = 18^(4 + 5 − 7) = 18² = 324. The unit digit is 4.<br><span class="hi">(18⁴ × 18⁵) ÷ 18⁷ = 18^(4 + 5 − 7) = 18² = 324। इकाई अंक 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">54. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2⁵ × 5² × 3³?</b><br><span class="hi">2⁵ × 5² × 3³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">5</li><li class="">2</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> The product has both 2 and 5 as factors, so it is a multiple of 10. (32 × 25 × 27 = 21600.) The unit digit is 0.<br><span class="hi">गुणनफल में 2 और 5 दोनों हैं, अतः यह 10 का गुणज है। (32 × 25 × 27 = 21600।) इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">55. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 13⁴ − 7⁴?</b><br><span class="hi">13⁴ − 7⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">6</li><li class="">4</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> Both 13⁴ and 7⁴ end in 1 (3⁴ = 81, 7⁴ = 2401), so the difference ends in 0. (28561 − 2401 = 26160.)<br><span class="hi">13⁴ और 7⁴ दोनों 1 पर समाप्त (3⁴ = 81, 7⁴ = 2401), अतः अंतर का इकाई अंक 0। (28561 − 2401 = 26160।)</span></p>
+</div>
+<div class="q">
+  <div class="n">56. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1⁷ + 2⁷ + 3⁷ + ... + 10⁷?</b><br><span class="hi">1⁷ + 2⁷ + 3⁷ + ... + 10⁷ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">0</li><li class="">3</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> 7 = 4 + 3, so each k⁷ ends like k³: 1, 8, 7, 4, 5, 6, 3, 2, 9, 0. These add to 45, so the unit digit is 5.<br><span class="hi">7 = 4 + 3, अतः हर k⁷ का इकाई अंक k³ जैसा: 1, 8, 7, 4, 5, 6, 3, 2, 9, 0। इनका योग 45, अतः इकाई अंक 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">57. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2²⁰²³ − 2²⁰²²?</b><br><span class="hi">2²⁰²³ − 2²⁰²² का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="right">4 ✔</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 2²⁰²³ − 2²⁰²² = 2²⁰²² (2 − 1) = 2²⁰²². 2022 = 4 × 505 + 2, so it ends like 2² = 4.<br><span class="hi">2²⁰²³ − 2²⁰²² = 2²⁰²² (2 − 1) = 2²⁰²²। 2022 = 4 × 505 + 2, अतः इकाई अंक 2² = 4 जैसा।</span></p>
+</div>
+<div class="q">
+  <div class="n">58. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 5⁴ + 4⁵?</b><br><span class="hi">5⁴ + 4⁵ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">9 ✔</li><li class="">5</li><li class="">4</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> 5⁴ = 625 and 4⁵ = 1024; 625 + 1024 = 1649. The unit digit is 9.<br><span class="hi">5⁴ = 625 और 4⁵ = 1024; 625 + 1024 = 1649। इकाई अंक 9।</span></p>
+</div>
+<div class="q">
+  <div class="n">59. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 6² + 7² + 8² + 9²?</b><br><span class="hi">6² + 7² + 8² + 9² का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">4</li><li class="">6</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 36 + 49 + 64 + 81 = 230. The unit digit is 0.<br><span class="hi">36 + 49 + 64 + 81 = 230। इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">60. <span class="t">Number System · Unit Digit · Medium #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3⁷ × 7³?</b><br><span class="hi">3⁷ × 7³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">3</li><li class="">7</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 3⁷ = 2187 ends in 7 and 7³ = 343 ends in 3. 7 × 3 = 21, so the unit digit is 1.<br><span class="hi">3⁷ = 2187 का इकाई अंक 7 और 7³ = 343 का 3। 7 × 3 = 21, अतः इकाई अंक 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">61. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2⁵⁰ × 3⁵⁰?</b><br><span class="hi">2⁵⁰ × 3⁵⁰ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">4</li><li class="">1</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 2⁵⁰ × 3⁵⁰ = 6⁵⁰, and every power of 6 ends in 6.<br><span class="hi">2⁵⁰ × 3⁵⁰ = 6⁵⁰, और 6 की हर घात 6 पर समाप्त होती है।</span></p>
+</div>
+<div class="q">
+  <div class="n">62. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>23 is multiplied by itself 23 times. What is the unit digit of the product?</b><br><span class="hi">23 को स्वयं से 23 बार गुणा किया जाता है। गुणनफल का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">1</li><li class="">3</li><li class="right">7 ✔</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> The product is 23²³. 23 = 4 × 5 + 3, so it ends like 3³ = 27: the unit digit is 7.<br><span class="hi">गुणनफल 23²³ है। 23 = 4 × 5 + 3, अतः इकाई अंक 3³ = 27 जैसा: 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">63. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1997¹⁹⁹⁸ × 1998¹⁹⁹⁷?</b><br><span class="hi">1997¹⁹⁹⁸ × 1998¹⁹⁹⁷ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 1998 = 4 × 499 + 2, so 1997¹⁹⁹⁸ ends like 7² (9). 1997 = 4 × 499 + 1, so 1998¹⁹⁹⁷ ends like 8¹ (8). 9 × 8 = 72: the unit digit is 2.<br><span class="hi">1998 = 4 × 499 + 2, अतः 1997¹⁹⁹⁸ का इकाई अंक 7² जैसा (9)। 1997 = 4 × 499 + 1, अतः 1998¹⁹⁹⁷ का 8¹ जैसा (8)। 9 × 8 = 72: इकाई अंक 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">64. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For any natural number n, what is the unit digit of 2^n × 5^n?</b><br><span class="hi">किसी भी प्राकृत संख्या n के लिए 2^n × 5^n का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">2</li><li class="">5</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> 2^n × 5^n = 10^n, which always ends in 0.<br><span class="hi">2^n × 5^n = 10^n, जो सदैव 0 पर समाप्त होती है।</span></p>
+</div>
+<div class="q">
+  <div class="n">65. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 4⁹ + 6⁹?</b><br><span class="hi">4⁹ + 6⁹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">4</li><li class="">6</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> 9 is odd, so 4⁹ ends in 4, and 6⁹ ends in 6. 4 + 6 = 10, so the unit digit is 0.<br><span class="hi">9 विषम है, अतः 4⁹ का इकाई अंक 4, और 6⁹ का 6। 4 + 6 = 10, अतः इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">66. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 9⁹ × 4⁴?</b><br><span class="hi">9⁹ × 4⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="right">4 ✔</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 9⁹ ends in 9 and 4⁴ = 256 ends in 6. 9 × 6 = 54, so the unit digit is 4.<br><span class="hi">9⁹ का इकाई अंक 9 और 4⁴ = 256 का 6। 9 × 6 = 54, अतः इकाई अंक 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">67. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 17¹⁷ + 13¹³?</b><br><span class="hi">17¹⁷ + 13¹³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 17 and 13 both leave 1 on division by 4, so 17¹⁷ ends in 7 and 13¹³ in 3. 7 + 3 = 10: the unit digit is 0.<br><span class="hi">17 और 13 दोनों का 4 से शेष 1, अतः 17¹⁷ का इकाई अंक 7 और 13¹³ का 3। 7 + 3 = 10: इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">68. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of the product 2² × 3³ × 4⁴?</b><br><span class="hi">गुणनफल 2² × 3³ × 4⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="">6</li><li class="right">8 ✔</li></ol>
+  <p class="sol"><b>Solution:</b> The factors end in 4, 7 and 6 (2² = 4, 3³ = 27, 4⁴ = 256). 4 × 7 × 6 = 168, so the unit digit is 8.<br><span class="hi">गुणनखंडों के इकाई अंक 4, 7 और 6 (2² = 4, 3³ = 27, 4⁴ = 256)। 4 × 7 × 6 = 168, अतः इकाई अंक 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">69. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 31³² × 32³¹?</b><br><span class="hi">31³² × 32³¹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="">6</li><li class="right">8 ✔</li></ol>
+  <p class="sol"><b>Solution:</b> 31³² ends in 1. 31 = 4 × 7 + 3, so 32³¹ ends like 2³ = 8. 1 × 8 = 8.<br><span class="hi">31³² का इकाई अंक 1। 31 = 4 × 7 + 3, अतः 32³¹ का 2³ = 8 जैसा। 1 × 8 = 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">70. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 8 + 8² + 8³ + 8⁴ + 8⁵?</b><br><span class="hi">8 + 8² + 8³ + 8⁴ + 8⁵ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="">6</li><li class="right">8 ✔</li></ol>
+  <p class="sol"><b>Solution:</b> The terms end in 8, 4, 2, 6, 8. 8 + 4 + 2 + 6 + 8 = 28, so the unit digit is 8.<br><span class="hi">पदों के इकाई अंक 8, 4, 2, 6, 8। 8 + 4 + 2 + 6 + 8 = 28, अतः इकाई अंक 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">71. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 7⁰ + 7¹ + 7²?</b><br><span class="hi">7⁰ + 7¹ + 7² का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">1</li><li class="">3</li><li class="right">7 ✔</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 7⁰ = 1, so the sum is 1 + 7 + 49 = 57. The unit digit is 7.<br><span class="hi">7⁰ = 1, अतः योग 1 + 7 + 49 = 57। इकाई अंक 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">72. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3³ + 3⁴ + 3⁵?</b><br><span class="hi">3³ + 3⁴ + 3⁵ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">3</li><li class="">7</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 27 + 81 + 243 = 351. The unit digit is 1.<br><span class="hi">27 + 81 + 243 = 351। इकाई अंक 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">73. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of (11¹¹)¹¹?</b><br><span class="hi">(11¹¹)¹¹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">0</li><li class="">9</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> Any power of a number ending in 1 ends in 1. (11¹¹)¹¹ = 11¹²¹ ends in 1.<br><span class="hi">1 पर समाप्त संख्या की हर घात 1 पर समाप्त होती है। (11¹¹)¹¹ = 11¹²¹ का इकाई अंक 1।</span></p>
+</div>
+<div class="q">
+  <div class="n">74. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2⁴ × 4² × 8¹?</b><br><span class="hi">2⁴ × 4² × 8¹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="">6</li><li class="right">8 ✔</li></ol>
+  <p class="sol"><b>Solution:</b> 2⁴ × 4² × 8 = 2⁴ × 2⁴ × 2³ = 2¹¹ = 2048. The unit digit is 8.<br><span class="hi">2⁴ × 4² × 8 = 2⁴ × 2⁴ × 2³ = 2¹¹ = 2048। इकाई अंक 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">75. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3²⁰²⁵?</b><br><span class="hi">3²⁰²⁵ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">1</li><li class="right">3 ✔</li><li class="">7</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 2025 = 4 × 506 + 1, so 3²⁰²⁵ ends like 3¹: the unit digit is 3.<br><span class="hi">2025 = 4 × 506 + 1, अतः 3²⁰²⁵ का इकाई अंक 3¹ जैसा: 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">76. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 7²⁰²⁶?</b><br><span class="hi">7²⁰²⁶ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">1</li><li class="">3</li><li class="">7</li><li class="right">9 ✔</li></ol>
+  <p class="sol"><b>Solution:</b> 2026 = 4 × 506 + 2, so 7²⁰²⁶ ends like 7² = 49: the unit digit is 9.<br><span class="hi">2026 = 4 × 506 + 2, अतः 7²⁰²⁶ का इकाई अंक 7² = 49 जैसा: 9।</span></p>
+</div>
+<div class="q">
+  <div class="n">77. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 8²⁰²⁷?</b><br><span class="hi">8²⁰²⁷ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 2027 = 4 × 506 + 3, so 8²⁰²⁷ ends like 8³ = 512: the unit digit is 2.<br><span class="hi">2027 = 4 × 506 + 3, अतः 8²⁰²⁷ का इकाई अंक 8³ = 512 जैसा: 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">78. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2²⁰²⁸?</b><br><span class="hi">2²⁰²⁸ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="right">6 ✔</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 2028 is a multiple of 4, so 2²⁰²⁸ ends like 2⁴ = 16: the unit digit is 6.<br><span class="hi">2028, 4 का गुणज है, अतः 2²⁰²⁸ का इकाई अंक 2⁴ = 16 जैसा: 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">79. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 9²⁰²⁹?</b><br><span class="hi">9²⁰²⁹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">9 ✔</li><li class="">1</li><li class="">3</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> 2029 is odd, and 9 to an odd power ends in 9.<br><span class="hi">2029 विषम है, और 9 की विषम घात 9 पर समाप्त होती है।</span></p>
+</div>
+<div class="q">
+  <div class="n">80. <span class="t">Number System · Unit Digit · Medium #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 4²⁰³⁰?</b><br><span class="hi">4²⁰³⁰ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">4</li><li class="">2</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 2030 is even, and 4 to an even power ends in 6.<br><span class="hi">2030 सम है, और 4 की सम घात 6 पर समाप्त होती है।</span></p>
+</div>
+<div class="q">
+  <div class="n">81. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 6²⁰³¹ − 1?</b><br><span class="hi">6²⁰³¹ − 1 का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">6</li><li class="">0</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> Every power of 6 ends in 6, so 6²⁰³¹ − 1 ends in 5.<br><span class="hi">6 की हर घात 6 पर समाप्त होती है, अतः 6²⁰³¹ − 1 का इकाई अंक 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">82. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 5²⁰³² + 2?</b><br><span class="hi">5²⁰³² + 2 का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">5</li><li class="">2</li><li class="">0</li></ol>
+  <p class="sol"><b>Solution:</b> Every power of 5 ends in 5, so 5²⁰³² + 2 ends in 7.<br><span class="hi">5 की हर घात 5 पर समाप्त होती है, अतः 5²⁰³² + 2 का इकाई अंक 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">83. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1² + 2² + 3² + ... + 30²?</b><br><span class="hi">1² + 2² + 3² + ... + 30² का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">0</li><li class="">4</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> Sum of squares = 30 × 31 × 61 / 6 = 9455. The unit digit is 5.<br><span class="hi">वर्गों का योग = 30 × 31 × 61 / 6 = 9455। इकाई अंक 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">84. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1³ + 2³ + 3³ + ... + 25³?</b><br><span class="hi">1³ + 2³ + 3³ + ... + 25³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">0</li><li class="">1</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> Sum of cubes = (25 × 26 / 2)² = 325² = 105625. The unit digit is 5.<br><span class="hi">घनों का योग = (25 × 26 / 2)² = 325² = 105625। इकाई अंक 5।</span></p>
+</div>
+<div class="q">
+  <div class="n">85. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2 + 2² + 2³ + ... + 2¹⁵?</b><br><span class="hi">2 + 2² + 2³ + ... + 2¹⁵ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="right">4 ✔</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> The sum is 2¹⁶ − 2 = 65536 − 2 = 65534. The unit digit is 4.<br><span class="hi">योग 2¹⁶ − 2 = 65536 − 2 = 65534 है। इकाई अंक 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">86. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3 + 3² + 3³ + ... + 3¹²?</b><br><span class="hi">3 + 3² + 3³ + ... + 3¹² का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">3</li><li class="">9</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> Twelve terms make three full cycles of 3, 9, 7, 1, each adding to 20. The total ends in 0.<br><span class="hi">बारह पद 3, 9, 7, 1 के तीन पूरे चक्र बनाते हैं, हर चक्र का योग 20। योग का इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">87. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 11¹¹ + 12¹² + 13¹³ + ... + 20²⁰?</b><br><span class="hi">11¹¹ + 12¹² + 13¹³ + ... + 20²⁰ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">3</li><li class="">5</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> Unit digits: 11¹¹ → 1, 12¹² → 6, 13¹³ → 3, 14¹⁴ → 6, 15¹⁵ → 5, 16¹⁶ → 6, 17¹⁷ → 7, 18¹⁸ → 4, 19¹⁹ → 9, 20²⁰ → 0. Sum = 47, so the unit digit is 7.<br><span class="hi">इकाई अंक: 11¹¹ → 1, 12¹² → 6, 13¹³ → 3, 14¹⁴ → 6, 15¹⁵ → 5, 16¹⁶ → 6, 17¹⁷ → 7, 18¹⁸ → 4, 19¹⁹ → 9, 20²⁰ → 0। योग = 47, अतः इकाई अंक 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">88. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3³¹ × 4⁴² × 7⁵³?</b><br><span class="hi">3³¹ × 4⁴² × 7⁵³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="right">4 ✔</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 31 = 4 × 7 + 3, so 3³¹ ends in 7; 4⁴² ends in 6 (even power); 53 = 4 × 13 + 1, so 7⁵³ ends in 7. 7 × 6 × 7 = 294: the unit digit is 4.<br><span class="hi">31 = 4 × 7 + 3, अतः 3³¹ का इकाई अंक 7; 4⁴² का 6 (सम घात); 53 = 4 × 13 + 1, अतः 7⁵³ का 7। 7 × 6 × 7 = 294: इकाई अंक 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">89. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2¹⁰¹ × 3¹⁰² × 4¹⁰³?</b><br><span class="hi">2¹⁰¹ × 3¹⁰² × 4¹⁰³ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 101 leaves 1 on division by 4, so 2¹⁰¹ ends in 2; 102 leaves 2, so 3¹⁰² ends in 9; 103 is odd, so 4¹⁰³ ends in 4. 2 × 9 × 4 = 72: the unit digit is 2.<br><span class="hi">101 का 4 से शेष 1, अतः 2¹⁰¹ का इकाई अंक 2; 102 का शेष 2, अतः 3¹⁰² का 9; 103 विषम, अतः 4¹⁰³ का 4। 2 × 9 × 4 = 72: इकाई अंक 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">90. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1234⁵ + 5678⁴?</b><br><span class="hi">1234⁵ + 5678⁴ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 4⁵ ends in 4 (odd power) and 8⁴ = 4096 ends in 6. 4 + 6 = 10, so the unit digit is 0.<br><span class="hi">4⁵ का इकाई अंक 4 (विषम घात) और 8⁴ = 4096 का 6। 4 + 6 = 10, अतः इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">91. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 29²⁹ − 19¹⁹?</b><br><span class="hi">29²⁹ − 19¹⁹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">8</li><li class="">2</li><li class="">1</li></ol>
+  <p class="sol"><b>Solution:</b> Both are odd powers of numbers ending in 9, so both end in 9. The difference ends in 0.<br><span class="hi">दोनों 9 पर समाप्त संख्याओं की विषम घातें हैं, अतः दोनों 9 पर समाप्त। अंतर का इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">92. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 14¹⁴ + 16¹⁶?</b><br><span class="hi">14¹⁴ + 16¹⁶ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">2 ✔</li><li class="">4</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 14¹⁴ ends in 6 (even power of 4) and 16¹⁶ ends in 6. 6 + 6 = 12: the unit digit is 2.<br><span class="hi">14¹⁴ का इकाई अंक 6 (4 की सम घात) और 16¹⁶ का 6। 6 + 6 = 12: इकाई अंक 2।</span></p>
+</div>
+<div class="q">
+  <div class="n">93. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 8³ × 8⁷?</b><br><span class="hi">8³ × 8⁷ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="right">4 ✔</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 8³ × 8⁷ = 8¹⁰. 10 = 4 × 2 + 2, so it ends like 8² = 64: the unit digit is 4.<br><span class="hi">8³ × 8⁷ = 8¹⁰। 10 = 4 × 2 + 2, अतः इकाई अंक 8² = 64 जैसा: 4।</span></p>
+</div>
+<div class="q">
+  <div class="n">94. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For any natural number n, what is the unit digit of (2⁴)^n?</b><br><span class="hi">किसी भी प्राकृत संख्या n के लिए (2⁴)^n का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">2</li><li class="">4</li><li class="right">6 ✔</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> (2⁴)^n = 16^n, and every power of 16 ends in 6.<br><span class="hi">(2⁴)^n = 16^n, और 16 की हर घात 6 पर समाप्त होती है।</span></p>
+</div>
+<div class="q">
+  <div class="n">95. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 777⁷⁷⁷?</b><br><span class="hi">777⁷⁷⁷ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="">1</li><li class="">3</li><li class="right">7 ✔</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 777 = 4 × 194 + 1, so 777⁷⁷⁷ ends like 7¹: the unit digit is 7.<br><span class="hi">777 = 4 × 194 + 1, अतः 777⁷⁷⁷ का इकाई अंक 7¹ जैसा: 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">96. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 19¹⁹ + 21²¹?</b><br><span class="hi">19¹⁹ + 21²¹ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">9</li><li class="">1</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 19¹⁹ is an odd power of a number ending in 9, so it ends in 9; 21²¹ ends in 1. 9 + 1 = 10: the unit digit is 0.<br><span class="hi">19¹⁹, 9 पर समाप्त संख्या की विषम घात है, अतः 9 पर समाप्त; 21²¹ का 1। 9 + 1 = 10: इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">97. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 6! + 7! + 8!?</b><br><span class="hi">6! + 7! + 8! का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">2</li><li class="">4</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> Every factorial from 5! on contains 2 × 5 and ends in 0. So 6! + 7! + 8! = 46080 ends in 0.<br><span class="hi">5! से आगे हर क्रमगुणित में 2 × 5 है और वह 0 पर समाप्त होता है। अतः 6! + 7! + 8! = 46080 का इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">98. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 1 × 2 + 3 × 4 + 5 × 6 + 7 × 8 + 9 × 10?</b><br><span class="hi">1 × 2 + 3 × 4 + 5 × 6 + 7 × 8 + 9 × 10 का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">2</li><li class="">6</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 2 + 12 + 30 + 56 + 90 = 190. The unit digit is 0.<br><span class="hi">2 + 12 + 30 + 56 + 90 = 190। इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">99. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 3⁴ × 4³ × 5²?</b><br><span class="hi">3⁴ × 4³ × 5² का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">5</li><li class="">4</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> 4³ is even and 5² = 25 has a 5, so the product is a multiple of 10. (81 × 64 × 25 = 129600.) The unit digit is 0.<br><span class="hi">4³ सम है और 5² = 25 में 5 है, अतः गुणनफल 10 का गुणज है। (81 × 64 × 25 = 129600।) इकाई अंक 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">100. <span class="t">Number System · Unit Digit · Medium #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the unit digit of 2⁷ + 3⁷ + 7⁷ + 8⁷?</b><br><span class="hi">2⁷ + 3⁷ + 7⁷ + 8⁷ का इकाई अंक क्या है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">5</li><li class="">2</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 7 = 4 + 3, so each ends like its cube: 2³ → 8, 3³ → 7, 7³ → 3, 8³ → 2. 8 + 7 + 3 + 2 = 20, so the unit digit is 0.<br><span class="hi">7 = 4 + 3, अतः हर एक का इकाई अंक उसके घन जैसा: 2³ → 8, 3³ → 7, 7³ → 3, 8³ → 2। 8 + 7 + 3 + 2 = 20, अतः इकाई अंक 0।</span></p>
+</div></body></html>

@@ -30,7 +30,8 @@ qs.forEach((x, i) => {
   const ans = String(x.o[x.a]);
   if (/^[\d,.\s%-]+$/.test(ans) && !x.s.includes(ans)) problems.push(`${where} - the solution never writes the answer "${ans}" as the option shows it`);
   const SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹";
-  const key = x.q.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => "^" + [...m].map((c) => SUP.indexOf(c)).join("")).toLowerCase().replace(/[^a-z0-9^]+/g, "");
+  const signs = (t) => t.replace(/[+]/g, " plus ").replace(/[×*·]/g, " times ").replace(/[÷/]/g, " over ").replace(/[−–]/g, " minus ").replace(/[()]/g, " br ").replace(/!/g, " fact ");
+  const key = signs(x.q.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => "^" + [...m].map((c) => SUP.indexOf(c)).join(""))).toLowerCase().replace(/[^a-z0-9^]+/g, "");
   if (seen.has(key)) problems.push(`${where} - same question as #${seen.get(key)}`);
   seen.set(key, i + 1);
 });
