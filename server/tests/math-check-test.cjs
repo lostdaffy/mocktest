@@ -53,6 +53,7 @@ const LEFT = [
   ["वह छोटी से छोटी संख्या कौन सी है जिसे 12, 16, 24 और 36 से विभाजित करने पर शेषफल 7 बचे?", ["151", "439", "583", "295"], 0],
   ["The HCF of two natural numbers is 12 and their sum is 144. How many such pairs of numbers are there?", ["2", "3", "4", "6"], 0],
   ["The LCM of two co-prime numbers is 391. If one of them is 17, what is the other?", ["19", "21", "23", "29"], 2],
+  ["What is the LCM of the first ten natural numbers (1 to 10)?", ["2520", "5040", "1260", "3628800"], 0],
 ];
 LEFT.forEach(([t, o, c], i) => {
   const r = run(t, o, c);
