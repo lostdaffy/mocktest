@@ -306,63 +306,177 @@ async function recheckQuestions({ limit = 20, subject, topic } = {}) {
 
   for (const q of checked) {
     if (q.status === "published") {
-      const fields = { status: "published", aiConfidenceScore: q.aiConfidenceScore, flagReason: "" };
-      if (q.mended) {
-        fields.solution = q.solution;
-        fields.solutionHi = q.solutionHi;
-        fields.textHi = q.textHi;
-        fields.optionsHi = q.optionsHi;
-      }
-      await Question.updateOne({ _id: q._id }, { $set: fields });
+      await keepQuestion(q);
       out.published++;
       continue;
     }
+    out[await retireQuestion(q, shortened)]++;
+  }
 
-    // Out of every test that was holding it, before anything else - a test
-    // pointing at a question that is gone serves one fewer without saying so.
-    const holding = await Test.find({ questions: q._id }).select("title questions publishStatus").lean();
-    if (holding.length) {
-      await Test.updateMany({ questions: q._id }, { $pull: { questions: q._id } });
-      // Every test we pulled from is now one question light, whatever its
-      // size. Counting against a practice test's twelve meant a mock left at
-      // 99 of 100 was never mentioned.
-      for (const t of holding) {
-        shortened.set(String(t._id), {
-          // The id, so the caller can put a replacement in rather than only
-          // telling somebody the test is short.
-          _id: t._id,
-          title: t.title,
-          left: t.questions.length - 1,
-          live: t.publishStatus === "published",
-        });
-      }
-    }
+  out.testsNowShort = [...shortened.values()];
+  return out;
+}
 
-    const wasAttempted = await Attempt.exists({ "answers.question": q._id });
-    try {
-      await RejectedQuestion.create({
-        text: q.text,
-        subject: q.subject,
-        topic: q.topic,
-        chapter: q.chapter,
-        difficulty: q.difficulty,
-        reason: /Rule check failed/.test(q.flagReason || "") ? "rule" : "answer_disputed",
-        detail: String(q.flagReason || "").slice(0, 200),
-        repairAttempted: isMendable(q.flagReason),
+// Save what the check learnt about a question that stays (and any mending).
+async function keepQuestion(q) {
+  const fields = { status: "published", aiConfidenceScore: q.aiConfidenceScore, flagReason: "" };
+  if (q.mended) {
+    fields.solution = q.solution;
+    fields.solutionHi = q.solutionHi;
+    fields.textHi = q.textHi;
+    fields.optionsHi = q.optionsHi;
+  }
+  await Question.updateOne({ _id: q._id }, { $set: fields });
+}
+
+// Take a failed question out of circulation. Returns "deleted" or
+// "keptForHistory"; every test it leaves is noted in `shortened`.
+async function retireQuestion(q, shortened) {
+  // Out of every test that was holding it, before anything else - a test
+  // pointing at a question that is gone serves one fewer without saying so.
+  const holding = await Test.find({ questions: q._id }).select("title questions publishStatus").lean();
+  if (holding.length) {
+    await Test.updateMany({ questions: q._id }, { $pull: { questions: q._id } });
+    // Every test we pulled from is now one question light, whatever its
+    // size. Counting against a practice test's twelve meant a mock left at
+    // 99 of 100 was never mentioned.
+    for (const t of holding) {
+      const seen = shortened.get(String(t._id));
+      shortened.set(String(t._id), {
+        // The id, so the caller can put a replacement in rather than only
+        // telling somebody the test is short.
+        _id: t._id,
+        title: t.title,
+        left: (seen ? seen.left : t.questions.length) - 1,
+        live: t.publishStatus === "published",
       });
-    } catch (_) {
-      // Losing the note must never cost us the clean-up.
-    }
-
-    if (wasAttempted) {
-      await Question.updateOne({ _id: q._id }, { $set: { status: "rejected", flagReason: q.flagReason } });
-      out.keptForHistory++;
-    } else {
-      await Question.deleteOne({ _id: q._id });
-      out.deleted++;
     }
   }
 
+  const wasAttempted = await Attempt.exists({ "answers.question": q._id });
+  try {
+    await RejectedQuestion.create({
+      text: q.text,
+      subject: q.subject,
+      topic: q.topic,
+      chapter: q.chapter,
+      difficulty: q.difficulty,
+      reason: /Rule check failed/.test(q.flagReason || "") ? "rule" : "answer_disputed",
+      detail: String(q.flagReason || "").slice(0, 200),
+      repairAttempted: isMendable(q.flagReason),
+    });
+  } catch (_) {
+    // Losing the note must never cost us the clean-up.
+  }
+
+  if (wasAttempted) {
+    await Question.updateOne({ _id: q._id }, { $set: { status: "rejected", flagReason: q.flagReason } });
+    return "keptForHistory";
+  }
+  await Question.deleteOne({ _id: q._id });
+  return "deleted";
+}
+
+const COULD_NOT_CHECK = /could not be completed/;
+
+/**
+ * AI audit of questions that are already live, one chapter at a time.
+ *
+ * Each question is solved again by the checker. A rule failure that is only
+ * a gap (thin solution, missing Hindi) is mended; any other failure has to
+ * be confirmed by a second, separate check before the question is retired -
+ * a single slip by the checker must not throw out a sound question. Retired
+ * questions leave their tests, and the caller refills those tests.
+ *
+ * Works through the chapter in _id order. `next` is where the following call
+ * starts. When the checker cannot answer (the day's allowance, usually) it
+ * stops before that question, so nothing is skipped and nothing is retired
+ * for want of a check.
+ */
+async function auditPublished({ chapter, after, limit = 12 } = {}) {
+  if (!chapter) throw new Error("chapter is required");
+  const filter = {
+    status: "published",
+    $or: [{ chapter }, { chapter: { $in: [null, ""] }, topic: chapter }],
+  };
+  if (after) filter._id = { $gt: after };
+
+  const out = {
+    looked: 0, kept: 0, repaired: 0, secondOpinionKept: 0, deleted: 0, keptForHistory: 0,
+    retired: [], testsNowShort: [], next: after || null, done: false, stopped: "",
+  };
+  const batch = await Question.find(filter).sort({ _id: 1 }).limit(limit).lean();
+  if (!batch.length) {
+    out.done = true;
+    return out;
+  }
+
+  let checked = await runValidationPipelineBatch(batch, { reshuffle: false });
+
+  // Stop at the first question the checker could not judge.
+  const stuckAt = checked.findIndex((q) => q.status !== "published" && COULD_NOT_CHECK.test(q.flagReason || ""));
+  if (stuckAt !== -1) {
+    out.stopped = checked[stuckAt].flagReason;
+    checked = checked.slice(0, stuckAt);
+  }
+
+  // ---- mend the honest gaps
+  const mendable = checked.filter(
+    (q) => q.status !== "published" && /Rule check failed/.test(q.flagReason || "") && isMendable(q.flagReason)
+  );
+  if (mendable.length) {
+    const attempts = await Promise.all(
+      mendable.map((q) => repairQuestion(q, (q.flagReason || "").replace("Rule check failed: ", "").split(", ")))
+    );
+    const mended = attempts.filter(Boolean);
+    if (mended.length) {
+      const rechecked = await runValidationPipelineBatch(mended, { reshuffle: false });
+      const byText = new Map(rechecked.map((q) => [q.text, q]));
+      checked = checked.map((q) => {
+        const better = byText.get(q.text);
+        if (better && q.status !== "published" && better.status === "published") {
+          out.repaired++;
+          return { ...better, _id: q._id, mended: true };
+        }
+        return q;
+      });
+    }
+  }
+
+  // ---- a disputed answer gets a second, separate check
+  const disputed = checked.filter((q) => q.status !== "published" && !/Rule check failed/.test(q.flagReason || ""));
+  const secondById = new Map();
+  if (disputed.length) {
+    const original = new Map(batch.map((q) => [String(q._id), q]));
+    const again = await runValidationPipelineBatch(disputed.map((q) => original.get(String(q._id))), { reshuffle: false });
+    again.forEach((q, i) => secondById.set(String(disputed[i]._id), q));
+  }
+
+  const shortened = new Map();
+  let lastDone = after || null;
+  for (const q of checked) {
+    const second = secondById.get(String(q._id));
+    if (second && COULD_NOT_CHECK.test(second.flagReason || "")) {
+      // No second opinion to be had: leave it, and start here next time.
+      out.stopped = out.stopped || second.flagReason;
+      break;
+    }
+    if (q.status === "published" || second?.status === "published") {
+      if (q.status !== "published") out.secondOpinionKept++;
+      await keepQuestion(q.status === "published" ? q : { ...second, _id: q._id });
+      out.kept++;
+    } else {
+      const reason = second ? `${q.flagReason}; second check: ${second.flagReason}` : q.flagReason;
+      const how = await retireQuestion({ ...q, flagReason: reason }, shortened);
+      out[how]++;
+      out.retired.push({ _id: q._id, text: String(q.text).slice(0, 140), reason: String(reason).slice(0, 240) });
+    }
+    out.looked++;
+    lastDone = q._id;
+  }
+
+  out.next = lastDone;
+  out.done = !out.stopped && batch.length < limit && out.looked === batch.length;
   out.testsNowShort = [...shortened.values()];
   return out;
 }
@@ -388,4 +502,4 @@ function qualityNote({ verified, repaired, discarded, duplicates, short }) {
   return parts.length ? ` (${parts.join(", ")})` : "";
 }
 
-module.exports = { createVerifiedQuestions, recheckQuestions, qualityNote };
+module.exports = { createVerifiedQuestions, recheckQuestions, auditPublished, qualityNote };

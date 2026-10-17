@@ -4,7 +4,7 @@ const Report = require("../models/Report");
 const User = require("../models/User");
 const Subscription = require("../models/Subscription");
 const { runValidationPipeline } = require("../services/validationPipeline");
-const { recheckQuestions } = require("../services/questionFactory");
+const { recheckQuestions, auditPublished } = require("../services/questionFactory");
 const { refillTests, refillNote } = require("../services/testTopUp");
 
 // GET /api/questions?examType=&subject=&topic=&status=  (admin/browse use)
@@ -99,6 +99,31 @@ async function recheckReviewQueue(req, res) {
   if (r.published) parts.push(`${r.published} published${r.repaired ? ` (${r.repaired} after a repair)` : ""}`);
   if (r.deleted) parts.push(`${r.deleted} deleted`);
   if (r.keptForHistory) parts.push(`${r.keptForHistory} marked rejected but kept, students had already answered them`);
+
+  res.json({ message: parts.join(", ") + refillNote(refilled), ...r, refilled });
+}
+
+// POST /api/questions/audit { chapter, after?, limit? } - AI re-check of the
+// live questions of one chapter, a batch per call. Whatever is retired is
+// replaced in its tests before answering; `next` is where to carry on.
+async function auditChapter(req, res) {
+  const chapter = String(req.body?.chapter || "").trim();
+  if (!chapter) return res.status(400).json({ message: "Choose a chapter to audit" });
+  const limit = Math.min(Math.max(Number(req.body?.limit) || 12, 1), 30);
+  const after = req.body?.after || undefined;
+
+  const r = await auditPublished({ chapter, after, limit });
+  const refilled = r.testsNowShort.length
+    ? await refillTests(r.testsNowShort.map((t) => t._id).filter(Boolean))
+    : [];
+
+  const parts = [`Checked ${r.looked}`, `${r.kept} sound`];
+  if (r.repaired) parts.push(`${r.repaired} mended`);
+  if (r.secondOpinionKept) parts.push(`${r.secondOpinionKept} kept after a second check`);
+  if (r.deleted) parts.push(`${r.deleted} deleted`);
+  if (r.keptForHistory) parts.push(`${r.keptForHistory} marked rejected but kept for students' history`);
+  if (r.stopped) parts.push(`stopped: ${r.stopped}`);
+  if (r.done) parts.push("chapter finished");
 
   res.json({ message: parts.join(", ") + refillNote(refilled), ...r, refilled });
 }
@@ -263,6 +288,7 @@ async function getStats(req, res) {
 
 module.exports = {
   recheckReviewQueue,
+  auditChapter,
   listQuestions,
   approveQuestion,
   rejectQuestion,

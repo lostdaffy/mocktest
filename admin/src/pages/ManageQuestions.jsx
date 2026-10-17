@@ -5,6 +5,7 @@ import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 import QuestionEditor from "../components/QuestionEditor";
 import QuestionVisual from "../components/QuestionVisual";
+import ChapterAudit from "../components/ChapterAudit";
 
 const PAGE_SIZE = 20;
 
@@ -137,6 +138,8 @@ export default function ManageQuestions() {
           <Stat label="Total questions" value={counts.totalQuestions} tone="muted" />
         </div>
       )}
+
+      <ChapterAudit />
 
       <div className="flex flex-wrap gap-2 mb-4">
         {TABS.map((t) => (
