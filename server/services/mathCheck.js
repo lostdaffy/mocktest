@@ -94,7 +94,7 @@ function checkArithmetic(q) {
   // LCM / HCF of numbers listed in the question, nothing else numeric.
   const only = HCF.test(text) !== LCM.test(text);
   if (only && nums.length >= 2 && nums.length <= 4 && nums.every((n) => Number.isInteger(n) && n > 0)
-      && !/(शेष|remainder|भाग|divid|घंटी|bell|अनुपात|ratio|गुणनफल|product|बड़ी|छोटी|largest|smallest|greatest|least|एक\s*संख्या|दो\s*संख्याओं|one\s+number|two\s+numbers)/i.test(text)) {
+      && !/(शेष|remainder|भाग|divid|घंटी|bell|अनुपात|ratio|गुणनफल|product|बड़ी|छोटी|largest|smallest|greatest|least|एक\s*संख्या|दो\s*संख्याओं|one\s+number|two\s+(?:\w+\s+)?numbers|pairs?\b|\bsum\b|\u092F\u0941\u0917\u094D\u092E|\u092F\u094B\u0917)/i.test(text)) {
     const value = HCF.test(text) ? nums.reduce(gcd) : nums.reduce(lcm);
     return judge(q, value, HCF.test(text) ? "the HCF" : "the LCM");
   }
