@@ -91,8 +91,15 @@ async function subjectsForExams(examGoals = []) {
  */
 function chaptersForExams(chapters = [], examGoals = []) {
   if (!examGoals.length) return chapters;
-  return chapters.filter((ch) => !ch.exams || !ch.exams.length || ch.exams.some((e) => examGoals.includes(e)));
+  const goals = new Set(examGoals.map(examCode));
+  const mine = chapters.filter((ch) => !ch.exams || !ch.exams.length || ch.exams.some((e) => goals.has(examCode(e))));
+  // Not one chapter tagged to the student's exam means the tags are
+  // incomplete, not that the subject is empty: show all its chapters.
+  return mine.length ? mine : chapters;
 }
+
+// "SSC CGL", "ssc-cgl" and "SSC_CGL" are one exam.
+const examCode = (e) => String(e || "").trim().toUpperCase().replace(/[\s-]+/g, "_");
 
 module.exports = {
   sectionSubjectNames,

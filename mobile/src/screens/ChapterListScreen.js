@@ -155,9 +155,9 @@ export default function ChapterListScreen({
     const percentage =
       total > 0
         ? Math.round(
-            (completed / total) *
-              100
-          )
+          (completed / total) *
+          100
+        )
         : 0;
 
     return {
@@ -428,43 +428,43 @@ export default function ChapterListScreen({
                 {group.chapters.map((chapter, i) => {
                   const index = before + i;
                   return (
-              <ChapterCard
-                key={
-                  chapter._id ||
-                  chapter.id ||
-                  index
-                }
-                chapter={
-                  chapter
-                }
-                index={
-                  index
-                }
-                onPress={() =>
-                  navigation.navigate(
-                    "PracticeMode",
-                    {
-                      subject:
-                        subject?.name,
-                      chapter:
-                        chapter.name,
-                      currentLevel:
-                        chapter.currentLevel,
-                      isCompleted:
-                        chapter.isCompleted,
-                    }
-                  )
-                }
-                LEVELS={
-                  LEVELS
-                }
-                colors={
-                  colors
-                }
-                chapterCard={
-                  chapterCard
-                }
-              />
+                    <ChapterCard
+                      key={
+                        chapter._id ||
+                        chapter.id ||
+                        index
+                      }
+                      chapter={
+                        chapter
+                      }
+                      index={
+                        index
+                      }
+                      onPress={() =>
+                        navigation.navigate(
+                          "PracticeMode",
+                          {
+                            subject:
+                              subject?.name,
+                            chapter:
+                              chapter.name,
+                            currentLevel:
+                              chapter.currentLevel,
+                            isCompleted:
+                              chapter.isCompleted,
+                          }
+                        )
+                      }
+                      LEVELS={
+                        LEVELS
+                      }
+                      colors={
+                        colors
+                      }
+                      chapterCard={
+                        chapterCard
+                      }
+                    />
                   );
                 })}
               </View>
@@ -686,7 +686,7 @@ function ChapterCard({
   const started =
     Number(
       chapter.testsCompleted ||
-        0
+      0
     ) > 0;
 
   const completed =
@@ -709,7 +709,7 @@ function ChapterCard({
   const testsCompleted =
     Number(
       chapter.testsCompleted ||
-        0
+      0
     );
 
 
@@ -1023,12 +1023,12 @@ function ChapterCard({
             const isPast =
               completed ||
               currentIndex <
-                chapterLevelIndex;
+              chapterLevelIndex;
 
             const current =
               !completed &&
               currentIndex ===
-                chapterLevelIndex;
+              chapterLevelIndex;
 
             return (
               <View
