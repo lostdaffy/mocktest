@@ -52,6 +52,7 @@ const LEFT = [
   ["2^3 × 3^2 और 2^2 × 3^3 का HCF क्या है?", ["36", "72", "108", "216"], 2],
   ["वह छोटी से छोटी संख्या कौन सी है जिसे 12, 16, 24 और 36 से विभाजित करने पर शेषफल 7 बचे?", ["151", "439", "583", "295"], 0],
   ["The HCF of two natural numbers is 12 and their sum is 144. How many such pairs of numbers are there?", ["2", "3", "4", "6"], 0],
+  ["The LCM of two co-prime numbers is 391. If one of them is 17, what is the other?", ["19", "21", "23", "29"], 2],
 ];
 LEFT.forEach(([t, o, c], i) => {
   const r = run(t, o, c);
