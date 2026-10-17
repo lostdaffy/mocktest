@@ -366,6 +366,19 @@ async function start() {
     console.error("Could not reclaim interrupted generation jobs:", err.message)
   );
 
+  // Questions written with raised digits (2⁴⁸) were keyed without them;
+  // re-key the few that are, so a repeat of one is still recognised.
+  (async () => {
+    const Question = require("./models/Question");
+    const { questionKey } = require("./services/validationPipeline");
+    let n = 0;
+    for (const q of await Question.find({ text: /[⁰¹²³⁴⁵⁶⁷⁸⁹]/ }).select("text textKey").lean()) {
+      const key = questionKey(q.text);
+      if (q.textKey !== key) { await Question.updateOne({ _id: q._id }, { $set: { textKey: key } }); n++; }
+    }
+    if (n) console.log(`Re-keyed ${n} question(s) written with raised digits`);
+  })().catch((err) => console.error("Re-keying questions:", err.message));
+
   const genTick = setInterval(runGenerationTick, 5_000);
 
   // The Daily GK Quiz: keeps today covered and, with AI on, queues the next

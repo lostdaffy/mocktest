@@ -29,7 +29,8 @@ qs.forEach((x, i) => {
   if (!ok) problems.push(`${where} - the check does not agree with option ${"ABCD"[x.a]}`);
   const ans = String(x.o[x.a]);
   if (/^[\d,.\s%-]+$/.test(ans) && !x.s.includes(ans)) problems.push(`${where} - the solution never writes the answer "${ans}" as the option shows it`);
-  const key = x.q.toLowerCase().replace(/[^a-z0-9]+/g, "");
+  const SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+  const key = x.q.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => "^" + [...m].map((c) => SUP.indexOf(c)).join("")).toLowerCase().replace(/[^a-z0-9^]+/g, "");
   if (seen.has(key)) problems.push(`${where} - same question as #${seen.get(key)}`);
   seen.set(key, i + 1);
 });

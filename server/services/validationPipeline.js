@@ -14,8 +14,13 @@ const { normaliseChart, checkChartAnswer, normaliseFigure, checkFigureAnswer, vi
 // "What is 15% of 240?" and "what is 15 % of 240" are the same question.
 // Used both to spot repeats inside a batch and to catch a question the bank
 // already has (Question.textKey).
+// Raised digits are kept as digits: without this "unit digit of 9⁴⁰" and
+// "unit digit of 9⁹" both became "unit digit of 9" - one refused as a copy
+// of the other.
+const SUPERSCRIPT = { "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9" };
 function questionKey(text) {
   return String(text || "")
+    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => " " + [...m].map((c) => SUPERSCRIPT[c]).join("") + " ")
     .toLowerCase()
     .replace(/[^a-z0-9ऀ-ॿ]+/g, " ")
     .trim();

@@ -104,6 +104,11 @@ const check = (name, cond, detail = "") => {
   check("a replacement for a question not in the test is refused", /not in this test/.test(why2(2)), why2(2));
   check("...and so is a second replacement for the same question", /already replaces/.test(why2(3)), why2(3));
 
+  // ---- raised digits are part of a question, not noise
+  check("9⁴⁰ and 9⁹ are different questions", questionKey("What is the unit digit of 9⁴⁰?") !== questionKey("What is the unit digit of 9⁹?"),
+    questionKey("What is the unit digit of 9⁴⁰?"));
+  check("...and 2⁴⁸ keys like 2^48", questionKey("2⁴⁸ − 1 is divisible by") === questionKey("2^48 - 1 is divisible by"), questionKey("2⁴⁸ − 1 is divisible by"));
+
   await mongoose.disconnect();
   await mem.stop();
   const failed = results.filter((x) => !x.ok);
