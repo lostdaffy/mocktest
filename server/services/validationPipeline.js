@@ -18,9 +18,18 @@ const { normaliseChart, checkChartAnswer, normaliseFigure, checkFigureAnswer, vi
 // "unit digit of 9⁹" both became "unit digit of 9" - one refused as a copy
 // of the other.
 const SUPERSCRIPT = { "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9" };
+// The signs of a sum are part of it too: "1¹ + 2² + 3³" and "1¹ × 2² × 3³"
+// are different questions, and so are 2^(3^5) and (2^3)^5. Each sign becomes
+// a word, so a copy written with other spacing or a typed "*" still matches.
+const SIGNS = [
+  [/[+]/g, " plus "], [/[×*·]/g, " times "], [/[÷/]/g, " over "], [/[−–]/g, " minus "],
+  [/(^|[\s\d)])-(?=[\s\d(])/g, "$1 minus "], [/\^/g, " pow "], [/[(]/g, " lp "], [/[)]/g, " rp "],
+  [/!/g, " fact "], [/√/g, " root "], [/=/g, " eq "],
+];
 function questionKey(text) {
-  return String(text || "")
-    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => " " + [...m].map((c) => SUPERSCRIPT[c]).join("") + " ")
+  let t = String(text || "").replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => " pow " + [...m].map((c) => SUPERSCRIPT[c]).join("") + " ");
+  for (const [re, word] of SIGNS) t = t.replace(re, word);
+  return t
     .toLowerCase()
     .replace(/[^a-z0-9ऀ-ॿ]+/g, " ")
     .trim();

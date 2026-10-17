@@ -366,17 +366,19 @@ async function start() {
     console.error("Could not reclaim interrupted generation jobs:", err.message)
   );
 
-  // Questions written with raised digits (2⁴⁸) were keyed without them;
-  // re-key the few that are, so a repeat of one is still recognised.
+  // When the way a question is keyed changes (raised digits, the signs of a
+  // sum), the bank is re-keyed to match, so a repeat is still recognised.
+  // Only keys that differ are written - after the first start nothing is.
   (async () => {
     const Question = require("./models/Question");
     const { questionKey } = require("./services/validationPipeline");
+    const { figureKey, visualSignature } = require("./services/visuals");
     let n = 0;
-    for (const q of await Question.find({ text: /[⁰¹²³⁴⁵⁶⁷⁸⁹]/ }).select("text textKey").lean()) {
-      const key = questionKey(q.text);
+    for (const q of await Question.find({}).select("text textKey visual").lean()) {
+      const key = figureKey(q.visual) || questionKey(q.text + visualSignature(q.visual));
       if (q.textKey !== key) { await Question.updateOne({ _id: q._id }, { $set: { textKey: key } }); n++; }
     }
-    if (n) console.log(`Re-keyed ${n} question(s) written with raised digits`);
+    if (n) console.log(`Re-keyed ${n} question(s)`);
   })().catch((err) => console.error("Re-keying questions:", err.message));
 
   const genTick = setInterval(runGenerationTick, 5_000);

@@ -107,6 +107,9 @@ const check = (name, cond, detail = "") => {
   // ---- raised digits are part of a question, not noise
   check("9⁴⁰ and 9⁹ are different questions", questionKey("What is the unit digit of 9⁴⁰?") !== questionKey("What is the unit digit of 9⁹?"),
     questionKey("What is the unit digit of 9⁴⁰?"));
+  check("a sum and a product of the same powers are different questions", questionKey("Unit digit of 1¹ + 2² + 3³?") !== questionKey("Unit digit of 1¹ × 2² × 3³?"));
+  check("...and so are 2^(3^5) and (2^3)^5", questionKey("Unit digit of 2^(3^5)?") !== questionKey("Unit digit of (2^3)^5?"));
+  check("...but spacing and a typed * still match", questionKey("Find 12*5 + 3") === questionKey("Find 12 × 5+3"));
   check("...and 2⁴⁸ keys like 2^48", questionKey("2⁴⁸ − 1 is divisible by") === questionKey("2^48 - 1 is divisible by"), questionKey("2⁴⁸ − 1 is divisible by"));
 
   await mongoose.disconnect();
