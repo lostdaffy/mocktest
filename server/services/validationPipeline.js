@@ -52,15 +52,22 @@ const STOPWORDS = new Set([
 // A raised power is a number too, and a power is not a base: 7⁴⁵ and 7⁴⁶
 // are different questions, and so are 3⁷ and 7³ (2^5 and 2⁵ are the same).
 const SUPERSCRIPT_DIGITS = { "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9" };
-// "three-digit" is a number the question is built on as much as "3-digit".
+// "three-digit" is a number the question is built on as much as "3-digit",
+// and a count of digits is not the divisor: a five-digit multiple of 4 is not
+// a four-digit multiple of 5. It is marked #5.
 const DIGIT_WORDS = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, "दो": 2, "तीन": 3, "चार": 4, "पाँच": 5, "पांच": 5, "छह": 6, "सात": 7, "आठ": 8, "नौ": 9 };
+// A number with unknown digits, 7ab6 or 5x2y4, is one thing as written:
+// 7ab6 and 7a6b are different numbers, not the digits 7 and 6 twice.
+const PATTERN = /\b(?=[0-9a-z]*\d)(?=\d*[a-z])[0-9a-z]{3,}\b/gi;
 function numberSignature(text) {
   const plain = String(text || "")
-    .replace(/\b(two|three|four|five|six|seven|eight|nine)[- ]digit/gi, (m, w) => ` ${DIGIT_WORDS[w.toLowerCase()]}-digit`)
-    .replace(/(दो|तीन|चार|पाँच|पांच|छह|सात|आठ|नौ) अंक/g, (m, w) => ` ${DIGIT_WORDS[w]} अंक`)
+    .replace(PATTERN, (m) => ` @${m.toLowerCase()} `)
+    .replace(/\b(two|three|four|five|six|seven|eight|nine)[- ]digit/gi, (m, w) => ` #${DIGIT_WORDS[w.toLowerCase()]} `)
+    .replace(/\b(\d)[- ]digit/gi, (m, d) => ` #${d} `)
+    .replace(/(दो|तीन|चार|पाँच|पांच|छह|सात|आठ|नौ) अंक/g, (m, w) => ` #${DIGIT_WORDS[w]} `)
     .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => "^" + [...m].map((c) => SUPERSCRIPT_DIGITS[c]).join("") + " ")
     .replace(/\^\s+(?=\d)/g, "^");
-  return (plain.match(/\^?[0-9]+(?:\.[0-9]+)?/g) || []).sort().join("|");
+  return (plain.match(/@[0-9a-z]+|[#^]?[0-9]+(?:\.[0-9]+)?/g) || []).sort().join("|");
 }
 
 function contentWords(text) {
@@ -114,9 +121,13 @@ const EVEN = /\beven\b| सम /i;
 const ODD = /\bodd\b|विषम/i;
 const parity = (s) => (EVEN.test(s) ? "even" : "") + (ODD.test(s) ? "odd" : "");
 const asks = (s) => (/\bhow many\b|कितनी|कितने/i.test(s) ? "count" : /\bsum\b|योग/i.test(s) ? "sum" : /\bproduct\b|गुणनफल/i.test(s) ? "product" : "");
+// The operations a question names, wherever they appear: "divisible by the
+// product of its digits" is not "divisible by the sum of its digits".
+const OPERATIONS = [["sum", /\bsum\b|योग/i], ["product", /\bproduct\b|गुणनफल/i], ["difference", /\bdifference\b|अंतर/i], ["average", /\baverage\b|औसत/i]];
+const operations = (s) => OPERATIONS.filter(([, re]) => re.test(s)).map(([k]) => k).join("+");
 const differ = (f, a, b) => f(a) && f(b) && f(a) !== f(b);
 const turnsAround = (a, b) =>
-  differ(extreme, a, b) || differ(parity, a, b) || differ(asks, a, b) || NEGATED.test(a) !== NEGATED.test(b);
+  differ(extreme, a, b) || differ(parity, a, b) || differ(asks, a, b) || differ(operations, a, b) || NEGATED.test(a) !== NEGATED.test(b);
 
 function looksLikeRepeat(text, existingTexts = []) {
   const signature = numberSignature(text);
