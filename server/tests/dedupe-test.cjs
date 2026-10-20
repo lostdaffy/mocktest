@@ -97,6 +97,7 @@ const MATHS_DIFFERENT = [
   ["What is the largest five-digit number with all digits different that is divisible by 4?", "What is the largest four-digit number with all digits different that is divisible by 5?"],
   ["How many two-digit numbers are divisible by the product of their own digits?", "How many two-digit numbers are divisible by the sum of their own digits?"],
   ["If the four-digit number 7ab6 is divisible by 66, what is the value of a − b?", "If the four-digit number 7a6b is divisible by 66, what is the value of a + b?"],
+  ["The product of any five consecutive natural numbers is always divisible by:", "The product of any four consecutive natural numbers is always divisible by:"],
 ];
 MATHS_DIFFERENT.forEach(([a, b], i) => check(`a different maths question is not a repeat (${i + 1})`, !looksLikeRepeat(a, [b]).repeat && !looksLikeRepeat(b, [a]).repeat, a));
 const MATHS_SAME = [

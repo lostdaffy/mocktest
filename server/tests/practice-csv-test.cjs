@@ -128,7 +128,7 @@ const check = (name, cond, detail = "") => {
   // ---- a test filled later goes live, unless the admin took it off
   const pool = await Question.insertMany(Array.from({ length: 38 }, (_, i) => ({
     text: `Filler question number ${i} about simplification`, textKey: questionKey(`Filler question number ${i} about simplification`),
-    options: ["1", "2", "3", "4"], correctIndex: 0, solution: "s", subject: "Maths", topic: "Simplification", status: "published",
+    options: ["1", "2", "3", "4"], correctIndex: 0, solution: "s", subject: "Maths", topic: "Simplification", source: "ai_generated", status: "published",
   })));
   const never = await Test.create({ title: "Simplification · Mixed Practice · Easy #5", type: "practice", examType: "PRACTICE", subject: "Maths", topic: "Simplification", questions: pool.slice(0, 19).map((q) => q._id), durationMinutes: 19, publishStatus: "draft" });
   const takenOff = await Test.create({ title: "Simplification · Mixed Practice · Easy #6", type: "practice", examType: "PRACTICE", subject: "Maths", topic: "Simplification", questions: pool.slice(19, 38).map((q) => q._id), durationMinutes: 19, publishStatus: "draft", publishedAt: new Date("2026-01-01") });

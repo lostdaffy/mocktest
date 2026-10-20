@@ -59,15 +59,20 @@ const DIGIT_WORDS = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eigh
 // A number with unknown digits, 7ab6 or 5x2y4, is one thing as written:
 // 7ab6 and 7a6b are different numbers, not the digits 7 and 6 twice.
 const PATTERN = /\b(?=[0-9a-z]*\d)(?=\d*[a-z])[0-9a-z]{3,}\b/gi;
+// A count written as a word is a number too: the product of any five
+// consecutive numbers is not the product of any four.
+const COUNT_WORDS = { ...DIGIT_WORDS, ten: 10, eleven: 11, twelve: 12, "दस": 10, "ग्यारह": 11, "बारह": 12 };
 function numberSignature(text) {
   const plain = String(text || "")
     .replace(PATTERN, (m) => ` @${m.toLowerCase()} `)
     .replace(/\b(two|three|four|five|six|seven|eight|nine)[- ]digit/gi, (m, w) => ` #${DIGIT_WORDS[w.toLowerCase()]} `)
     .replace(/\b(\d)[- ]digit/gi, (m, d) => ` #${d} `)
     .replace(/(दो|तीन|चार|पाँच|पांच|छह|सात|आठ|नौ) अंक/g, (m, w) => ` #${DIGIT_WORDS[w]} `)
+    .replace(/\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b/gi, (m, w) => ` ~${COUNT_WORDS[w.toLowerCase()]} `)
+    .replace(/(?<![ऀ-ॿ])(दो|तीन|चार|पाँच|पांच|छह|सात|आठ|नौ|दस|ग्यारह|बारह)(?![ऀ-ॿ])/g, (m, w) => ` ~${COUNT_WORDS[w]} `)
     .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => "^" + [...m].map((c) => SUPERSCRIPT_DIGITS[c]).join("") + " ")
     .replace(/\^\s+(?=\d)/g, "^");
-  return (plain.match(/@[0-9a-z]+|[#^]?[0-9]+(?:\.[0-9]+)?/g) || []).sort().join("|");
+  return (plain.match(/@[0-9a-z]+|[#^~]?[0-9]+(?:\.[0-9]+)?/g) || []).sort().join("|");
 }
 
 function contentWords(text) {
