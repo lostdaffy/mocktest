@@ -15,6 +15,7 @@ const { plainMaths } = require("./mathNotation");
 const { PRACTICE_TEST_SIZE } = require("../utils/practice");
 
 const LEVELS = ["easy", "medium", "hard", "advanced"];
+const IS_MATHS = /^(maths?|mathematics|quant|गणित|reasoning|तर्क)/i;
 const TESTS_PER_LEVEL = 10;
 // The chapter's own series, with no topic ("Mixed Practice" in a spreadsheet
 // title): shown on the Subject Practice page as the chapter itself.
@@ -23,7 +24,8 @@ const WHOLE = "Whole chapter";
 const GRADES_FOR = { easy: ["easy"], medium: ["medium"], hard: ["hard"], advanced: ["hard", "exam"] };
 // Typeset maths that was never turned into plain text, and keyboard maths.
 const LATEX = /\\(frac|times|div|sqrt|cdot|left|right|text|pm|le|ge|ne)\b|\$[^$\n]{1,80}\$/;
-const KEYBOARD = /[0-9)]\s*\^\s*[0-9(]|\d\s+\*\s+\d/;
+// A power of a power, 7^(7⁷), is left as written on purpose (mathNotation.js).
+const KEYBOARD = /[0-9)]\s*\^\s*\d|\d\s+\*\s+\d/;
 const short = (q) => ({ _id: q._id, text: String(q.text).slice(0, 140) });
 
 async function chapterHealth(chapter) {
@@ -80,7 +82,9 @@ async function chapterHealth(chapter) {
     for (let i = 0; i < present.length; i++) {
       for (let j = i + 1; j < present.length; j++) {
         const [a, b] = [present[i], present[j]];
-        if (sameFactInPaper(a, b) || looksLikeRepeat(plainMaths(a.text), [plainMaths(b.text)]).repeat) {
+        // Same numbers and mostly the same words. (sameFactInPaper is for GK:
+        // in maths, two different remainder questions often share an answer.)
+        if (looksLikeRepeat(plainMaths(a.text), [plainMaths(b.text)]).repeat) {
           problems.push(`asks the same thing twice: "${a.text.slice(0, 70)}" / "${b.text.slice(0, 70)}"`);
         }
       }
@@ -113,10 +117,19 @@ async function chapterHealth(chapter) {
   const ordered = [...pool.values()].sort((a, b) => String(a._id).localeCompare(String(b._id)));
   const human = (q) => q.source === "manual" || q.createdBy === "admin";
   for (const q of ordered) {
-    const text = plainMaths(q.text);
+    // "Which of the following numbers is divisible by 11?" says nothing until
+    // its options are read: such a question is compared with its options.
+    const stem = plainMaths(q.text);
+    const generic = !numberSignature(stem);
+    const text = generic ? `${stem} ${(q.options || []).join(" ")}` : stem;
     const sig = numberSignature(text);
     const bucket = bySignature.get(sig) || [];
-    const hit = bucket.find((o) => (o.textKey && o.textKey === q.textKey) || looksLikeRepeat(text, [o.plain]).repeat || sameFactInPaper(q, o));
+    // Same answer and similar words is a repeat in GK, not in maths, where
+    // two different remainder questions often share an answer.
+    const gk = !IS_MATHS.test(String(q.subject || ""));
+    const hit = bucket.find(
+      (o) => (!generic && o.textKey && o.textKey === q.textKey) || looksLikeRepeat(text, [o.plain]).repeat || (gk && sameFactInPaper(q, o))
+    );
     if (hit) {
       const [keep, replace] = human(q) && !human(hit) ? [q, hit] : [hit, q];
       repeats.push({ keep: short(keep), replace: { ...short(replace), tests: testsOf.get(String(replace._id)) || [] } });

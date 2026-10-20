@@ -18,8 +18,11 @@ const lcm = (a, b) => (a && b ? Math.abs(a * b) / gcd(a, b) : 0);
 const close = (a, b) => Math.abs(a - b) <= 1e-6 * Math.max(1, Math.abs(a), Math.abs(b));
 
 // The numbers in a piece of text, in order ("1,200" is 1200; "₹ 400" is 400).
+// A raised power is a number the question gives: 2¹⁵ gives 2 and 15.
+const RAISED = { "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9" };
 function numbersIn(text) {
-  return (String(text || "").replace(/(\d),(\d{3})\b/g, "$1$2").match(/\d+(?:\.\d+)?/g) || []).map(Number);
+  const plain = String(text || "").replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => "^" + [...m].map((c) => RAISED[c]).join(""));
+  return (plain.replace(/(\d),(\d{3})\b/g, "$1$2").match(/\d+(?:\.\d+)?/g) || []).map(Number);
 }
 
 // The single number an option stands for, or null if it is not just one

@@ -49,11 +49,14 @@ const STOPWORDS = new Set([
 // The numbers a question is built on, in order. Two questions asking the
 // same thing about the same figures share this exactly: "increases by 20%"
 // is "20" whether a housewife or a householder is doing the increasing.
-// A raised power is a number too: 7⁴⁵ and 7⁴⁶ are different questions.
+// A raised power is a number too, and a power is not a base: 7⁴⁵ and 7⁴⁶
+// are different questions, and so are 3⁷ and 7³ (2^5 and 2⁵ are the same).
 const SUPERSCRIPT_DIGITS = { "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9" };
 function numberSignature(text) {
-  const plain = String(text || "").replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => " " + [...m].map((c) => SUPERSCRIPT_DIGITS[c]).join("") + " ");
-  return (plain.match(/[0-9]+(?:\.[0-9]+)?/g) || []).sort().join("|");
+  const plain = String(text || "")
+    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => "^" + [...m].map((c) => SUPERSCRIPT_DIGITS[c]).join("") + " ")
+    .replace(/\^\s+(?=\d)/g, "^");
+  return (plain.match(/\^?[0-9]+(?:\.[0-9]+)?/g) || []).sort().join("|");
 }
 
 function contentWords(text) {
