@@ -92,8 +92,8 @@ const list = [
     "7 × 1,188 = 8,316, so 8,320 leaves 4 and needs 7 − 4 = 3 more: 8,323 = 7 × 1,189.", "7 × 1,188 = 8,316, अतः 8,320 का शेष 4 और 7 − 4 = 3 और चाहिए: 8,323 = 7 × 1,189।"),
   Q(T(9), "Every number divisible by 45 is also divisible by:", "45 से विभाज्य हर संख्या किससे भी विभाज्य होती है?", ["15", "90", "30", "25"], 0, always(["15", "90", "30", "25"], 45),
     "45 = 15 × 3, so every multiple of 45 is a multiple of 15. 45 itself is not divisible by 90, 30 or 25.", "45 = 15 × 3, अतः 45 का हर गुणज 15 का गुणज है। 45 स्वयं 90, 30 या 25 से विभाज्य नहीं।"),
-  Q(T(9), "What is the smallest four-digit number divisible by 15?", "15 से विभाज्य चार अंकों की सबसे छोटी संख्या कौन-सी है?", ["1,005", "1,000", "1,015", "1,020"], 0, () => R(1000, 9999).find((n) => n % 15 === 0).toLocaleString("en-US"),
-    "It must end in 0 or 5 and have a digit sum divisible by 3. 1,000 (sum 1) fails; 1,005 has digit sum 6, so 1,005 = 15 × 67.", "यह 0 या 5 पर समाप्त हो और अंकों का योग 3 से विभाज्य हो। 1,000 (योग 1) नहीं; 1,005 के अंकों का योग 6, अतः 1,005 = 15 × 67।"),
+  Q(T(9), "What is the smallest four-digit number divisible by 35?", "35 से विभाज्य चार अंकों की सबसे छोटी संख्या कौन-सी है?", ["1,015", "1,005", "1,050", "1,035"], 0, () => R(1000, 9999).find((n) => n % 35 === 0).toLocaleString("en-US"),
+    "35 = 5 × 7, so the number ends in 0 or 5 and is a multiple of 7. 1,000 = 35 × 28 + 20, so the next multiple is 35 × 29 = 1,015.", "35 = 5 × 7, अतः संख्या 0 या 5 पर समाप्त और 7 का गुणज। 1,000 = 35 × 28 + 20, अतः अगला गुणज 35 × 29 = 1,015।"),
   Q(T(9), "What is the remainder when 98,767 is divided by 4?", "98,767 को 4 से भाग देने पर शेषफल क्या होगा?", ["3", "1", "2", "0"], 0, () => 98767 % 4,
     "Only the last two digits matter for 4: 67 = 4 × 16 + 3. The remainder is 3.", "4 के लिए केवल अंतिम दो अंक: 67 = 4 × 16 + 3। शेषफल 3।"),
 

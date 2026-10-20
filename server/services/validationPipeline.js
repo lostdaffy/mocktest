@@ -109,8 +109,14 @@ const LARGEST = /\b(largest|greatest|maximum|highest|biggest)\b|सबसे ब
 const SMALLEST = /\b(smallest|least|minimum|lowest)\b|सबसे छोटी|सबसे छोटा|न्यूनतम/i;
 const NEGATED = /\bnot\b|\bneither\b|नहीं/i;
 const extreme = (s) => (LARGEST.test(s) ? "largest" : "") + (SMALLEST.test(s) ? "smallest" : "");
+// Even digits are not odd digits, and "how many" is not "what is the sum".
+const EVEN = /\beven\b| सम /i;
+const ODD = /\bodd\b|विषम/i;
+const parity = (s) => (EVEN.test(s) ? "even" : "") + (ODD.test(s) ? "odd" : "");
+const asks = (s) => (/\bhow many\b|कितनी|कितने/i.test(s) ? "count" : /\bsum\b|योग/i.test(s) ? "sum" : /\bproduct\b|गुणनफल/i.test(s) ? "product" : "");
+const differ = (f, a, b) => f(a) && f(b) && f(a) !== f(b);
 const turnsAround = (a, b) =>
-  (extreme(a) && extreme(b) && extreme(a) !== extreme(b)) || NEGATED.test(a) !== NEGATED.test(b);
+  differ(extreme, a, b) || differ(parity, a, b) || differ(asks, a, b) || NEGATED.test(a) !== NEGATED.test(b);
 
 function looksLikeRepeat(text, existingTexts = []) {
   const signature = numberSignature(text);

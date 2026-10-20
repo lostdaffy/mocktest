@@ -92,6 +92,8 @@ const MATHS_DIFFERENT = [
   ["Which of 2,346 and 4,566 is NOT divisible by 4?", "Which of 2,346 and 4,566 is divisible by 4?"],
   ["What is the unit digit of 3⁷?", "What is the unit digit of 7³?"],
   ["What is the unit digit of 7⁴⁵?", "What is the unit digit of 7⁴⁶?"],
+  ["How many three-digit numbers are divisible by 13?", "Find the sum of all three-digit numbers which are divisible by 13."],
+  ["How many four-digit numbers have all their digits even and are divisible by 5?", "How many four-digit numbers have all their digits odd and are divisible by 5?"],
 ];
 MATHS_DIFFERENT.forEach(([a, b], i) => check(`a different maths question is not a repeat (${i + 1})`, !looksLikeRepeat(a, [b]).repeat && !looksLikeRepeat(b, [a]).repeat, a));
 const MATHS_SAME = [
