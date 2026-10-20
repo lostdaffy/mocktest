@@ -89,8 +89,8 @@ const list = [
     "Digit sum 27, so it is divisible by 3; it ends in 0, so by 10; hence by 30. Its last two digits 70 are not a multiple of 4, so 20, 40 and 60 do not divide it.", "अंकों का योग 27, अतः 3 से विभाज्य; 0 पर समाप्त, अतः 10 से; इसलिए 30 से। अंतिम दो अंक 70, 4 का गुणज नहीं, अतः 20, 40 और 60 इसे विभाजित नहीं करते।"),
   Q(T(4), "Which of the following numbers is a multiple of 12?", "निम्नलिखित में से कौन-सी संख्या 12 का गुणज है?", ["3,156", "2,134", "4,218", "5,146"], 0, which(["3,156", "2,134", "4,218", "5,146"], (n) => n % 12 === 0),
     "A multiple of 12 is divisible by 4 and by 3. Only 3,156 ends in a multiple of 4 (56), and its digit sum 15 is a multiple of 3. So 3,156 = 12 × 263.", "12 का गुणज 4 और 3 दोनों से विभाज्य होता है। केवल 3,156 के अंतिम दो अंक (56) 4 के गुणज हैं, और उसके अंकों का योग 15, 3 का गुणज। अतः 3,156 = 12 × 263।"),
-  Q(T(4), "How many two-digit numbers are divisible by 7?", "दो अंकों की कितनी संख्याएँ 7 से विभाज्य हैं?", ["13", "14", "12", "15"], 0, () => L.count(10, 99, (n) => n % 7 === 0),
-    "They run from 14 = 7 × 2 to 98 = 7 × 14: 14 − 2 + 1 = 13 numbers.", "ये 14 = 7 × 2 से 98 = 7 × 14 तक हैं: 14 − 2 + 1 = 13 संख्याएँ।"),
+  Q(T(4), "How many two-digit numbers are divisible by 13?", "दो अंकों की कितनी संख्याएँ 13 से विभाज्य हैं?", ["7", "8", "6", "9"], 0, () => L.count(10, 99, (n) => n % 13 === 0),
+    "They run from 13 = 13 × 1 to 91 = 13 × 7 (13 × 8 = 104 has three digits): 7 numbers.", "ये 13 = 13 × 1 से 91 = 13 × 7 तक हैं (13 × 8 = 104 तीन अंकों की): 7 संख्याएँ।"),
   Q(T(4), "A whole number ends in the digit 5. By which of the following is it certainly divisible?", "एक पूर्ण संख्या का अंतिम अंक 5 है। वह निश्चित रूप से किससे विभाज्य है?", ["5", "15", "25", "10"], 0, () => ["5", "15", "25", "10"].filter((d) => [5, 15, 25, 35, 45, 55, 65].every((n) => n % Number(d) === 0)).join(),
     "Every number ending in 5 is a multiple of 5. It need not be divisible by 15 (35), 25 (35) or 10 (it is odd).", "5 पर समाप्त हर संख्या 5 का गुणज है। 15 (35), 25 (35) या 10 (विषम है) से आवश्यक नहीं।"),
   Q(T(4), "What is the remainder when 8,765 is divided by 11?", "8,765 को 11 से भाग देने पर शेषफल क्या होगा?", ["9", "2", "0", "7"], 0, () => 8765 % 11,
@@ -107,7 +107,7 @@ const list = [
   Q(T(5), "If the four-digit number 6x28 is divisible by 9, what is the value of x?", "यदि चार अंकों की संख्या 6x28, 9 से विभाज्य है, तो x का मान क्या है?", ["2", "1", "4", "6"], 0, () => digitsFor("6a28", (n) => n % 9 === 0).join(),
     "6 + x + 2 + 8 = 16 + x must be a multiple of 9, so 16 + x = 18 and x = 2 (6228).", "6 + x + 2 + 8 = 16 + x, 9 का गुणज हो, अतः 16 + x = 18 और x = 2 (6228)।"),
   Q(T(5), "For how many digits x is the four-digit number 15x6 divisible by 8?", "कितने अंकों x के लिए चार अंकों की संख्या 15x6, 8 से विभाज्य है?", ["2", "1", "3", "4"], 0, () => digitsFor("15a6", (n) => n % 8 === 0).length,
-    "For 8, the last three digits 5x6 must be a multiple of 8. Of 506, 516, ..., 596 only 536 = 8 × 67 and 576 = 8 × 72 are. So x = 3 or 7: two digits.", "8 के लिए अंतिम तीन अंक 5x6, 8 का गुणज हों। 506, 516, ..., 596 में केवल 536 = 8 × 67 और 576 = 8 × 72। अतः x = 3 या 7: दो अंक।"),
+    "For 8, the last three digits 5x6 must be a multiple of 8. Of 506, 516, ..., 596 only 536 = 8 × 67 and 576 = 8 × 72 are. So x = 3 or 7: 2 digits.", "8 के लिए अंतिम तीन अंक 5x6, 8 का गुणज हों। 506, 516, ..., 596 में केवल 536 = 8 × 67 और 576 = 8 × 72। अतः x = 3 या 7: 2 अंक।"),
   Q(T(5), "What is the remainder when 75,322 is divided by 9?", "75,322 को 9 से भाग देने पर शेषफल क्या होगा?", ["1", "0", "2", "4"], 0, () => 75322 % 9,
     "Digit sum 7 + 5 + 3 + 2 + 2 = 19 = 9 × 2 + 1, so the remainder is 1.", "अंकों का योग 7 + 5 + 3 + 2 + 2 = 19 = 9 × 2 + 1, अतः शेषफल 1।"),
   Q(T(5), "Which of the following numbers is divisible by both 3 and 4?", "निम्नलिखित में से कौन-सी संख्या 3 और 4 दोनों से विभाज्य है?", ["2,376", "3,474", "4,562", "5,214"], 0, which(["2,376", "3,474", "4,562", "5,214"], (n) => n % 12 === 0),
@@ -236,4 +236,12 @@ const list = [
   Q(T(7), "What is the least number that must be added to 6,543 to make it divisible by both 2 and 5?", "6,543 में कम से कम कौन-सी संख्या जोड़ें कि वह 2 और 5 दोनों से विभाज्य हो जाए?", ["7", "3", "5", "2"], 0, () => (10 - (6543 % 10)) % 10,
     "Divisible by both 2 and 5 means divisible by 10, i.e. ending in 0. The next such number after 6,543 is 6,550, so add 7.", "2 और 5 दोनों से विभाज्य यानी 10 से विभाज्य, अर्थात 0 पर समाप्त। 6,543 के बाद अगली ऐसी संख्या 6,550, अतः 7 जोड़ें।"),
 ];
+// "Which of the following numbers is divisible by 8?" is the bank's question
+// whatever the options: the stem names its numbers instead.
+const listed = (o, and) => { const xs = [...o].sort((p, q) => num(p) - num(q)); return `${xs.slice(0, -1).join(", ")} ${and} ${xs[xs.length - 1]}`; };
+for (const x of list) {
+  if (!/^Which of the following numbers is/.test(x.q) || !x.o.every((o) => /^[\d,]+$/.test(o))) continue;
+  x.q = x.q.replace("Which of the following numbers is", `Which of ${listed(x.o, "and")} is`);
+  x.qh = x.qh.replace("निम्नलिखित में से कौन-सी संख्या", `${listed(x.o, "और")} में से कौन-सी संख्या`);
+}
 module.exports = list.map(fmt);
