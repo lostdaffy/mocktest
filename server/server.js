@@ -379,6 +379,22 @@ async function start() {
       if (q.textKey !== key) { await Question.updateOne({ _id: q._id }, { $set: { textKey: key } }); n++; }
     }
     if (n) console.log(`Re-keyed ${n} question(s)`);
+
+    // Number System written the keyboard way (2^15 * 3^10) is shown to the
+    // student exactly so; it is rewritten as 2¹⁵ × 3¹⁰ (services/mathNotation).
+    // Only questions that change are written - after the first start, none.
+    const { plainMathsUpdate } = require("./services/mathNotation");
+    const chapter = "Number System";
+    let m = 0;
+    const filter = { $or: [{ chapter }, { chapter: { $in: [null, ""] }, topic: chapter }] };
+    for (const q of await Question.find(filter).select("text textHi solution solutionHi options optionsHi visual").lean()) {
+      const set = plainMathsUpdate(q);
+      if (!set) continue;
+      if (set.text) set.textKey = figureKey(q.visual) || questionKey(set.text + visualSignature(q.visual));
+      await Question.updateOne({ _id: q._id }, { $set: set });
+      m++;
+    }
+    if (m) console.log(`Number System: ${m} question(s) rewritten with raised powers and ×`);
   })().catch((err) => console.error("Re-keying questions:", err.message));
 
   const genTick = setInterval(runGenerationTick, 5_000);
