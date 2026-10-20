@@ -125,6 +125,17 @@ const check = (name, cond, detail = "") => {
   const typed = await Question.findOne({ text: "Simplify: 2⁵ × 3 + 0" }).lean();
   check("2^5 * 3 typed in a spreadsheet is saved as 2⁵ × 3", !!typed && typed.solution === "2⁵ = 32 and 32 × 3 = 96, so 96.", typed?.solution);
 
+  // ---- a test filled later goes live, unless the admin took it off
+  const pool = await Question.insertMany(Array.from({ length: 38 }, (_, i) => ({
+    text: `Filler question number ${i} about simplification`, textKey: questionKey(`Filler question number ${i} about simplification`),
+    options: ["1", "2", "3", "4"], correctIndex: 0, solution: "s", subject: "Maths", topic: "Simplification", status: "published",
+  })));
+  const never = await Test.create({ title: "Simplification · Mixed Practice · Easy #5", type: "practice", examType: "PRACTICE", subject: "Maths", topic: "Simplification", questions: pool.slice(0, 19).map((q) => q._id), durationMinutes: 19, publishStatus: "draft" });
+  const takenOff = await Test.create({ title: "Simplification · Mixed Practice · Easy #6", type: "practice", examType: "PRACTICE", subject: "Maths", topic: "Simplification", questions: pool.slice(19, 38).map((q) => q._id), durationMinutes: 19, publishStatus: "draft", publishedAt: new Date("2026-01-01") });
+  await addPracticeCsv([row(never.title, 300), row(takenOff.title, 301)]);
+  check("a never-published test a file fills to 20 goes live", (await Test.findById(never._id).lean()).publishStatus === "published");
+  check("...but one the admin took off the app stays off", (await Test.findById(takenOff._id).lean()).publishStatus === "draft");
+
   // ---- raised digits are part of a question, not noise
   check("9⁴⁰ and 9⁹ are different questions", questionKey("What is the unit digit of 9⁴⁰?") !== questionKey("What is the unit digit of 9⁹?"),
     questionKey("What is the unit digit of 9⁴⁰?"));

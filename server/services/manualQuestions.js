@@ -302,8 +302,8 @@ async function addPracticeCsv(rows, { dryRun = false } = {}) {
   for (let i = 0; i < rows.length; i++) {
     const ref = String(rows[i].test || "").trim();
     let test = null;
-    if (/^[a-f0-9]{24}$/i.test(ref)) test = await Test.findById(ref).select("title type questions subject topic subtopic examType").lean();
-    else if (ref) test = created.get(ref) || (await Test.findOne({ title: ref, type: "practice" }).select("title type questions subject topic subtopic examType").lean());
+    if (/^[a-f0-9]{24}$/i.test(ref)) test = await Test.findById(ref).select("title type questions subject topic subtopic examType publishStatus publishedAt").lean();
+    else if (ref) test = created.get(ref) || (await Test.findOne({ title: ref, type: "practice" }).select("title type questions subject topic subtopic examType publishStatus publishedAt").lean());
     // A test that does not exist yet is made, if its title is a practice
     // test's title for a chapter and topic the catalog has:
     // "Number System · Unit Digit · Easy #3".
@@ -394,12 +394,15 @@ async function addPracticeCsv(rows, { dryRun = false } = {}) {
     const r = keep.length
       ? await addManualQuestions(test.virtual ? test : test._id, keep, { dryRun, source: "manual", strict: true, maxAdd: room, examTypes: info?.exams })
       : { wouldAdd: 0, added: 0, wouldReplace: 0, replaced: 0, rejected: [], warned: [] };
-    // Full: a minute a question, and a test this file made goes live.
+    // Full: a minute a question, and the test goes live - one this file made,
+    // or one never published that a file has now filled (a test the admin
+    // took off the app has a publishedAt, and stays off until they say).
     if (!dryRun && r.added) {
       const size = (test.questions || []).length + r.added;
+      const goesLive = size >= PRACTICE_TEST_SIZE && (test.isNew || (test.publishStatus === "draft" && !test.publishedAt));
       await Test.updateOne(
         { _id: test._id },
-        { $set: { durationMinutes: Math.max(10, size), ...(test.isNew && size >= PRACTICE_TEST_SIZE ? { publishStatus: "published" } : {}) } }
+        { $set: { durationMinutes: Math.max(10, size), ...(goesLive ? { publishStatus: "published", publishedAt: new Date() } : {}) } }
       );
     }
     // Row numbers back to the file's, not the group's.
