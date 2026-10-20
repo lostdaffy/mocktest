@@ -84,6 +84,23 @@ const named = looksLikeRepeat(REPEATS[0][1], [REPEATS[0][0]]);
 check("a caught repeat says which question it repeats",
   typeof named.of === "string" && named.of.length > 20, String(named.of).slice(0, 50));
 
+// ---- maths stems: the few words that make a different question
+const MATHS_DIFFERENT = [
+  ["What is the largest three-digit number divisible by 7?", "What is the smallest three-digit number divisible by 7?"],
+  ["What is the smallest four-digit number divisible by 7?", "What is the smallest three-digit number divisible by 7?"],
+  ["Every number divisible by 8 is also divisible by:", "A number is divisible by 8 if:"],
+  ["Which of 2,346 and 4,566 is NOT divisible by 4?", "Which of 2,346 and 4,566 is divisible by 4?"],
+  ["What is the unit digit of 3⁷?", "What is the unit digit of 7³?"],
+  ["What is the unit digit of 7⁴⁵?", "What is the unit digit of 7⁴⁶?"],
+];
+MATHS_DIFFERENT.forEach(([a, b], i) => check(`a different maths question is not a repeat (${i + 1})`, !looksLikeRepeat(a, [b]).repeat && !looksLikeRepeat(b, [a]).repeat, a));
+const MATHS_SAME = [
+  ["What is the smallest four-digit number divisible by 15?", "What is the smallest four-digit number that is divisible by 15?"],
+  ["What is the LCM of 12, 15 and 20?", "Find the LCM of 12, 15, and 20."],
+  ["What is the unit digit of 7⁴⁵?", "Find the unit digit of 7^45."],
+];
+MATHS_SAME.forEach(([a, b], i) => check(`a reworded maths question is a repeat (${i + 1})`, looksLikeRepeat(a, [b]).repeat, a));
+
 // ---- one paper asking the same fact twice, across sections. Real pairs
 //      from the first two Super TET mocks; the bank check (one subject at a
 //      time) let every one through.

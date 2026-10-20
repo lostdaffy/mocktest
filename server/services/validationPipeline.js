@@ -52,8 +52,12 @@ const STOPWORDS = new Set([
 // A raised power is a number too, and a power is not a base: 7⁴⁵ and 7⁴⁶
 // are different questions, and so are 3⁷ and 7³ (2^5 and 2⁵ are the same).
 const SUPERSCRIPT_DIGITS = { "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9" };
+// "three-digit" is a number the question is built on as much as "3-digit".
+const DIGIT_WORDS = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, "दो": 2, "तीन": 3, "चार": 4, "पाँच": 5, "पांच": 5, "छह": 6, "सात": 7, "आठ": 8, "नौ": 9 };
 function numberSignature(text) {
   const plain = String(text || "")
+    .replace(/\b(two|three|four|five|six|seven|eight|nine)[- ]digit/gi, (m, w) => ` ${DIGIT_WORDS[w.toLowerCase()]}-digit`)
+    .replace(/(दो|तीन|चार|पाँच|पांच|छह|सात|आठ|नौ) अंक/g, (m, w) => ` ${DIGIT_WORDS[w]} अंक`)
     .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => "^" + [...m].map((c) => SUPERSCRIPT_DIGITS[c]).join("") + " ")
     .replace(/\^\s+(?=\d)/g, "^");
   return (plain.match(/\^?[0-9]+(?:\.[0-9]+)?/g) || []).sort().join("|");
@@ -98,14 +102,32 @@ const REPEAT_SIMILARITY = 0.65;
  * meaningful words. Either alone is too blunt - plenty of honest questions
  * share "20%", and plenty share vocabulary while asking something else.
  */
+// Words that turn a question into a different one while the rest stays:
+// the largest three-digit multiple of 7 is not the smallest, and "which is
+// NOT divisible" is not "which is divisible".
+const LARGEST = /\b(largest|greatest|maximum|highest|biggest)\b|सबसे बड़ी|सबसे बड़ा|अधिकतम/i;
+const SMALLEST = /\b(smallest|least|minimum|lowest)\b|सबसे छोटी|सबसे छोटा|न्यूनतम/i;
+const NEGATED = /\bnot\b|\bneither\b|नहीं/i;
+const extreme = (s) => (LARGEST.test(s) ? "largest" : "") + (SMALLEST.test(s) ? "smallest" : "");
+const turnsAround = (a, b) =>
+  (extreme(a) && extreme(b) && extreme(a) !== extreme(b)) || NEGATED.test(a) !== NEGATED.test(b);
+
 function looksLikeRepeat(text, existingTexts = []) {
   const signature = numberSignature(text);
   const words = contentWords(text);
+  // A short question with at most one number says too little for its words
+  // to decide: "Every number divisible by 8 is also divisible by" is not "A
+  // number is divisible by 8 if". With two or more numbers in common it is
+  // decided as usual ("LCM of 12, 15 and 20").
+  const numbers = signature ? signature.split("|").length : 0;
 
   for (const other of existingTexts) {
     if (!other) continue;
     if (numberSignature(other) !== signature) continue;
-    if (overlap(words, contentWords(other)) >= REPEAT_SIMILARITY) return { repeat: true, of: other };
+    if (turnsAround(String(text), String(other))) continue;
+    const theirs = contentWords(other);
+    if (numbers < 2 && Math.min(words.size, theirs.size) < 3) continue;
+    if (overlap(words, theirs) >= REPEAT_SIMILARITY) return { repeat: true, of: other };
   }
   return { repeat: false, of: null };
 }
