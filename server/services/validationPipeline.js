@@ -75,6 +75,18 @@ function numberSignature(text) {
   return (plain.match(/@[0-9a-z]+|[#^~]?[0-9]+(?:\.[0-9]+)?/g) || []).sort().join("|");
 }
 
+// Words that name the same thing. "The number of divisors of 120" is "the
+// number of factors of 120" - a generated test carried both, three questions
+// apart, because the two words never matched.
+const SAME_WORD = {
+  divisor: "factor", divisors: "factor", factors: "factor",
+  gcd: "hcf", gcf: "hcf",
+  multiples: "multiple",
+  numbers: "number", integers: "number", integer: "number",
+  remainders: "remainder",
+  digits: "digit",
+};
+
 function contentWords(text) {
   return new Set(
     String(text || "")
@@ -82,6 +94,7 @@ function contentWords(text) {
       .replace(/[^a-z0-9ऀ-ॿ]+/g, " ")
       .split(" ")
       .filter((w) => w.length > 2 && !STOPWORDS.has(w))
+      .map((w) => SAME_WORD[w] || w)
   );
 }
 

@@ -104,6 +104,9 @@ const MATHS_SAME = [
   ["What is the smallest four-digit number divisible by 15?", "What is the smallest four-digit number that is divisible by 15?"],
   ["What is the LCM of 12, 15 and 20?", "Find the LCM of 12, 15, and 20."],
   ["What is the unit digit of 7⁴⁵?", "Find the unit digit of 7^45."],
+  // divisors are factors, GCD is HCF
+  ["Find the number of total divisors of the number 120.", "Find the number of total factors of 120."],
+  ["What is the GCD of 48 and 72?", "Find the HCF of 48 and 72."],
 ];
 MATHS_SAME.forEach(([a, b], i) => check(`a reworded maths question is a repeat (${i + 1})`, looksLikeRepeat(a, [b]).repeat, a));
 
