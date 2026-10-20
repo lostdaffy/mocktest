@@ -5,6 +5,7 @@ import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 import QuestionVisual from "../components/QuestionVisual";
 import PracticeCsvUpload from "../components/PracticeCsvUpload";
+import ChapterHealth from "../components/ChapterHealth";
 import { useGenerationActivity, useGenerationFinished, useJobs } from "../context/GenerationActivity";
 
 const LEVELS = ["easy", "medium", "hard", "advanced"];
@@ -457,6 +458,8 @@ export default function PracticeSeries() {
       {message && (
         <div className="mb-6 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3">{message}</div>
       )}
+
+      <ChapterHealth subject={selectedSubject.name} chapter={ch.name} />
 
       {chapterJobs.length > 0 && (
         <div className="mb-6 rounded-lg border border-info-border bg-info-light px-4 py-3">

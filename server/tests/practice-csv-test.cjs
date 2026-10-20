@@ -104,6 +104,27 @@ const check = (name, cond, detail = "") => {
   check("a replacement for a question not in the test is refused", /not in this test/.test(why2(2)), why2(2));
   check("...and so is a second replacement for the same question", /already replaces/.test(why2(3)), why2(3));
 
+  // ---- a reworded repeat is refused; a replacement may reword its own
+  const live = (await Test.findById(a._id).lean()).questions.map(String);
+  const udq = (await Test.findById(made._id).lean()).questions.map(String);
+  const t1 = made.title;
+  const echo = [
+    { ...ud(0, t1), question: "Find the unit digit of 2 + 3 × 10.", replaces: udq[5] }, // the bank's first one, reworded
+    { ...ud(0, t1), question: "Find the unit digit of 2 + 3 × 10.", replaces: udq[0] }, // rewording the one it replaces
+    { ...ud(700, t1), replaces: udq[6] },
+    { ...ud(700, t1), question: "Find the unit digit of 702 + 703 × 10.", replaces: udq[7] }, // repeats the row above
+  ];
+  r = await addPracticeCsv(echo, { dryRun: true });
+  const why3 = (n) => (r.rejected.find((x) => x.row === n)?.errors || []).join("; ");
+  check("a reworded question already in the chapter is refused", /repeats a question already in this chapter/.test(why3(1)), why3(1));
+  check("...but a row may reword the question it replaces", !why3(2), why3(2));
+  check("...and a row may not repeat an earlier row of the same file", /repeats a question/.test(why3(4)) && !why3(3), `${why3(3)} | ${why3(4)}`);
+
+  // ---- keyboard maths is saved the way students read it
+  await addPracticeCsv([{ ...row(a.title, 90), question: "Simplify: 2^5 * 3 + 0", formula: "2**5 * 3 + 0", optionA: "96", optionB: "97", optionC: "98", optionD: "99", solution: "2^5 = 32 and 32 * 3 = 96, so 96.", replaces: live[8] }]);
+  const typed = await Question.findOne({ text: "Simplify: 2⁵ × 3 + 0" }).lean();
+  check("2^5 * 3 typed in a spreadsheet is saved as 2⁵ × 3", !!typed && typed.solution === "2⁵ = 32 and 32 × 3 = 96, so 96.", typed?.solution);
+
   // ---- raised digits are part of a question, not noise
   check("9⁴⁰ and 9⁹ are different questions", questionKey("What is the unit digit of 9⁴⁰?") !== questionKey("What is the unit digit of 9⁹?"),
     questionKey("What is the unit digit of 9⁴⁰?"));

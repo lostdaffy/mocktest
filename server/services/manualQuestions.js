@@ -1,6 +1,7 @@
 const Question = require("../models/Question");
 const Test = require("../models/Test");
-const { ruleBasedCheck, questionKey } = require("./validationPipeline");
+const { ruleBasedCheck, questionKey, looksLikeRepeat, numberSignature } = require("./validationPipeline");
+const { plainMaths, plainMathsUpdate } = require("./mathNotation");
 
 // Questions a person typed or pasted in: a human-made mock, or a previous
 // year paper entered by hand. One implementation for both, because the rules
@@ -80,6 +81,10 @@ function prepareRow(row, { examType, source, subjectFallback, pyq, strict = fals
     createdBy: "admin",
     ...(pyq || {}),
   };
+
+  // 2^15 * 3^10 typed in a spreadsheet reaches the student as typed; it is
+  // saved as 2¹⁵ × 3¹⁰ (services/mathNotation.js).
+  Object.assign(question, plainMathsUpdate(question) || {});
 
   // A real past paper prints no solution, and the model requires one. Say so
   // in words a student will read, rather than leave a blank that looks like
@@ -340,16 +345,48 @@ async function addPracticeCsv(rows, { dryRun = false } = {}) {
   let added = 0;
   let wouldReplace = 0;
   let replaced = 0;
+  // The same question reworded is still a repeat: the chapter's live
+  // questions, and the rows of this file already taken, are what a new row
+  // must not repeat (same numbers and mostly the same words - the rule the
+  // generator holds its own questions to). Bucketed by their numbers, since
+  // only questions with the same numbers can be repeats.
+  const banks = new Map();
+  const bankOf = async (chapter) => {
+    if (!banks.has(chapter)) {
+      const live = await Question.find({
+        status: { $ne: "rejected" },
+        $or: [{ chapter }, { chapter: { $in: [null, ""] }, topic: chapter }],
+      }).select("text").lean();
+      const bySig = new Map();
+      for (const q of live) {
+        const text = plainMaths(q.text);
+        const sig = numberSignature(text);
+        if (!bySig.has(sig)) bySig.set(sig, []);
+        bySig.get(sig).push({ _id: String(q._id), text });
+      }
+      banks.set(chapter, bySig);
+    }
+    return banks.get(chapter);
+  };
+
   for (const { test, rows: mine, rowNumbers } of groups.values()) {
     const keep = [];
     const keepNumbers = [];
+    const bySig = await bankOf(test.topic);
     for (let k = 0; k < mine.length; k++) {
-      const text = String(mine[k].question ?? mine[k].text ?? "").trim();
-      const exists = text && (await Question.exists({ textKey: questionKey(text), status: { $ne: "rejected" } }));
+      const text = plainMaths(String(mine[k].question ?? mine[k].text ?? "").trim());
+      const replaces = String(mine[k].replaces || "").trim();
+      const exists = text && (await Question.exists({ textKey: questionKey(text), status: { $ne: "rejected" }, _id: { $ne: /^[a-f0-9]{24}$/i.test(replaces) ? replaces : null } }));
+      const sig = numberSignature(text);
+      const near = text && !exists ? looksLikeRepeat(text, (bySig.get(sig) || []).filter((o) => o._id !== replaces).map((o) => o.text)) : { repeat: false };
       if (exists) rejected.push({ row: rowNumbers[k], test: test.title, text: text.slice(0, 80), errors: ["already in the question bank"] });
+      else if (near.repeat) rejected.push({ row: rowNumbers[k], test: test.title, text: text.slice(0, 80), errors: [`repeats a question already in this chapter: "${String(near.of).slice(0, 100)}"`] });
       else {
         keep.push(mine[k]);
         keepNumbers.push(rowNumbers[k]);
+        // Taken: later rows of this file must not repeat it either.
+        if (!bySig.has(sig)) bySig.set(sig, []);
+        bySig.get(sig).push({ _id: `row:${rowNumbers[k]}`, text });
       }
     }
     const room = Math.max(0, PRACTICE_TEST_SIZE - (test.questions || []).length);

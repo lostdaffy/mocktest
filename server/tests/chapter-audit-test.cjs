@@ -79,7 +79,7 @@ async function api(method, p, { body, token } = {}) {
 
   const test = await db.collection("tests").insertOne({
     title: "Number System · Unit Digit · Easy #1", type: "practice", subject: "Maths",
-    topic: "Unit Digit", chapter: "Number System", difficultyLevel: "easy",
+    topic: "Number System", subtopic: "Unit Digit", difficultyLevel: "easy",
     questions: [id(0), id(1), id(2), id(3)], publishStatus: "published",
   });
 
@@ -108,9 +108,11 @@ async function api(method, p, { body, token } = {}) {
 
   // ---- the allowance is back: carry on from `next`
   await db.collection("questions").updateOne({ _id: id(4) }, { $set: { text: "Fourth one, now reachable" } });
-  const r2 = await api("POST", "/questions/audit", { token, body: { chapter: "Number System", after: r1.json.next, limit: 12 } });
-  check("the next call carries on where the last stopped", r2.json.looked === 3, `${r2.json.looked} ${r2.json.message}`);
-  check("...including a question filed under the chapter as its topic", r2.json.kept === 3, `${r2.json.kept}`);
+  const r2 = await api("POST", "/questions/audit", { token, body: { chapter: "Number System", after: r1.json.next, limit: 30 } });
+  // The replacements made after the first call are in the chapter too, so
+  // this call also checks those.
+  check("the next call carries on where the last stopped", r2.json.looked >= 3 && (await q(4))?.status === "published", `${r2.json.looked} ${r2.json.message}`);
+  check("...including a question filed under the chapter as its topic", r2.json.kept === r2.json.looked && (await q(6))?.status === "published", `${r2.json.kept}`);
   check("...and finishes the chapter", r2.json.done === true, r2.json.message);
   check("another chapter is never touched", (await q(7))?.status === "published");
 
@@ -124,8 +126,9 @@ async function api(method, p, { body, token } = {}) {
   const ex = (i) => extra.insertedIds[i];
   const short = await db.collection("tests").insertOne({
     title: "Number System · Unit Digit · Hard #2", type: "practice", subject: "Maths",
-    difficultyLevel: "hard", questions: [ex(0), ex(1), ex(2)], publishStatus: "draft",
+    topic: "Number System", subtopic: "Unit Digit", difficultyLevel: "hard", questions: [ex(0), ex(1), ex(2)], publishStatus: "draft",
   });
+  await db.collection("subjects").insertOne({ name: "Maths", chapters: [{ name: "Number System", topics: ["Unit Digit", "Remainder Theorem"] }] });
   const h = await api("GET", "/questions/chapter-health?chapter=Number%20System", { token });
   check("the chapter health check answers", h.status === 200, `${h.status}`);
   check("...it counts the tests per subtopic and level",
@@ -135,12 +138,15 @@ async function api(method, p, { body, token } = {}) {
   check("...and one that is not live", sp?.problems.some((p) => /not published/.test(p)));
   check("...and one that asks the same thing twice", sp?.problems.some((p) => /same thing twice/.test(p)));
   check("...and one with questions graded for another level", sp?.problems.some((p) => /another level/.test(p)));
-  check("typeset maths left in a question is found", (h.json.latex || []).some((q) => String(q._id) === String(ex(2))));
+  check("typeset maths left in a question is found", (h.json.notation || []).some((q) => String(q._id) === String(ex(2))));
+  check("keyboard maths (2^4) is found too", (h.json.notation || []).some((q) => String(q._id) === String(ex(0))));
+  check("every level of a catalog topic counts its missing tests", h.json.grid?.["Unit Digit"]?.medium?.missing === 10, JSON.stringify(h.json.grid?.["Unit Digit"]));
   check("a live question that fails the rule gate is found",
     (h.json.ruleFailures || []).some((q) => String(q._id) === String(ex(3)) && q.issues.some((i) => /duplicate options/.test(i))));
   check("the same question twice in the chapter is found",
-    (h.json.repeats || []).some((r) => [r.a._id, r.b._id].map(String).sort().join() === [ex(0), ex(1)].map(String).sort().join()),
+    (h.json.repeats || []).some((r) => [r.keep._id, r.replace._id].map(String).sort().join() === [ex(0), ex(1)].map(String).sort().join()),
     JSON.stringify(h.json.repeats));
+  check("...and the one to replace names its test", (h.json.repeats || []).some((r) => r.replace.tests.includes("Number System · Unit Digit · Hard #2")), JSON.stringify(h.json.repeats));
   check("another chapter's question is not counted", !(h.json.ruleFailures || []).some((q) => String(q._id) === String(id(7))));
 
   // ---- guard rails

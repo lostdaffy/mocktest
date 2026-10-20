@@ -4,6 +4,7 @@ const { refersToAPassage, carriesItsPassage } = require("../utils/comprehension"
 const { arguesWithItself } = require("../utils/selfDoubt");
 const { solutionReachesTheAnswer } = require("../utils/answerAgrees");
 const { checkArithmetic, checkFormula, isNumberOption } = require("./mathCheck");
+const { plainMathsUpdate } = require("./mathNotation");
 const IS_MATHS = /^(math|गणित|quant|arith|numerical)/i;
 // Phrases that put a fact on today's date. "वर्तमान आयु" is a sum and
 // "वर्तमान भारतीय राज्य" a place on the map, so only "at present / currently /
@@ -48,8 +49,11 @@ const STOPWORDS = new Set([
 // The numbers a question is built on, in order. Two questions asking the
 // same thing about the same figures share this exactly: "increases by 20%"
 // is "20" whether a housewife or a householder is doing the increasing.
+// A raised power is a number too: 7⁴⁵ and 7⁴⁶ are different questions.
+const SUPERSCRIPT_DIGITS = { "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9" };
 function numberSignature(text) {
-  return (String(text || "").match(/[0-9]+(?:\.[0-9]+)?/g) || []).sort().join("|");
+  const plain = String(text || "").replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => " " + [...m].map((c) => SUPERSCRIPT_DIGITS[c]).join("") + " ");
+  return (plain.match(/[0-9]+(?:\.[0-9]+)?/g) || []).sort().join("|");
 }
 
 function contentWords(text) {
@@ -377,9 +381,11 @@ async function runValidationPipelineBatch(questions, { reshuffle = true } = {}) 
   // reshuffle: false when re-checking questions that are already in
   // circulation. A saved answer is an option number, so moving the options
   // under a student would rewrite the paper they already sat.
-  const prepared = (reshuffle ? questions.map(shuffleOptions) : questions.map((q) => ({ ...q }))).map(
-    fillNeutralHindiOptions
-  );
+  // Powers and × written the way a student reads them (2¹⁵ × 3¹⁰, not
+  // 2^15 * 3^10) before anything is judged or saved - see mathNotation.js.
+  const prepared = (reshuffle ? questions.map(shuffleOptions) : questions.map((q) => ({ ...q })))
+    .map((q) => ({ ...q, ...(plainMathsUpdate(q) || {}) }))
+    .map(fillNeutralHindiOptions);
   const ruleResults = prepared.map((q) => ({ question: q, rule: ruleBasedCheck(q) }));
   const needVerification = ruleResults.filter((r) => r.rule.passed).map((r) => r.question);
 
