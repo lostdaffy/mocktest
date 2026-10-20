@@ -174,6 +174,18 @@ app.use(
   })
 );
 
+// No "$operator" or "__proto__" key from a request ever reaches a query or an
+// object - see middleware/sanitize.js. (The Razorpay webhook checks its
+// signature against rawBody, which this leaves untouched.)
+app.use(require("./middleware/sanitize").sanitize);
+
+// API answers carry accounts, scores and answer keys: no browser or proxy
+// should keep a copy.
+app.use("/api", (req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
+
 // General API traffic - generous, because a student actively taking a test
 // legitimately fires many requests (loading questions, saving answers,
 // checking sections). This exists to catch runaway/abusive clients, not to
@@ -299,6 +311,7 @@ app.get("/api/app-config", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/questions", questionRoutes);
+app.use("/api/quality", require("./routes/qualityRoutes"));
 app.use("/api/tests", testRoutes);
 app.use("/api/exams", examRoutes);
 app.use("/api/payments", paymentRoutes);

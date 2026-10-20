@@ -34,6 +34,55 @@ const isWorthRetrying = (message) =>
     String(message || "")
   );
 
+// ---- the AI quality desk (services/qualityDesk.js)
+
+const AUDIT_BATCH = 20;
+const qualityNote = (r) =>
+  [`Checked ${r.checked}`, `${r.sound} sound`, r.proposed && `${r.proposed} fixed or proposed`, r.applied && `${r.applied} applied`, r.flagged && `${r.flagged} flagged for the admin`]
+    .filter(Boolean)
+    .join(", ");
+
+// A spreadsheet's new questions, checked by the AI. When the allowance runs
+// out part-way the job keeps only the questions not yet judged and goes back
+// in the queue, so nothing is checked twice and nothing is skipped.
+async function runQualityCheckJob(job) {
+  const { checkQuestions } = require("../services/qualityDesk");
+  const r = await checkQuestions(job.questionIds || [], { source: job.source || "csv" });
+  if (r.unjudged.length) {
+    job.questionIds = r.unjudged;
+    await job.save();
+    throw new Error(`Every model has used its allowance for today - ${r.unjudged.length} question(s) still to check.`);
+  }
+  return qualityNote(r);
+}
+
+// The whole bank, a batch at a time, from where the last batch stopped
+// (QualitySettings.auditCursor). Each batch queues the next.
+async function runQualityAuditJob(job) {
+  const QualitySettings = require("../models/QualitySettings");
+  const Question = require("../models/Question");
+  const { checkQuestions } = require("../services/qualityDesk");
+  const settings = await QualitySettings.get();
+  const filter = { status: "published", ...(settings.auditCursor ? { _id: { $gt: settings.auditCursor } } : {}) };
+  const batch = (await Question.find(filter).sort({ _id: 1 }).limit(AUDIT_BATCH).select("_id").lean()).map((q) => q._id);
+  if (!batch.length) {
+    await QualitySettings.updateOne({ key: "quality" }, { $set: { auditFinishedAt: new Date() }, $unset: { auditCursor: "" } });
+    return `The whole bank has been audited (${settings.auditChecked} questions)`;
+  }
+  const r = await checkQuestions(batch, { source: "audit" });
+  // The cursor moves past every question judged, and stops before the first
+  // one the AI could not reach.
+  const unjudged = new Set(r.unjudged.map(String));
+  const firstOpen = batch.findIndex((id) => unjudged.has(String(id)));
+  const done = firstOpen === -1 ? batch : batch.slice(0, firstOpen);
+  if (done.length) {
+    await QualitySettings.updateOne({ key: "quality" }, { $set: { auditCursor: done[done.length - 1] }, $inc: { auditChecked: done.length } });
+  }
+  if (firstOpen !== -1) throw new Error("Every model has used its allowance for today - the bank audit carries on after the reset.");
+  await GenerationJob.create({ kind: "quality_audit", label: "AI audit of the question bank", status: "queued", batch: job.batch });
+  return qualityNote(r);
+}
+
 async function runPracticeJob(job) {
   // Required late: the controller pulls in the whole generation stack, and
   // requiring it at module load would put the worker in every import chain.
@@ -246,6 +295,8 @@ async function runGenerationTick() {
       : job.kind === "pyq_extract" ? await runPyqJob(job)
       : job.kind === "reference_read" ? await runReferenceJob(job)
       : job.kind === "lessons" ? await runLessonsJob()
+      : job.kind === "quality_check" ? await runQualityCheckJob(job)
+      : job.kind === "quality_audit" ? await runQualityAuditJob(job)
       : await runMockJob(job);
     job.status = "done";
     job.result = String(result).slice(0, 300);

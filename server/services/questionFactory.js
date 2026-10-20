@@ -373,7 +373,7 @@ async function retireQuestion(q, shortened) {
     await Question.updateOne({ _id: q._id }, { $set: { status: "rejected", flagReason: q.flagReason } });
     return "keptForHistory";
   }
-  await Question.deleteOne({ _id: q._id });
+  await require("./questionHistory").deleteForGood(q._id, { by: "ai", note: q.flagReason });
   return "deleted";
 }
 

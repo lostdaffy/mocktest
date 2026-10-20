@@ -490,8 +490,14 @@ async function deleteMock(req, res) {
 
   // Delete the mock's questions too (they were generated for this mock only),
   // and the pictures of any figure questions among them.
-  await QuestionImage.deleteMany({ question: { $in: test.questions } });
-  await Question.deleteMany({ _id: { $in: test.questions } });
+  // Each question is kept in its history first (restorable), one a student
+  // has answered is retired instead of deleted, and one another test also
+  // uses is left alone.
+  const { deleteForGood } = require("../services/questionHistory");
+  for (const qid of test.questions) {
+    if (await Test.exists({ _id: { $ne: test._id }, questions: qid })) continue;
+    await deleteForGood(qid, { note: `${test.title} deleted` });
+  }
   await Test.findByIdAndDelete(req.params.testId);
 
   res.json({ message: "The mock and its questions were deleted" });
@@ -566,9 +572,7 @@ async function removeQuestionFromMock(req, res) {
         text: q.text, subject: q.subject, topic: q.topic, chapter: q.chapter, difficulty: q.difficulty,
         reason: "removed_by_admin", detail: `removed from ${test.title}`,
       }).catch(() => {});
-      await Question.findByIdAndDelete(questionId);
-      await QuestionImage.deleteMany({ question: questionId });
-      deleted = true;
+      deleted = (await require("../services/questionHistory").deleteForGood(questionId, { note: `Removed from ${test.title}` })) === "deleted";
     }
   }
 

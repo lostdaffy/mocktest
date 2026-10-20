@@ -129,7 +129,7 @@ async function removePyqQuestion(req, res) {
 
   test.questions = test.questions.filter((q) => String(q) !== String(questionId));
   await test.save();
-  await Question.findByIdAndDelete(questionId);
+  await require("../services/questionHistory").deleteForGood(questionId, { note: `Removed from the paper ${test.title}` });
 
   res.json({ message: "Question removed", remainingCount: test.questions.length });
 }
@@ -171,7 +171,13 @@ async function deletePyqPaper(req, res) {
   const test = await Test.findById(req.params.testId);
   if (!test) return res.status(404).json({ message: "Paper not found" });
 
-  await Question.deleteMany({ _id: { $in: test.questions } });
+  // Each question is kept in its history first (restorable); one a student
+  // has answered is retired instead of deleted.
+  const { deleteForGood } = require("../services/questionHistory");
+  for (const qid of test.questions) {
+    if (await Test.exists({ _id: { $ne: test._id }, questions: qid })) continue;
+    await deleteForGood(qid, { note: `${test.title} deleted` });
+  }
   await Test.findByIdAndDelete(req.params.testId);
 
   res.json({ message: "Paper deleted" });

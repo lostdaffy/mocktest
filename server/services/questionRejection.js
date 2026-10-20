@@ -5,8 +5,13 @@ const Question = require("../models/Question");
 const Test = require("../models/Test");
 const { refillTests } = require("./testTopUp");
 
-async function rejectAndHeal(id, reason) {
-  const q = await Question.findByIdAndUpdate(id, { status: "rejected", flagReason: reason || "Rejected by admin" }, { new: true });
+async function rejectAndHeal(id, reason, { by = "admin" } = {}) {
+  // Recorded in the question's history, so it can be restored.
+  const q = await require("./questionHistory").change(
+    id,
+    { status: "rejected", flagReason: reason || "Rejected by admin" },
+    { action: "retire", by, note: reason || "Rejected by admin" }
+  );
   if (!q) return null;
   const affected = await Test.find({ questions: q._id }).select("title questions publishStatus").lean();
   if (affected.length) await Test.updateMany({ questions: q._id }, { $pull: { questions: q._id } });

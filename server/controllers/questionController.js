@@ -7,33 +7,46 @@ const { runValidationPipeline } = require("../services/validationPipeline");
 const { recheckQuestions, auditPublished } = require("../services/questionFactory");
 const { refillTests, refillNote } = require("../services/testTopUp");
 const { chapterHealth } = require("../services/chapterHealth");
+const history = require("../services/questionHistory");
+const mongoose = require("mongoose");
+
+const isId = (v) => typeof v === "string" && /^[a-f0-9]{24}$/i.test(v) && mongoose.Types.ObjectId.isValid(v);
 
 // GET /api/questions?examType=&subject=&topic=&status=  (admin/browse use)
 async function listQuestions(req, res) {
-  const { examType, subject, topic, status, page = 1, limit = 20 } = req.query;
+  // Only plain text reaches the query: "status[$ne]=x" arrives as an object
+  // and would otherwise become a database operator.
+  const str = (v) => (typeof v === "string" && v ? v.slice(0, 100) : undefined);
   const filter = {};
-  if (examType) filter.examType = examType;
-  if (subject) filter.subject = subject;
-  if (topic) filter.topic = topic;
-  if (status) filter.status = status;
+  for (const k of ["examType", "subject", "topic", "status", "chapter"]) {
+    if (str(req.query[k])) filter[k] = str(req.query[k]);
+  }
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 20000);
 
   const questions = await Question.find(filter)
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
-    .limit(Number(limit));
+    .limit(limit);
 
   const total = await Question.countDocuments(filter);
-  res.json({ questions, total, page: Number(page) });
+  res.json({ questions, total, page });
 }
 
 // PATCH /api/questions/:id/approve (admin only)
+//
+// Only a question that passes the quality gate is published: approving one
+// that fails is refused, with the reasons, so it is fixed first.
 async function approveQuestion(req, res) {
-  const q = await Question.findByIdAndUpdate(
-    req.params.id,
-    { status: "published", flagReason: null },
-    { new: true }
-  );
-  if (!q) return res.status(404).json({ message: "Question not found" });
+  if (!isId(req.params.id)) return res.status(400).json({ message: "Not a valid id" });
+  const current = await Question.findById(req.params.id).lean();
+  if (!current) return res.status(404).json({ message: "Question not found" });
+  const { ruleBasedCheck } = require("../services/validationPipeline");
+  const { passed, issues } = ruleBasedCheck(current);
+  if (!passed) {
+    return res.status(409).json({ message: `It fails the quality check - fix it before publishing: ${issues.join(", ")}`, issues });
+  }
+  const q = await history.change(current._id, { status: "published", flagReason: "" }, { action: "status", note: "Approved by the admin" });
   res.json({ message: "Question approved and published", question: q });
 }
 
@@ -45,9 +58,10 @@ async function approveQuestion(req, res) {
 // that already contained it. The admin had pressed Reject and been told it
 // was done.
 async function rejectQuestion(req, res) {
-  const { reason } = req.body;
+  if (!isId(req.params.id)) return res.status(400).json({ message: "Not a valid id" });
+  const reason = typeof req.body?.reason === "string" ? req.body.reason.slice(0, 500) : undefined;
   // Out of every test that was using it, and a replacement in its place -
-  // see services/questionRejection.js.
+  // see services/questionRejection.js. Recorded in its history.
   const { rejectAndHeal } = require("../services/questionRejection");
   const done = await rejectAndHeal(req.params.id, reason);
   if (!done) return res.status(404).json({ message: "Question not found" });
@@ -205,39 +219,138 @@ async function listBookmarked(req, res) {
 }
 
 // PUT /api/questions/:id (admin) - edit a question fully
-async function updateQuestion(req, res) {
-  try {
-    const allowed = [
-      "text", "textHi", "options", "optionsHi", "correctIndex",
-      "solution", "solutionHi", "examType", "subject", "topic",
-      "chapter", "difficulty", "status",
-    ];
-    const updates = {};
-    for (const key of allowed) {
-      if (req.body[key] !== undefined) updates[key] = req.body[key];
-    }
-    const q = await Question.findByIdAndUpdate(req.params.id, updates, { new: true });
-    if (!q) return res.status(404).json({ message: "Question not found" });
+//
+// Every edit is kept in the question's history (before and after), so any
+// version can be restored. The edited question goes through the rule gate
+// again: if it is (or is being made) live and fails, it is saved but held for
+// review with the reasons, never left live broken. If the AI desk is on, the
+// AI checks it too, in the background.
+const STATUSES = ["draft", "under_review", "published", "rejected", "hidden"];
+const LEVELS = ["easy", "medium", "hard", "exam"];
 
-    // An edited question skips the quality gate, deliberately - an admin
-    // looking straight at it should be able to overrule a rule. But the
-    // commonest hand-edit is changing which option is correct, and that is
-    // the one mistake re-reading never catches: the solution still works
-    // through to the old answer. So the save goes through and the checks
-    // come back with it.
-    const { checkEditedQuestion } = require("../utils/questionWarnings");
-    res.json({ question: q, warnings: checkEditedQuestion(q) });
-  } catch (err) {
-    res.status(500).json({ message: "Update failed", error: err.message });
+function readEdit(b) {
+  const updates = {};
+  const text = (k, max = 5000) => {
+    if (b[k] === undefined || b[k] === null) return;
+    if (typeof b[k] !== "string") throw new Error(`${k} must be text`);
+    updates[k] = b[k].slice(0, max);
+  };
+  const four = (k) => {
+    if (b[k] === undefined || (b[k] === null && k === "optionsHi")) return;
+    if (k === "optionsHi" && Array.isArray(b[k]) && b[k].length === 0) return (updates[k] = []);
+    if (!Array.isArray(b[k]) || b[k].length !== 4 || b[k].some((x) => typeof x !== "string")) {
+      throw new Error(`${k} must be four pieces of text`);
+    }
+    updates[k] = b[k].map((x) => x.slice(0, 1000));
+  };
+  ["text", "textHi", "solution", "solutionHi", "subject", "topic", "chapter"].forEach((k) => text(k));
+  four("options");
+  four("optionsHi");
+  if (b.correctIndex !== undefined) {
+    if (![0, 1, 2, 3].includes(b.correctIndex)) throw new Error("correctIndex must be 0, 1, 2 or 3");
+    updates.correctIndex = b.correctIndex;
   }
+  if (b.difficulty !== undefined) {
+    if (!LEVELS.includes(b.difficulty)) throw new Error("difficulty must be easy, medium, hard or exam");
+    updates.difficulty = b.difficulty;
+  }
+  if (b.status !== undefined) {
+    if (!STATUSES.includes(b.status)) throw new Error("status is not a known status");
+    updates.status = b.status;
+  }
+  if (b.examType !== undefined) {
+    if (!Array.isArray(b.examType) || b.examType.some((x) => typeof x !== "string")) throw new Error("examType must be a list of text");
+    updates.examType = b.examType.slice(0, 30).map((x) => x.slice(0, 100));
+  }
+  return updates;
+}
+
+async function updateQuestion(req, res) {
+  if (!isId(req.params.id)) return res.status(400).json({ message: "Not a valid id" });
+  let updates;
+  try {
+    updates = readEdit(req.body || {});
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
+
+  const before = await Question.findById(req.params.id).lean();
+  if (!before) return res.status(404).json({ message: "Question not found" });
+
+  const { ruleBasedCheck } = require("../services/validationPipeline");
+  const { plainMathsUpdate } = require("../services/mathNotation");
+  Object.assign(updates, plainMathsUpdate({ ...before, ...updates }) || {});
+  const { passed, issues } = ruleBasedCheck({ ...before, ...updates });
+  const wantsLive = (updates.status || before.status) === "published";
+  const held = wantsLive && !passed;
+  if (held) {
+    updates.status = "under_review";
+    updates.flagReason = `Rule check failed after an edit: ${issues.join(", ")}`;
+  }
+  const q = await history.change(before._id, updates, { action: "edit", note: held ? "Held for review: fails the quality check" : undefined });
+
+  try {
+    const QualitySettings = require("../models/QualitySettings");
+    const GenerationJob = require("../models/GenerationJob");
+    if ((await QualitySettings.get()).checkCsvUploads && q.status === "published") {
+      await GenerationJob.create({ kind: "quality_check", questionIds: [q._id], source: "edit", label: "AI check of an edited question", status: "queued" });
+    }
+  } catch (_) {
+    // The edit is saved either way; the bank audit reaches it later.
+  }
+
+  // The commonest hand-edit is changing which option is correct, and the
+  // solution still works through to the old answer - these warnings say so.
+  const { checkEditedQuestion } = require("../utils/questionWarnings");
+  res.json({
+    question: q,
+    warnings: checkEditedQuestion(q),
+    ...(held ? { held: true, issues, message: `Saved, but it fails the quality check, so it is moved to Needs review until fixed: ${issues.join(", ")}` } : {}),
+  });
 }
 
 // DELETE /api/questions/:id (admin)
+//
+// A question that is live, sits in a test, or has been answered by a student
+// is not deleted on a plain request: it is retired - taken out of its tests,
+// a replacement put in, and kept with its history so it can be restored.
+// Deleting it for good needs { permanent: true, confirm: "DELETE" } in the
+// body, and its content is still kept in the history.
 async function deleteQuestion(req, res) {
-  const q = await Question.findByIdAndDelete(req.params.id);
-  if (q) await require("../models/QuestionImage").deleteMany({ question: q._id });
+  if (!isId(req.params.id)) return res.status(400).json({ message: "Not a valid id" });
+  const q = await Question.findById(req.params.id).lean();
   if (!q) return res.status(404).json({ message: "Question not found" });
-  res.json({ message: "Question deleted" });
+  const Attempt = require("../models/Attempt");
+  const inUse =
+    q.status === "published" ||
+    !!(await Test.exists({ questions: q._id })) ||
+    !!(await Attempt.exists({ "answers.question": q._id }));
+  const permanent = req.body?.permanent === true && req.body?.confirm === "DELETE";
+
+  if (inUse && !permanent) {
+    const { rejectAndHeal } = require("../services/questionRejection");
+    const done = await rejectAndHeal(q._id, "Removed by the admin");
+    return res.json({
+      retired: true,
+      message:
+        "It is in use, so it was retired, not deleted: taken out of its tests, a replacement put in, and kept in the history" +
+        refillNote(done?.refilled || []),
+    });
+  }
+
+  let refilled = [];
+  if (inUse) {
+    const affected = await Test.find({ questions: q._id }).select("_id").lean();
+    await Test.updateMany({ questions: q._id }, { $pull: { questions: q._id } });
+    if (affected.length) refilled = await refillTests(affected.map((t) => t._id));
+  }
+  const how = await history.deleteForGood(q._id, { note: inUse ? "Deleted for good, confirmed by the admin" : "Deleted (never used)" });
+  res.json({
+    message:
+      (how === "retired"
+        ? "Students have answered it, so it was retired instead of deleted (their results still show it)"
+        : "Question deleted. A copy is kept in the history.") + refillNote(refilled),
+  });
 }
 
 // GET /api/questions/reports (admin) - list open student error-reports with the question

@@ -34,6 +34,14 @@ export default function QuestionEditor({ question, onClose, onSaved, canApprove 
     try {
       const res = await api.put(`/questions/${draft._id}`, draft);
       const found = res.data?.warnings || [];
+      // The server re-checks every edit. One that fails the quality gate is
+      // saved but held for review instead of live - say why and stay open.
+      if (res.data?.held) {
+        onSaved?.(res.data.question);
+        setWarnings([...(res.data.issues || []).map((i) => `Quality check: ${i}`), ...found]);
+        toast.error(res.data.message || "Saved, but held for review: it fails the quality check");
+        return;
+      }
       if (approve) await api.patch(`/questions/${draft._id}/approve`);
       onSaved?.(res.data?.question || draft);
 

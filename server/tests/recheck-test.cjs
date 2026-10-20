@@ -197,6 +197,9 @@ async function pipelineChecks() {
     text: "A shop marks up by 25% then gives 20% off. What is the profit?",
     options: ["0", "5", "10", "20"], correctIndex: 0,
     solution: "1.25 x 0.8 = 1.0, so there is no profit. The answer is 0.",
+    textHi: "एक दुकान 25% बढ़ाकर मूल्य अंकित करती है, फिर 20% छूट देती है। लाभ कितना है?",
+    optionsHi: ["0", "5", "10", "20"],
+    solutionHi: "1.25 x 0.8 = 1.0, अतः कोई लाभ नहीं है। उत्तर 0 है।",
     subject: "Maths", topic: "Percentage", difficulty: "medium", status: "published",
   });
   const qid = handEdited.insertedId.toString();
@@ -218,6 +221,11 @@ async function pipelineChecks() {
   e = await api("PUT", `/questions/${qid}`, { token, body: { options: ["0", "5", "10", "20"], solution: "" } });
   check("a solution deleted by hand is caught, because a wrong answer teaches nothing",
     (e.json.warnings || []).some((w) => /no solution/i.test(w)), JSON.stringify(e.json.warnings));
+  // A live question an edit breaks is not left live: saved, but held for review.
+  check("...and the broken live question is held for review, not left live",
+    e.json.question.status === "under_review", e.json.question?.status);
+  e = await api("PUT", `/questions/${qid}`, { token, body: { solution: "1.25 x 0.8 = 1.0, so there is no profit. The answer is 0.", status: "published" } });
+  check("...and goes live again once it is fixed", e.json.question?.status === "published" && !e.json.held, e.json.message || "");
 
   // ---- nothing left to do says so, rather than pretending to work
   const again = await api("POST", "/questions/recheck", { token, body: { limit: 20 } });

@@ -214,7 +214,7 @@ async function removeQuestionFromLiveExam(req, res) {
 
   test.questions = test.questions.filter((q) => String(q) !== String(questionId));
   await test.save();
-  await Question.findByIdAndDelete(questionId);
+  await require("../services/questionHistory").deleteForGood(questionId, { note: `Removed from the live exam ${test.title}` });
 
   res.json({ message: "Question removed", remainingCount: test.questions.length });
 }
@@ -301,7 +301,12 @@ async function deleteLiveExam(req, res) {
     });
   }
 
-  await Question.deleteMany({ _id: { $in: test.questions } });
+  // A copy of each question stays in its history.
+  const { deleteForGood } = require("../services/questionHistory");
+  for (const qid of test.questions) {
+    if (await Test.exists({ _id: { $ne: test._id }, questions: qid })) continue;
+    await deleteForGood(qid, { note: `${test.title} deleted` });
+  }
   await Test.findByIdAndDelete(test._id);
 
   res.json({ message: "The live exam and its questions were deleted" });

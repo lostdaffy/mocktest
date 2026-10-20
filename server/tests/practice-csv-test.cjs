@@ -100,6 +100,12 @@ const check = (name, cond, detail = "") => {
   check("the new question takes the old one's place, the test stays at 20", after.length === 20 && fresh3 && after[3] === String(fresh3._id) && !after.includes(victim), after.length);
   const gone = await Question.findById(victim).lean();
   check("...and the old one is rejected with the reason given", gone.status === "rejected" && gone.flagReason === "wrong key", gone.status + " " + gone.flagReason);
+  const Rev = require(path.join(SERVER, "models/QuestionRevision"));
+  check("...and the replacement is in the old one's history", !!(await Rev.exists({ question: victim, action: "replaced", replacedBy: fresh3._id })));
+  check("every uploaded question has a creation record", !!(await Rev.exists({ question: fresh3._id, action: "create" })));
+  const Job = require(path.join(SERVER, "models/GenerationJob"));
+  const checks = await Job.find({ kind: "quality_check", source: "csv" }).lean();
+  check("uploaded questions are queued for the AI check, 20 at most per job", checks.length > 0 && checks.every((j) => j.questionIds.length <= 20) && checks.some((j) => j.questionIds.map(String).includes(String(fresh3._id))), `${checks.length}`);
   const why2 = (n) => (r.rejected.find((x) => x.row === n)?.errors || []).join("; ");
   check("a replacement for a question not in the test is refused", /not in this test/.test(why2(2)), why2(2));
   check("...and so is a second replacement for the same question", /already replaces/.test(why2(3)), why2(3));

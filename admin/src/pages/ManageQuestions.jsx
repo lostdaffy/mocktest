@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { RiCheckLine, RiCloseLine, RiEdit2Line, RiDeleteBin6Line, RiAlertLine } from "@remixicon/react";
+import { RiCheckLine, RiCloseLine, RiEdit2Line, RiDeleteBin6Line, RiAlertLine, RiSparkling2Line, RiRefreshLine, RiHistoryLine, RiShieldCheckLine } from "@remixicon/react";
 import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 import QuestionEditor from "../components/QuestionEditor";
 import QuestionVisual from "../components/QuestionVisual";
 import ChapterAudit from "../components/ChapterAudit";
+import QualityDesk from "../components/QualityDesk";
+import QuestionHistory from "../components/QuestionHistory";
 
 const PAGE_SIZE = 20;
 
@@ -30,6 +32,8 @@ export default function ManageQuestions() {
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState("");
   const [rechecking, setRechecking] = useState(false);
+  const [historyOf, setHistoryOf] = useState(null);
+  const [deskKey, setDeskKey] = useState(0);
 
   async function load(targetPage = page, targetStatus = status) {
     setLoading(true);
@@ -105,19 +109,40 @@ export default function ManageQuestions() {
   async function handleDelete(id) {
     const ok = await toast.confirm({
       title: "Delete this question?",
-      message: "It disappears from the bank for good. Rejecting keeps it out of tests without losing it.",
+      message:
+        "If it is live, in a test or answered by students, it is retired instead: taken out of its tests, a replacement put in, and kept in the history. A copy of anything deleted is kept and can be brought back.",
       confirmLabel: "Delete",
       danger: true,
     });
     if (!ok) return;
     try {
-      await api.delete(`/questions/${id}`);
+      const r = await api.delete(`/questions/${id}`);
       setQuestions((prev) => prev.filter((q) => q._id !== id));
       setTotal((t) => Math.max(0, t - 1));
       loadCounts();
-      toast.success("Question deleted");
+      toast.success(r.data?.message || "Question deleted");
     } catch (err) {
-      toast.error("Delete failed");
+      toast.error(err.response?.data?.message || "Delete failed");
+    }
+  }
+
+  // The AI on one question: check it (and correct or replace what is wrong),
+  // improve its solution and Hindi, or build a new one for its place. In
+  // approval mode the result waits in the quality desk above.
+  async function ai(id, what) {
+    setBusy(id);
+    try {
+      const r =
+        what === "check"
+          ? await api.post("/quality/check", { ids: [id] })
+          : await api.post(`/quality/questions/${id}/${what}`);
+      toast.success(r.data?.message || "Done");
+      setDeskKey((k) => k + 1);
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "The AI couldn't do that right now");
+    } finally {
+      setBusy("");
     }
   }
 
@@ -138,6 +163,8 @@ export default function ManageQuestions() {
           <Stat label="Total questions" value={counts.totalQuestions} tone="muted" />
         </div>
       )}
+
+      <QualityDesk refreshKey={deskKey} />
 
       <ChapterAudit />
 
@@ -239,7 +266,28 @@ export default function ManageQuestions() {
                   {q.reportCount > 0 && ` · ${q.reportCount} student report(s)`}
                 </p>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    ["check", "AI check", RiShieldCheckLine],
+                    ["improve", "Improve", RiSparkling2Line],
+                    ["regenerate", "Regenerate", RiRefreshLine],
+                  ].map(([what, label, Icon]) => (
+                    <button
+                      key={what}
+                      onClick={() => ai(q._id, what)}
+                      disabled={busy === q._id}
+                      className="px-3 py-1.5 rounded-lg bg-brand/10 hover:bg-brand/20 text-brand text-xs font-medium inline-flex items-center gap-1 disabled:opacity-50"
+                    >
+                      <Icon size={14} /> {label}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setHistoryOf(q._id)}
+                    className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium inline-flex items-center gap-1"
+                    title="History"
+                  >
+                    <RiHistoryLine size={14} />
+                  </button>
                   {q.status !== "published" && (
                     <button
                       onClick={() => act(q._id, "approve")}
@@ -293,6 +341,17 @@ export default function ManageQuestions() {
 
       {/* The same editor the mock review modal opens - one implementation,
           so a fix made in one place is a fix made in both. */}
+      {historyOf && (
+        <QuestionHistory
+          questionId={historyOf}
+          onClose={() => setHistoryOf(null)}
+          onChanged={() => {
+            load();
+            loadCounts();
+          }}
+        />
+      )}
+
       {editing && (
         <QuestionEditor
           question={editing}

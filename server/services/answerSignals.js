@@ -46,7 +46,7 @@ async function sweepSuspectKeys({ apply = true } = {}) {
     const reason = `Students' answers point to option ${"ABCD"[k]} (${c[k]} of ${n}), not the marked ${"ABCD"[q.correctIndex]} (${c[q.correctIndex]}) - the key is likely wrong`;
     const entry = { _id: q._id, text: q.text, subject: q.subject, reason };
     if (apply) {
-      const done = await rejectAndHeal(q._id, `Auto: ${reason}`);
+      const done = await rejectAndHeal(q._id, `Auto: ${reason}`, { by: "system" });
       entry.removedFrom = (done?.affected || []).map((t) => t.title);
     }
     found.push(entry);

@@ -237,20 +237,29 @@ async function addManualQuestions(testId, rows, { dryRun = false, source, strict
 
   let added = 0;
   let replaced = 0;
+  let createdIds = [];
   if (!dryRun && accepted.length) {
     const created = await Question.insertMany(accepted, { ordered: true });
     const pushed = created.filter((_, k) => !replacing[k]);
     // $push keeps the paper in row order and avoids re-validating the whole
     // test document, which fails on tests created under an older schema.
     if (pushed.length) await Test.updateOne({ _id: test._id }, { $push: { questions: { $each: pushed.map((q) => q._id) } } });
+    const history = require("./questionHistory");
     for (let k = 0; k < created.length; k++) {
+      await history.record(created[k]._id, "create", { after: created[k], note: "Added from a spreadsheet" });
       if (!replacing[k]) continue;
       // Into the same place in every test that held the old one.
       await Test.updateMany({ questions: replacing[k] }, { $set: { "questions.$": created[k]._id } });
-      await Question.updateOne({ _id: replacing[k] }, { status: "rejected", flagReason: replaceReasons[k] || "Replaced by a checked question" });
+      await history.change(
+        replacing[k],
+        { status: "rejected", flagReason: replaceReasons[k] || "Replaced by a checked question" },
+        { action: "replaced", note: "Replaced by a spreadsheet row", replacedBy: created[k]._id }
+      );
       replaced++;
     }
     added = pushed.length;
+    createdIds = created.map((q) => q._id);
+    await queueQualityCheck(createdIds, "csv");
   }
 
   return {
@@ -263,7 +272,28 @@ async function addManualQuestions(testId, rows, { dryRun = false, source, strict
     rejected,
     warned,
     paperSize: test.questions.length + added,
+    createdIds,
   };
+}
+
+// After an upload, the AI checks every new question in the background - its
+// answer, solution, language and repeats - if the quality desk says so. Jobs
+// of 20 wait in the generation queue; an exhausted AI allowance only delays
+// them, the questions are already in (they passed the rule gate to get in).
+async function queueQualityCheck(ids, source) {
+  if (!ids.length) return;
+  try {
+    const QualitySettings = require("../models/QualitySettings");
+    if (!(await QualitySettings.get()).checkCsvUploads) return;
+    const GenerationJob = require("../models/GenerationJob");
+    const jobs = [];
+    for (let i = 0; i < ids.length; i += 20) {
+      jobs.push({ kind: "quality_check", questionIds: ids.slice(i, i + 20), source, label: `AI check of ${Math.min(20, ids.length - i)} uploaded question(s)`, status: "queued" });
+    }
+    await GenerationJob.insertMany(jobs);
+  } catch (err) {
+    console.error("Queueing the AI check:", err.message);
+  }
 }
 
 // ---- practice tests from one spreadsheet

@@ -12,7 +12,13 @@ const mongoose = require("mongoose");
 // survives a restart, the panel can show it, and a job that fails says why.
 const generationJobSchema = new mongoose.Schema(
   {
-    kind: { type: String, enum: ["practice", "mock", "daily_quiz", "top_up", "pyq_extract", "reference_read", "lessons"], required: true },
+    kind: { type: String, enum: ["practice", "mock", "daily_quiz", "top_up", "pyq_extract", "reference_read", "lessons", "quality_check", "quality_audit"], required: true },
+
+    // quality_check: the questions the AI quality desk is to check (a
+    // spreadsheet's new rows), and where they came from. Shrinks to the ones
+    // not yet judged when the day's allowance runs out part-way.
+    questionIds: { type: [mongoose.Schema.Types.ObjectId], default: undefined },
+    source: String,
 
     // top_up: the practice test to fill up to its size (the old 12-question
     // tests, brought to 20).
