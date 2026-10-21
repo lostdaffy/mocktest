@@ -797,6 +797,9 @@ async function buildPracticeTest({ subject, chapter, subtopic, topics, difficult
       try {
         const built = await createVerifiedQuestions({
           needed: ask,
+          // The test's questions so far: no repeat of one, and no pattern
+          // drilled more than a few times in one test.
+          inTest: allQuestionIds,
           // examType here OVERRIDES what the generator stamped on each
           // question - tags are applied after generation. examStage is gone:
           // the Question schema has no such field, so it was being dropped

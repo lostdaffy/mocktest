@@ -127,7 +127,7 @@ const check = (name, cond, detail = "") => {
   check("...and a row may not repeat an earlier row of the same file", /repeats a question/.test(why3(4)) && !why3(3), `${why3(3)} | ${why3(4)}`);
 
   // ---- keyboard maths is saved the way students read it
-  await addPracticeCsv([{ ...row(a.title, 90), question: "Simplify: 2^5 * 3 + 0", formula: "2**5 * 3 + 0", optionA: "96", optionB: "97", optionC: "98", optionD: "99", solution: "2^5 = 32 and 32 * 3 = 96, so 96.", replaces: live[8] }]);
+  await addPracticeCsv([{ ...row(a.title, 90), question: "Simplify: 2^5 * 3 + 0", questionHi: "सरल कीजिए: 2^5 * 3 + 0", optionAHi: "96", optionBHi: "97", optionCHi: "98", optionDHi: "99", formula: "2**5 * 3 + 0", optionA: "96", optionB: "97", optionC: "98", optionD: "99", solution: "2^5 = 32 and 32 * 3 = 96, so 96.", replaces: live[8] }]);
   const typed = await Question.findOne({ text: "Simplify: 2⁵ × 3 + 0" }).lean();
   check("2^5 * 3 typed in a spreadsheet is saved as 2⁵ × 3", !!typed && typed.solution === "2⁵ = 32 and 32 × 3 = 96, so 96.", typed?.solution);
 

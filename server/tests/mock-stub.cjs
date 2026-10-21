@@ -1,6 +1,7 @@
 // Preloaded into the server under test (node -r). Replaces Gemini with a
 // local generator so mock generation runs instantly and costs nothing, and
 // logs every call so the test can inspect what the generator was given.
+const STUB_WORDS = "apples rivers trains clocks coins ladders gardens pipes boats candles shelves tickets bridges lamps kites wells towers drums maps seeds rockets parrots marbles tunnels baskets mirrors bottles engines blankets pencils".split(" ");
 const path = require("path");
 const fs = require("fs");
 const SERVER = require("path").resolve(__dirname, "..");
@@ -60,7 +61,9 @@ gemini.generateQuestions = async ({ examType, subject, difficulty, count, pyqExa
   const raw = Array.from({ length: count }, () => {
     n += 1;
     return {
-      text: `AI ${subject} ${difficulty} #${n}`,
+      // Two words that change with n: real questions differ in more than a
+      // number, and the gate refuses a fourth question of one pattern.
+      text: `AI ${subject} ${difficulty} #${n} (${STUB_WORDS[n % STUB_WORDS.length]} ${STUB_WORDS[(n * 7 + 3) % STUB_WORDS.length]})`,
       // A different answer each time: one paper must not ask the same thing
       // with the same answer twice (sameFactInPaper).
       options: [`${n}1`, `${n}2`, `${n}3`, `${n}4`],

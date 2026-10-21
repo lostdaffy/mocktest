@@ -10,16 +10,17 @@ const path = require("path");
 const SERVER = require("path").resolve(__dirname, "..");
 const fetchPath = require.resolve("node-fetch", { paths: [SERVER] });
 
+const STUB_WORDS = "apples rivers trains clocks coins ladders gardens pipes boats candles shelves tickets bridges lamps kites wells towers drums maps seeds rockets parrots marbles tunnels baskets mirrors bottles engines blankets pencils".split(" ");
 let generated = 0;
 
 function makeQuestion(kind, n) {
   const base = {
-    text: `${kind} question number ${n} about percentages and ratios`,
+    text: `${kind} question number ${n} about percentages and ratios (${STUB_WORDS[n % STUB_WORDS.length]} ${STUB_WORDS[(n * 7 + 3) % STUB_WORDS.length]})`,
     textHi: `${kind} हिंदी प्रश्न ${n} प्रतिशत और अनुपात`,
-    options: [`RIGHT answer ${n}`, `wrong one ${n}`, `wrong two ${n}`, `wrong three ${n}`],
+    options: [`RIGHT answer ${n} ${STUB_WORDS[n % STUB_WORDS.length]}`, `wrong one ${n}`, `wrong two ${n}`, `wrong three ${n}`],
     optionsHi: [`सही उत्तर ${n}`, `गलत एक ${n}`, `गलत दो ${n}`, `गलत तीन ${n}`],
     correctIndex: 0,
-    solution: `Work it out step by step: the answer comes to RIGHT answer ${n} because of the ratio.`,
+    solution: `Work it out step by step: the answer comes to RIGHT answer ${n} ${STUB_WORDS[n % STUB_WORDS.length]} because of the ratio.`,
     solutionHi: `चरण दर चरण हल करें, उत्तर ${n} आता है क्योंकि अनुपात ऐसा है।`,
   };
   if (kind === "NOHINDI") return { ...base, textHi: "", optionsHi: [], solutionHi: "" };

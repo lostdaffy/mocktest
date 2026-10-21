@@ -275,6 +275,16 @@ const QUESTIONS_PER_CALL = Number(process.env.GEMINI_QUESTIONS_PER_CALL) || 6;
 // one go starts rubber-stamping the tail.
 const VERIFY_PER_CALL = Number(process.env.GEMINI_VERIFY_PER_CALL) || 6;
 
+// The language a working is written in - run by services/mathCheck.js. One
+// description for the setter and the checker, so both can be proved the same
+// way (services/answerProof.js).
+const WORKING_LANGUAGE = `- Arithmetic: + - * / ^ ( ), a postfix % (20% = 0.2), pi, and sqrt cbrt abs round floor ceil pow min max hcf lcm.
+- Number theory: mod(a, b), powmod(b, e, m) for huge powers, unitdigit(b, e), fact(n), ncr(n, r), npr(n, r), tau(n) = number of factors, sigma(n) = sum of factors, phi(n), isprime(n), digitsum(n).
+- Counting over a range, with a letter of your choice: count(n, a, b, condition), sum(n, a, b, value), product(n, a, b, value), first(n, a, b, condition), last(n, a, b, condition). Conditions use == != < <= > >= and / or / not.
+- Examples: "1200 * 12 * 3 / 100", "(450 - 360) / 360 * 100", "lcm(12, 18, 24)", "count(n, 1, 2000, mod(n, 2) != 0 and mod(n, 3) != 0)", "powmod(3, 256, 13)", "mod(unitdigit(24, 57) * unitdigit(37, 49), 10)", "sum(d, 1, 2520, (mod(2520, d) == 0 and mod(d, 2) == 1) * d)", "tau(540)", "first(n, 1000, 9999, mod(n, 23) == 0)".
+- Never just write the answer ("458" alone is refused): the formula must WORK IT OUT.`;
+const isNumberOptionForProof = (o) => require("./mathCheck").isNumberOption(o);
+
 // "What is 15% of 240?" and "what is 15 % of 240" are the same question.
 const normalizeText = (t) =>
   String(t || "")
@@ -437,7 +447,9 @@ Use this ONLY to match the level, the topic weight, the formats and the style. W
   const isMaths = /^(math|गणित|quant|arith|numerical)/i.test(String(subject || ""));
   const formulaRule = isMaths
     ? `
-- "formula": the plain arithmetic that gives the correct answer, written with ONLY the numbers that appear in the question (plus unit constants like 100, 60, 1000, 12, 365, 18/5) - e.g. "1200 * 12 * 3 / 100", "(450 - 360) / 360 * 100", "lcm(12, 18, 24)", "sqrt(144) + 3^2". Allowed: + - * / ^ ( ) sqrt cbrt pow abs round min max hcf lcm pi. No letters, no "x =", no units. It is run by a computer and must equal the marked option's number exactly; a question whose formula does not is thrown out. If the answer is not one number (a ratio like 3:4, an expression, a statement), set "formula" to "".`
+- "formula": the working that gives the correct answer, as ONE expression a computer runs, written with ONLY the numbers that appear in the question (plus unit constants like 100, 60, 1000, 12, 365). It must equal the marked option's number exactly; a question whose formula does not is thrown out. A separate checker writes its own formula, and both must agree. If the answer is not one number (a ratio like 3:4, an expression, a statement), set "formula" to "".
+${WORKING_LANGUAGE}
+- Write "solution" and "formula" BEFORE choosing the options: work the answer out first, then build the four options around it (the right one plus three plausible wrong ones, e.g. the result of a common mistake).`
     : "";
   const shapeReminder = `- This holds for EVERY format, including "spot the error", "fill in the blank" and cloze questions: exactly 4 options and exactly 4 Hindi options, always.
 - Where the options are segment labels (A / B / C / D), still return all four as the four options, and repeat them as the four Hindi options.`;
@@ -469,6 +481,9 @@ MISTAKES FOUND IN EARLIER BATCHES - never make these:
 - No "who is the current / वर्तमान में / हाल ही में X" questions about office-holders (CEC, CJI, ministers, governors, chiefs) or "latest" rankings - they go out of date. Ask a fixed fact instead (who was the first, which article, which year).
 - Current affairs only from events you are certain of, with the year stated in the question; never guess a theme, rank or winner.
 - Maths: the numbers given must be consistent with each other. HCF and LCM of a pair: the HCF must divide the LCM, and the other number (HCF x LCM / given number) must give back that HCF and LCM. Work every sum out fully and make sure the marked option is exactly that result.
+- "How many ... between A and B": if A or B would itself be counted, say "(both included)" or "(excluding both)", or choose ends that would not be counted - otherwise two answers are defensible.
+- Never Yes / No / Maybe options in a maths question - ask for something to work out.
+- The Hindi question and options must carry exactly the same numbers as the English ones.
 - Place value is the digit times its position (in 58439 the 4 is in the hundreds place: 400). Simple interest from two amounts: principal = first amount - (yearly interest x its years).
 - Kinship words: mother's brother's child is ममेरा/ममेरी, father's brother's child is चचेरा/चचेरी, daughter's daughter is नातिन (not पौत्री), son's daughter is पौत्री.
 - Hindi/Sanskrit: spell every word and form correctly (संस्कृत, वृक्षात्, कादम्बरी); never mix Latin letters into a Hindi word; a sandhi/samas/pratyay question must have exactly one option that fits the rule asked.
@@ -493,13 +508,13 @@ ${avoidTexts.map((t, i) => `${i + 1}. ${t}`).join("\n")}`
   {
     "text": ${hindiMedium ? '"प्रश्न हिंदी में"' : '"question in English"'},
     "textHi": "question in Hindi",
+    "topic": "which ONE of the listed topics this question belongs to",
+    "solution": ${hindiMedium ? '"संक्षिप्त हल हिंदी में"' : '"short English solution"'},
+    "solutionHi": "short Hindi solution",${isMaths ? `
+    "formula": "1200 * 12 * 3 / 100",` : ""}
     "options": ${hindiMedium ? '["विकल्प 1", "विकल्प 2", "विकल्प 3", "विकल्प 4"]' : '["A", "B", "C", "D"]'},
     "optionsHi": ${hindiMedium ? '["विकल्प 1", "विकल्प 2", "विकल्प 3", "विकल्प 4"]' : '["A-hi", "B-hi", "C-hi", "D-hi"]'},
-    "correctIndex": 0,
-    "solution": ${hindiMedium ? '"संक्षिप्त हल हिंदी में"' : '"short English solution"'},
-    "solutionHi": "short Hindi solution",
-    "topic": "which ONE of the listed topics this question belongs to"${isMaths ? `,
-    "formula": "1200 * 12 * 3 / 100"` : ""}
+    "correctIndex": 0
   }
 ]${formulaRule}`;
 
@@ -650,14 +665,26 @@ async function verifyQuestions(questions) {
   // This is the difference between a gate that catches bad questions and one
   // that mostly flags good ones - 62 of the first 426 generated were held
   // back as disputed, most of them correct.
+  // Where the answer is a number, the checker also writes its working as a
+  // formula, and code runs it (services/answerProof.js). A checker's slip in
+  // arithmetic or counting was the commonest reason a correct question was
+  // thrown out - 4 of 6 disputes on 2026-10-21 - and in code it cannot slip.
+  const anyNumeric = questions.some((q) => (q.options || []).every(isNumberOptionForProof));
+  const formulaAsk = anyNumeric
+    ? `
+
+When the options are numbers, ALSO give "formula": your working as one expression a computer can run, using ONLY numbers from the question:
+${WORKING_LANGUAGE}
+Leave "formula" as "" when the answer is not a single number.`
+    : "";
   const prompt = `Solve each multiple-choice question below independently.
 
 For EACH question, write out the actual working first - the steps, the arithmetic - and only then give the answer. Do not skip to the answer.
 
-${list}
+${list}${formulaAsk}
 
 Return ONLY a valid JSON array with one entry per question, in the same order, no extra text:
-[{ "q": 1, "working": "<your steps, briefly>", "answer": "<exact text of the correct option, copied>", "correctIndex": <0-3>, "confidence": <0.0-1.0> }]`;
+[{ "q": 1, "working": "<your steps, briefly>",${anyNumeric ? ' "formula": "<runnable working or empty>",' : ""} "answer": "<exact text of the correct option, copied>", "correctIndex": <0-3>, "confidence": <0.0-1.0> }]`;
 
   let answers = [];
   try {
@@ -684,6 +711,7 @@ Return ONLY a valid JSON array with one entry per question, in the same order, n
       matches: agrees,
       aiSaid: saidText,
       confidence: answer.confidence ?? (agrees ? 0.9 : 0.3),
+      checkerFormula: typeof answer.formula === "string" ? answer.formula.slice(0, 400) : "",
     };
   });
 }

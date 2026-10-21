@@ -26,7 +26,7 @@ const { plainMaths, plainMathsUpdate } = require("./mathNotation");
 const HARD_FAULTS = [/must have exactly 4 options/, /an option is empty/, /correctIndex out of range/];
 // A practice test filled from a spreadsheet is held to the gate's bar: these
 // are refused too, not just reported.
-const STRICT_FAULTS = [/duplicate options/, /maths check/, /maths working/, /solution never arrives/, /mixed script/];
+const STRICT_FAULTS = [/duplicate options/, /maths check/, /maths working/, /solution never arrives/, /mixed script/, /^ambiguous:/, /^translation:/, /Yes \/ No \/ Maybe/];
 
 /**
  * The correct answer as a person writes it: A-D, or 1-4 where 1 is the FIRST

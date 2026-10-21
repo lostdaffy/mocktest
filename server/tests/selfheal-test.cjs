@@ -211,7 +211,7 @@ async function api(method, p, { body, token } = {}) {
   require(STUB);
   const { createVerifiedQuestions } = require(path.join(SERVER, "services/questionFactory"));
   const { questionKey } = require(path.join(SERVER, "services/validationPipeline"));
-  const twin = "AI EVS easy #1";
+  const twin = "AI EVS easy #1 (rivers shelves)"; // the stub adds two words that change with n
   const inGk = await db.collection("questions").insertOne({
     text: twin, textKey: questionKey(twin), subject: "GK", topic: "GK", options: ["a", "b", "c", "d"], correctIndex: 0, status: "published",
   });
@@ -226,7 +226,7 @@ async function api(method, p, { body, token } = {}) {
   // ...and so is the same fact in other words with the same answer. That
   // call used the stub's #1-#6; its next question is #7, answer "71".
   const sameFact = await db.collection("questions").insertOne({
-    text: "Which EVS topic is easy and important?", textKey: questionKey("Which EVS topic is easy and important?"),
+    text: "Which EVS topic is easy and important (pipes marbles)?", textKey: questionKey("Which EVS topic is easy and important (pipes marbles)?"),
     subject: "GK", topic: "GK", options: ["71", "b1", "c1", "d1"], correctIndex: 0, status: "published",
   });
   const built2 = await createVerifiedQuestions({
@@ -235,7 +235,7 @@ async function api(method, p, { body, token } = {}) {
   });
   const texts2 = (await db.collection("questions").find({ _id: { $in: built2.ids } }).toArray()).map((q) => q.text);
   check("the same fact asked in other words, same answer, is not added either",
-    texts2.length === 2 && !texts2.includes("AI EVS easy #7") && built2.duplicates >= 1, JSON.stringify({ texts2, dup: built2.duplicates }));
+    texts2.length === 2 && !texts2.includes("AI EVS easy #7 (pipes marbles)") && built2.duplicates >= 1, JSON.stringify({ texts2, dup: built2.duplicates }));
 
   // ---- a PUBLISHED mock that lost questions to a review is refilled too,
   //      section by section (the Super TET mocks were published mid-review)

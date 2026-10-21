@@ -47,6 +47,9 @@ const questionSchema = new mongoose.Schema(
       index: true,
     },
     aiConfidenceScore: { type: Number, min: 0, max: 1 }, // from self-verification step
+    // "proven": two separate workings, run in code, both land on the key
+    // (services/answerProof.js). Absent when there was nothing to run.
+    answerProof: { type: String, enum: ["proven", "disproved"] },
     flagReason: { type: String },
     reportCount: { type: Number, default: 0 },
 

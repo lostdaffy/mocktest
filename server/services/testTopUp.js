@@ -106,11 +106,15 @@ async function refillTest(testId, { max } = {}) {
   // as it is made, so a later batch failing keeps what an earlier one added.
   let added = 0;
   let why;
+  // The test's own questions, so a top-up neither repeats one of them nor
+  // adds a fourth question of a pattern the test already has three of.
+  const inTest = [...test.questions];
   while (added < needed) {
     const ask = Math.min(PRACTICE_BATCH, needed - added);
     let built;
     try {
-      built = await createVerifiedQuestions({ needed: ask, tag, generateParams });
+      built = await createVerifiedQuestions({ needed: ask, tag, generateParams, inTest });
+      inTest.push(...built.ids);
     } catch (err) {
       why = err.message;
       break;

@@ -5,6 +5,8 @@ const { arguesWithItself } = require("../utils/selfDoubt");
 const { solutionReachesTheAnswer } = require("../utils/answerAgrees");
 const { checkArithmetic, checkFormula, isNumberOption } = require("./mathCheck");
 const { plainMathsUpdate } = require("./mathNotation");
+const { qualityIssues } = require("./qualityRules");
+const { proveAnswer } = require("./answerProof");
 const IS_MATHS = /^(math|गणित|quant|arith|numerical)/i;
 // Phrases that put a fact on today's date. "वर्तमान आयु" is a sum and
 // "वर्तमान भारतीय राज्य" a place on the map, so only "at present / currently /
@@ -353,6 +355,11 @@ function ruleBasedCheck(q) {
     if ([q.text, q.textHi].some((t) => DATED_PHRASE.test(String(t || "")))) issues.push("time-bound fact: asks about 'now' or 'recently'");
   }
 
+  // Faults found by reading real questions (services/qualityRules.js): a
+  // "between" count with two defensible answers, a maths question answered
+  // Yes / No / Maybe, a number that changes in the Hindi translation.
+  issues.push(...qualityIssues(q, { maths: IS_MATHS.test(String(q.subject || "")) }));
+
   // The app is bilingual and most of these students read Hindi first. A
   // question without Hindi is half a question for them.
   const optionsHi = (q.optionsHi || []).map((o) => String(o ?? "").trim());
@@ -439,6 +446,26 @@ function readableFailure(error) {
 // Low-risk (AI agrees with high confidence) -> ready to use.
 // High-risk (AI disagrees or is unsure)     -> human review queue.
 function applyVerification(question, verification) {
+  // A numeric maths answer is settled in code where it can be: the setter's
+  // working and the checker's working are both run (services/answerProof.js).
+  // Two workings landing on the key outrank either model's say-so; a working
+  // landing anywhere else is a dispute whatever the checker's words said.
+  const numeric = IS_MATHS.test(String(question.subject || "")) && (question.options || []).every(isNumberOption);
+  if (numeric && !verification.error) {
+    const proof = proveAnswer(question, verification.checkerFormula);
+    if (proof.verdict === "proven") {
+      return { ...question, status: "published", aiConfidenceScore: 1, answerProof: "proven" };
+    }
+    if (proof.verdict === "disproved") {
+      return {
+        ...question,
+        status: "under_review",
+        flagReason: `AI verification disagreed - worked in code, ${proof.reason}`,
+        aiConfidenceScore: 0,
+        answerProof: "disproved",
+      };
+    }
+  }
   if (verification.matches && verification.confidence >= 0.75) {
     return { ...question, status: "published", aiConfidenceScore: verification.confidence };
   }
@@ -511,6 +538,7 @@ async function runValidationPipeline(question) {
 }
 
 module.exports = {
+  applyVerification,
   ruleBasedCheck,
   looksLikeRepeat,
   sameFactInPaper,

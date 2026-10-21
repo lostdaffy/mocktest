@@ -79,6 +79,28 @@ check("the same pattern with new numbers is one pattern", R.samePattern("How man
 check("odd factors is another pattern", !R.samePattern("How many even factors does 5,040 have?", "How many odd factors does 5,040 have?"));
 check("a different question is another pattern", !R.samePattern("How many even factors does 5,040 have?", "What is the sum of the factors of 5,040?"));
 
+// ---- the gate's decision: code outranks a model's say-so
+const { applyVerification, ruleBasedCheck } = require(path.join(SERVER, "services/validationPipeline"));
+const mq = { ...q, subject: "Maths", text: "How many numbers from 1 to 2,000 are divisible by none of 2, 3, 5 and 7?" };
+const goodChecker = "2000 - count(n,1,2000, mod(n,2)==0 or mod(n,3)==0 or mod(n,5)==0 or mod(n,7)==0)";
+let d = applyVerification(mq, { matches: false, aiSaid: "457", confidence: 0.4, checkerFormula: goodChecker });
+check("a right key the checker's words dispute is still published when both workings prove it", d.status === "published" && d.answerProof === "proven", d.flagReason);
+d = applyVerification(mq, { matches: true, aiSaid: "458", confidence: 0.95, checkerFormula: "count(n,1,2000,mod(n,2)!=0) - 543" });
+check("a key the checker 'agrees' with is held when its own working lands elsewhere", d.status === "under_review" && /worked in code/.test(d.flagReason), d.flagReason);
+d = applyVerification(mq, { matches: true, aiSaid: "458", confidence: 0.95, checkerFormula: "" });
+check("with only one working the model's verdict decides, as before", d.status === "published" && !d.answerProof);
+d = applyVerification({ ...mq, subject: "GK", options: ["Delhi", "Agra", "Pune", "Goa"] }, { matches: true, aiSaid: "Delhi", confidence: 0.9 });
+check("non-maths questions are judged as before", d.status === "published");
+d = applyVerification(mq, { matches: false, aiSaid: null, confidence: 0, error: "quota", checkerFormula: goodChecker });
+check("a checker that failed proves nothing", d.status === "under_review");
+
+// ---- and the new rules reach the gate itself
+const base = { subject: "Maths", textHi: "प्रश्न", options: ["16", "17", "15", "18"], optionsHi: ["16", "17", "15", "18"], correctIndex: 0, solution: "From 312 to 492 there are 16 multiples of 12 = 16.", solutionHi: "312 से 492 तक 16 गुणज = 16।" };
+const gate = (over) => ruleBasedCheck({ ...base, ...over }).issues;
+check("the gate refuses an ambiguous 'between'", gate({ text: "How many multiples of 12 lie between 300 and 500?" }).some((i) => /^ambiguous:/.test(i)));
+check("the gate refuses a number changed in Hindi", gate({ text: "How many multiples of 12 lie between 310 and 500?", textHi: "310 और 600 के बीच 12 के कितने गुणज हैं?" }).some((i) => /^translation:/.test(i)));
+check("the gate passes the clear version", !gate({ text: "How many multiples of 12 lie between 310 and 500?", textHi: "310 और 500 के बीच 12 के कितने गुणज हैं?" }).some((i) => /^(ambiguous|translation):/.test(i)));
+
 const failed = results.filter((x) => !x.ok);
 console.log(`\n${results.length - failed.length}/${results.length} passed`);
 process.exit(failed.length ? 1 : 0);

@@ -8,6 +8,7 @@ const { runValidationPipelineBatch, questionKey, looksLikeRepeat, sameFactInPape
 const visualGen = require("./visualGenerator");
 const { visualSignature, figureKey } = require("./visuals");
 const { attachDrawings } = require("./figureImage");
+const { patternCount, MAX_PER_PATTERN } = require("./qualityRules");
 
 // How many extra to ask for each round. A round that asks for exactly what is
 // missing comes back short the moment anything is rejected, and the test ends
@@ -75,13 +76,16 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
     .map((t) => (typeof t === "string" ? t : t?.topic))
     .filter(Boolean);
   const topicFilter = topicNames.length ? { $in: topicNames } : generateParams.topic;
-  const bankTexts = (
-    await Question.find({ subject: generateParams.subject, topic: topicFilter })
-      .select("text")
-      .sort({ createdAt: -1 })
-      .limit(300)
-      .lean()
-  ).map((q) => q.text);
+  // The whole chapter, not the latest few hundred: Number System's bank holds
+  // four thousand questions, and a rewording of one written months ago is as
+  // much a repeat as one written yesterday - 62 such pairs were sitting in
+  // its tests on 2026-10-21 because only the newest 300 were compared.
+  // Texts only, and the repeat check skips any question whose numbers differ
+  // before it reads a word, so four thousand is cheap.
+  const scope = tag.chapter
+    ? { subject: generateParams.subject, status: { $ne: "rejected" }, $or: [{ topic: topicFilter }, { chapter: tag.chapter }] }
+    : { subject: generateParams.subject, status: { $ne: "rejected" }, topic: topicFilter };
+  const bankTexts = (await Question.find(scope).select("text").sort({ createdAt: -1 }).limit(20000).lean()).map((q) => q.text);
   const alreadyAsked = bankTexts.slice(0, 40);
 
   const drop = async (q, reason, detail, repairAttempted = false) => {
@@ -205,6 +209,17 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
         duplicates++;
         await drop(q, "reworded", `already asked as: ${String(reworded.of).slice(0, 120)}`);
         continue;
+      }
+
+      // One idea drilled over and over with new numbers: at most a few
+      // questions of one pattern in a paper (services/qualityRules.js).
+      if (!q.visual?.kind) {
+        const paperSoFar = [...paperTexts, ...accepted.map((a) => a.text), ...savedRound.map((s) => s.text)];
+        if (patternCount(q.text, paperSoFar) >= MAX_PER_PATTERN) {
+          duplicates++;
+          await drop(q, "same_pattern", `the paper already has ${MAX_PER_PATTERN} questions of this pattern`);
+          continue;
+        }
       }
 
       // The same fact asked again elsewhere in the paper, with the same answer.
