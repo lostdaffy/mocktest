@@ -98,6 +98,20 @@ const MATHS_DIFFERENT = [
   ["How many two-digit numbers are divisible by the product of their own digits?", "How many two-digit numbers are divisible by the sum of their own digits?"],
   ["If the four-digit number 7ab6 is divisible by 66, what is the value of a − b?", "If the four-digit number 7a6b is divisible by 66, what is the value of a + b?"],
   ["The product of any five consecutive natural numbers is always divisible by:", "The product of any four consecutive natural numbers is always divisible by:"],
+  // Number System chapter health, 2026-10-21: pairs it called repeats.
+  ["What is the remainder when (123 + 456) is divided by 7?", "What is the remainder when 123 × 456 is divided by 7?"],
+  ["What is the unit digit of 3⁴ × 7⁴?", "What is the unit digit of 7⁴ − 3⁴?"],
+  ["For any natural number n, what is the unit digit of 6ⁿ + 5ⁿ?", "For any natural number n, what is the unit digit of 6ⁿ − 5ⁿ?"],
+  ["What is the remainder when 3¹⁰⁰ is divided by 4?", "What is the remainder when 4¹⁰⁰ is divided by 3?"],
+  ["What is the unit digit of 5⁵ + 6⁶?", "What is the unit digit of 5⁶ + 6⁵?"],
+  ["What is the remainder when 1! + 2! + 3! + ... + 100! is divided by 7?", "What is the remainder when 1 + 2 + 3 + ... + 100 is divided by 7?"],
+  ["How many zeros are there at the end of (100! − 99!)?", "How many zeros are there at the end of 99! + 100!?"],
+  ["How many different digits can occur as the unit digit of a perfect square?", "How many different digits can occur as the unit digit of a perfect cube?"],
+  ["How many three-digit numbers are divisible by 7?", "What is the smallest three-digit number divisible by 7?"],
+  ["How many three-digit numbers are divisible by 9?", "How many three-digit numbers with all digits different are divisible by 9?"],
+  ["Find the unit digit of 7³.", "The unit digit of x³ is 7. What is the unit digit of x?"],
+  ["What is the unit digit of the product of all prime numbers less than 100?", "What is the unit digit of the product of all odd prime numbers less than 100?"],
+  ["What is the sum of the reciprocals of all the divisors of 360?", "Find the sum of all divisors (factors) of 360."],
 ];
 MATHS_DIFFERENT.forEach(([a, b], i) => check(`a different maths question is not a repeat (${i + 1})`, !looksLikeRepeat(a, [b]).repeat && !looksLikeRepeat(b, [a]).repeat, a));
 const MATHS_SAME = [
@@ -107,6 +121,12 @@ const MATHS_SAME = [
   // divisors are factors, GCD is HCF
   ["Find the number of total divisors of the number 120.", "Find the number of total factors of 120."],
   ["What is the GCD of 48 and 72?", "Find the HCF of 48 and 72."],
+  // and the real repeats chapter health found must stay repeats
+  ["Find the unit digit in the product 7 × 12 × 15 × 19.", "Find the unit digit of the product 7 x 12 x 15 x 19."],
+  ["What is the unit digit of 7⁹⁵ - 3⁵⁸?", "What is the unit digit of the expression 7⁹⁵ - 3⁵⁸?"],
+  ["For any natural number n, what is the unit digit of 5ⁿ + 6ⁿ + 1?", "For any natural number n, what is the unit digit of 1ⁿ + 5ⁿ + 6ⁿ?"],
+  ["The sum of three consecutive odd numbers is 57. What is the middle number?", "The sum of three consecutive odd numbers is 57. What is the largest of these numbers?"],
+  ["How many divisors of 10800 are perfect squares?", "Find the number of divisors of 10800 which are perfect squares."],
 ];
 MATHS_SAME.forEach(([a, b], i) => check(`a reworded maths question is a repeat (${i + 1})`, looksLikeRepeat(a, [b]).repeat, a));
 // Which factors it asks about changes the question.

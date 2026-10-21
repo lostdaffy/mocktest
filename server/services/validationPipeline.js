@@ -149,8 +149,41 @@ const FACTOR_WORD = /\b(factors?|divisors?)\b|गुणनखंड/i;
 const FACTOR_KIND = /\b(even|odd|prime|composite|perfect[- ]square|square|cube|common|distinct|different)\s+(?:prime\s+)?(?:factors?|divisors?)\b|(सम|विषम|अभाज्य|भाज्य|उभयनिष्ठ|भिन्न)\s+(?:अभाज्य\s+)?गुणनखंड/i;
 const factorKind = (s) => { if (!FACTOR_WORD.test(s)) return ""; const m = FACTOR_KIND.exec(s); return m ? (m[1] || m[2]).toLowerCase() : "all"; };
 const differ = (f, a, b) => f(a) && f(b) && f(a) !== f(b);
+// The same numbers with another sign between them: "123 + 456" is not
+// "123 × 456", "7⁴ − 3⁴" is not "3⁴ × 7⁴" (Number System chapter health,
+// 2026-10-21 - 36 of its 72 "repeats" were pairs like these).
+const SUPS = "⁰¹²³⁴⁵⁶⁷⁸⁹ⁿ";
+const timesX = (s) => String(s).replace(/(\d)\s*[xX*]\s*(\d)/g, "$1 × $2");
+const signs = (s) => {
+  const t = timesX(s);
+  const near = `[\\d${SUPS})!]\\s*`;
+  return [["+", /\+/], ["−", new RegExp(`${near}[-−]\\s*[\\d(]`)], ["×", /×/], ["÷", /÷/]].filter(([, re]) => re.test(t)).map(([k]) => k).join("");
+};
+// Powers as written, base and exponent: 3¹⁰⁰ ÷ 4 is not 4¹⁰⁰ ÷ 3, 5⁶ + 6⁵ is
+// not 5⁵ + 6⁶. One list inside the other ("1ⁿ + 5ⁿ + 6ⁿ" / "5ⁿ + 6ⁿ + 1")
+// can still be a rewording, so only two lists that each have a power the
+// other lacks count as different.
+const powers = (s) => new Set(String(s).match(new RegExp(`(\\d+|\\))[${SUPS}]+`, "g")) || []);
+const powersDiffer = (a, b) => {
+  const pa = powers(a), pb = powers(b);
+  if (!pa.size || !pb.size) return false;
+  return [...pa].some((p) => !pb.has(p)) && [...pb].some((p) => !pa.has(p));
+};
+// Squares are not cubes, a sum of factorials is not a sum of numbers, a
+// count is not the smallest or the largest, "with all digits different" is
+// its own question, and "x³ ends in 7" is not "7³".
+const powerKind = (s) => (/\bsquares?\b|वर्ग/i.test(s) ? "square" : "") + (/\bcubes?\b|घन/i.test(s) ? "cube" : "");
+const wants = (s) => (/\bhow many\b|कितनी|कितने/i.test(s) ? "count" : extreme(s));
+const FACTORIAL = /\d\s*!/;
+const DISTINCT_DIGITS = /\b(all|its)\s+digits\s+(are\s+)?(different|distinct)\b|\bdistinct digits\b|अंक\s+भिन्न/i;
+const VARIABLE = /\b[xyz]\b/i;
+const RECIPROCAL = /reciprocal|व्युत्क्रम/i;
+const hasVariable = (s) => VARIABLE.test(timesX(s).replace(/×/g, " "));
 const turnsAround = (a, b) =>
-  differ(extreme, a, b) || differ(parity, a, b) || differ(asks, a, b) || differ(operations, a, b) || differ(factorKind, a, b) || NEGATED.test(a) !== NEGATED.test(b);
+  differ(extreme, a, b) || differ(parity, a, b) || differ(asks, a, b) || differ(operations, a, b) || differ(factorKind, a, b) || NEGATED.test(a) !== NEGATED.test(b) ||
+  differ(signs, a, b) || powersDiffer(a, b) || differ(powerKind, a, b) || differ(wants, a, b) ||
+  FACTORIAL.test(a) !== FACTORIAL.test(b) || DISTINCT_DIGITS.test(a) !== DISTINCT_DIGITS.test(b) || hasVariable(a) !== hasVariable(b) ||
+  parity(a) !== parity(b) || RECIPROCAL.test(a) !== RECIPROCAL.test(b);
 
 function looksLikeRepeat(text, existingTexts = []) {
   const signature = numberSignature(text);
