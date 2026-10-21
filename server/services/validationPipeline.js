@@ -143,9 +143,14 @@ const asks = (s) => (/\bhow many\b|कितनी|कितने/i.test(s) ? "
 // product of its digits" is not "divisible by the sum of its digits".
 const OPERATIONS = [["sum", /\bsum\b|योग/i], ["product", /\bproduct\b|गुणनफल/i], ["difference", /\bdifference\b|अंतर/i], ["average", /\baverage\b|औसत/i]];
 const operations = (s) => OPERATIONS.filter(([, re]) => re.test(s)).map(([k]) => k).join("+");
+// Which factors a question is about: "how many even factors of 5,040" is
+// not "how many factors of 5,040", though only one word differs.
+const FACTOR_WORD = /\b(factors?|divisors?)\b|गुणनखंड/i;
+const FACTOR_KIND = /\b(even|odd|prime|composite|perfect[- ]square|square|cube|common|distinct|different)\s+(?:prime\s+)?(?:factors?|divisors?)\b|(सम|विषम|अभाज्य|भाज्य|उभयनिष्ठ|भिन्न)\s+(?:अभाज्य\s+)?गुणनखंड/i;
+const factorKind = (s) => { if (!FACTOR_WORD.test(s)) return ""; const m = FACTOR_KIND.exec(s); return m ? (m[1] || m[2]).toLowerCase() : "all"; };
 const differ = (f, a, b) => f(a) && f(b) && f(a) !== f(b);
 const turnsAround = (a, b) =>
-  differ(extreme, a, b) || differ(parity, a, b) || differ(asks, a, b) || differ(operations, a, b) || NEGATED.test(a) !== NEGATED.test(b);
+  differ(extreme, a, b) || differ(parity, a, b) || differ(asks, a, b) || differ(operations, a, b) || differ(factorKind, a, b) || NEGATED.test(a) !== NEGATED.test(b);
 
 function looksLikeRepeat(text, existingTexts = []) {
   const signature = numberSignature(text);

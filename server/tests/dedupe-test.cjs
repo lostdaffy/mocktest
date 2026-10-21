@@ -109,6 +109,8 @@ const MATHS_SAME = [
   ["What is the GCD of 48 and 72?", "Find the HCF of 48 and 72."],
 ];
 MATHS_SAME.forEach(([a, b], i) => check(`a reworded maths question is a repeat (${i + 1})`, looksLikeRepeat(a, [b]).repeat, a));
+// Which factors it asks about changes the question.
+[["How many even factors does 5,040 have?", "How many factors does 5,040 have?"], ["How many odd factors does 540 have?", "How many factors does 540 have?"], ["How many composite factors does 360 have?", "How many factors does 360 have?"]].forEach(([a, b], i) => check(`a different kind of factor is not a repeat (${i + 1})`, !looksLikeRepeat(a, [b]).repeat, a));
 
 // ---- one paper asking the same fact twice, across sections. Real pairs
 //      from the first two Super TET mocks; the bank check (one subject at a
