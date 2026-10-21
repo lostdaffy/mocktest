@@ -1,0 +1,71 @@
+# A full copy of the database every night, kept for 30 days.
+#
+# MongoDB Atlas's free tier takes no backups of its own - before this, the
+# last copy anywhere was a month old (27 Sept 2026). This runs the same
+# scripts/backupDb.js you can run by hand, encrypts the result (it holds
+# students' phone numbers and accounts), and keeps it as a downloadable
+# artifact of the run.
+#
+# Needs two repository secrets (Settings -> Secrets and variables -> Actions):
+#   MONGO_URI        - the same connection string the server uses
+#   BACKUP_PASSWORD  - any long passphrase; it is the only way to open a backup
+#
+# To restore, see server/RUNBOOK.md ("Restoring a nightly backup").
+name: Database backup
+
+on:
+  schedule:
+    - cron: "0 21 * * *" # 02:30 IST, when nobody is studying
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Both secrets are set
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          BACKUP_PASSWORD: ${{ secrets.BACKUP_PASSWORD }}
+        run: |
+          if [ -z "$MONGO_URI" ] || [ -z "$BACKUP_PASSWORD" ]; then
+            echo "::error::Add the MONGO_URI and BACKUP_PASSWORD repository secrets first (Settings -> Secrets and variables -> Actions)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install the server's packages
+        working-directory: server
+        run: npm ci --omit=dev --no-audit --no-fund
+
+      - name: Copy every collection
+        working-directory: server
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+        run: node scripts/backupDb.js --out "$RUNNER_TEMP/rankveer-db"
+
+      - name: Pack and encrypt
+        env:
+          BACKUP_PASSWORD: ${{ secrets.BACKUP_PASSWORD }}
+        run: |
+          STAMP=$(TZ=Asia/Kolkata date +%Y-%m-%d_%H-%M)
+          tar -czf "$RUNNER_TEMP/db.tgz" -C "$RUNNER_TEMP" rankveer-db
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt \
+            -in "$RUNNER_TEMP/db.tgz" -out "$RUNNER_TEMP/rankveer-db-$STAMP.tgz.enc" -pass env:BACKUP_PASSWORD
+          rm -rf "$RUNNER_TEMP/db.tgz" "$RUNNER_TEMP/rankveer-db"
+          echo "STAMP=$STAMP" >> "$GITHUB_ENV"
+          ls -la "$RUNNER_TEMP"/rankveer-db-*.tgz.enc
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rankveer-db-${{ env.STAMP }}
+          path: ${{ runner.temp }}/rankveer-db-*.tgz.enc
+          retention-days: 30
+          if-no-files-found: error

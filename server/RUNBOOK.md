@@ -62,6 +62,33 @@ npm run restore -- backups/2026-09-24T18-00 --apply --replace   # wipe first, ex
 Default is additive: anything already in the database is left alone. `--replace`
 deletes first — only use it when you want that backup back exactly as it was.
 
+### Nightly automatic backup (GitHub Actions)
+
+`.github/workflows/db-backup.yml` runs the same backup every night at 02:30 IST
+(GitHub's schedule can run late — that is fine for a backup) and keeps each one
+for 30 days as an **encrypted** artifact of the run. It needs two repository
+secrets, set once in GitHub → Settings → Secrets and variables → Actions:
+
+| Secret | Value |
+|---|---|
+| `MONGO_URI` | the same connection string as on Render |
+| `BACKUP_PASSWORD` | a long passphrase — write it down somewhere safe, it is the only way to open a backup |
+
+Test it once: GitHub → Actions → "Database backup" → **Run workflow**.
+
+### Restoring a nightly backup
+
+1. GitHub → Actions → "Database backup" → pick the night → download the artifact (a zip).
+2. Unzip it, then decrypt and unpack (Git Bash on Windows has `openssl` and `tar`):
+
+```
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in rankveer-db-<date>.tgz.enc -out db.tgz
+tar -xzf db.tgz          # -> rankveer-db/
+```
+
+3. From the server folder: `npm run restore -- ../rankveer-db` (report only), then add
+   `--apply` as above.
+
 ---
 
 ## Indexes
