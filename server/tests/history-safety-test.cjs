@@ -150,6 +150,19 @@ const good = (n, extra = {}) => ({
   r = await api("GET", `/quality/questions/${q1}/history`, { token });
   check("a rejection is recorded in the history", (r.json.history || []).some((h) => h.action === "retire" && /Wrong key/.test(h.note || "")));
 
+  // ---- an applied AI replacement can be undone
+  const oldQ = String((await db.collection("questions").insertOne(good(7, { status: "rejected" }))).insertedId);
+  const newQ = String((await db.collection("questions").insertOne(good(8))).insertedId);
+  const paperB = await db.collection("tests").insertOne({ title: "Paper B", type: "practice", questions: [oid(newQ)], publishStatus: "published", createdAt: new Date() });
+  await db.collection("questionrevisions").insertOne({ question: oid(oldQ), action: "replaced", by: "ai", before: { status: "published" }, after: { status: "rejected" }, replacedBy: oid(newQ), createdAt: new Date() });
+  const fixId = (await db.collection("qualityfixes").insertOne({ question: oid(oldQ), kind: "replace", replacement: oid(newQ), problems: ["AI doubt"], source: "csv", status: "applied", decidedBy: "ai", decidedAt: new Date(), createdAt: new Date(), updatedAt: new Date() })).insertedId;
+  r = await api("POST", `/quality/fixes/${fixId}/undo`, { token });
+  const pb = await db.collection("tests").findOne({ _id: paperB.insertedId });
+  check("undoing an AI replacement puts the original back in its test", r.status === 200 && String(pb.questions[0]) === oldQ, r.json.message);
+  check("…live again, and the replacement retired", (await get(oldQ)).status === "published" && (await get(newQ)).status === "rejected");
+  r = await api("POST", `/quality/fixes/${fixId}/undo`, { token });
+  check("it cannot be undone twice", r.status === 409);
+
   // ---- settings and export
   r = await api("PUT", "/quality/settings", { token, body: { mode: "everything" } });
   check("an unknown mode is refused", r.status === 400);

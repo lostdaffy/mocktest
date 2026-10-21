@@ -47,7 +47,7 @@ async function putSettings(req, res) {
 
 // GET /api/quality/fixes?status=pending&limit=50
 async function listFixes(req, res) {
-  const status = ["pending", "applied", "dismissed", "failed"].includes(req.query.status) ? req.query.status : "pending";
+  const status = ["pending", "applied", "dismissed", "failed", "undone"].includes(req.query.status) ? req.query.status : "pending";
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200);
   const fields = "text textHi options optionsHi correctIndex solution solutionHi subject topic chapter difficulty status";
   const fixes = await QualityFix.find({ status })
@@ -63,6 +63,11 @@ async function listFixes(req, res) {
 async function applyFix(req, res) {
   if (!isId(req.params.id)) return bad(res, "Not a valid id");
   const r = await desk.applyFix(req.params.id, { by: "admin" });
+  res.status(r.ok ? 200 : 409).json(r);
+}
+async function undoFix(req, res) {
+  if (!isId(req.params.id)) return bad(res, "Not a valid id");
+  const r = await desk.undoFix(req.params.id, { by: "admin" });
   res.status(r.ok ? 200 : 409).json(r);
 }
 async function dismissFix(req, res) {
@@ -191,4 +196,4 @@ async function exportQuestions(req, res) {
   });
 }
 
-module.exports = { getSettings, putSettings, listFixes, applyFix, dismissFix, checkNow, improve, regenerate, getHistory, restore, listDeleted, auditBank, exportQuestions };
+module.exports = { getSettings, putSettings, listFixes, applyFix, dismissFix, undoFix, checkNow, improve, regenerate, getHistory, restore, listDeleted, auditBank, exportQuestions };

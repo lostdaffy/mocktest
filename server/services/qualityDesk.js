@@ -91,10 +91,12 @@ async function inspect(questions) {
     let aiSaid;
     let mendable = false;
     let needsReplacing = false;
+    let byRule = false;
 
     if (/Rule check failed/.test(r.flagReason || "")) {
       const issues = (r.flagReason || "").replace("Rule check failed: ", "").split(", ");
       problems.push(...issues);
+      byRule = true;
       if (issues.every((x) => MENDABLE.test(x) && !NOT_MENDABLE.test(x))) mendable = true;
       else needsReplacing = true;
     } else if (r.status !== "published") {
@@ -114,8 +116,14 @@ async function inspect(questions) {
     if (twin) {
       problems.push(`repeats a question already in the chapter: "${String(twin).slice(0, 120)}"`);
       needsReplacing = true;
+      byRule = true;
     }
-    reports.push({ question: q, problems, mendable: mendable && !needsReplacing, needsReplacing, aiSaid, aiUnavailable });
+    // Only the AI's own answer says it is wrong: no rule, no repeat. The
+    // checker is a language model and is wrong often enough on harder maths
+    // (it called 2,047 a multiple of 31) that this alone never changes a
+    // question by itself - it goes to the admin, even in automatic mode.
+    const onlyAiDoubt = problems.length > 0 && !byRule;
+    reports.push({ question: q, problems, mendable: mendable && !needsReplacing, needsReplacing, aiSaid, aiUnavailable, onlyAiDoubt });
   }
   return reports;
 }
@@ -223,6 +231,38 @@ async function applyFix(fixId, { by = "admin" } = {}) {
   return { ok: true, message: fix.result };
 }
 
+// Takes back a correction that was applied - the admin's, or one the AI made
+// on its own in automatic mode. A replacement is swapped back into every test
+// that now holds the new question, the old one goes back to how it was before
+// the swap, and the new one is retired. A mend is undone from the history.
+async function undoFix(fixId, { by = "admin" } = {}) {
+  const fix = await QualityFix.findById(fixId);
+  if (!fix || fix.status !== "applied") return { ok: false, message: "Only an applied correction can be undone" };
+  const QuestionRevision = require("../models/QuestionRevision");
+  if (fix.kind === "replace") {
+    const old = await Question.findById(fix.question).lean();
+    const fresh = fix.replacement && (await Question.findById(fix.replacement).lean());
+    if (!old) return { ok: false, message: "The original question no longer exists" };
+    const swap = await QuestionRevision.findOne({ question: old._id, action: "replaced" }).sort({ createdAt: -1 }).lean();
+    const backTo = swap?.before?.status || "published";
+    if (fresh) await Test.updateMany({ questions: fresh._id }, { $set: { "questions.$": old._id } });
+    await history.change(old._id, { status: backTo, flagReason: "" }, { action: "restore", by, note: "AI replacement undone" });
+    if (fresh) await history.change(fresh._id, { status: "rejected", flagReason: "Replacement undone by the admin" }, { action: "retire", by, note: "Replacement undone" });
+  } else if (fix.kind === "fix") {
+    const rev = await QuestionRevision.findOne({ question: fix.question, action: "ai_fix", createdAt: { $gte: new Date((fix.decidedAt || fix.createdAt).getTime() - 60 * 1000) } }).sort({ createdAt: -1 }).lean();
+    if (!rev) return { ok: false, message: "The change was not found in the question's history" };
+    await history.restore(fix.question, rev._id, { by });
+  } else {
+    return { ok: false, message: "Nothing to undo" };
+  }
+  fix.status = "undone";
+  fix.result = `${fix.result || ""} - undone`.trim();
+  fix.decidedAt = new Date();
+  fix.decidedBy = by;
+  await fix.save();
+  return { ok: true, message: fix.kind === "replace" ? "Undone: the original question is back in its tests" : "Undone: the question is back as it was" };
+}
+
 async function dismissFix(fixId) {
   const fix = await QualityFix.findById(fixId);
   if (!fix || fix.status !== "pending") return { ok: false, message: "This fix is not waiting" };
@@ -299,7 +339,7 @@ async function checkQuestions(ids, { source = "admin", mode } = {}) {
       continue;
     }
     out.proposed++;
-    if (act === "auto") {
+    if (act === "auto" && !r.onlyAiDoubt) {
       const done = await applyFix(saved._id, { by: "ai" });
       if (done.ok) out.applied++;
     }
@@ -307,4 +347,4 @@ async function checkQuestions(ids, { source = "admin", mode } = {}) {
   return out;
 }
 
-module.exports = { inspect, checkQuestions, applyFix, dismissFix, buildReplacement, buildMend };
+module.exports = { inspect, checkQuestions, applyFix, dismissFix, undoFix, buildReplacement, buildMend };

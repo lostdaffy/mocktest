@@ -19,6 +19,7 @@ export default function QualityDesk({ refreshKey = 0 }) {
   const [busy, setBusy] = useState("");
   const [chapter, setChapter] = useState("");
   const [deleted, setDeleted] = useState(null);
+  const [applied, setApplied] = useState(null);
 
   async function load() {
     try {
@@ -107,6 +108,31 @@ export default function QualityDesk({ refreshKey = 0 }) {
     }
   }
 
+  async function showApplied() {
+    try {
+      const r = await api.get("/quality/fixes", { params: { status: "applied", limit: 100 } });
+      setApplied(r.data.fixes || []);
+    } catch (err) {
+      toast.error("Couldn't load the corrections");
+    }
+  }
+  async function undo(fix) {
+    const ok = await toast.confirm({
+      title: "Undo this correction?",
+      message: fix.kind === "replace" ? "The original question goes back into its tests and the new one is retired." : "The question goes back to how it was before the correction.",
+      confirmLabel: "Undo",
+    });
+    if (!ok) return;
+    try {
+      const r = await api.post(`/quality/fixes/${fix._id}/undo`);
+      toast.success(r.data.message || "Undone");
+      setApplied((list) => list.filter((x) => x._id !== fix._id));
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Couldn't undo it");
+    }
+  }
+
   async function showDeleted() {
     try {
       const r = await api.get("/quality/deleted");
@@ -176,6 +202,9 @@ export default function QualityDesk({ refreshKey = 0 }) {
         <button onClick={exportCsv} disabled={busy === "export"} className="rv-btn-secondary !text-xs disabled:opacity-50">
           {busy === "export" ? "Exporting..." : "Export CSV"}
         </button>
+        <button onClick={showApplied} className="rv-btn-secondary !text-xs">
+          Corrections made
+        </button>
         <button onClick={showDeleted} className="rv-btn-secondary !text-xs">
           Deleted questions
         </button>
@@ -192,6 +221,27 @@ export default function QualityDesk({ refreshKey = 0 }) {
           ))}
         </div>
       )}
+
+      <Modal open={!!applied} onClose={() => setApplied(null)} title="Corrections made" subtitle="Applied by you or, in automatic mode, by the AI. Any of them can be undone.">
+        {applied?.length === 0 && <p className="text-sm text-slate-soft">No corrections yet.</p>}
+        <div className="space-y-3">
+          {(applied || []).map((f) => (
+            <div key={f._id} className="border border-border-soft rounded-lg p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-slate-soft">
+                  {f.kind === "replace" ? "Replaced" : "Corrected"} by {f.decidedBy === "ai" ? "the AI" : "the admin"} · {new Date(f.decidedAt || f.updatedAt).toLocaleString("en-IN")}
+                </p>
+                <button onClick={() => undo(f)} className="rv-btn-secondary !text-xs shrink-0">
+                  Undo
+                </button>
+              </div>
+              <p className="text-xs text-danger mt-1">{(f.problems || []).join("; ")}</p>
+              <p className="text-sm text-ink mt-1"><span className="text-slate-soft">Was: </span>{f.question?.text}</p>
+              {f.replacement && <p className="text-sm text-ink mt-1"><span className="text-slate-soft">Now: </span>{f.replacement.text}</p>}
+            </div>
+          ))}
+        </div>
+      </Modal>
 
       <Modal open={!!deleted} onClose={() => setDeleted(null)} title="Deleted questions" subtitle="A copy of each is kept. Bring one back and it goes to Needs review.">
         {deleted?.length === 0 && <p className="text-sm text-slate-soft">Nothing deleted.</p>}

@@ -24,7 +24,7 @@ const qualityFixSchema = new mongoose.Schema(
     // Where the check came from: a spreadsheet upload, a bank audit, or the
     // admin asking about one question.
     source: { type: String, enum: ["csv", "audit", "admin", "edit"], default: "admin" },
-    status: { type: String, enum: ["pending", "applied", "dismissed", "failed"], default: "pending", index: true },
+    status: { type: String, enum: ["pending", "applied", "dismissed", "failed", "undone"], default: "pending", index: true },
     result: String,
     decidedAt: Date,
     decidedBy: { type: String, enum: ["admin", "ai"] },

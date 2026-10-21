@@ -24,6 +24,7 @@ router.put("/settings", asyncRoute(c.putSettings));
 router.get("/fixes", asyncRoute(c.listFixes));
 router.post("/fixes/:id/apply", asyncRoute(c.applyFix));
 router.post("/fixes/:id/dismiss", asyncRoute(c.dismissFix));
+router.post("/fixes/:id/undo", asyncRoute(c.undoFix));
 router.post("/check", aiPace, asyncRoute(c.checkNow));
 router.post("/questions/:id/improve", aiPace, asyncRoute(c.improve));
 router.post("/questions/:id/regenerate", aiPace, asyncRoute(c.regenerate));
