@@ -1,0 +1,100 @@
+// Number System · Factors and Multiples · Easy #6 - #10. Every answer is
+// worked out again in `v`.
+const L = require("./lib");
+const { fmt } = require("./fmt");
+const T = (n) => `Number System · Factors and Multiples · Easy #${n}`;
+const Q = (t, q, qh, o, a, value, s, sh, oh) => ({ t, q, qh, o, ...(oh ? { oh } : {}), a, v: () => L.only(o, a, String(value())), s, sh });
+const R = L.range;
+const fmtN = (n) => Number(n).toLocaleString("en-US");
+const nd = (n) => L.divisors(n).length;
+const pick = (opts, test) => () => opts.filter(test).join(" & ");
+const pair = (p) => p.split(" and ").map(Number);
+const remainderLeast = (ds, r) => () => R(r + 1, 100000).find((n) => ds.every((d) => n % d === r));
+
+const list = [
+  // ------------------------------------------------------------ EASY #6
+  Q(T(6), "What is the HCF of 64 and 96?", "64 और 96 का HCF क्या है?", ["32", "16", "64", "8"], 0, () => L.gcd(64, 96),
+    "64 = 2⁶ and 96 = 2⁵ × 3. The common part is 2⁵ = 32.", "64 = 2⁶ और 96 = 2⁵ × 3। उभयनिष्ठ भाग 2⁵ = 32।"),
+  Q(T(6), "What is the LCM of 45 and 105?", "45 और 105 का LCM क्या है?", ["315", "945", "105", "630"], 0, () => L.lcm(45, 105),
+    "45 = 3² × 5 and 105 = 3 × 5 × 7. LCM = 3² × 5 × 7 = 315.", "45 = 3² × 5 और 105 = 3 × 5 × 7। LCM = 3² × 5 × 7 = 315।"),
+  Q(T(6), "How many factors does 3⁴ × 5² have?", "3⁴ × 5² के कितने गुणनखंड हैं?", ["15", "8", "10", "6"], 0, () => nd(81 * 25),
+    "Add 1 to each power and multiply: (4 + 1) × (2 + 1) = 15.", "हर घात में 1 जोड़कर गुणा करें: (4 + 1) × (2 + 1) = 15।"),
+  Q(T(6), "The LCM of a number x and 18 is 36, and their HCF is 2. What is x?", "किसी संख्या x और 18 का LCM 36 और HCF 2 है। x क्या है?", ["4", "2", "12", "8"], 0, () => (2 * 36) / 18,
+    "x × 18 = HCF × LCM = 2 × 36 = 72, so x = 4. (HCF of 4 and 18 is 2, LCM is 36.)", "x × 18 = HCF × LCM = 2 × 36 = 72, अतः x = 4। (4 और 18 का HCF 2, LCM 36।)"),
+  Q(T(6), "What is the smallest number divisible by 6, 10 and 14?", "6, 10 और 14 से विभाज्य सबसे छोटी संख्या कौन-सी है?", ["210", "420", "140", "105"], 0, () => L.lcm(6, 10, 14),
+    "6 = 2 × 3, 10 = 2 × 5, 14 = 2 × 7. LCM = 2 × 3 × 5 × 7 = 210.", "6 = 2 × 3, 10 = 2 × 5, 14 = 2 × 7। LCM = 2 × 3 × 5 × 7 = 210।"),
+  Q(T(6), "What is the HCF of 36, 60 and 84?", "36, 60 और 84 का HCF क्या है?", ["12", "6", "24", "4"], 0, () => L.hcf(36, 60, 84),
+    "36 = 2² × 3², 60 = 2² × 3 × 5, 84 = 2² × 3 × 7. Common to all: 2² × 3 = 12.", "36 = 2² × 3², 60 = 2² × 3 × 5, 84 = 2² × 3 × 7। तीनों में उभयनिष्ठ: 2² × 3 = 12।"),
+  Q(T(6), "Two numbers are in the ratio 4 : 5 and their HCF is 6. What is their sum?", "दो संख्याओं का अनुपात 4 : 5 है और उनका HCF 6 है। उनका योग क्या है?", ["54", "30", "45", "60"], 0, () => 4 * 6 + 5 * 6,
+    "Since 4 and 5 have no common factor, the numbers are 4 × 6 = 24 and 5 × 6 = 30. Sum = 54.", "चूँकि 4 और 5 का कोई उभयनिष्ठ गुणनखंड नहीं, संख्याएँ 4 × 6 = 24 और 5 × 6 = 30। योग = 54।"),
+  Q(T(6), "Three alarms ring every 15, 20 and 30 minutes. If they ring together at 6:00 a.m., how many times will they ring together from then until 12:00 noon, including both times?", "तीन अलार्म हर 15, 20 और 30 मिनट पर बजते हैं। यदि वे सुबह 6:00 बजे एक साथ बजते हैं, तो तब से दोपहर 12:00 तक, दोनों समय मिलाकर, वे कितनी बार एक साथ बजेंगे?", ["7", "6", "12", "13"], 0, () => Math.floor(360 / L.lcm(15, 20, 30)) + 1,
+    "They ring together every LCM(15, 20, 30) = 60 minutes: at 6, 7, 8, 9, 10, 11 and 12 o'clock. That is 7 times.", "वे हर LCM(15, 20, 30) = 60 मिनट पर एक साथ बजते हैं: 6, 7, 8, 9, 10, 11 और 12 बजे। कुल 7 बार।"),
+  Q(T(6), "A rectangular hall 18 m long and 12 m wide is to be paved with identical square stones as large as possible. How many stones are needed?", "18 m लंबे और 12 m चौड़े एक आयताकार हॉल में एक जैसे, यथासंभव बड़े वर्गाकार पत्थर लगाने हैं। कितने पत्थर लगेंगे?", ["6", "36", "216", "12"], 0, () => { const g = L.gcd(18, 12); return (18 / g) * (12 / g); },
+    "The side of a stone is the HCF of 18 and 12, which is 6 m. Stones = (18 ÷ 6) × (12 ÷ 6) = 3 × 2 = 6.", "पत्थर की भुजा 18 और 12 का HCF, यानी 6 m। पत्थर = (18 ÷ 6) × (12 ÷ 6) = 3 × 2 = 6।"),
+  Q(T(6), "What is the smallest number that leaves a remainder of 4 when divided by each of 6, 9 and 12?", "वह सबसे छोटी संख्या कौन-सी है जिसे 6, 9 और 12 में से प्रत्येक से भाग देने पर 4 शेष बचता है?", ["40", "76", "36", "112"], 0, remainderLeast([6, 9, 12], 4),
+    "LCM of 6, 9 and 12 = 2² × 3² = 36. The number is 36 + 4 = 40.", "6, 9 और 12 का LCM = 2² × 3² = 36। संख्या 36 + 4 = 40।"),
+  Q(T(6), "What is the greatest number that divides 130 and 305 leaving a remainder of 5 in each case?", "वह सबसे बड़ी संख्या कौन-सी है जो 130 और 305 को भाग देने पर प्रत्येक में 5 शेष छोड़ती है?", ["25", "5", "125", "15"], 0, () => L.gcd(125, 300),
+    "It divides 130 − 5 = 125 and 305 − 5 = 300 exactly. 125 = 5³ and 300 = 2² × 3 × 5², so the HCF is 5² = 25.", "यह 130 − 5 = 125 और 305 − 5 = 300 को पूरा विभाजित करती है। 125 = 5³ और 300 = 2² × 3 × 5², अतः HCF 5² = 25।"),
+  Q(T(6), "Which of the numbers 12, 16, 24 and 32 is a factor of both 48 and 80?", "संख्याओं 12, 16, 24 और 32 में से कौन 48 और 80 दोनों का गुणनखंड है?", ["16", "12", "24", "32"], 0, pick(["16", "12", "24", "32"], (x) => 48 % Number(x) === 0 && 80 % Number(x) === 0),
+    "HCF of 48 and 80 is 16, and the common factors are the factors of 16. 16 divides both (48 = 16 × 3, 80 = 16 × 5); 12 and 24 do not divide 80, and 32 does not divide 48.", "48 और 80 का HCF 16, और उभयनिष्ठ गुणनखंड 16 के गुणनखंड। 16 दोनों को विभाजित करता है (48 = 16 × 3, 80 = 16 × 5); 12 और 24, 80 को नहीं, और 32, 48 को विभाजित नहीं करता।"),
+  Q(T(6), "What is the least number that must be added to 389 to make it a multiple of 12?", "389 में कम से कम कौन-सी संख्या जोड़ें कि वह 12 का गुणज बन जाए?", ["7", "5", "1", "11"], 0, () => (12 - (389 % 12)) % 12,
+    "389 ÷ 12 = 32 remainder 5. The next multiple is 12 × 33 = 396, so add 396 − 389 = 7.", "389 ÷ 12 = 32, शेष 5। अगला गुणज 12 × 33 = 396, अतः 396 − 389 = 7 जोड़ें।"),
+  Q(T(6), "How many common factors do 56 and 84 have?", "56 और 84 के कितने उभयनिष्ठ गुणनखंड हैं?", ["6", "4", "8", "7"], 0, () => L.divisors(56).filter((d) => 84 % d === 0).length,
+    "HCF of 56 = 2³ × 7 and 84 = 2² × 3 × 7 is 28 = 2² × 7, which has (2 + 1)(1 + 1) = 6 factors: 1, 2, 4, 7, 14, 28.", "56 = 2³ × 7 और 84 = 2² × 3 × 7 का HCF 28 = 2² × 7, जिसके (2 + 1)(1 + 1) = 6 गुणनखंड: 1, 2, 4, 7, 14, 28।"),
+  Q(T(6), "The product of two numbers is 2,160 and their LCM is 360. What is their HCF?", "दो संख्याओं का गुणनफल 2,160 और उनका LCM 360 है। उनका HCF क्या है?", ["6", "12", "60", "18"], 0, () => 2160 / 360,
+    "HCF = product ÷ LCM = 2,160 ÷ 360 = 6.", "HCF = गुणनफल ÷ LCM = 2,160 ÷ 360 = 6।"),
+  Q(T(6), "How many multiples of 6 are there from 1 to 250?", "1 से 250 तक 6 के कितने गुणज हैं?", ["41", "42", "40", "25"], 0, () => L.count(1, 250, (n) => n % 6 === 0),
+    "250 ÷ 6 = 41 remainder 4, so the multiples are 6 × 1 to 6 × 41 = 246: 41.", "250 ÷ 6 = 41, शेष 4, अतः गुणज 6 × 1 से 6 × 41 = 246: 41।"),
+  Q(T(6), "What is the largest three-digit number that is divisible by 15, 20 and 25?", "15, 20 और 25 से विभाज्य तीन अंकों की सबसे बड़ी संख्या कौन-सी है?", ["900", "975", "600", "990"], 0, () => R(100, 999).filter((n) => n % 15 === 0 && n % 20 === 0 && n % 25 === 0).pop(),
+    "LCM of 15, 20 and 25 = 2² × 3 × 5² = 300. Its three-digit multiples are 300, 600 and 900; the largest is 900.", "15, 20 और 25 का LCM = 2² × 3 × 5² = 300। इसके तीन अंकों के गुणज 300, 600 और 900; सबसे बड़ा 900।"),
+  Q(T(6), "The HCF of two numbers is 9. Which of the following can be their LCM?", "दो संख्याओं का HCF 9 है। निम्नलिखित में से कौन उनका LCM हो सकता है?", ["126", "120", "102", "84"], 0, pick(["126", "120", "102", "84"], (x) => Number(x) % 9 === 0),
+    "The LCM must be a multiple of the HCF. Of these only 126 = 9 × 14 is a multiple of 9 (for example, 18 and 63 have HCF 9 and LCM 126).", "LCM, HCF का गुणज होना चाहिए। इनमें केवल 126 = 9 × 14, 9 का गुणज है (जैसे 18 और 63 का HCF 9 और LCM 126)।"),
+  Q(T(6), "What is the HCF of 323 and 391?", "323 और 391 का HCF क्या है?", ["17", "19", "23", "1"], 0, () => L.gcd(323, 391),
+    "391 = 323 × 1 + 68, 323 = 68 × 4 + 51, 68 = 51 × 1 + 17, 51 = 17 × 3. HCF = 17 (323 = 17 × 19, 391 = 17 × 23).", "391 = 323 × 1 + 68, 323 = 68 × 4 + 51, 68 = 51 × 1 + 17, 51 = 17 × 3। HCF = 17 (323 = 17 × 19, 391 = 17 × 23)।"),
+  Q(T(6), "A shopkeeper has 132 red and 198 blue pencils. He packs them in boxes, each box holding pencils of one colour only, every box holding the same number, as many as possible. How many boxes does he need?", "एक दुकानदार के पास 132 लाल और 198 नीली पेंसिलें हैं। वह इन्हें डिब्बों में भरता है, हर डिब्बे में एक ही रंग की पेंसिलें, हर डिब्बे में संख्या समान और यथासंभव अधिक। कितने डिब्बे चाहिए?", ["5", "66", "6", "10"], 0, () => { const g = L.gcd(132, 198); return 132 / g + 198 / g; },
+    "Pencils per box = HCF of 132 and 198 = 66. Boxes = 132 ÷ 66 + 198 ÷ 66 = 2 + 3 = 5.", "हर डिब्बे में पेंसिलें = 132 और 198 का HCF = 66। डिब्बे = 132 ÷ 66 + 198 ÷ 66 = 2 + 3 = 5।"),
+
+  // ------------------------------------------------------------ EASY #7
+  Q(T(7), "What is the HCF of 66 and 110?", "66 और 110 का HCF क्या है?", ["22", "11", "33", "44"], 0, () => L.gcd(66, 110),
+    "66 = 2 × 3 × 11 and 110 = 2 × 5 × 11. HCF = 2 × 11 = 22.", "66 = 2 × 3 × 11 और 110 = 2 × 5 × 11। HCF = 2 × 11 = 22।"),
+  Q(T(7), "What is the LCM of 32 and 56?", "32 और 56 का LCM क्या है?", ["224", "448", "112", "1,792"], 0, () => L.lcm(32, 56),
+    "32 = 2⁵ and 56 = 2³ × 7. LCM = 2⁵ × 7 = 224.", "32 = 2⁵ और 56 = 2³ × 7। LCM = 2⁵ × 7 = 224।"),
+  Q(T(7), "How many factors does 80 have?", "80 के कितने गुणनखंड हैं?", ["10", "8", "12", "9"], 0, () => nd(80),
+    "80 = 2⁴ × 5. Number of factors = (4 + 1)(1 + 1) = 10.", "80 = 2⁴ × 5। गुणनखंडों की संख्या = (4 + 1)(1 + 1) = 10।"),
+  Q(T(7), "The HCF of two numbers is 11 and their LCM is 330. If one of them is 66, what is the other?", "दो संख्याओं का HCF 11 और LCM 330 है। यदि उनमें से एक 66 है, तो दूसरी क्या है?", ["55", "110", "33", "165"], 0, () => (11 * 330) / 66,
+    "HCF × LCM = product: 11 × 330 = 66 × other, so the other is 3,630 ÷ 66 = 55. (HCF of 66 and 55 is 11, LCM is 330.)", "HCF × LCM = गुणनफल: 11 × 330 = 66 × दूसरी, अतः दूसरी = 3,630 ÷ 66 = 55। (66 और 55 का HCF 11, LCM 330।)"),
+  Q(T(7), "What is the smallest number divisible by 8, 20 and 25?", "8, 20 और 25 से विभाज्य सबसे छोटी संख्या कौन-सी है?", ["200", "400", "100", "800"], 0, () => L.lcm(8, 20, 25),
+    "8 = 2³, 20 = 2² × 5, 25 = 5². LCM = 2³ × 5² = 200.", "8 = 2³, 20 = 2² × 5, 25 = 5²। LCM = 2³ × 5² = 200।"),
+  Q(T(7), "What is the HCF of 48, 80 and 112?", "48, 80 और 112 का HCF क्या है?", ["16", "8", "32", "4"], 0, () => L.hcf(48, 80, 112),
+    "48 = 2⁴ × 3, 80 = 2⁴ × 5, 112 = 2⁴ × 7. Common to all: 2⁴ = 16.", "48 = 2⁴ × 3, 80 = 2⁴ × 5, 112 = 2⁴ × 7। तीनों में उभयनिष्ठ: 2⁴ = 16।"),
+  Q(T(7), "Two numbers are in the ratio 2 : 3 and their LCM is 72. What is the smaller number?", "दो संख्याओं का अनुपात 2 : 3 है और उनका LCM 72 है। छोटी संख्या क्या है?", ["24", "36", "12", "48"], 0, () => { const k = 72 / 6; return 2 * k; },
+    "Write the numbers as 2k and 3k; their LCM is 6k. 6k = 72 gives k = 12, so the numbers are 24 and 36. The smaller is 24.", "संख्याएँ 2k और 3k लिखें; उनका LCM 6k। 6k = 72 से k = 12, अतः संख्याएँ 24 और 36। छोटी 24।"),
+  Q(T(7), "Two cyclists go round a circular track, one every 24 minutes and the other every 36 minutes. If they start together from the same point in the same direction, after how many minutes will they first meet again at the starting point?", "दो साइकिल सवार एक वृत्ताकार ट्रैक का चक्कर लगाते हैं, एक हर 24 मिनट में और दूसरा हर 36 मिनट में। यदि वे एक ही बिंदु से एक ही दिशा में साथ चलें, तो कितने मिनट बाद वे पहली बार फिर आरंभ बिंदु पर मिलेंगे?", ["72", "60", "144", "12"], 0, () => L.lcm(24, 36),
+    "They meet at the start after the LCM of 24 and 36 minutes: 2³ × 3² = 72 minutes.", "वे 24 और 36 मिनट के LCM के बाद आरंभ पर मिलेंगे: 2³ × 3² = 72 मिनट।"),
+  Q(T(7), "Three pieces of cloth are 36 m, 48 m and 60 m long. They are to be cut into pieces of equal length, as long as possible, with nothing left over. What is the length of each piece?", "कपड़े के तीन टुकड़े 36 m, 48 m और 60 m लंबे हैं। इन्हें बराबर लंबाई के, यथासंभव लंबे टुकड़ों में काटना है, कुछ बचे बिना। हर टुकड़े की लंबाई क्या है?", ["12 m", "6 m", "24 m", "4 m"], 0, () => `${L.hcf(36, 48, 60)} m`,
+    "The length must divide 36, 48 and 60: HCF = 12 m (36 = 12 × 3, 48 = 12 × 4, 60 = 12 × 5).", "लंबाई 36, 48 और 60 को विभाजित करे: HCF = 12 m (36 = 12 × 3, 48 = 12 × 4, 60 = 12 × 5)।"),
+  Q(T(7), "What is the smallest number that leaves a remainder of 1 when divided by each of 8, 10 and 15?", "वह सबसे छोटी संख्या कौन-सी है जिसे 8, 10 और 15 में से प्रत्येक से भाग देने पर 1 शेष बचता है?", ["121", "241", "120", "61"], 0, remainderLeast([8, 10, 15], 1),
+    "LCM of 8, 10 and 15 = 2³ × 3 × 5 = 120. The number is 120 + 1 = 121.", "8, 10 और 15 का LCM = 2³ × 3 × 5 = 120। संख्या 120 + 1 = 121।"),
+  Q(T(7), "What is the greatest number that divides 77, 147 and 252 exactly?", "77, 147 और 252 को पूरा विभाजित करने वाली सबसे बड़ी संख्या कौन-सी है?", ["7", "21", "11", "49"], 0, () => L.hcf(77, 147, 252),
+    "77 = 7 × 11, 147 = 3 × 7², 252 = 2² × 3² × 7. The only common prime is 7, so the HCF is 7.", "77 = 7 × 11, 147 = 3 × 7², 252 = 2² × 3² × 7। एकमात्र उभयनिष्ठ अभाज्य 7, अतः HCF 7।"),
+  Q(T(7), "Of the pairs 25 and 36, 35 and 63, 39 and 65, and 34 and 51, which is co-prime?", "युग्मों 25 और 36, 35 और 63, 39 और 65, तथा 34 और 51 में से कौन-सा सह-अभाज्य है?", ["25 and 36", "35 and 63", "39 and 65", "34 and 51"], 0, pick(["25 and 36", "35 and 63", "39 and 65", "34 and 51"], (p) => L.gcd(...pair(p)) === 1),
+    "25 = 5² and 36 = 2² × 3² share no prime. 35 and 63 share 7, 39 and 65 share 13, 34 and 51 share 17.", "25 = 5² और 36 = 2² × 3² में कोई अभाज्य उभयनिष्ठ नहीं। 35 और 63 में 7, 39 और 65 में 13, 34 और 51 में 17 उभयनिष्ठ।",
+    ["25 और 36", "35 और 63", "39 और 65", "34 और 51"]),
+  Q(T(7), "What is the prime factorisation of 2,520?", "2,520 का अभाज्य गुणनखंडन क्या है?", ["2³ × 3² × 5 × 7", "2² × 3² × 5 × 7", "2³ × 3 × 5 × 7", "2⁴ × 3² × 5 × 7"], 0, () => (8 * 9 * 5 * 7 === 2520 ? "2³ × 3² × 5 × 7" : "?"),
+    "2,520 = 8 × 315 = 2³ × 315, and 315 = 3² × 5 × 7. So 2,520 = 2³ × 3² × 5 × 7. (The others are 1,260, 840 and 5,040.)", "2,520 = 8 × 315 = 2³ × 315, और 315 = 3² × 5 × 7। अतः 2,520 = 2³ × 3² × 5 × 7। (बाकी 1,260, 840 और 5,040 हैं।)"),
+  Q(T(7), "How many common factors do 63 and 105 have?", "63 और 105 के कितने उभयनिष्ठ गुणनखंड हैं?", ["4", "3", "6", "2"], 0, () => L.divisors(63).filter((d) => 105 % d === 0).length,
+    "HCF of 63 = 3² × 7 and 105 = 3 × 5 × 7 is 21, whose factors are 1, 3, 7, 21: 4.", "63 = 3² × 7 और 105 = 3 × 5 × 7 का HCF 21, जिसके गुणनखंड 1, 3, 7, 21: 4।"),
+  Q(T(7), "The HCF and LCM of two numbers are 14 and 980. What is their product?", "दो संख्याओं का HCF और LCM क्रमशः 14 और 980 हैं। उनका गुणनफल क्या है?", ["13,720", "994", "70", "6,860"], 0, () => fmtN(14 * 980),
+    "Product = HCF × LCM = 14 × 980 = 13,720 (for example, 98 × 140).", "गुणनफल = HCF × LCM = 14 × 980 = 13,720 (जैसे 98 × 140)।"),
+  Q(T(7), "How many multiples of 12 lie between 300 and 500?", "300 और 500 के बीच 12 के कितने गुणज हैं?", ["16", "17", "18", "15"], 0, () => L.count(301, 499, (n) => n % 12 === 0),
+    "300 = 12 × 25 is not between, so the first is 312 = 12 × 26 and the last before 500 is 492 = 12 × 41. 41 − 26 + 1 = 16.", "300 = 12 × 25 बीच में नहीं, अतः पहला 312 = 12 × 26 और 500 से पहले अंतिम 492 = 12 × 41। 41 − 26 + 1 = 16।"),
+  Q(T(7), "What is the smallest four-digit number that is divisible by 16, 20 and 36?", "16, 20 और 36 से विभाज्य चार अंकों की सबसे छोटी संख्या कौन-सी है?", ["1,440", "1,080", "2,160", "1,200"], 0, () => fmtN(R(1000, 9999).find((n) => n % 16 === 0 && n % 20 === 0 && n % 36 === 0)),
+    "LCM of 16, 20 and 36 = 2⁴ × 3² × 5 = 720. 720 is three-digit and 720 × 2 = 1,440 is the first four-digit multiple.", "16, 20 और 36 का LCM = 2⁴ × 3² × 5 = 720। 720 तीन अंकों का है और 720 × 2 = 1,440 चार अंकों का पहला गुणज।"),
+  Q(T(7), "Of the numbers 12, 14, 15 and 35, which is NOT a factor of 210?", "संख्याओं 12, 14, 15 और 35 में से कौन 210 का गुणनखंड नहीं है?", ["12", "14", "15", "35"], 0, pick(["12", "14", "15", "35"], (x) => 210 % Number(x) !== 0),
+    "210 = 2 × 3 × 5 × 7 has only one factor 2. 14 = 2 × 7, 15 = 3 × 5 and 35 = 5 × 7 divide it, but 12 = 2² × 3 needs two 2s, so it does not.", "210 = 2 × 3 × 5 × 7 में 2 केवल एक बार। 14 = 2 × 7, 15 = 3 × 5 और 35 = 5 × 7 इसे विभाजित करते हैं, पर 12 = 2² × 3 को दो 2 चाहिए, अतः नहीं।"),
+  Q(T(7), "What is the HCF of 589 and 713?", "589 और 713 का HCF क्या है?", ["31", "19", "23", "1"], 0, () => L.gcd(589, 713),
+    "713 = 589 × 1 + 124, 589 = 124 × 4 + 93, 124 = 93 × 1 + 31, 93 = 31 × 3. HCF = 31 (589 = 19 × 31, 713 = 23 × 31).", "713 = 589 × 1 + 124, 589 = 124 × 4 + 93, 124 = 93 × 1 + 31, 93 = 31 × 3। HCF = 31 (589 = 19 × 31, 713 = 23 × 31)।"),
+  Q(T(7), "Some chocolates can be shared equally among 6, 9 or 15 children with none left over. What is the least number of chocolates?", "कुछ चॉकलेटें 6, 9 या 15 बच्चों में बिना कोई बचे बराबर बाँटी जा सकती हैं। चॉकलेटों की न्यूनतम संख्या क्या है?", ["90", "45", "180", "30"], 0, () => L.lcm(6, 9, 15),
+    "The number must be a multiple of 6, 9 and 15, and as small as possible: LCM = 2 × 3² × 5 = 90.", "संख्या 6, 9 और 15 की गुणज और न्यूनतम हो: LCM = 2 × 3² × 5 = 90।"),
+];
+module.exports = list.map(fmt);
