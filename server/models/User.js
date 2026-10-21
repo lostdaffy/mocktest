@@ -137,6 +137,13 @@ const userSchema = new mongoose.Schema(
 
     selectedSubjects: [{ type: String }],
 
+    // Blocked by the admin (a shared or misused account). A blocked student
+    // cannot sign in, every device is signed out at once, and no broadcast
+    // reaches them. Unblocking clears both fields; nothing else is touched,
+    // so the plan, progress and history are all there when they come back.
+    blockedAt: { type: Date },
+    blockedReason: { type: String, trim: true, maxlength: 300 },
+
     role: { type: String, enum: ["student", "admin"], default: "student" },
   },
   { timestamps: true }

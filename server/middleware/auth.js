@@ -3,6 +3,8 @@ const User = require("../models/User");
 const Session = require("../models/Session");
 const { refreshesUserItself } = require("../utils/appVersion");
 
+const BLOCKED_MESSAGE = "This account has been blocked. If you think this is a mistake, please contact Rankveer support.";
+
 // Verifies the JWT AND that it's still the most recent one issued for this
 // user. Every login (password or OTP) generates a fresh
 // activeSessionId and embeds it in the token; if a newer login has
@@ -27,6 +29,15 @@ async function protect(req, res, next) {
     const user = await User.findById(decoded.id).select("+activeSessionId");
     if (!user) {
       return res.status(401).json({ message: "User not found" });
+    }
+
+    // Blocked by the admin: out on the very next request, on every device. Before the
+    // session check, so the student is told the real reason.
+    // TOKEN_INVALID because that is the code every installed app acts on
+    // (it clears the session and opens sign-in, where the login answer
+    // says why).
+    if (user.role !== "admin" && user.blockedAt) {
+      return res.status(401).json({ message: BLOCKED_MESSAGE, code: "TOKEN_INVALID", reason: "ACCOUNT_BLOCKED" });
     }
 
     // "Log out that device" has to actually lock the door, not just hide a
@@ -99,4 +110,4 @@ function adminOnly(req, res, next) {
   next();
 }
 
-module.exports = { protect, adminOnly };
+module.exports = { protect, adminOnly, BLOCKED_MESSAGE };

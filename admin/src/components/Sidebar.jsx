@@ -20,6 +20,8 @@ import {
   RiImageLine,
   RiMegaphoneLine,
   RiBrainLine,
+  RiNotification3Line,
+  RiMoneyRupeeCircleLine,
 } from "@remixicon/react";
 
 // Grouped rather than one flat list of 11 - with this many destinations a
@@ -56,6 +58,8 @@ const NAV_GROUPS = [
     items: [
       { to: "/users", label: "Users", Icon: RiGroupLine },
       { to: "/reports", label: "Student Reports", Icon: RiFlag2Line },
+      { to: "/notifications", label: "Notifications", Icon: RiNotification3Line },
+      { to: "/payments", label: "Payments", Icon: RiMoneyRupeeCircleLine },
       { to: "/coupons", label: "Coupons", Icon: RiCoupon3Line },
     ],
   },

@@ -321,6 +321,7 @@ app.use("/api/exam-series", examSeriesRoutes);
 app.use("/api/live-exams", liveExamRoutes);
 app.use("/api/pyq", pyqRoutes);
 app.use("/api/admin/coupons", couponRoutes);
+app.use("/api/admin", require("./routes/adminToolsRoutes")); // broadcasts, payments
 app.use("/api/generation", require("./routes/generationRoutes"));
 app.use("/api/daily-quiz", require("./routes/dailyQuizRoutes"));
 app.use("/api/question-images", require("./routes/questionImageRoutes"));

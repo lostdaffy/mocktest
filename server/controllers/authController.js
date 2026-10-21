@@ -9,6 +9,7 @@ const Test = require("../models/Test");
 const Subscription = require("../models/Subscription");
 const DeletedAccount = require("../models/DeletedAccount");
 const Session = require("../models/Session");
+const { BLOCKED_MESSAGE } = require("../middleware/auth");
 const { generateOtpCode, sendOtp } = require("../services/otpService");
 const { isEmailConfigured, sendPasswordResetCode } = require("../services/emailService");
 const { claimSend, releaseSend, throttleMessage } = require("../utils/sendThrottle");
@@ -503,6 +504,12 @@ async function login(req, res) {
             ? `Wrong phone number or password. ${left} attempt(s) left before the account is locked for ${waitText(LOCK_MINUTES)}.`
             : "Wrong phone number or password",
       });
+    }
+
+    // Blocked by the admin. Checked only after the password is right, so the
+    // answer tells nothing to someone who does not own the account.
+    if (user.blockedAt && user.role !== "admin") {
+      return res.status(403).json({ message: BLOCKED_MESSAGE, code: "ACCOUNT_BLOCKED" });
     }
 
     if (user.failedLoginAttempts || user.lockUntil) {

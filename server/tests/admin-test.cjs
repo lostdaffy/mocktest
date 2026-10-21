@@ -321,7 +321,9 @@ async function api(method, p, body) {
   check("the only admin can't lock the panel by removing themselves", r.status === 400, r.json.message);
 
   r = await api("PATCH", `/admin/users/${stu.insertedId}/role`, { role: "admin" });
-  check("an admin can make a team member an admin", r.status === 200 && (await db.collection("users").findOne({ _id: stu.insertedId })).role === "admin", r.json.message);
+  check("one admin only: no one else can be made an admin", r.status === 409 && (await db.collection("users").findOne({ _id: stu.insertedId })).role === "student", r.json.message);
+  // An extra admin made before the one-admin rule can still be cleaned up.
+  await db.collection("users").updateOne({ _id: stu.insertedId }, { $set: { role: "admin" } });
   token = jwt.sign({ id: stu.insertedId.toString(), sessionId: "s2" }, JWT_SECRET);
   check("...and it works on their very next request", (await api("GET", "/admin/users/stats")).status === 200);
 

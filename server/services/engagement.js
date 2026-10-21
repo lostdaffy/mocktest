@@ -382,6 +382,9 @@ async function notificationFeed(user, { showVisuals = true } = {}) {
     });
   }
 
+  // The admin's own messages of the last 14 days (services/broadcast.js).
+  items.push(...(await require("./broadcast").forStudent(user, now).catch(() => [])));
+
   items.sort((a, b) => new Date(b.at) - new Date(a.at));
   return { items, serverTime: now };
 }

@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Subscription = require("../models/Subscription");
 const Attempt = require("../models/Attempt");
 const Report = require("../models/Report");
+const Session = require("../models/Session");
 const ExamPattern = require("../models/ExamPattern");
 const { deleteAccountData } = require("../services/accountDeletion");
 const PLAN_DURATION_MONTHS = { quarterly: 3, half_yearly: 6, yearly: 12 };
@@ -18,6 +19,7 @@ function buildFilter(query) {
   if (name) filter.name = { $regex: name.trim(), $options: "i" };
   if (examGoal) filter.examGoals = examGoal;
   if (authProvider) filter.authProvider = authProvider;
+  if (query.blocked === "yes") filter.blockedAt = { $ne: null };
 
   const now = new Date();
   if (subscription === "premium") {
@@ -53,7 +55,7 @@ function buildSort(sortBy) {
 }
 
 const LIST_FIELDS =
-  "name phone email subscriptionStatus subscriptionExpiresAt subscriptionPlan authProvider examGoals streakCount referralCount referralCredits createdAt role";
+  "name phone email subscriptionStatus subscriptionExpiresAt subscriptionPlan authProvider examGoals streakCount referralCount referralCredits createdAt role blockedAt";
 
 // GET /api/admin/users?phone=&name=&email=&subscription=&examGoal=&authProvider=&expiringDays=&sortBy=&page=&limit=
 async function searchUsers(req, res) {
@@ -287,6 +289,9 @@ async function getUserDetail(req, res) {
         hasPassword: !!user.passwordHash, // legacy Google account, can only get in via email reset
         loggedInSomewhere: !!user.activeSessionId, // single-device: a stale session logs them out elsewhere
         hasPushToken: !!user.pushToken,
+        blocked: !!user.blockedAt,
+        blockedAt: user.blockedAt || null,
+        blockedReason: user.blockedReason || null,
         pushError: user.pushToken ? null : user.pushError || null,
       },
       activity: { attemptCount, recentAttempts, reportCount },
@@ -382,6 +387,13 @@ async function setUserRole(req, res) {
   if (!user) return res.status(404).json({ message: "User not found" });
   if (user.role === role) return res.json({ message: `${user.name} is already ${role === "admin" ? "an admin" : "a student"}`, role });
 
+  // Rankveer is run by one admin (decided 2026-10-22): no second admin
+  // account is made. Taking access away from an extra one made before that
+  // still works, so it can be cleaned up.
+  if (role === "admin" && (await User.exists({ role: "admin" }))) {
+    return res.status(409).json({ message: "Rankveer runs with a single admin account, so no one else can be made an admin." });
+  }
+
   if (role === "student") {
     if (String(user._id) === String(req.user._id)) {
       return res.status(400).json({ message: "You can't remove your own admin access. Ask another admin to do it." });
@@ -421,6 +433,26 @@ async function deleteUser(req, res) {
   }
 }
 
+// PATCH /api/admin/users/:id/block  { blocked: true|false, reason }
+// Blocking signs the student out of every device at once and stops any new
+// sign-in; the plan, progress and history stay as they are. Unblocking
+// only lifts the block - they sign in again as usual.
+async function setBlocked(req, res) {
+  const blocked = req.body.blocked !== false;
+  const user = await User.findById(req.params.id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+  if (user.role === "admin") return res.status(403).json({ message: "The admin account cannot be blocked" });
+
+  if (blocked) {
+    const reason = String(req.body.reason || "").trim().slice(0, 300);
+    await User.updateOne({ _id: user._id }, { $set: { blockedAt: new Date(), blockedReason: reason }, $unset: { activeSessionId: 1 } });
+    await Session.updateMany({ user: user._id, revokedAt: null }, { $set: { revokedAt: new Date() } });
+    return res.json({ message: `${user.name} is blocked and signed out of every device`, blocked: true });
+  }
+  await User.updateOne({ _id: user._id }, { $unset: { blockedAt: 1, blockedReason: 1 } });
+  res.json({ message: `${user.name} is unblocked and can sign in again`, blocked: false });
+}
+
 // POST /api/admin/users/:id/test-push
 // One notification to this one account's phone - to check a new build, or a
 // student's "I never get notifications". Never a broadcast.
@@ -443,6 +475,7 @@ async function sendTestPush(req, res) {
 }
 
 module.exports = {
+  setBlocked,
   sendTestPush,
   searchUsers,
   getUserStats,

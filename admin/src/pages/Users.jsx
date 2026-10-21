@@ -63,8 +63,29 @@ export default function Users() {
   const [editEmail, setEditEmail] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [actionBusy, setActionBusy] = useState("");
+  // Blocking asks for a reason first (kept on the account, shown here later).
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [blockReason, setBlockReason] = useState("");
+
+  async function setBlocked(blocked) {
+    setActionBusy("block");
+    try {
+      const res = await api.patch("/admin/users/" + detailId + "/block", { blocked, reason: blockReason });
+      toast.success(res.data.message || "Done");
+      setBlockOpen(false);
+      setBlockReason("");
+      await openDetail(detailId);
+      load(page);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Action failed");
+    } finally {
+      setActionBusy("");
+    }
+  }
 
   async function openDetail(id) {
+    setBlockOpen(false);
+    setBlockReason("");
     setDetailId(id);
     setDetail(null);
     setDetailLoading(true);
@@ -151,7 +172,8 @@ export default function Users() {
         params.email = term.trim();
       }
     }
-    if (subscription) params.subscription = subscription;
+    if (subscription === "blocked") params.blocked = "yes";
+    else if (subscription) params.subscription = subscription;
     if (examGoal) params.examGoal = examGoal;
     return params;
   }
@@ -322,6 +344,7 @@ export default function Users() {
           <option value="free">Free</option>
           <option value="expiring">Expiring (7 days)</option>
           <option value="expired">Expired</option>
+          <option value="blocked">Blocked</option>
         </select>
 
         <select
@@ -388,6 +411,11 @@ export default function Users() {
                       {isExpiring && (
                         <span className="text-[10px] font-semibold bg-warn-light text-warn px-2 py-0.5 rounded-full">
                           Expiring soon
+                        </span>
+                      )}
+                      {u.blockedAt && (
+                        <span className="text-[10px] font-semibold bg-danger-light text-danger px-2 py-0.5 rounded-full">
+                          Blocked
                         </span>
                       )}
                     </div>
@@ -496,6 +524,12 @@ export default function Users() {
                 <>
                   {/* Why they're stuck, at a glance */}
                   <div className="flex flex-wrap gap-2">
+                    {detail.flags.blocked && (
+                      <Flag tone="danger">
+                        ⛔ Blocked {detail.flags.blockedAt ? "on " + new Date(detail.flags.blockedAt).toLocaleDateString("en-IN") : ""}
+                        {detail.flags.blockedReason ? " · " + detail.flags.blockedReason : ""}
+                      </Flag>
+                    )}
                     {detail.flags.locked && (
                       <Flag tone="danger">🔒 Locked · {detail.flags.lockMinutesLeft} min left</Flag>
                     )}
@@ -569,37 +603,56 @@ export default function Users() {
                     >
                       Manage plan
                     </button>
-                    {/* One admin account per team member, rather than one
-                        shared password - see setUserRole on the server. */}
-                    <button
-                      onClick={async () => {
-                        const makeAdmin = detail.user.role !== "admin";
-                        const ok = await toast.confirm({
-                          title: makeAdmin ? `Make ${detail.user.name} an admin?` : `Remove ${detail.user.name}'s admin access?`,
-                          message: makeAdmin
-                            ? "They will be able to do everything you can in this panel - publish tests, change exams, manage users. Only do this for your own team."
-                            : "They will be signed out of the panel on their next click. Their student account stays.",
-                          confirmLabel: makeAdmin ? "Make admin" : "Remove access",
-                          danger: !makeAdmin,
-                        });
-                        if (!ok) return;
-                        setActionBusy("role");
-                        try {
-                          const res = await api.patch(`/admin/users/${detailId}/role`, { role: makeAdmin ? "admin" : "student" });
-                          toast.success(res.data.message);
-                          await openDetail(detailId);
-                          load(page);
-                        } catch (err) {
-                          toast.error(err.response?.data?.message || "Couldn't change access");
-                        } finally {
-                          setActionBusy("");
-                        }
-                      }}
-                      disabled={!!actionBusy}
-                      className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium disabled:opacity-50"
-                    >
-                      {actionBusy === "role" ? "Saving..." : detail.user.role === "admin" ? "Remove admin access" : "Make admin"}
-                    </button>
+                    {/* Rankveer runs with one admin account: no one is made an
+                        admin from here. An extra admin account made before
+                        that rule can still have its access taken away. */}
+                    {detail.user.role === "admin" && (
+                      <button
+                        onClick={async () => {
+                          const ok = await toast.confirm({
+                            title: `Remove ${detail.user.name}'s admin access?`,
+                            message: "They will be signed out of the panel on their next click. Their student account stays.",
+                            confirmLabel: "Remove access",
+                            danger: true,
+                          });
+                          if (!ok) return;
+                          setActionBusy("role");
+                          try {
+                            const res = await api.patch(`/admin/users/${detailId}/role`, { role: "student" });
+                            toast.success(res.data.message);
+                            await openDetail(detailId);
+                            load(page);
+                          } catch (err) {
+                            toast.error(err.response?.data?.message || "Couldn't change access");
+                          } finally {
+                            setActionBusy("");
+                          }
+                        }}
+                        disabled={!!actionBusy}
+                        className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium disabled:opacity-50"
+                      >
+                        {actionBusy === "role" ? "Saving..." : "Remove admin access"}
+                      </button>
+                    )}
+                    {/* A shared or misused account: out of every device, no new sign-in. */}
+                    {detail.user.role !== "admin" &&
+                      (detail.flags.blocked ? (
+                        <button
+                          onClick={() => setBlocked(false)}
+                          disabled={!!actionBusy}
+                          className="px-3 py-1.5 rounded-lg bg-success-light hover:opacity-80 text-success text-xs font-medium disabled:opacity-50"
+                        >
+                          {actionBusy === "block" ? "Saving..." : "Unblock"}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setBlockOpen((v) => !v)}
+                          disabled={!!actionBusy}
+                          className="px-3 py-1.5 rounded-lg bg-danger-light hover:opacity-80 text-danger text-xs font-medium disabled:opacity-50"
+                        >
+                          Block
+                        </button>
+                      ))}
                     {detail.user.role !== "admin" && (
                       <button
                         onClick={deleteUserAccount}
@@ -610,6 +663,34 @@ export default function Users() {
                       </button>
                     )}
                   </div>
+
+                  {blockOpen && !detail.flags.blocked && (
+                    <div className="rounded-lg border border-danger/30 bg-danger-light/40 p-3 space-y-2">
+                      <p className="text-xs text-ink-soft">
+                        {detail.user.name} will be signed out of every device and cannot sign in until you unblock them. Their plan,
+                        progress and history stay as they are.
+                      </p>
+                      <input
+                        value={blockReason}
+                        onChange={(e) => setBlockReason(e.target.value)}
+                        maxLength={300}
+                        placeholder="Reason (only you see it), e.g. account shared with others"
+                        className="rv-input !py-1.5 text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setBlocked(true)}
+                          disabled={!!actionBusy}
+                          className="px-3 py-1.5 rounded-lg bg-danger text-white text-xs font-medium disabled:opacity-50"
+                        >
+                          {actionBusy === "block" ? "Blocking..." : "Block this account"}
+                        </button>
+                        <button onClick={() => setBlockOpen(false)} className="px-3 py-1.5 rounded-lg text-xs text-slate hover:text-ink">
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Fixing a mistyped email is what makes password reset work again */}
                   <Panel title="Profile">
