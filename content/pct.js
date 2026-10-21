@@ -48,4 +48,7 @@ const after = (v, ...ch) => clean(ch.reduce((m, c) => m * (1 + c / 100), v));
 // The change that undoes a change of c%: 25 -> -20.
 const undo = (c) => clean((100 / (100 + c) - 1) * 100);
 
-module.exports = { clean, isInt, n, rs, mixed, pct, net, after, undo, chg, chgH };
+// "an" before a number said with a vowel sound: 8, 80-89, 11, 18 (not 110, 180).
+const an = (s) => (/^(8|1[18](?![\d,]))/.test(String(s)) ? "an" : "a");
+
+module.exports = { an, clean, isInt, n, rs, mixed, pct, net, after, undo, chg, chgH };
