@@ -87,6 +87,11 @@ const SAME_WORD = {
   numbers: "number", integers: "number", integer: "number",
   remainders: "remainder",
   digits: "digit",
+  // a change is a change, whatever verb the setter liked that day (which way
+  // it goes is decided separately - see signedChanges)
+  increases: "increased", increase: "increased", raised: "increased", raises: "increased", rises: "increased", rose: "increased", hiked: "increased",
+  decreases: "decreased", decrease: "decreased", reduced: "decreased", reduces: "decreased", lowered: "decreased", falls: "decreased", fell: "decreased", cut: "decreased",
+  discounts: "discount", percent: "percentage",
 };
 
 function contentWords(text) {
@@ -181,7 +186,54 @@ const DISTINCT_DIGITS = /\b(all|its)\s+digits\s+(are\s+)?(different|distinct)\b|
 const VARIABLE = /\b[xyz]\b/i;
 const RECIPROCAL = /reciprocal|व्युत्क्रम/i;
 const hasVariable = (s) => VARIABLE.test(timesX(s).replace(/×/g, " "));
+// Which way each percentage goes: "x is increased by 30% and y decreased by
+// 25%" is not "x is decreased by 30% and y increased by 25%" (x/y grows by
+// 73⅓% in one, falls by 46% in the other), though the numbers and the words
+// are the same. Each "N%" takes the direction word nearest to it; the sets of
+// signed changes must match for a repeat. Order does not matter - a +20%,
+// −20%, +25% chain is the same question in any order.
+const UP_WORD = /\b(increas\w*|rais\w*|rise[sn]?|rising|rose|grow\w*|grew|more|higher|above|hike\w*|gain\w*|up)\b|बढ़\S*|अधिक|ज़्यादा/gi;
+const DOWN_WORD = /\b(decreas\w*|cut\w*|reduc\w*|fall\w*|fell|drop\w*|less|lower\w*|below|discount\w*|loss\w*|down|lose[sd]?|slow\w*)\b|घट\S*|कम|छूट/gi;
+// What a change applies to. When a question changes two or more different
+// things (x and y, length and breadth, speed and time), each change keeps the
+// thing it belongs to; a chain of changes to one price stays order-free.
+const ENTITY = /\b(x|y|z|length|breadth|width|height|radius|diameter|side|base|speed|time|price|consumption|tax|income|expenditure|first|second)\b/gi;
+const signedChanges = (s) => {
+  const text = String(s || "");
+  const out = [];
+  const words = [];
+  for (const [re, sign] of [[UP_WORD, "+"], [DOWN_WORD, "-"]]) {
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(text))) words.push({ at: m.index, end: m.index + m[0].length, sign });
+  }
+  const things = [];
+  ENTITY.lastIndex = 0;
+  let e;
+  while ((e = ENTITY.exec(text))) things.push({ at: e.index, name: e[1].toLowerCase() });
+  const several = new Set(things.map((t) => t.name)).size >= 2;
+  const PCT = /(\d+(?:\.\d+)?)\s*%/g;
+  let m;
+  while ((m = PCT.exec(text))) {
+    const start = m.index, end = m.index + m[0].length;
+    let best = null, gap = Infinity;
+    for (const w of words) {
+      const d = w.end <= start ? start - w.end : w.at >= end ? w.at - end : 0;
+      if (d < gap && d <= 30) { gap = d; best = w; }
+    }
+    if (!best) continue;
+    // The thing named last before this change, if the question has several.
+    const owner = several ? [...things].reverse().find((t) => t.at < start) : null;
+    out.push(`${owner ? owner.name + ":" : ""}${best.sign}${m[1]}`);
+  }
+  return out.sort();
+};
+const directionsDiffer = (a, b) => {
+  const x = signedChanges(a), y = signedChanges(b);
+  return x.length > 0 && y.length > 0 && x.join() !== y.join();
+};
 const turnsAround = (a, b) =>
+  directionsDiffer(a, b) ||
   differ(extreme, a, b) || differ(parity, a, b) || differ(asks, a, b) || differ(operations, a, b) || differ(factorKind, a, b) || NEGATED.test(a) !== NEGATED.test(b) ||
   differ(signs, a, b) || powersDiffer(a, b) || differ(powerKind, a, b) || differ(wants, a, b) ||
   FACTORIAL.test(a) !== FACTORIAL.test(b) || DISTINCT_DIGITS.test(a) !== DISTINCT_DIGITS.test(b) || hasVariable(a) !== hasVariable(b) ||

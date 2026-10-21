@@ -9,6 +9,35 @@ const visualGen = require("./visualGenerator");
 const { visualSignature, figureKey } = require("./visuals");
 const { attachDrawings } = require("./figureImage");
 const { patternCount, MAX_PER_PATTERN } = require("./qualityRules");
+const { nextIdeas, markUsed, LEVEL_MEANS } = require("./blueprints");
+
+// The next ideas of a series' blueprint; [] if it has none and none can be
+// drafted (no AI today, say) - generation then goes on as before.
+// A blueprint is a help, never a wait: drafting one gets BLUEPRINT_WAIT_MS,
+// and a series whose drafting failed is not tried again for
+// BLUEPRINT_RETRY_MS - otherwise every round of a top-up would sit through
+// the AI's retries again (a chapter audit once took over 5 minutes this way).
+const BLUEPRINT_WAIT_MS = 60 * 1000;
+const BLUEPRINT_RETRY_MS = 30 * 60 * 1000;
+const blueprintFailed = new Map();
+async function blueprintIdeas(bp, count) {
+  const key = [bp.subject, bp.chapter, bp.topic || "", bp.level].join("|");
+  if (Date.now() - (blueprintFailed.get(key) || 0) < BLUEPRINT_RETRY_MS) return [];
+  let timer;
+  try {
+    // Through the module, so a test stub that replaces callGemini is used.
+    const draft = (prompt) => require("./geminiService").callGemini(prompt, { jsonMode: true });
+    const late = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("blueprint took too long")), BLUEPRINT_WAIT_MS); });
+    const ideas = await Promise.race([nextIdeas(bp, count, { draft }), late]);
+    if (!ideas.length) blueprintFailed.set(key, Date.now());
+    return ideas;
+  } catch {
+    blueprintFailed.set(key, Date.now());
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 // How many extra to ask for each round. A round that asks for exactly what is
 // missing comes back short the moment anything is rejected, and the test ends
@@ -109,6 +138,11 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
   for (let round = 0; round < rounds && accepted.length < needed; round++) {
     const remaining = needed - accepted.length;
 
+    // A practice series writes one question per idea of its blueprint, the
+    // least-used ideas first (services/blueprints.js). The blueprint is
+    // drafted by the AI the first time the series needs one.
+    const ideasNow = generateParams.blueprint && !generateParams.visualKind ? await blueprintIdeas(generateParams.blueprint, remaining + SURPLUS) : [];
+
     // A chart or figure chapter is written by the visual generator, which
     // checks every answer against its chart or figure in code before the
     // question gets this far.
@@ -123,9 +157,13 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
           ...generateParams,
           count: remaining + SURPLUS,
           avoidTexts: [...alreadyAsked, ...accepted.map((q) => q.text)].slice(0, 60),
+          ideas: ideasNow.map((i) => i.text),
+          levelNote: generateParams.blueprint ? LEVEL_MEANS[generateParams.blueprint.level] || "" : "",
         });
     if (!raw.length) break;
 
+    // Question i was asked to follow idea i.
+    raw.forEach((q, i) => { if (ideasNow[i]) q.blueprintIdea = ideasNow[i].id; });
     for (const q of raw) Object.assign(q, tag);
 
     let checked = await runValidationPipelineBatch(raw);
@@ -245,6 +283,9 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
       accepted.push(...saved);
       // A figure whose answer the code has proved gets its picture now.
       if (generateParams.visualKind === "figure") await attachDrawings(saved.map((q) => q._id));
+      // The ideas that became questions move to the back of the queue.
+      const used = savedRound.map((q) => q.blueprintIdea).filter(Boolean);
+      if (used.length) await markUsed(generateParams.blueprint, used).catch(() => {});
     }
   }
 

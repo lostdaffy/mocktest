@@ -112,6 +112,11 @@ const MATHS_DIFFERENT = [
   ["Find the unit digit of 7³.", "The unit digit of x³ is 7. What is the unit digit of x?"],
   ["What is the unit digit of the product of all prime numbers less than 100?", "What is the unit digit of the product of all odd prime numbers less than 100?"],
   ["What is the sum of the reciprocals of all the divisors of 360?", "Find the sum of all divisors (factors) of 360."],
+  // Percentage, 2026-10-21: the same numbers going the other way
+  ["x is increased by 40% and y is decreased by 30%. What is the change in x/y?", "x is decreased by 30% and y is increased by 40%. What is the change in x/y?"],
+  ["A delivery rider lowers the speed by 10% and travels for 20% more time. What is the change in the distance covered?", "A motorcyclist lowers the speed by 20% and travels for 10% more time. What is the change in the distance covered?"],
+  ["The radius of a cylinder is increased by 20% and its height is decreased by 25%. What is the change in its volume?", "The radius of the base of a cone is decreased by 20% and its height is increased by 25%. What is the change in its volume?"],
+  ["A's salary is 20% more than B's. By what percent is B's salary less than A's?", "A's salary is 20% less than B's. By what percent is B's salary more than A's?"],
 ];
 MATHS_DIFFERENT.forEach(([a, b], i) => check(`a different maths question is not a repeat (${i + 1})`, !looksLikeRepeat(a, [b]).repeat && !looksLikeRepeat(b, [a]).repeat, a));
 const MATHS_SAME = [
@@ -127,6 +132,11 @@ const MATHS_SAME = [
   ["For any natural number n, what is the unit digit of 5ⁿ + 6ⁿ + 1?", "For any natural number n, what is the unit digit of 1ⁿ + 5ⁿ + 6ⁿ?"],
   ["The sum of three consecutive odd numbers is 57. What is the middle number?", "The sum of three consecutive odd numbers is 57. What is the largest of these numbers?"],
   ["How many divisors of 10800 are perfect squares?", "Find the number of divisors of 10800 which are perfect squares."],
+  // ...and the same changes in another order, or with another verb, stay repeats
+  ["A value is increased by 20%, then decreased by 20% and then increased by 25%. What is the overall change?", "A price is decreased by 20%, then increased by 25% and then increased by 20%. What is the overall change?"],
+  ["Two successive discounts of 10% and 20% are equal to a single discount of:", "Two successive discounts of 20% and 10% are equal to a single discount of:"],
+  ["x is increased by 40% and y is decreased by 30%. What is the change in x/y?", "x is increased by 40% and y is reduced by 30%. What is the change in x/y?"],
+  ["The price of sugar rises by 25%. By what percentage must a family reduce its consumption so that its spending stays the same?", "The price of sugar is increased by 25%. By what percentage must a family reduce its consumption so that its spending stays the same?"],
 ];
 MATHS_SAME.forEach(([a, b], i) => check(`a reworded maths question is a repeat (${i + 1})`, looksLikeRepeat(a, [b]).repeat, a));
 // Which factors it asks about changes the question.

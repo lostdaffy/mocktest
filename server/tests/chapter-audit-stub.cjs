@@ -30,7 +30,10 @@ pipeline.runValidationPipelineBatch = async (questions) =>
   });
 pipeline.runValidationPipeline = async (q) => (await pipeline.runValidationPipelineBatch([q]))[0];
 
-gemini.repairQuestion = async (q) => ({ ...q, solution: LONG, solutionHi: "हिंदी हल: " + LONG });
+// Nothing here may reach the real AI (a top-up drafts a blueprint through it).
+gemini.callGemini = async () => { throw new Error("no AI in this test"); };
+
+gemini.repairQuestion =async (q) => ({ ...q, solution: LONG, solutionHi: "हिंदी हल: " + LONG });
 
 gemini.generateQuestions = async ({ subject, difficulty, count }) =>
   Array.from({ length: count }, (_, i) => ({

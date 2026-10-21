@@ -57,6 +57,7 @@ async function chapterHealth(chapter) {
     grid[topic] = Object.fromEntries(LEVELS.map((l) => [l, { tests: 0, full: 0, live: 0, missing: TESTS_PER_LEVEL, numbers: [] }]));
   }
   const testProblems = [];
+  const twins = []; // the second of two questions in one test that ask the same thing
   for (const t of tests) {
     const topic = t.subtopic || WHOLE;
     const level = String(t.difficultyLevel || "?").toLowerCase();
@@ -64,7 +65,7 @@ async function chapterHealth(chapter) {
     const cell = (grid[topic][level] = grid[topic][level] || { tests: 0, full: 0, live: 0, missing: TESTS_PER_LEVEL, numbers: [] });
     cell.tests++;
     // The test's number in its series ("… · Easy #3"), so the missing ones can be named.
-    const number = t.seriesNumber || Number(String(t.title).match(/#(d+)s*$/)?.[1]) || 0;
+    const number = t.seriesNumber || Number(String(t.title).match(/#(\d+)\s*$/)?.[1]) || 0;
     if (number) cell.numbers.push(number);
     cell.missing = Math.max(0, TESTS_PER_LEVEL - cell.tests);
     const qs = t.questions.map((id) => byId.get(String(id)));
@@ -85,6 +86,7 @@ async function chapterHealth(chapter) {
         // Same numbers and mostly the same words. (sameFactInPaper is for GK:
         // in maths, two different remainder questions often share an answer.)
         if (looksLikeRepeat(plainMaths(a.text), [plainMaths(b.text)]).repeat) {
+          twins.push({ replace: b._id, title: t.title });
           problems.push(`asks the same thing twice: "${a.text.slice(0, 70)}" / "${b.text.slice(0, 70)}"`);
         }
       }
@@ -150,6 +152,7 @@ async function chapterHealth(chapter) {
     liveQuestions: pool.size,
     grid,
     testProblems,
+    twins,
     ruleFailures,
     notation,
     repeats,

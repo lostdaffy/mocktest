@@ -307,10 +307,13 @@ async function generateQuestions(params) {
 
   for (let round = 0; round < maxRounds && collected.length < count; round++) {
     const remaining = count - collected.length;
+    const n = Math.min(QUESTIONS_PER_CALL, remaining);
     const batch = await generateOneBatch({
       ...params,
-      count: Math.min(QUESTIONS_PER_CALL, remaining),
+      count: n,
       avoidTexts: collected.map((q) => q.text),
+      // Each call gets the next ideas of the list, not the first ones again.
+      ideas: (params.ideas || []).slice(collected.length, collected.length + n),
     });
 
     for (const q of batch) {
@@ -337,6 +340,10 @@ async function generateOneBatch({
   examLevel = "",
   syllabusTopics = [],
   avoidTexts = [],
+  // From the series' blueprint (services/blueprints.js): one question per
+  // idea, so a test of twenty tests twenty things.
+  ideas = [],
+  levelNote = "",
 }) {
   const builtIn = EXAM_CONTEXT[examType];
   const ctx = {
@@ -391,7 +398,14 @@ ${syllabusLines.map((t, i) => `${i + 1}. ${t}`).join("\n")}
 - Mix difficulty naturally like a real paper: some easy, some moderate, some tough — just as the actual exam does.
 - Focus on the TYPE of questions and concepts that genuinely repeat in this exam year after year, so practicing these gives real exam benefit.
 - Make them feel authentic — as if lifted from a real ${ctx.fullName} question paper (but original, not copied).`
-    : `- Difficulty level for all questions: "${difficulty}".`;
+    : `- Difficulty level for all questions: "${difficulty}".${levelNote ? `\n- What this level means here: ${levelNote}.` : ""}`;
+
+  const ideasBlock = ideas.length
+    ? `QUESTION IDEAS - write question 1 from idea 1, question 2 from idea 2, and so on, one idea per question. Each question must test ITS idea, at the level above:
+${ideas.map((t, i) => `${i + 1}. ${t}`).join("\n")}
+
+`
+    : "";
 
   const countLine = examMode
     ? `Generate exactly ${count} multiple-choice questions for subject "${subject}", exactly like real ${ctx.fullName} exam questions.`
@@ -462,7 +476,7 @@ CRITICAL RULES ABOUT SCOPE (follow strictly):
 - Do NOT include questions from other exams' syllabus or a harder/easier exam's level.
 - Every question must be something that could realistically appear in the actual ${ctx.fullName} exam.
 
-${syllabusBlock}${examplesBlock}${countLine}
+${syllabusBlock}${examplesBlock}${ideasBlock}${countLine}
 
 EXAM-REALISM RULES:
 ${difficultyInstruction}

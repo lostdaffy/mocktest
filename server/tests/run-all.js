@@ -24,6 +24,10 @@ for (const suite of suites) {
   const started = Date.now();
   const run = spawnSync(process.execPath, [path.join(__dirname, suite)], {
     cwd: __dirname,
+    // No suite may reach the real AI: a key set here wins over server/.env
+    // (dotenv never overrides), so a call a stub missed fails at once instead
+    // of spending the day's allowance - chapter-audit once did, for 4 minutes.
+    env: { ...process.env, GEMINI_API_KEY: "" },
     encoding: "utf8",
     timeout: 10 * 60 * 1000,
   });

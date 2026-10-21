@@ -818,6 +818,9 @@ async function buildPracticeTest({ subject, chapter, subtopic, topics, difficult
             // generator, which checks every answer against its chart or
             // figure in code.
             ...(chapterDoc?.visual ? { visualKind: chapterDoc.visual } : {}),
+            // One question per idea of the series' blueprint (drafted by the
+            // AI the first time) - see services/blueprints.js.
+            blueprint: { subject, chapter, topic: subtopic || "", level: difficulty },
           },
         });
 

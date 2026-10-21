@@ -56,6 +56,16 @@ async function runQualityCheckJob(job) {
   return qualityNote(r);
 }
 
+// Every chapter's practice tests checked the way the chapter-health screen
+// checks them; each fault gets a replacement through the quality desk
+// (services/nightlyHealth.js). Queued once a night by the reminders tick.
+async function runChapterHealthJob() {
+  const { runNightlyHealth, healthNote } = require("../services/nightlyHealth");
+  const r = await runNightlyHealth();
+  if (r.aiOut) throw new Error(`Every model has used its allowance for today - ${healthNote(r)}`);
+  return healthNote(r);
+}
+
 // The whole bank, a batch at a time, from where the last batch stopped
 // (QualitySettings.auditCursor). Each batch queues the next.
 async function runQualityAuditJob(job) {
@@ -297,6 +307,7 @@ async function runGenerationTick() {
       : job.kind === "lessons" ? await runLessonsJob()
       : job.kind === "quality_check" ? await runQualityCheckJob(job)
       : job.kind === "quality_audit" ? await runQualityAuditJob(job)
+      : job.kind === "chapter_health" ? await runChapterHealthJob(job)
       : await runMockJob(job);
     job.status = "done";
     job.result = String(result).slice(0, 300);

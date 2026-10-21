@@ -55,7 +55,9 @@ async function getQuizBoard(req, res) {
 // calling it again does nothing.
 async function jobsTick(req, res) {
   const result = await runReminders();
-  res.json({ ok: true, ...result });
+  // The night one: every chapter checked, faults sent to the quality desk.
+  const health = await require("../services/nightlyHealth").queueNightlyHealth().catch(() => null);
+  res.json({ ok: true, ...result, healthQueued: Boolean(health) });
 }
 
 module.exports = { getTodayPlan, getQuizBoard, jobsTick, getContinue, getNotifications, getQuestionOfDay, postQuestionOfDay };

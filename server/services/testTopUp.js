@@ -69,6 +69,10 @@ async function generationParamsFor(test, subjectName) {
       // A Data Interpretation or figure chapter is written by the visual
       // generator - see services/visualGenerator.js.
       ...(chapterDoc?.visual ? { visualKind: chapterDoc.visual } : {}),
+      // A practice series is written from its blueprint of ideas.
+      ...(test.type === "practice" && chapter
+        ? { blueprint: { subject, chapter, topic: test.subtopic || "", level: test.difficultyLevel || "easy" } }
+        : {}),
     },
   };
 }
