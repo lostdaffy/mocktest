@@ -1,0 +1,27 @@
+// "between A and B" counts where an end would itself be counted, so two
+// answers were defensible - found by the backend's new rule
+// (services/qualityRules.js ambiguousBetween) on 2026-10-21. Each is moved to
+// ends that would not be counted, and the count worked out again in `v`.
+const L = require("./lib");
+const Q = (t, r, q, qh, o, a, value, s, sh) => ({ t: `Number System · ${t}`, r, rr: "ambiguous: an end of the range would itself be counted", q, qh, o, a, v: () => L.only(o, a, String(value())), s, sh });
+
+module.exports = [
+  Q("Mixed Practice · Medium #9", "6abe85ec6580e18694f1f045",
+    "How many integers between 100 and 310 are divisible by both 5 and 6?", "100 और 310 के बीच कितने पूर्णांक 5 और 6 दोनों से विभाज्य हैं?", ["7", "6", "8", "9"], 0, () => L.count(101, 309, (n) => n % 30 === 0),
+    "Divisible by both 5 and 6 means divisible by 30. Between 100 and 310 these are 120, 150, 180, 210, 240, 270, 300 - that is 7 (neither 100 nor 310 is a multiple of 30).", "5 और 6 दोनों से विभाज्य का अर्थ 30 से विभाज्य। 100 और 310 के बीच ये 120, 150, 180, 210, 240, 270, 300 हैं - कुल 7 (न 100 न 310, 30 का गुणज है)।"),
+  Q("Mixed Practice · Hard #8", "6ac05fe43bed8428c4c89694",
+    "How many numbers between 200 and 610 are divisible by both 4 and 6?", "200 और 610 के बीच कितनी संख्याएँ 4 और 6 दोनों से विभाज्य हैं?", ["34", "33", "35", "32"], 0, () => L.count(201, 609, (n) => n % 12 === 0),
+    "Divisible by both 4 and 6 means divisible by LCM(4, 6) = 12. Multiples of 12 up to 610: 50 (12 × 50 = 600); up to 200: 16 (12 × 16 = 192). Neither end is a multiple of 12, so 50 − 16 = 34.", "4 और 6 दोनों से विभाज्य का अर्थ LCM(4, 6) = 12 से विभाज्य। 610 तक 12 के गुणज: 50 (12 × 50 = 600); 200 तक: 16 (12 × 16 = 192)। कोई सिरा 12 का गुणज नहीं, अतः 50 − 16 = 34।"),
+  Q("Mixed Practice · Advanced #6", "6ac0945c43e0284865e12f09",
+    "How many numbers between 99 and 1,001 are divisible by neither 3 nor 7?", "99 और 1,001 के बीच कितनी संख्याएँ न 3 से विभाज्य हैं न 7 से?", ["516", "514", "518", "520"], 0, () => L.count(100, 1000, (n) => n % 3 && n % 7),
+    "The numbers are 100 to 1,000 (99 = 3 × 33 and 1,001 = 7 × 143 would not be counted anyway). From 1 to 1,000: 1,000 − 333 − 142 + 47 = 572 are divisible by neither; from 1 to 99: 99 − 33 − 14 + 4 = 56. 572 − 56 = 516.", "संख्याएँ 100 से 1,000 हैं (99 = 3 × 33 और 1,001 = 7 × 143 वैसे भी नहीं गिनी जातीं)। 1 से 1,000 में: 1,000 − 333 − 142 + 47 = 572 किसी से विभाज्य नहीं; 1 से 99 में: 99 − 33 − 14 + 4 = 56। 572 − 56 = 516।"),
+  Q("Mixed Practice · Advanced #9", "6ac09bd143e0284865e13674",
+    "How many numbers between 200 and 590 are divisible by both 4 and 6, but not by 9?", "200 और 590 के बीच कितनी संख्याएँ 4 और 6 दोनों से विभाज्य हैं, पर 9 से नहीं?", ["22", "33", "37", "28"], 0, () => L.count(201, 589, (n) => n % 12 === 0 && n % 9),
+    "Divisible by 4 and 6 means by 12: from 204 to 588 there are 33 such numbers. Those also divisible by 9 are multiples of LCM(12, 9) = 36: 216 to 576, that is 11. 33 − 11 = 22.", "4 और 6 से विभाज्य का अर्थ 12 से: 204 से 588 तक ऐसी 33 संख्याएँ। इनमें 9 से भी विभाज्य, यानी LCM(12, 9) = 36 के गुणज: 216 से 576, कुल 11। 33 − 11 = 22।"),
+  Q("Divisibility Rules · Hard #1", "6ad279ea1f0dee15d7edb451",
+    "How many numbers between 200 and 650 are divisible by 4, 5 and 6 together?", "200 और 650 के बीच कितनी संख्याएँ 4, 5 और 6 तीनों से विभाज्य हैं?", ["7", "6", "8", "5"], 0, () => L.count(201, 649, (n) => n % 60 === 0),
+    "Divisible by 4, 5 and 6 together means divisible by LCM(4, 5, 6) = 60. Between 200 and 650: 240, 300, 360, 420, 480, 540, 600 - that is 7.", "4, 5 और 6 तीनों से विभाज्य का अर्थ LCM(4, 5, 6) = 60 से विभाज्य। 200 और 650 के बीच: 240, 300, 360, 420, 480, 540, 600 - कुल 7।"),
+  Q("Factors and Multiples · Easy #4", "6ad837c23d85a8788e9b2870",
+    "How many multiples of 8 lie between 205 and 300?", "205 और 300 के बीच 8 के कितने गुणज हैं?", ["12", "13", "11", "25"], 0, () => L.count(206, 299, (n) => n % 8 === 0),
+    "The first multiple of 8 after 205 is 208 (8 × 26) and the last before 300 is 296 (8 × 37). From 26 to 37 there are 37 − 26 + 1 = 12.", "205 के बाद 8 का पहला गुणज 208 (8 × 26) और 300 से पहले अंतिम 296 (8 × 37)। 26 से 37 तक 37 − 26 + 1 = 12।"),
+];

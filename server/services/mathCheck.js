@@ -149,10 +149,65 @@ function checkArithmetic(q) {
 // conversions, percent, a dozen, days and degrees, pi as 22/7.
 const FREE_NUMBERS = new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 18, 22, 24, 30, 60, 100, 1000, 360, 365, 3600, 0.5]);
 
+// The working is a small language, read and run here - never eval'd:
+//
+//   numbers, + - * / ^, ( ), a postfix % (12% is 0.12), pi
+//   comparisons == != < <= > >= and the words and / or / not (true is 1)
+//   sqrt cbrt abs round floor ceil pow min max hcf gcd lcm
+//   mod(a, b)            remainder, always 0 .. b-1
+//   powmod(b, e, m)      b^e mod m for huge e (exact, BigInt)
+//   unitdigit(b, e)      last digit of b^e
+//   fact(n) ncr(n, r) npr(n, r)
+//   tau(n) sigma(n) phi(n) isprime(n) digitsum(n)
+//   count(n, a, b, condition)   how many n from a to b make it true
+//   sum(n, a, b, value) product(n, a, b, value)
+//   first(n, a, b, condition) last(n, a, b, condition)   smallest / largest such n
+//
+// The counting forms are what let "how many numbers from 1 to 2,000 are
+// divisible by none of 2, 3, 5 and 7" or "the sum of the factors of 2,520
+// that are odd" be worked out in code, not trusted to the model - the
+// Factors and Multiples tests of 2026-10-20 were mostly questions of that
+// shape, and the one wrong key among them was one too. Loops are capped, so
+// a working cannot run away with the server.
+const MAX_STEPS = 3_000_000;
+const MAX_FACTOR_N = 1e12;
+const intOnly = (name, ...xs) => {
+  for (const x of xs) if (!Number.isInteger(x)) throw new Error(`${name} needs whole numbers`);
+};
+const tauOf = (n) => { let c = 0; for (let d = 1; d * d <= n; d++) if (n % d === 0) c += d * d === n ? 1 : 2; return c; };
+const sigmaOf = (n) => { let s = 0; for (let d = 1; d * d <= n; d++) if (n % d === 0) s += d * d === n ? d : d + n / d; return s; };
+const phiOf = (n) => { let r = n, x = n; for (let p = 2; p * p <= x; p++) if (x % p === 0) { while (x % p === 0) x /= p; r -= r / p; } if (x > 1) r -= r / x; return r; };
+const isPrimeN = (n) => { if (n < 2) return false; for (let d = 2; d * d <= n; d++) if (n % d === 0) return false; return true; };
+const powmodBig = (b, e, m) => {
+  let r = 1n, x = ((BigInt(b) % BigInt(m)) + BigInt(m)) % BigInt(m), k = BigInt(e);
+  const M = BigInt(m);
+  while (k > 0n) { if (k & 1n) r = (r * x) % M; x = (x * x) % M; k >>= 1n; }
+  return Number(r % M);
+};
+const FNS = {
+  sqrt: (x) => Math.sqrt(x), cbrt: (x) => Math.cbrt(x), abs: (x) => Math.abs(x), round: (x) => Math.round(x),
+  floor: (x) => Math.floor(x + 1e-9), ceil: (x) => Math.ceil(x - 1e-9),
+  pow: (a, b) => Math.pow(a, b), min: (...a) => Math.min(...a), max: (...a) => Math.max(...a),
+  gcd: (...a) => a.reduce((x, y) => gcd(x, y)), hcf: (...a) => a.reduce((x, y) => gcd(x, y)), lcm: (...a) => a.reduce((x, y) => lcm(x, y)),
+  mod: (a, b) => { intOnly("mod", a, b); if (!b) throw new Error("mod by 0"); return ((a % b) + Math.abs(b)) % Math.abs(b); },
+  powmod: (b, e, m) => { intOnly("powmod", b, e, m); if (e < 0 || m < 1) throw new Error("powmod needs e >= 0, m >= 1"); return powmodBig(b, e, m); },
+  unitdigit: (b, e) => { intOnly("unitdigit", b, e); if (e < 0) throw new Error("unitdigit needs e >= 0"); return powmodBig(Math.abs(b), e, 10); },
+  fact: (n) => { intOnly("fact", n); if (n < 0 || n > 170) throw new Error("fact needs 0..170"); let r = 1; for (let k = 2; k <= n; k++) r *= k; return r; },
+  ncr: (n, r) => { intOnly("ncr", n, r); if (r < 0 || r > n) return 0; let v = 1; for (let k = 1; k <= r; k++) v = (v * (n - r + k)) / k; return Math.round(v); },
+  npr: (n, r) => { intOnly("npr", n, r); if (r < 0 || r > n) return 0; let v = 1; for (let k = 0; k < r; k++) v *= n - k; return v; },
+  tau: (n) => { intOnly("tau", n); if (n < 1 || n > MAX_FACTOR_N) throw new Error("tau needs 1..10^12"); return tauOf(n); },
+  sigma: (n) => { intOnly("sigma", n); if (n < 1 || n > MAX_FACTOR_N) throw new Error("sigma needs 1..10^12"); return sigmaOf(n); },
+  phi: (n) => { intOnly("phi", n); if (n < 1 || n > MAX_FACTOR_N) throw new Error("phi needs 1..10^12"); return phiOf(n); },
+  isprime: (n) => { intOnly("isprime", n); if (n > MAX_FACTOR_N) throw new Error("isprime needs n <= 10^12"); return isPrimeN(n) ? 1 : 0; },
+  digitsum: (n) => { intOnly("digitsum", n); return String(Math.abs(n)).split("").reduce((s, d) => s + Number(d), 0); },
+};
+const LOOPS = new Set(["count", "sum", "product", "first", "last"]);
+const WORD_OPS = { and: "&&", or: "||", not: "!" };
+
 function evaluateArithmetic(src) {
   const toks = [];
-  const re = /\s*(?:(\d+(?:\.\d+)?)|([A-Za-z_]+)|(\*\*|[-+*/^(),%]))/y;
-  const s = String(src || "").replace(/×/g, "*").replace(/÷/g, "/");
+  const re = /\s*(?:(\d+(?:\.\d+)?)|([A-Za-z_]+)|(\*\*|==|!=|<=|>=|&&|\|\||[-+*/^(),%<>!]))/y;
+  const s = String(src || "").replace(/×/g, "*").replace(/÷/g, "/").replace(/≤/g, "<=").replace(/≥/g, ">=").replace(/≠/g, "!=");
   let m;
   re.lastIndex = 0;
   while (re.lastIndex < s.length) {
@@ -162,9 +217,15 @@ function evaluateArithmetic(src) {
       throw new Error(`cannot read "${s.slice(re.lastIndex, re.lastIndex + 8)}"`);
     }
     if (m[1]) toks.push({ t: "num", v: Number(m[1]) });
-    else if (m[2]) toks.push({ t: "id", v: m[2].toLowerCase() });
-    else toks.push({ t: "op", v: m[3] === "**" ? "^" : m[3] });
+    else if (m[2]) {
+      const w = m[2].toLowerCase();
+      if (WORD_OPS[w]) toks.push({ t: "op", v: WORD_OPS[w] });
+      else toks.push({ t: "id", v: w });
+    } else toks.push({ t: "op", v: m[3] === "**" ? "^" : m[3] });
   }
+
+  // ---- parse into a tree (a loop body is run once per value, so it cannot
+  //      be worked out while reading)
   let i = 0;
   const peek = () => toks[i];
   const take = (v) => {
@@ -173,52 +234,116 @@ function evaluateArithmetic(src) {
     i++;
     return t;
   };
-  const FNS = {
-    sqrt: (x) => Math.sqrt(x), cbrt: (x) => Math.cbrt(x), abs: (x) => Math.abs(x), round: (x) => Math.round(x),
-    pow: (a, b) => Math.pow(a, b), min: (...a) => Math.min(...a), max: (...a) => Math.max(...a),
-    gcd: (...a) => a.reduce((x, y) => gcd(x, y)), hcf: (...a) => a.reduce((x, y) => gcd(x, y)), lcm: (...a) => a.reduce((x, y) => lcm(x, y)),
-  };
   const used = [];
+  let operators = 0;
+  const bound = [];
   function primary() {
     const t = peek();
     if (!t) throw new Error("ends too early");
-    if (t.t === "num") { used.push(t.v); return take().v; }
-    if (t.v === "(") { take("("); const v = expr(); take(")"); return v; }
-    if (t.v === "-") { take("-"); return -power(); }
+    if (t.t === "num") { used.push(t.v); take(); return { k: "num", v: t.v }; }
+    if (t.v === "(") { take("("); const e = orExpr(); take(")"); return e; }
+    if (t.v === "-") { take("-"); operators++; return { k: "neg", a: power() }; }
     if (t.v === "+") { take("+"); return power(); }
+    if (t.v === "!") { take("!"); operators++; return { k: "not", a: power() }; }
     if (t.t === "id") {
       const name = take().v;
-      if (name === "pi") return Math.PI;
-      const fn = FNS[name];
-      if (!fn) throw new Error(`unknown function ${name}`);
+      if (name === "pi") return { k: "num", v: Math.PI };
+      if (bound.includes(name) && peek()?.v !== "(") return { k: "var", name };
+      operators++;
+      if (LOOPS.has(name)) {
+        take("(");
+        const v = peek();
+        if (!v || v.t !== "id" || FNS[v.v] || LOOPS.has(v.v)) throw new Error(`${name} needs a letter to count with, e.g. ${name}(n, 1, 100, ...)`);
+        take();
+        take(",");
+        const from = orExpr(); take(",");
+        const to = orExpr(); take(",");
+        bound.push(v.v);
+        const body = orExpr();
+        bound.pop();
+        take(")");
+        return { k: "loop", name, v: v.v, from, to, body };
+      }
+      if (!FNS[name]) throw new Error(peek()?.v === "(" ? `unknown function ${name}` : `unknown name ${name} (a letter is only known inside count/sum/product/first/last)`);
       take("(");
-      const args = [expr()];
-      while (peek()?.v === ",") { take(","); args.push(expr()); }
+      const args = [orExpr()];
+      while (peek()?.v === ",") { take(","); args.push(orExpr()); }
       take(")");
-      return fn(...args);
+      return { k: "fn", name, args };
     }
     throw new Error(`unexpected "${t.v}"`);
   }
   function power() {
-    const base = primary();
-    if (peek()?.v === "^") { take("^"); return Math.pow(base, power()); }
-    if (peek()?.v === "%") { take("%"); return base / 100; }
-    return base;
+    let base = primary();
+    for (;;) {
+      if (peek()?.v === "^") { take("^"); operators++; base = { k: "bin", op: "^", a: base, b: power() }; continue; }
+      if (peek()?.v === "%") { take("%"); operators++; base = { k: "pct", a: base }; continue; }
+      return base;
+    }
   }
-  function term() {
-    let v = power();
-    while (peek() && (peek().v === "*" || peek().v === "/")) v = take().v === "*" ? v * power() : v / power();
+  const chain = (next, ops) => () => {
+    let v = next();
+    while (peek() && ops.includes(peek().v)) { const op = take().v; operators++; v = { k: "bin", op, a: v, b: next() }; }
     return v;
-  }
-  function expr() {
-    let v = term();
-    while (peek() && (peek().v === "+" || peek().v === "-")) v = take().v === "+" ? v + term() : v - term();
-    return v;
-  }
-  const value = expr();
+  };
+  const term = chain(power, ["*", "/"]);
+  const sum = chain(term, ["+", "-"]);
+  const cmp = chain(sum, ["==", "!=", "<", "<=", ">", ">="]);
+  const andExpr = chain(cmp, ["&&"]);
+  const orExpr = chain(andExpr, ["||"]);
+  const tree = orExpr();
   if (i !== toks.length) throw new Error(`unexpected "${toks[i].v}"`);
+
+  // ---- run it
+  let steps = 0;
+  const env = {};
+  const B = (x) => (x ? 1 : 0);
+  function run(n) {
+    if (++steps > MAX_STEPS) throw new Error("too much counting - narrow the range");
+    switch (n.k) {
+      case "num": return n.v;
+      case "var": return env[n.name];
+      case "neg": return -run(n.a);
+      case "not": return B(!run(n.a));
+      case "pct": return run(n.a) / 100;
+      case "fn": return FNS[n.name](...n.args.map(run));
+      case "bin": {
+        if (n.op === "&&") return B(run(n.a) && run(n.b));
+        if (n.op === "||") return B(run(n.a) || run(n.b));
+        const a = run(n.a), b = run(n.b);
+        switch (n.op) {
+          case "+": return a + b; case "-": return a - b; case "*": return a * b; case "/": return a / b;
+          case "^": return Math.pow(a, b);
+          case "==": return B(close(a, b)); case "!=": return B(!close(a, b));
+          case "<": return B(a < b); case "<=": return B(a <= b || close(a, b)); case ">": return B(a > b); case ">=": return B(a >= b || close(a, b));
+        }
+        throw new Error(`unknown operator ${n.op}`);
+      }
+      case "loop": {
+        const from = run(n.from), to = run(n.to);
+        intOnly(n.name, from, to);
+        if (to - from > 2_000_000) throw new Error(`${n.name} over more than 2,000,000 values`);
+        const saved = env[n.v];
+        let acc = n.name === "product" ? 1 : 0;
+        let found = null;
+        for (let x = from; x <= to; x++) {
+          env[n.v] = x;
+          const val = run(n.body);
+          if (n.name === "count") acc += val ? 1 : 0;
+          else if (n.name === "sum") acc += val;
+          else if (n.name === "product") acc *= val;
+          else if (val) { found = x; if (n.name === "first") break; }
+        }
+        env[n.v] = saved;
+        if (n.name === "first" || n.name === "last") { if (found === null) throw new Error(`no value from ${from} to ${to} fits`); return found; }
+        return acc;
+      }
+    }
+    throw new Error("cannot run this");
+  }
+  const value = run(tree);
   if (!Number.isFinite(value)) throw new Error("does not give a number");
-  return { value, used, operators: toks.filter((t) => t.t === "op" && t.v !== "(" && t.v !== ")" && t.v !== ",").length + toks.filter((t) => t.t === "id").length };
+  return { value, used, operators };
 }
 
 // An option matches when it is the worked value rounded to the places the
