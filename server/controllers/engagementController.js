@@ -54,6 +54,9 @@ async function getQuizBoard(req, res) {
 // on purpose and harmless: every reminder goes out at most once a day, so
 // calling it again does nothing.
 async function jobsTick(req, res) {
+  // The wake-up call is also when the coming days' quizzes are checked:
+  // a sleeping free instance may have missed the 5-minute timer for hours.
+  await require("../services/dailyQuiz").runDailyQuizTick().catch((e) => console.error("Daily quiz tick:", e.message));
   const result = await runReminders();
   // The night one: every chapter checked, faults sent to the quality desk.
   const health = await require("../services/nightlyHealth").queueNightlyHealth().catch(() => null);

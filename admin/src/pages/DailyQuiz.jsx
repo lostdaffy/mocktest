@@ -122,6 +122,11 @@ export default function DailyQuiz() {
               </select>
               day(s) ahead with AI
             </label>
+            <p className="text-xs text-slate-soft">
+              If the AI is down, the missing days stay queued and fill in by themselves when it is back. An AI quiz with a fault
+              (two questions asking the same thing) is mended from the bank and goes live by itself. If tomorrow is still not
+              ready by 6 PM, it is made from the bank, so midnight is always covered.
+            </p>
           </div>
           <Button className="mt-4" size="sm" loading={busy === "settings"} onClick={saveSettings}>
             Save

@@ -43,7 +43,7 @@ const dailyQuizSettingsSchema = new mongoose.Schema(
     autoFromBank: { type: Boolean, default: true },
     // Queue AI generation for the coming days that have no quiz yet.
     autoAI: { type: Boolean, default: false },
-    daysAhead: { type: Number, default: 2, min: 1, max: 7 },
+    daysAhead: { type: Number, default: 4, min: 1, max: 7 },
   },
   { timestamps: true }
 );

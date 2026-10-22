@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const Question = require("../models/Question");
 const Test = require("../models/Test");
 const GenerationJob = require("../models/GenerationJob");
-const QueueState = require("../models/QueueState");
 const { DailyQuiz, DailyQuizSettings } = require("../models/DailyQuiz");
 
 // The Daily GK Quiz: 20 General Knowledge questions, the same for every
@@ -316,7 +315,11 @@ async function generateQuizWithAI(date, { by = "auto" } = {}) {
       ids.push(...built.ids.map(String));
     }
   } catch (err) {
-    await DailyQuiz.updateOne({ date }, { $set: { status: "draft", lastError: err.message } });
+    // A backup already made for this date (from the bank) stays live: the AI
+    // failing is no reason to take a sound quiz away.
+    const { test: kept } = await quizWithTest(date);
+    const sound = kept && !(await quizProblems(kept, date)).length;
+    await DailyQuiz.updateOne({ date }, { $set: { status: sound ? "ready" : "draft", lastError: err.message } });
     throw err;
   }
 
@@ -404,20 +407,73 @@ async function quizDetail(date) {
   };
 }
 
-// The scheduler's share, run every few minutes: today is always covered from
-// the bank, and with AI on, the coming days are queued for generation.
-async function runDailyQuizTick() {
+// A date whose AI quiz failed is tried again after this long, not on every
+// tick - when Gemini is down, a retry every 5 minutes only burns the queue.
+const AI_RETRY_MS = 30 * 60 * 1000;
+// From this hour (IST), tomorrow's quiz is made from the bank if it is still
+// not ready - the AI has had the whole day, and midnight must be safe.
+const BACKUP_FROM_HOUR = 18;
+
+// The scheduler's share, run every 5 minutes and on every wake-up call.
+// Goal: today and the next `daysAhead` days (4 by default) always hold a
+// ready quiz, so a day or two of Gemini being down changes nothing for
+// students.
+//   - today: always covered (from the bank if need be);
+//   - a coming day with no quiz: queued for the AI - even while the queue is
+//     paused, so it runs the moment the AI is back and the missed days fill
+//     themselves in;
+//   - an AI quiz that came out with a fault (two questions asking the same
+//     thing, a repeat): only the faulty questions are swapped from the bank
+//     and it goes live by itself - nobody has to open the panel;
+//   - an AI attempt that failed: tried again after AI_RETRY_MS;
+//   - tomorrow, still not ready by the evening: made from the bank.
+// A quiz an admin is preparing by hand (preparedBy is not "auto") is left
+// alone until its own day.
+async function runDailyQuizTick({ now = new Date() } = {}) {
   const settings = await getSettings();
+  const out = { repaired: [], queued: [], backup: [], failed: [] };
   if (settings.autoFromBank) await ensureTodayQuiz().catch((e) => console.error("Daily quiz (today):", e.message));
-  if (!settings.autoAI) return;
-  const state = await QueueState.findOne({ key: "generation" }).lean();
-  if (state?.paused) return; // nothing would run anyway
+  const istHour = new Date(now.getTime() + IST_OFFSET_MS).getUTCHours();
+
   for (let d = 1; d <= settings.daysAhead; d++) {
-    const date = istDateKey(new Date(), d);
-    const quiz = await DailyQuiz.findOne({ date }).lean();
-    if (quiz && (quiz.status === "ready" || quiz.test)) continue; // done, or someone is working on it
-    await queueAIQuiz(date, "auto");
+    const date = istDateKey(now, d);
+    const { quiz, test } = await quizWithTest(date);
+    const problems = test ? await quizProblems(test, date) : ["no quiz"];
+    if (quiz?.status === "ready" && !problems.length) continue;
+
+    const job = await GenerationJob.findOne({ kind: "daily_quiz", quizDate: date }).sort({ createdAt: -1 }).lean();
+    const working = job && ["queued", "running"].includes(job.status);
+    const byHand = quiz && quiz.preparedBy && quiz.preparedBy !== "auto";
+
+    try {
+      // A finished quiz with a fault, or a sound one never switched on.
+      if (test && !working && !byHand && settings.autoFromBank) {
+        await fillFromBank(date, { status: "ready", by: "auto" });
+        out.repaired.push(date);
+        continue;
+      }
+      if (byHand) continue;
+
+      if (!test && !working && settings.autoAI) {
+        const failedLately = job?.status === "failed" && now - new Date(job.updatedAt || job.createdAt) < AI_RETRY_MS;
+        if (!failedLately) {
+          await queueAIQuiz(date, "auto");
+          out.queued.push(date);
+        }
+      }
+
+      // Tomorrow must not wait on the AI past the evening (or at all, with AI off).
+      const late = d === 1 && istHour >= BACKUP_FROM_HOUR;
+      if (!test && settings.autoFromBank && (late || !settings.autoAI)) {
+        await fillFromBank(date, { status: "ready", by: "auto" });
+        out.backup.push(date);
+      }
+    } catch (err) {
+      out.failed.push(`${date}: ${err.message}`);
+      await DailyQuiz.updateOne({ date }, { $set: { lastError: err.message } }, { upsert: true }).catch(() => {});
+    }
   }
+  return out;
 }
 
 module.exports = {
