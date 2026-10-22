@@ -170,11 +170,11 @@ export default function PracticeSeries() {
   // re-reads itself and a notification says so, wherever the admin is.
   const { activity: queue, refresh: refreshQueue } = useGenerationActivity();
   const queuePaused = !!queue?.paused;
-  const subjectJobs = useJobs((j) => (j.kind === "practice" || j.kind === "top_up") && j.subject === subjectName);
+  const subjectJobs = useJobs((j) => (j.kind === "practice" || j.kind === "top_up" || j.kind === "practice_series") && j.subject === subjectName);
   const chapterJobs = subjectJobs.filter((j) => j.chapter === chapterName);
   const topUpJobs = new Map(chapterJobs.filter((j) => j.kind === "top_up" && j.testId).map((j) => [String(j.testId), j]));
   useGenerationFinished((job) => {
-    if (job.kind !== "practice" && job.kind !== "top_up") return;
+    if (job.kind !== "practice" && job.kind !== "top_up" && job.kind !== "practice_series") return;
     load({ silent: true });
     if (job.subject === subjectName && job.chapter === chapterName) loadChapterTests(subjectName, chapterName);
   });
@@ -555,6 +555,40 @@ export default function PracticeSeries() {
         <h2 className="font-display text-lg font-bold text-ink">
           <span className="capitalize">{openLevel}</span> tests{openSub && <span className="text-slate"> · {openSub}</span>}
         </h2>
+        <div className="flex flex-wrap items-center gap-2">
+        {/* The whole series on the server: built to 10, each test live once
+            it is full and sound - carries on with nobody at the panel. */}
+        {[
+          ["this", `Fill ${openLevel} to 10 (auto)`, openLevel],
+          ["all", "Fill all levels to 10 (auto)", "all"],
+        ].map(([key, text, difficulty]) => (
+          <button
+            key={key}
+            onClick={async () => {
+              setGenBusy(`series-${key}`);
+              try {
+                const res = await api.post("/generation/enqueue-series", {
+                  subject: selectedSubject.name,
+                  chapter: ch.name,
+                  subtopic: openSub || undefined,
+                  difficulty,
+                  target: 10,
+                });
+                toast.success(res.data.message);
+                refreshQueue();
+              } catch (err) {
+                toast.error(err.response?.data?.message || "Couldn't queue the series");
+              } finally {
+                setGenBusy(null);
+              }
+            }}
+            disabled={!!genBusy}
+            title="Builds the tests one by one on the server and publishes each when it has 20 sound questions. Runs on its own, even overnight."
+            className="px-3 py-1.5 rounded-lg border border-brand text-brand hover:bg-brand/5 text-xs font-medium disabled:opacity-50"
+          >
+            {genBusy === `series-${key}` ? "Queueing..." : text}
+          </button>
+        ))}
         <button
           onClick={() => generate(ch, openLevel, openSub)}
           disabled={!!genBusy}
@@ -569,6 +603,7 @@ export default function PracticeSeries() {
             `+ Build ${openLevel} test (${FULL_TEST} Qs)`
           )}
         </button>
+        </div>
       </div>
 
       {testsLoading ? (

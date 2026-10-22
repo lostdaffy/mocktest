@@ -270,8 +270,16 @@ async function runGenerationTick() {
     return;
   }
 
-  // Paused stays paused until a person resumes it - including after the
-  // allowance has reset. The team chose to press Resume themselves.
+  // A pause for the day's AI allowance lifts itself once the allowance has
+  // reset (since 2026-10-22: the queue fills practice series for days with
+  // nobody at the panel). A pause the admin made stays until they resume.
+  if (state.paused && state.pausedBy === "worker" && state.resumableAfter && new Date(state.resumableAfter) <= new Date()) {
+    await QueueState.updateOne(
+      { key: "generation" },
+      { $set: { paused: false, pausedReason: "", pausedBy: "worker" }, $unset: { resumableAfter: "", resumeAfter: "" } }
+    );
+    return;
+  }
   if (state.paused) return;
 
   // Repairs first: a top-up is a test students may be sitting short right
@@ -308,6 +316,7 @@ async function runGenerationTick() {
       : job.kind === "quality_check" ? await runQualityCheckJob(job)
       : job.kind === "quality_audit" ? await runQualityAuditJob(job)
       : job.kind === "chapter_health" ? await runChapterHealthJob(job)
+      : job.kind === "practice_series" ? await require("../services/practiceSeries").fillSeriesStep(job)
       : await runMockJob(job);
     job.status = "done";
     job.result = String(result).slice(0, 300);

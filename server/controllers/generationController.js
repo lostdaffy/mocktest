@@ -295,6 +295,33 @@ async function enqueuePractice(req, res) {
   });
 }
 
+// POST /api/generation/enqueue-series { subject, chapter, subtopic?, difficulty | "all", target? }
+// Fills a practice series to `target` tests (10) on the server, one step a
+// job, publishing each test once it is full and sound (services/practiceSeries.js).
+async function enqueueSeries(req, res) {
+  const { subject, chapter } = req.body || {};
+  const subtopic = String(req.body?.subtopic || "").trim() || undefined;
+  const target = Math.min(20, Math.max(1, Number(req.body?.target) || 10));
+  const levels = req.body?.difficulty === "all" ? ["easy", "medium", "hard", "advanced"] : [req.body?.difficulty];
+  if (!subject || !chapter || !levels.every((l) => ["easy", "medium", "hard", "advanced"].includes(l))) {
+    return res.status(400).json({ message: "subject, chapter and difficulty (or \"all\") are required" });
+  }
+  if (subtopic) {
+    const Subject = require("../models/Subject");
+    const subjectDoc = await Subject.findOne({ $or: [{ name: subject }, { aliases: subject }] }).lean();
+    const topics = (subjectDoc?.chapters || []).find((c) => c.name === chapter)?.topics || [];
+    if (!topics.includes(subtopic)) return res.status(400).json({ message: `"${subtopic}" is not one of the topics of ${chapter}.` });
+  }
+  const { queueSeries } = require("../services/practiceSeries");
+  let queued = 0;
+  for (const difficulty of levels) if (await queueSeries({ subject, chapter, subtopic, difficulty, target })) queued++;
+  if (queued) await unpause();
+  res.status(queued ? 201 : 200).json({
+    message: queued ? `Queued ${queued} series to fill to ${target} tests each. Each test goes live by itself when it is full and sound.` : "Already in the queue",
+    queued,
+  });
+}
+
 // POST /api/generation/pause and /resume (admin)
 async function pause(req, res) {
   await QueueState.updateOne(
@@ -360,4 +387,5 @@ async function prioritize(req, res) {
 }
 
 module.exports = {
+  enqueueSeries,
   prioritize, queueStatus, activity, listGaps, enqueue, enqueueShort, enqueuePractice, pause, resume, retryFailed, clearHistory, cancelQueued };

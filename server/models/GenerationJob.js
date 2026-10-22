@@ -12,7 +12,7 @@ const mongoose = require("mongoose");
 // survives a restart, the panel can show it, and a job that fails says why.
 const generationJobSchema = new mongoose.Schema(
   {
-    kind: { type: String, enum: ["practice", "mock", "daily_quiz", "top_up", "pyq_extract", "reference_read", "lessons", "quality_check", "quality_audit", "chapter_health"], required: true },
+    kind: { type: String, enum: ["practice", "mock", "daily_quiz", "top_up", "pyq_extract", "reference_read", "lessons", "quality_check", "quality_audit", "chapter_health", "practice_series"], required: true },
 
     // quality_check: the questions the AI quality desk is to check (a
     // spreadsheet's new rows), and where they came from. Shrinks to the ones
@@ -38,6 +38,8 @@ const generationJobSchema = new mongoose.Schema(
     // practice: one topic of the chapter, when the test is for that topic
     // alone. Empty means the whole chapter.
     subtopic: String,
+    // practice_series: how many tests the series is filled to (services/practiceSeries.js)
+    target: Number,
 
     // mock: the recruitment notice whose syllabus the mock follows. Empty
     // means the exam's general mock series.

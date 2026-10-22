@@ -7,6 +7,7 @@ const {
   enqueue,
   enqueueShort,
   enqueuePractice,
+  enqueueSeries,
   pause,
   resume,
   retryFailed,
@@ -25,6 +26,7 @@ router.post("/enqueue", protect, adminOnly, asyncRoute(enqueue));
 router.post("/enqueue-short", protect, adminOnly, asyncRoute(enqueueShort));
 router.post("/prioritize", protect, adminOnly, asyncRoute(prioritize)); // one exam's waiting work first
 router.post("/enqueue-practice", protect, adminOnly, asyncRoute(enqueuePractice));
+router.post("/enqueue-series", protect, adminOnly, asyncRoute(enqueueSeries)); // fill a practice series to 10 tests, unattended
 router.post("/pause", protect, adminOnly, asyncRoute(pause));
 router.post("/resume", protect, adminOnly, asyncRoute(resume));
 router.post("/retry-failed", protect, adminOnly, asyncRoute(retryFailed));
