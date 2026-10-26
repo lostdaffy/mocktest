@@ -172,6 +172,23 @@ const good = (n, extra = {}) => ({
   r = await api("GET", "/quality/export?chapter=Percentage", { token });
   check("the bank exports as spreadsheet rows", (r.json.rows || []).length >= 3 && r.json.rows[0].optionA, `${(r.json.rows || []).length}`);
 
+  // ---- a maths question rewritten with new numbers takes a new formula
+  const fq = (await db.collection("questions").insertOne({ ...good(9), formula: "249 * 100 / 75" })).insertedId;
+  const rewrite = {
+    text: "What is the perimeter of an equilateral triangle whose each side is 7 cm?",
+    textHi: "एक समबाहु त्रिभुज की प्रत्येक भुजा 7 सेमी है। उसका परिमाप कितना है?",
+    options: ["14 cm", "21 cm", "28 cm", "49 cm"], optionsHi: ["14 सेमी", "21 सेमी", "28 सेमी", "49 सेमी"], correctIndex: 1,
+    solution: "All three sides are equal, so the perimeter is 3 × 7 = 21 cm.", solutionHi: "तीनों भुजाएँ बराबर हैं, अतः परिमाप = 3 × 7 = 21 सेमी।",
+  };
+  r = await api("PUT", `/questions/${fq}`, { token, body: rewrite });
+  check("a rewrite that keeps the old formula is held (the old sum is wrong now)", r.json.held === true, JSON.stringify(r.json.issues || []));
+  r = await api("PUT", `/questions/${fq}`, { token, body: { ...rewrite, formula: "3 * 7", status: "published" } });
+  check("...with its new formula it is saved and live", r.status === 200 && !r.json.held && r.json.question.status === "published" && r.json.question.formula === "3 * 7", `${r.status} ${JSON.stringify(r.json.issues || [])}`);
+  r = await api("PUT", `/questions/${fq}`, { token, body: { formula: "" } });
+  check("...and a formula can be dropped", r.status === 200 && !(await get(String(fq))).formula);
+  r = await api("PUT", `/questions/${fq}`, { token, body: { formula: { $ne: 1 } } });
+  check("a formula that is not text is refused", r.status === 400);
+
   srv.kill();
   await mongoose.disconnect();
   await mem.stop();

@@ -262,6 +262,14 @@ function readEdit(b) {
     if (!Array.isArray(b.examType) || b.examType.some((x) => typeof x !== "string")) throw new Error("examType must be a list of text");
     updates.examType = b.examType.slice(0, 30).map((x) => x.slice(0, 100));
   }
+  // The sum the gate runs for a maths question (services/mathCheck.js).
+  // Rewriting a question with new numbers needs a new one - or "" to drop
+  // it; otherwise the old sum is checked against the new options and the
+  // edit is held (2026-10-26: two UPTET rewrites were held for exactly this).
+  if (b.formula !== undefined) {
+    if (b.formula !== null && typeof b.formula !== "string") throw new Error("formula must be text");
+    updates.formula = String(b.formula || "").slice(0, 500);
+  }
   return updates;
 }
 
