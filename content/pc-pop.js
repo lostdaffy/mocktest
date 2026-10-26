@@ -609,7 +609,10 @@ const KINDS = [
 for (const k of [twoRates, upDown, dep3]) k.levels.push("hard");
 for (const k of [back3, genders, literacy]) k.levels.push("advanced");
 
-const topic = () => fillTopic({ kinds: KINDS, prefix: "Percentage · Population Growth and Depreciation" });
+// One set of used numbers for the whole Percentage chapter (pc-ie.js and
+// pc-mixed.js build after this, from the same set).
+const USED = new Set();
+const topic = () => fillTopic({ kinds: KINDS, prefix: "Percentage · Population Growth and Depreciation", used: USED });
 // tests(level, from, to) -> the questions of those tests, for build-batch.
 const tests = (level, from, to) => topic()[level].slice(from - 1, to).flat();
-module.exports = { tests, KINDS };
+module.exports = { tests, KINDS, USED, topic };

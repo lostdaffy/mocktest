@@ -110,10 +110,27 @@ const check = (name, cond, detail = "") => {
   let threw = "";
   try { await series.fillSeriesStep(params); } catch (e) { threw = e.message; }
   check("out of allowance: the step throws the allowance message (the job is put back)", /Every model has used its allowance/.test(threw), threw);
+  // ---- "came up short" with nothing new: tried again, not stopped
   refillMode = "stuck";
+  const stuckTitle = (await Test.findOne({ ...filter, questions: { $size: 10 } }).lean()).title;
+  await GenerationJob.updateMany({ kind: "practice_series" }, { $set: { status: "done" } });
   threw = "";
-  try { await series.fillSeriesStep(params); } catch (e) { threw = e.message; }
-  check("a test that cannot be filled stops the series instead of looping", /Could not fill/.test(threw), threw);
+  try { r = await series.fillSeriesStep({ ...params, stalls: 0 }); } catch (e) { threw = e.message; }
+  const again = await GenerationJob.findOne({ kind: "practice_series", status: "queued" }).lean();
+  check("a step that adds nothing does not stop the series", !threw && again?.stalls === 1, threw || r);
+  // after 3 tries in a row, the next test is built meanwhile
+  await GenerationJob.updateMany({ kind: "practice_series" }, { $set: { status: "done" } });
+  const before = await Test.countDocuments(filter);
+  nextSize = 20;
+  r = await series.fillSeriesStep({ ...params, stalls: 3 });
+  check("...after 3 stalls the series builds its next test meanwhile", (await Test.countDocuments(filter)) === before + 1 && r.includes(`${stuckTitle} is left for later`), r);
+  check("...and counts from zero again", (await GenerationJob.findOne({ kind: "practice_series", status: "queued" }).lean())?.stalls === 0);
+  // with nothing else left, it stops after 6 tries with the reason
+  threw = "";
+  const all = await Test.find(filter).select("_id").lean();
+  for (let i = all.length; i < 10; i++) await controller.buildPracticeTest(params);
+  try { await series.fillSeriesStep({ ...params, stalls: 5 }); } catch (e) { threw = e.message; }
+  check("...and with nothing else left, stops after 6 tries with the reason", /Could not fill .* after 6 tries/.test(threw), threw);
   refillMode = "fill";
   nextSize = 20;
 

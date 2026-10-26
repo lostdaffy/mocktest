@@ -22,6 +22,14 @@ const { looksLikeRepeat } = require("./validationPipeline");
 const { plainMaths } = require("./mathNotation");
 
 const DEFAULT_TARGET = 10;
+// "The generator came up short" usually clears on the next go: a test that
+// gets nothing new is tried again, and after STALL_SKIP tries in a row the
+// series builds its next test meanwhile (the stuck one is tried again later).
+// Only when nothing else is left and it has stalled STALL_STOP times does the
+// series stop with the reason. (On 23-24 Oct 2026 the first version stopped
+// at the first stall, and all 7 Percentage series sat still for two days.)
+const STALL_SKIP = 3;
+const STALL_STOP = 6;
 const LEVELS = ["easy", "medium", "hard", "advanced"];
 
 const seriesFilter = ({ subject, chapter, subtopic, difficulty }) => ({
@@ -67,22 +75,28 @@ async function fillSeriesStep(params) {
   // Full drafts that are sound go live first - nothing to generate for them.
   for (const t of tests) if (await publishIfReady(t)) notes.push(`${t.title} is live`);
 
+  let stalls = params.stalls || 0;
   const short = tests.find((t) => t.questions.length < PRACTICE_TEST_SIZE);
-  if (short) {
+  const skipShort = short && stalls >= STALL_SKIP && tests.length < target;
+  if (short && !skipShort) {
     const { refillTest } = require("./testTopUp");
     const r = await refillTest(short._id);
-    if (!r.filled) {
-      const where = `${short.title} is at ${r.to} of ${r.target || PRACTICE_TEST_SIZE}`;
-      if (/allowance|quota|per day|PerDay/i.test(r.why || "")) throw new Error(`Every model has used its allowance for today - ${where}.`);
-      // Nothing added and not the allowance: stop rather than loop on it -
-      // the job fails with the reason, and the series waits for the admin.
-      if (!r.added) throw new Error(`Could not fill ${where}: ${r.why || "the generator came up short"}`);
-      notes.push(`${where} (${r.why || "came up short"})`);
-    } else notes.push(`${short.title}: ${r.from} → ${r.to} questions`);
+    const where = `${short.title} is at ${r.to} of ${r.target || PRACTICE_TEST_SIZE}`;
+    if (!r.filled && /allowance|quota|per day|PerDay/i.test(r.why || "")) throw new Error(`Every model has used its allowance for today - ${where}.`);
+    if (r.added) {
+      stalls = 0;
+      notes.push(r.filled ? `${short.title}: ${r.from} → ${r.to} questions` : `${where} (${r.why || "came up short"})`);
+    } else {
+      stalls++;
+      if (stalls >= STALL_STOP) throw new Error(`Could not fill ${where} after ${stalls} tries: ${r.why || "the generator came up short"}`);
+      notes.push(`${where} - nothing new this time (try ${stalls})`);
+    }
   } else if (tests.length < target) {
     const { buildPracticeTest } = require("../controllers/examSeriesController");
     const built = await buildPracticeTest({ subject: params.subject, chapter: params.chapter, subtopic: params.subtopic, difficulty: params.difficulty });
+    if (skipShort) notes.push(`${short.title} is left for later`);
     notes.push(built.message);
+    stalls = 0;
   }
 
   tests = await listTests();
@@ -91,7 +105,7 @@ async function fillSeriesStep(params) {
 
   const live = tests.filter((t) => t.publishStatus === "published" && t.questions.length >= PRACTICE_TEST_SIZE).length;
   const done = tests.length >= target && tests.every((t) => t.questions.length >= PRACTICE_TEST_SIZE);
-  if (!done) await queueSeries(params, { next: true });
+  if (!done) await queueSeries({ ...params, stalls }, { next: true });
   notes.push(done ? `Series complete: ${live} of ${tests.length} tests live` : `${live} of ${target} tests live - next step queued`);
   return notes.join(". ");
 }
@@ -100,12 +114,12 @@ async function fillSeriesStep(params) {
  * Puts a series on the queue (one waiting job per series). `next` is the
  * job queuing its own next step while it is still running.
  */
-async function queueSeries({ subject, chapter, subtopic, difficulty, target = DEFAULT_TARGET }, { next = false } = {}) {
+async function queueSeries({ subject, chapter, subtopic, difficulty, target = DEFAULT_TARGET, stalls = 0 }, { next = false } = {}) {
   if (!LEVELS.includes(difficulty)) throw new Error(`difficulty must be one of ${LEVELS.join(", ")}`);
   const job = { kind: "practice_series", subject, chapter, subtopic: subtopic || null, difficulty, target };
   const waiting = await GenerationJob.exists({ ...job, status: next ? "queued" : { $in: ["queued", "running"] } });
   if (waiting) return null;
-  return GenerationJob.create({ ...job, label: label(job), batch: `series-${subject}-${chapter}-${subtopic || "mixed"}-${difficulty}`, status: "queued" });
+  return GenerationJob.create({ ...job, stalls, label: label(job), batch: `series-${subject}-${chapter}-${subtopic || "mixed"}-${difficulty}`, status: "queued" });
 }
 
 module.exports = { fillSeriesStep, queueSeries, notReady, publishIfReady, seriesFilter, DEFAULT_TARGET };

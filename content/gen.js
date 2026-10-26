@@ -87,11 +87,12 @@ module.exports = { fillTests, shuffle, rng, numbersOf };
 // Returns { easy: [[20 questions] x 10], medium: ..., ... } (cached per kinds).
 const LEVELS = ["easy", "medium", "hard", "advanced"];
 const cache = new Map();
-function fillTopic({ kinds, prefix, tests = 10 }) {
+// `used` may be shared with other topics of the chapter (a kind used in two
+// topics then never repeats a set of numbers across them).
+function fillTopic({ kinds, prefix, tests = 10, used = new Set(), levels = LEVELS }) {
   if (cache.has(prefix)) return cache.get(prefix);
-  const used = new Set();
   const out = {};
-  for (const level of LEVELS) {
+  for (const level of levels) {
     const name = level[0].toUpperCase() + level.slice(1);
     const all = fillTests({ kinds, level, from: 1, to: tests, title: (n) => `${prefix} · ${name} #${n}`, used });
     out[level] = Array.from({ length: tests }, (_, i) => all.slice(i * 20, i * 20 + 20));

@@ -40,6 +40,8 @@ const generationJobSchema = new mongoose.Schema(
     subtopic: String,
     // practice_series: how many tests the series is filled to (services/practiceSeries.js)
     target: Number,
+    // practice_series: steps in a row that added nothing (services/practiceSeries.js)
+    stalls: Number,
 
     // mock: the recruitment notice whose syllabus the mock follows. Empty
     // means the exam's general mock series.
