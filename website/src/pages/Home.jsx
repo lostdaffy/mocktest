@@ -19,9 +19,9 @@ import {
 } from "../components/icons";
 
 export const meta = {
-  title: "Rankveer – Mock Tests, PYQs & Live Exams for SSC, Railway, UP Police, Banking & CTET",
+  title: "Rankveer – Mock Tests, PYQs & Practice for SSC, Railway, UP Police, UPSSSC PET, TET & Banking",
   description:
-    "Practice like the real exam. Exam-pattern mock tests, genuine previous year papers and live exams with an all-India rank – in Hindi and English. Free to start.",
+    "Practice like the real exam. Exam-pattern mock tests, previous year papers, chapter-wise practice, live exams and a free Daily GK Quiz – in Hindi and English. Free to start.",
   organizationSchema: true,
 };
 
@@ -39,7 +39,8 @@ const FEATURES = [
     Icon: ClipboardCheckIcon,
     tint: "tint-blue",
     title: "Full-length mock tests",
-    text: "The same sections, number of questions, time limit and negative marking as the real paper — so exam day feels familiar.",
+    text: "A mock series for each exam with the same sections, number of questions, time limit and negative marking as the real paper.",
+    tag: "First mock of every series free",
   },
   {
     Icon: FileTextIcon,
@@ -58,8 +59,14 @@ const FEATURES = [
     Icon: TrendingUpIcon,
     tint: "tint-orange",
     title: "Chapter-wise practice",
-    text: "Start at Easy and move up to Medium, Hard and Advanced as your accuracy in each chapter improves.",
-    tag: "Topic practice always free",
+    text: "Practise a whole chapter mixed or one topic at a time, at four levels — Easy, Medium, Hard and Advanced — with a step-by-step solution for every question.",
+  },
+  {
+    Icon: TrophyIcon,
+    tint: "tint-teal",
+    title: "Daily GK Quiz & today's plan",
+    text: "A fresh 20-question GK quiz every day with a ranking, plus a short daily plan: the quiz, one practice test and a mock of the week.",
+    tag: "Daily quiz always free",
   },
   {
     Icon: BarChartIcon,
@@ -67,16 +74,10 @@ const FEATURES = [
     title: "Detailed analysis",
     text: "Topic-by-topic accuracy with your weakest areas first — and whether you lose marks to speed or to concepts.",
   },
-  {
-    Icon: LanguageIcon,
-    tint: "tint-teal",
-    title: "Hindi and English",
-    text: "Switch language in the middle of a test. Solutions appear in the same language you attempted it in.",
-  },
 ];
 
 const STEPS = [
-  { title: "Choose your exam", text: "Pick SSC CGL, RRB NTPC, UP Police Constable, IBPS PO or CTET, and the subjects you're studying." },
+  { title: "Choose your exam", text: "Pick from 13 exams — SSC, Railway, UP Police, UPSSSC PET, teaching exams, Banking and Agniveer — and the subjects you're studying." },
   { title: "Practise and take mocks", text: "Build concepts chapter by chapter, then test yourself on full mocks and real previous-year papers." },
   { title: "Compete and improve", text: "Join live exams for an all-India rank, and use your analysis to fix weak topics before the real exam." },
 ];
@@ -88,42 +89,64 @@ const LIVE_POINTS = [
   "A reminder notification before the exam begins, so you never miss one",
 ];
 
+// The exams the app offers (server /api/exams/catalog), grouped the way
+// students think of them.
 const EXAMS = [
-  { abbr: "SSC", tint: "tint-blue", name: "SSC CGL", detail: "Tier 1" },
-  { abbr: "RRB", tint: "tint-orange", name: "RRB NTPC", detail: "CBT 1" },
-  { abbr: "UP", tint: "tint-red", name: "UP Police", detail: "Constable" },
-  { abbr: "IBPS", tint: "tint-green", name: "IBPS PO", detail: "Prelims" },
-  { abbr: "CTET", tint: "tint-violet", name: "CTET", detail: "Paper 1" },
+  { abbr: "SSC", tint: "tint-blue", name: "SSC", exams: ["CGL Tier 1", "CHSL Tier 1", "MTS & Havaldar", "GD Constable"] },
+  { abbr: "RRB", tint: "tint-orange", name: "Railway", exams: ["RRB NTPC CBT 1", "RRB Group D"] },
+  { abbr: "UP", tint: "tint-red", name: "UP Police & UPSSSC", exams: ["UP Police Constable", "UPSSSC PET"] },
+  { abbr: "TET", tint: "tint-violet", name: "Teaching", exams: ["CTET Paper 1", "UPTET Paper 1", "UP Super TET"] },
+  { abbr: "IBPS", tint: "tint-green", name: "Banking", exams: ["IBPS PO Prelims"] },
+  { abbr: "GD", tint: "tint-teal", name: "Defence", exams: ["Agniveer Army GD"] },
 ];
 
-const PREMIUM = ["Unlimited mock tests", "Every live exam", "All previous year papers", "Personalised daily test", "Everything in Free"];
+// Same list, same order and same prices as the app's Premium screen
+// (mobile/src/screens/SubscriptionScreen.js) and the server's
+// controllers/paymentController.js - change all three together.
+const PREMIUM = [
+  "Unlimited access to all mock tests",
+  "Full previous-year question library",
+  "Chapter-wise practice — easy to advanced",
+  "Live exams with all-India ranking",
+  "Detailed analysis of every attempt",
+  "Pay once · no auto-debit",
+];
+
+const perDay = (price, days) => `₹${(price / days).toFixed(2)}/day`;
 
 const PLANS = [
   {
     name: "Free",
-    price: "₹0",
+    price: 0,
     sub: "No payment needed",
     cta: "Start free",
     features: [
-      "5 full mock tests",
-      "3 live exams",
+      "First mock of every mock series",
       "This year's & last year's papers",
-      "Unlimited topic-wise practice",
+      "3 live exams",
+      "Selected chapter practice tests",
+      "Daily GK Quiz, every day",
       "Detailed analysis of every test",
-      "7-day trial of personalised daily test",
     ],
   },
-  { name: "3 months", price: "₹149", sub: "About ₹1.66 a day", cta: "Get 3 months", features: PREMIUM },
-  { name: "6 months", price: "₹249", sub: "About ₹1.38 a day", cta: "Get 6 months", features: PREMIUM, featured: true },
-  { name: "12 months", price: "₹449", sub: "About ₹1.23 a day", cta: "Get 12 months", features: PREMIUM },
+  { name: "3 Months", price: 149, mrp: 449, off: "67% OFF", days: 90, cta: "Get 3 months", features: PREMIUM },
+  { name: "6 Months", price: 249, mrp: 899, off: "72% OFF", days: 180, cta: "Get 6 months", features: PREMIUM, featured: true },
+  { name: "12 Months", price: 449, mrp: 1799, off: "75% OFF", days: 365, cta: "Get 12 months", features: PREMIUM },
 ];
 
 const FAQS = [
   {
     q: "Is Rankveer free?",
-    a: "Yes, you can start without paying. The free plan includes 5 full mock tests, 3 live exams, this year's and last year's previous-year papers, and unlimited topic-wise practice. Upgrade only when you want more.",
+    a: "Yes, you can start without paying. Free users get the first mock of every exam's mock series, this year's and last year's previous-year papers, 3 live exams, selected chapter practice tests and the Daily GK Quiz every day. Upgrade only when you want everything.",
   },
-  { q: "Which exams can I prepare for?", a: "SSC CGL, RRB NTPC, UP Police Constable, IBPS PO and CTET, with more being added regularly." },
+  {
+    q: "Which exams can I prepare for?",
+    a: "SSC CGL, CHSL, MTS and GD; RRB NTPC and Group D; UP Police Constable; UPSSSC PET; CTET, UPTET and UP Super TET; IBPS PO; and Agniveer Army GD. More are being added regularly.",
+  },
+  {
+    q: "What is the Daily GK Quiz?",
+    a: "A free 20-question general-knowledge quiz that is new every day. Everyone gets the same quiz, so you can see your rank among everyone who took it that day.",
+  },
   {
     q: "Can I take tests in Hindi?",
     a: "Yes. Tests are available in Hindi and English, and you can switch language during the test. When you review your result, solutions are shown in the language you took the test in.",
@@ -240,22 +263,24 @@ export default function Home() {
           <Reveal className="section-head">
             <p className="kicker">Exams covered</p>
             <h2 className="section-title">Built for the exam you're preparing for</h2>
+            <p className="section-lead">13 exams, each with its own pattern, sections and timing.</p>
           </Reveal>
 
-          <ul className="grid gap-3.5 min-[560px]:grid-cols-2 lg:grid-cols-5">
-            {EXAMS.map(({ abbr, tint, name, detail }, i) => (
-              <Reveal
-                as="li"
-                key={name}
-                delay={i * 70}
-                className="card flex items-center gap-3.5 rounded-md p-[18px] lg:flex-col lg:items-start lg:p-[22px]"
-              >
+          <ul className="grid gap-3.5 min-[560px]:grid-cols-2 lg:grid-cols-3 lg:gap-[18px]">
+            {EXAMS.map(({ abbr, tint, name, exams }, i) => (
+              <Reveal as="li" key={name} delay={stagger(i, 3)} className="card flex items-start gap-3.5 rounded-md p-[18px] lg:p-[22px]">
                 <span className={`grid h-[50px] w-[50px] flex-none place-items-center rounded-[14px] border font-display text-[13px] font-bold ${tint}`}>
                   {abbr}
                 </span>
                 <div>
                   <h3 className="text-base font-bold tracking-[-0.01em]">{name}</h3>
-                  <p className="mt-0.5 text-[13.5px] text-slate">{detail}</p>
+                  <ul className="mt-2 flex flex-wrap gap-1.5">
+                    {exams.map((exam) => (
+                      <li key={exam} className="rounded-full bg-slate-light px-2.5 py-1 text-[12.5px] font-semibold text-ink-soft">
+                        {exam}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </Reveal>
             ))}
@@ -307,7 +332,7 @@ function Hero() {
         <div>
           <p className="inline-flex max-w-full items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-1.5 text-[13px] font-semibold text-ink-soft shadow-soft">
             <span className="h-2 w-2 flex-none rounded-full bg-brand-gradient" />
-            SSC · Railway · UP Police · Banking · CTET
+            SSC · Railway · UP Police · UPSSSC PET · TET · Banking · Agniveer
           </p>
 
           <h1 className="mt-5 text-[clamp(34px,5.6vw,60px)] font-extrabold leading-[1.08] tracking-[-0.035em]">
@@ -319,8 +344,8 @@ function Hero() {
           </p>
 
           <p className="mt-3 max-w-[560px] text-[clamp(16px,1.7vw,18px)] text-slate">
-            Mock tests built on the actual exam pattern, genuine previous-year papers, and live exams that give you an all-India rank. In
-            Hindi and English.
+            Mock tests built on the actual exam pattern, genuine previous-year papers, chapter-wise practice and live exams that give you an
+            all-India rank. In Hindi and English.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -334,7 +359,7 @@ function Hero() {
           </div>
 
           <ul className="mt-6 flex flex-wrap gap-x-[22px] gap-y-2.5 text-sm font-medium text-ink-soft">
-            {["Free to start", "No card needed", "5 free mock tests"].map((point) => (
+            {["Free to start", "No card needed", "First mock of every series free"].map((point) => (
               <li key={point} className="flex items-center gap-[7px]">
                 <CheckIcon className="check-icon" />
                 {point}
@@ -457,7 +482,7 @@ function LiveExamsBand() {
 
       <div className="wrap relative grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
         <Reveal>
-          <p className="kicker text-[#B8ADFF]">Live exams</p>
+          <p className="kicker text-[#C3B1FA]">Live exams</p>
           <h2 className="mt-2.5 text-[clamp(30px,3.8vw,46px)] font-extrabold tracking-[-0.03em] text-white">The exam hall, on your phone.</h2>
           <p className="mt-4 max-w-[560px] text-[17px] text-white/80">
             Mock tests show what you know. Live exams show where you stand — against everyone preparing for the same exam, on the same
@@ -525,7 +550,7 @@ function Pricing() {
         </Reveal>
 
         <div className="grid items-stretch gap-[18px] sm:grid-cols-2 min-[1100px]:grid-cols-4 min-[1100px]:gap-4">
-          {PLANS.map(({ name, price, sub, cta, features, featured }, i) => (
+          {PLANS.map(({ name, price, mrp, off, days, sub, cta, features, featured }, i) => (
             <Reveal
               as="article"
               key={name}
@@ -541,9 +566,19 @@ function Pricing() {
                   Best value
                 </span>
               )}
-              <h3 className="text-[17px] font-bold text-ink-soft">{name}</h3>
-              <p className="mt-3.5 font-display text-[44px] font-extrabold leading-none tracking-[-0.03em]">{price}</p>
-              <p className="mt-2 text-sm text-slate">{sub}</p>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-[17px] font-bold text-ink-soft">{name}</h3>
+                {off && <span className="rounded-full bg-success-light px-2.5 py-1 text-xs font-bold text-success">{off}</span>}
+              </div>
+              <p className="mt-3.5 flex items-baseline gap-2.5">
+                <span className="font-display text-[44px] font-extrabold leading-none tracking-[-0.03em]">₹{price}</span>
+                {mrp && (
+                  <s className="text-lg font-semibold text-slate-soft">
+                    <span className="sr-only">was </span>₹{mrp}
+                  </s>
+                )}
+              </p>
+              <p className="mt-2 text-sm text-slate">{days ? `Only ${perDay(price, days)}` : sub}</p>
               <ul className="mb-[26px] mt-[22px] grid flex-1 content-start gap-[11px] border-t border-line pt-[22px] text-[14.5px] leading-snug text-ink-soft">
                 {features.map((feature) => (
                   <li key={feature} className="flex gap-2.5">
@@ -561,7 +596,8 @@ function Pricing() {
 
         <Reveal as="p" className="mx-auto mt-[34px] max-w-[660px] text-center text-[14.5px] text-slate">
           Plans are bought inside the app. Payments are processed securely by Razorpay — UPI, cards and net banking. Renew before your plan
-          ends and the new period is added on top, so you never lose remaining days.
+          ends and the new period is added on top, so you never lose remaining days. Invite friends with your referral code and earn ₹5
+          credit for each one who joins — credits can pay for up to half of a plan.
         </Reveal>
       </div>
     </section>
