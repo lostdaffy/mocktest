@@ -164,6 +164,8 @@ async function addQuestionsToLiveExam(req, res) {
     const built = await createVerifiedQuestions({
       needed: batch,
       inTest: test.questions.map((q) => q._id),
+      // A live exam is a whole paper: each idea asked once.
+      onePerIdea: true,
       tag: { examStage: test.examType },
       generateParams: {
         examType: test.examType,

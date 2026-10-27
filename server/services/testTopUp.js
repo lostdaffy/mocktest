@@ -206,6 +206,8 @@ async function refillMock(test, { from, target, max }) {
         built = await createVerifiedQuestions({
           needed: want,
           inTest: [...paper, ...siblings],
+          siblings,
+          onePerIdea: true,
           tag: { examStage: test.examStage, chapter: v.chapter },
           generateParams: {
             examType: test.examStage,
@@ -245,6 +247,8 @@ async function refillMock(test, { from, target, max }) {
           built = await createVerifiedQuestions({
             needed: ask,
             inTest: [...now, ...siblings],
+            siblings,
+            onePerIdea: true,
             tag: { examStage: test.examStage },
             generateParams: {
               examType: test.examStage,

@@ -1,0 +1,708 @@
+{
+  "u2_1": {
+    "subject": "Child Development",
+    "topic": "Development & Learning",
+    "text": "Which of the following factors plays a primary role in the early socialization of a young child during primary school years?",
+    "options": [
+      "The immediate and extended family members",
+      "The local sports club and professional teams",
+      "The distant political leaders and institutions",
+      "The commercial mass media and television ads"
+    ],
+    "correctIndex": 0,
+    "textHi": "प्राथमिक विद्यालय के वर्षों के दौरान एक छोटे बच्चे के शुरुआती समाजीकरण में निम्नलिखित में से कौन सा कारक प्राथमिक भूमिका निभाता है?",
+    "optionsHi": [
+      "तत्कालिक और विस्तारित परिवार के सदस्य",
+      "स्थानीय खेल क्लब और पेशेवर टीमें",
+      "दूर के राजनीतिक नेता और संस्थान",
+      "वाणिज्यिक जनसंचार माध्यम और टेलीविजन विज्ञापन"
+    ]
+  },
+  "u2_2": {
+    "subject": "Child Development",
+    "topic": "Inclusive Education",
+    "text": "Which learning difficulty primarily affects a child's ability to read, spell, and decode words accurately?",
+    "options": [
+      "Dyslexia",
+      "Dyspraxia",
+      "Dyscalculia",
+      "Dysgraphia"
+    ],
+    "correctIndex": 0,
+    "textHi": "कौन सी अधिगम अक्षमता मुख्य रूप से बच्चे के पढ़ने, वर्तनी सीखने और शब्दों को सटीक रूप से डिकोड करने की क्षमता को प्रभावित करती है?",
+    "optionsHi": [
+      "डिस्लेक्सिया",
+      "डिस्प्रेक्सिया",
+      "डिस्केलकुलिया",
+      "डिस्ग्राफिया"
+    ]
+  },
+  "u2_17": {
+    "subject": "Child Development",
+    "topic": "Inclusive Education",
+    "text": "A primary school teacher observes that a child frequently reverses letter orientations like 'b' and 'd' while reading and writing, despite having average intelligence and adequate schooling. Which learning difficulty does this behavior typically indicate?",
+    "options": [
+      "Dyspraxia involving coordination and physical movement challenges",
+      "Dyslexia involving reading and symbol processing impairments",
+      "Dyscalculia involving numeric processing and calculation deficits",
+      "Dysgraphia involving fine motor and handwriting limitations"
+    ],
+    "correctIndex": 1,
+    "textHi": "एक प्राथमिक विद्यालय का शिक्षक देखता है कि एक बच्चा पढ़ने और लिखने के दौरान 'b' और 'd' जैसे अक्षरों की दिशाओं को बार-बार उलट देता है, जबकि उसकी बुद्धि औसत है और उसे पर्याप्त स्कूली शिक्षा मिली है। यह व्यवहार आमतौर पर किस अधिगम कठिनाई को दर्शाता है?",
+    "optionsHi": [
+      "डिसप्राक्सिया जिसमें समन्वय और शारीरिक गतिविधि की चुनौतियां शामिल हैं",
+      "डिसलेक्सिया जिसमें पठन और प्रतीक प्रसंस्करण की हानि शामिल है",
+      "डिसकैल्कुलिया जिसमें संख्यात्मक प्रसंस्करण और गणना की कमी शामिल है",
+      "डिसग्राफिया जिसमें सूक्ष्म मोटर और हस्तलेखन सीमाएं शामिल हैं"
+    ]
+  },
+  "u2_27": {
+    "subject": "Child Development",
+    "topic": "Inclusive Education",
+    "text": "A student in primary school consistently struggles with reading fluency, reversing letters like 'b' and 'd', and finding it hard to decode words. This profile most closely indicates which learning difficulty?",
+    "options": [
+      "Dyscalculia condition",
+      "Dysgraphia challenge",
+      "Dyslexia disorder",
+      "Dyspraxia syndrome"
+    ],
+    "correctIndex": 2,
+    "textHi": "प्राथमिक विद्यालय का एक छात्र लगातार पठन प्रवाह के साथ संघर्ष करता है, 'b' और 'd' जैसे अक्षरों को उल्टा कर देता है, और शब्दों को डिकोड करना कठिन पाता है। यह प्रोफ़ाइल किस सीखने की कठिनाई को सबसे अधिक दर्शाती है?",
+    "optionsHi": [
+      "डिसकैलकुलिया (गणितीय वैकल्य) स्थिति",
+      "डिसग्राफिया (लेखन वैकल्य) चुनौती",
+      "डिसलेक्सिया (पठन वैकल्य) विकार",
+      "डिसप्राक्सिया (शारीरिक वैकल्य) सिंड्रोम"
+    ]
+  },
+  "u2_16": {
+    "subject": "Child Development",
+    "topic": "Inclusive Education",
+    "text": "Which specific learning disability primarily affects a child's mathematical ability, making it difficult to understand numbers, compute sums, and learn basic calculation facts?",
+    "options": [
+      "Dyspraxia affecting fine motor skill coordination",
+      "Dyslexia affecting reading and decoding words",
+      "Dyscalculia affecting numerical calculations",
+      "Dysgraphia affecting handwriting and spelling"
+    ],
+    "correctIndex": 2,
+    "textHi": "कौन सी विशिष्ट सीखने की अक्षमता मुख्य रूप से बच्चे की गणितीय क्षमता को प्रभावित करती है, जिससे संख्या, योग की गणना और बुनियादी गणना तथ्यों को सीखना मुश्किल हो जाता है?",
+    "optionsHi": [
+      "डिस्प्रैक्सिया जो सूक्ष्म मोटर कौशल समन्वय को प्रभावित करता है",
+      "डिस्लेक्सिया जो पढ़ने और शब्दों को डिकोड करने को प्रभावित करता है",
+      "डिस्कैल्कुलिया जो संख्यात्मक गणना को प्रभावित करता है",
+      "डिस्ग्राफिया जो लिखावट और वर्तनी को प्रभावित करता है"
+    ]
+  },
+  "u2_28": {
+    "subject": "Child Development",
+    "topic": "Inclusive Education",
+    "text": "During a mathematics lesson, a primary teacher notices a student who consistently transposes numbers and struggles significantly with basic arithmetic calculations despite average intelligence. This is characteristic of:",
+    "options": [
+      "Dyspraxia impairing the spatial coordination necessary for geometry and graphs.",
+      "Dyslexia affecting numerical symbol processing and sequential memory retrieval routines.",
+      "Dyscalculia specifically impacting numerical processing and foundational arithmetic skills.",
+      "Dysgraphia interfering with the fine motor control required for writing equations."
+    ],
+    "correctIndex": 2,
+    "textHi": "गणित के पाठ के दौरान, एक प्राथमिक शिक्षक एक ऐसे छात्र को देखता है जो औसत बुद्धि होने के बावजूद लगातार संख्याओं को उलट देता है और बुनियादी अंकगणितीय गणनाओं में काफी संघर्ष करता है। यह विशेषता किसकी है:",
+    "optionsHi": [
+      "डिसप्रैक्सिया जो ज्यामिति और ग्राफ़ के लिए आवश्यक स्थानिक समन्वय को बिगाड़ता है।",
+      "डिसलेक्सिया जो संख्यात्मक प्रतीक प्रसंस्करण और अनुक्रमिक स्मृति पुनर्प्राप्ति रूटीन को प्रभावित करता है।",
+      "डिस्कैल्कुलिया जो विशेष रूप से संख्यात्मक प्रसंस्करण और बुनियादी अंकगणितीय कौशल को प्रभावित करता है।",
+      "डिसग्राफिया जो समीकरण लिखने के लिए आवश्यक सूक्ष्म मोटर नियंत्रण में बाधा डालता है।"
+    ]
+  },
+  "u2_4": {
+    "subject": "Child Development",
+    "topic": "Development & Learning",
+    "text": "Lawrence Kohlberg presented the dilemma of Heinz to participants to study moral reasoning. If a child argues that stealing the drug is wrong solely because the person will be caught and sent to prison, which stage of moral development does this response represent?",
+    "options": [
+      "Conventional stage emphasizing interpersonal accord and social system maintenance",
+      "Pre-conventional stage governed by obedience to avoid punishment consequences",
+      "Post-conventional stage prioritizing universal ethical principles over laws",
+      "Conventional stage focusing on fulfilling social duties and obeying established authority"
+    ],
+    "correctIndex": 1,
+    "textHi": "लॉरेंस कोहलबर्ग ने नैतिक तर्क का अध्ययन करने के लिए प्रतिभागियों के सामने हाइन्ज की दुविधा प्रस्तुत की। यदि कोई बच्चा यह तर्क देता है कि दवा चुराना गलत है क्योंकि उस व्यक्ति को पकड़ लिया जाएगा और जेल भेज दिया जाएगा, तो यह प्रतिक्रिया नैतिक विकास के किस चरण का प्रतिनिधित्व करती है?",
+    "optionsHi": [
+      "पारंपरिक चरण जो पारस्परिक समझौते और सामाजिक व्यवस्था के रखरखाव पर जोर देता है",
+      "पूर्व-पारंपरिक चरण जो दंड परिणामों से बचने के लिए आज्ञाकारिता द्वारा शासित होता है",
+      "उत्तर-पारंपरिक चरण जो कानूनों पर सार्वभौमिक नैतिक सिद्धांतों को प्राथमिकता देता है",
+      "पारंपरिक चरण जो सामाजिक कर्तव्यों को पूरा करने और स्थापित अधिकार का पालन करने पर ध्यान केंद्रित करता है"
+    ]
+  },
+  "u2_19": {
+    "subject": "Child Development",
+    "topic": "Development & Learning",
+    "text": "According to Lawrence Kohlberg's stages of moral development, an individual who obeys rules primarily to avoid punishment and secure immediate physical rewards is operating at which level?",
+    "options": [
+      "Conventional moral level",
+      "Postconventional moral level",
+      "Autonomous moral level",
+      "Preconventional moral level"
+    ],
+    "correctIndex": 3,
+    "textHi": "लॉरेंस कोहलबर्ग के नैतिक विकास के चरणों के अनुसार, वह व्यक्ति जो मुख्य रूप से सजा से बचने और तत्काल भौतिक पुरस्कार सुरक्षित करने के लिए नियमों का पालन करता है, किस स्तर पर काम कर रहा है?",
+    "optionsHi": [
+      "पारंपरिक नैतिक स्तर",
+      "उत्तर-पारंपरिक नैतिक स्तर",
+      "स्वायत्त नैतिक स्तर",
+      "पूर्व-पारंपरिक नैतिक स्तर"
+    ]
+  },
+  "u2_5": {
+    "subject": "Child Development",
+    "topic": "Development & Learning",
+    "text": "According to Lawrence Kohlberg's theory of moral development, at which stage do children make moral decisions based on the desire to gain social approval and maintain interpersonal relationships?",
+    "options": [
+      "The interpersonal accord and conformity stage",
+      "The obedience and punishment orientation stage",
+      "The social system and conscience maintenance stage",
+      "The universal ethical principles orientation stage"
+    ],
+    "correctIndex": 0,
+    "textHi": "लॉरेंस कोहलबर्ग के नैतिक विकास के सिद्धांत के अनुसार, बच्चे किस चरण में सामाजिक स्वीकृति प्राप्त करने और पारस्परिक संबंधों को बनाए रखने की इच्छा के आधार पर नैतिक निर्णय लेते हैं?",
+    "optionsHi": [
+      "पारस्परिक समझौता और अनुरूपता चरण",
+      "आज्ञाकारिता और सजा अभिविन्यास चरण",
+      "सामाजिक व्यवस्था और विवेक रख-रखाव चरण",
+      "सार्वभौमिक नैतिक सिद्धांत अभिविन्यास चरण"
+    ]
+  },
+  "u2_9": {
+    "subject": "Child Development",
+    "topic": "Learning & Pedagogy",
+    "text": "Which of the following best describes the core objective of Continuous and Comprehensive Evaluation (CCE) in primary education?",
+    "options": [
+      "Evaluating holistic progress during learning",
+      "Ranking students for final grade distribution",
+      "Conducting monthly competitive written tests",
+      "Measuring only textbook content memorization"
+    ],
+    "correctIndex": 0,
+    "textHi": "निम्नलिखित में से कौन प्राथमिक शिक्षा में सतत और व्यापक मूल्यांकन (CCE) के मुख्य उद्देश्य का सबसे अच्छा वर्णन करता है?",
+    "optionsHi": [
+      "सीखने के दौरान समग्र प्रगति का मूल्यांकन करना",
+      " अंतिम ग्रेड वितरण के लिए छात्रों को रैंक करना",
+      "मासिक प्रतिस्पर्धी लिखित परीक्षाएं आयोजित करना",
+      "केवल पाठ्यपुस्तक सामग्री की याददाश्त को मापना"
+    ]
+  },
+  "u2_29": {
+    "subject": "Child Development",
+    "topic": "Learning & Pedagogy",
+    "text": "What is the primary objective of Continuous and Comprehensive Evaluation (CCE) in primary school classrooms as advocated by modern pedagogical frameworks?",
+    "options": [
+      "To evaluate holistic student progress across academic and co-scholastic domains",
+      "To eliminate the need for teacher feedback by utilizing automated scoring keys",
+      "To standardize instructional pacing based entirely on external board examination results",
+      "To rank students competitively at the end of each academic term for sorting"
+    ],
+    "correctIndex": 0,
+    "textHi": "आधुनिक शैक्षणिक ढांचों द्वारा समर्थित प्राथमिक विद्यालय की कक्षाओं में सतत और व्यापक मूल्यांकन (CCE) का प्राथमिक उद्देश्य क्या है?",
+    "optionsHi": [
+      "शैक्षणिक और सह-शैक्षणिक डोमेन में छात्र की समग्र प्रगति का मूल्यांकन करना",
+      "स्वचालित स्कोरिंग कुंजियों का उपयोग करके शिक्षक प्रतिक्रिया की आवश्यकता को समाप्त करना",
+      "पूरी तरह से बाहरी बोर्ड परीक्षा परिणामों के आधार पर निर्देशात्मक गति को मानकीकृत करना",
+      "छाटफुट के लिए प्रत्येक शैक्षणिक सत्र के अंत में छात्रों को प्रतिस्पर्धी रूप से रैंक करना"
+    ]
+  },
+  "u2_10": {
+    "subject": "Child Development",
+    "topic": "Development & Learning",
+    "text": "What is the primary role of heredity in a child's overall development according to contemporary educational psychology?",
+    "options": [
+      "It acts as the sole determinant of intellectual capacity and emotional stability.",
+      "It establishes the upper boundaries and potential upon which environment acts.",
+      "It dictates the exact speed and precise direction of cognitive progression.",
+      "It has minimal impact compared to peer relationships and early socialization."
+    ],
+    "correctIndex": 1,
+    "textHi": "समकालीन शिक्षा मनोविज्ञान के अनुसार एक बच्चे के समग्र विकास में आनुवंशिकता की प्राथमिक भूमिका क्या है?",
+    "optionsHi": [
+      "यह बौद्धिक क्षमता और भावनात्मक स्थिरता के एकमात्र निर्धारक के रूप में कार्य करती है।",
+      "यह उन ऊपरी सीमाओं और संभावनाओं को स्थापित करती है जिन पर पर्यावरण काम करता है।",
+      "यह संज्ञानात्मक प्रगति की सटीक गति और निश्चित दिशा को तय करती है।",
+      "साथी संबंधों और शुरुआती समाजीकरण की तुलना में इसका प्रभाव न्यूनतम होता है।"
+    ]
+  },
+  "u2_26": {
+    "subject": "Child Development",
+    "topic": "Development & Learning",
+    "text": "Which of the following best describes the influence of heredity on a child's development?",
+    "options": [
+      "It has no role once the formal schooling of the child begins",
+      "It completely determines the final personality of the child",
+      "It sets the biological boundaries and potential for physical traits",
+      "It is solely responsible for shaping the moral values of the child"
+    ],
+    "correctIndex": 2,
+    "textHi": "निम्नलिखित में से कौन सा एक बच्चे के विकास पर आनुवंशिकता के प्रभाव का सबसे अच्छा वर्णन करता है?",
+    "optionsHi": [
+      "बच्चे की औपचारिक स्कूली शिक्षा शुरू होने के बाद इसकी कोई भूमिका नहीं होती है",
+      "यह बच्चे के अंतिम व्यक्तित्व को पूरी तरह से निर्धारित करता है",
+      "यह शारीरिक लक्षणों के लिए जैविक सीमाओं और क्षमता को निर्धारित करता है",
+      "यह बच्चे के नैतिक मूल्यों को आकार देने के लिए पूरी तरह से जिम्मेदार है"
+    ]
+  },
+  "u2_11": {
+    "subject": "Child Development",
+    "topic": "Development & Learning",
+    "text": "How does intrinsic motivation affect the learning process of primary school children compared to extrinsic motivation?",
+    "options": [
+      "It creates high anxiety levels regarding peer performance comparisons",
+      "It promotes superficial learning driven strictly by external rewards",
+      "It reduces independent problem-solving skills in classroom activities",
+      "It fosters deep conceptual engagement driven by personal interest"
+    ],
+    "correctIndex": 3,
+    "textHi": "आंतरिक प्रेरणा बाहरी प्रेरणा की तुलना में प्राथमिक विद्यालय के बच्चों की सीखने की प्रक्रिया को कैसे प्रभावित करती है?",
+    "optionsHi": [
+      "यह सहकर्मी प्रदर्शन तुलना के संबंध में उच्च चिंता स्तर पैदा करता है",
+      "यह कड़ाई से बाहरी पुरस्कारों से प्रेरित सतही शिक्षण को बढ़ावा देता है",
+      "यह कक्षा की गतिविधियों में स्वतंत्र समस्या-समाधान कौशल को कम करता है",
+      "यह व्यक्तिगत रुचि से प्रेरित गहरे वैचारिक जुड़ाव को बढ़ावा देता है"
+    ]
+  },
+  "u2_22": {
+    "subject": "Child Development",
+    "topic": "Development & Learning",
+    "text": "How should a teacher utilize intrinsic motivation to enhance conceptual learning among primary school students?",
+    "options": [
+      "Connecting learning tasks to students' natural curiosity and personal relevance.",
+      "Offering external gold stars and stickers for every completed assignment promptly.",
+      "Establishing a competitive ranking system announced publicly at the end of each week.",
+      "Threatening the loss of recess privileges if homework tasks are left unfinished."
+    ],
+    "correctIndex": 0,
+    "textHi": "प्राथमिक विद्यालय के छात्रों के बीच वैचारिक सीखने को बढ़ाने के लिए शिक्षक को आंतरिक प्रेरणा का उपयोग कैसे करना चाहिए?",
+    "optionsHi": [
+      "सीखने के कार्यों को छात्रों की प्राकृतिक जिज्ञासा और व्यक्तिगत प्रासंगिकता से जोड़ना।",
+      "प्रत्येक पूरे किए गए कार्य के लिए तुरंत बाहरी स्वर्ण तारे और स्टिकर प्रदान करना।",
+      "प्रत्येक सप्ताह के अंत में सार्वजनिक रूप से घोषित एक प्रतिस्पर्धी रैंकिंग प्रणाली स्थापित करना।",
+      "गृहकार्य अधूरा रहने पर खेल के मैदान की सुविधाओं को खोने की धमकी देना।"
+    ]
+  },
+  "u2_13": {
+    "subject": "Child Development",
+    "topic": "Inclusive Education",
+    "text": "In an inclusive classroom with learners from diverse linguistic and cultural backgrounds, what should an effective primary teacher primarily do?",
+    "options": [
+      "Enforce the exclusive use of the majority standard language",
+      "Ignore cultural differences to maintain uniform classroom discipline",
+      "Segregate students into homogeneous groups based on their native tongue",
+      "Acknowledge and respect the diverse languages as valuable resources"
+    ],
+    "correctIndex": 3,
+    "textHi": "विविध भाषाई और सांस्कृतिक पृष्ठभूमि वाले शिक्षार्थियों वाली समावेशी कक्षा में, एक प्रभावी प्राथमिक शिक्षक को मुख्य रूप से क्या करना चाहिए?",
+    "optionsHi": [
+      "बहुसंख्यक मानक भाषा के अनन्य उपयोग को लागू करना",
+      "एक समान कक्षा अनुशासन बनाए रखने के लिए सांस्कृतिक अंतरों की उपेक्षा करना",
+      "उनकी मातृभाषा के आधार पर छात्रों को सजातीय समूहों में अलग करना",
+      "विविध भाषाओं को मूल्यवान संसाधनों के रूप में स्वीकार करना और उनका सम्मान करना"
+    ]
+  },
+  "u2_14": {
+    "subject": "Child Development",
+    "topic": "Inclusive Education",
+    "text": "How does primary school classroom practice become truly inclusive when teaching children from diverse linguistic backgrounds?",
+    "options": [
+      "Discouraging any verbal expression outside the standard curriculum vocabulary guidelines.",
+      "Acknowledging and utilizing the children's home languages as a resource for learning.",
+      "Enforcing strict usage of the official school language to prevent confusion among learners.",
+      "Segregating students into specific groups based on their dominant spoken dialect."
+    ],
+    "correctIndex": 1,
+    "textHi": "विविध भाषाई पृष्ठभूमि वाले बच्चों को पढ़ाते समय प्राथमिक विद्यालय की कक्षा का अभ्यास वास्तव में समावेशी कैसे बनता है?",
+    "optionsHi": [
+      "मानक पाठ्यक्रम शब्दावली दिशानिर्देशों के बाहर किसी भी मौखिक अभिव्यक्ति को हतोत्साहित करना।",
+      "सीखने के लिए एक संसाधन के रूप में बच्चों की घरेलू भाषाओं को स्वीकार करना और उनका उपयोग करना।",
+      "शिक्षार्थियों के बीच भ्रम को रोकने के लिए आधिकारिक स्कूली भाषा के कड़े उपयोग को लागू करना।",
+      "छात्रों को उनकी प्रमुख बोली जाने वाली भाषा के आधार पर विशिष्ट समूहों में अलग करना।"
+    ]
+  },
+  "u2_110": {
+    "subject": "Maths",
+    "topic": "Pedagogy of Mathematics",
+    "text": "During error analysis in primary mathematics, a teacher notices that a student frequently adds numerators and denominators separately when adding fractions (e.g., 1/2 + 1/3 = 2/5). What should be the primary remedial measure?",
+    "options": [
+      "Use concrete objects and visual fraction strips to teach part-whole concepts",
+      "Ignore the error as children naturally outgrow such misconceptions over time",
+      "Punish the student for repeated careless arithmetic mistakes in class",
+      "Give a large number of abstract drill worksheets on fraction addition"
+    ],
+    "correctIndex": 0,
+    "textHi": "प्राथमिक गणित में त्रुटि विश्लेषण के दौरान, एक शिक्षक देखता है कि एक छात्र भिन्नों को जोड़ते समय अंशों और हरों को अलग-अलग जोड़ता है (जैसे, 1/2 + 1/3 = 2/5)। प्राथमिक सुधारात्मक उपाय क्या होना चाहिए?",
+    "optionsHi": [
+      "भाग-पूर्ण अवधारणाओं को सिखाने के लिए ठोस वस्तुओं और दृश्य भिन्न पट्टी का उपयोग करें",
+      "त्रुटि की उपेक्षा करें क्योंकि बच्चे समय के साथ स्वाभाविक रूप से ऐसी भ्रांतियों से बाहर निकल जाते हैं",
+      "कक्षा में बार-बार होने वाली असावधानीपूर्ण अंकगणितीय गलतियों के लिए छात्र को दंडित करें",
+      "भिन्न जोड़ पर बड़ी संख्या में अमूर्त अभ्यास कार्यपत्रिकाएँ दें"
+    ]
+  },
+  "u2_115": {
+    "subject": "Maths",
+    "topic": "Pedagogy of Mathematics",
+    "text": "While teaching the concept of addition of fractions with unlike denominators, a teacher notices that students frequently add the numerators together and denominators together (e.g., 1/2 + 1/3 = 2/5). What is the most appropriate pedagogical action to address this error?",
+    "options": [
+      "Scolding the students for making basic arithmetic calculation mistakes",
+      "Using visual aids and fraction strips to show equivalent parts before combining",
+      "Giving students a strict rule to memorize without explaining the underlying concept",
+      "Skipping fraction addition entirely and moving directly to decimal numbers"
+    ],
+    "correctIndex": 1,
+    "textHi": "अमान हर (विभिन्न हर) वाले भिन्नों को जोड़ने की अवधारणा को पढ़ाते समय, एक शिक्षक देखता है कि छात्र अक्सर अंशों को एक साथ और हरों को एक साथ जोड़ देते हैं (उदाहरण के लिए, 1/2 + 1/3 = 2/5)। इस त्रुटि को दूर करने के लिए सबसे उपयुक्त शैक्षणिक कार्रवाई क्या है?",
+    "optionsHi": [
+      "बुनियादी अंकगणितीय गणना की गलतियाँ करने के लिए छात्रों को डांटना",
+      "समान भागों को मिलाने से पहले दृश्य सहायक सामग्री और भिन्न पट्टियों का उपयोग करना",
+      "अंतर्निहित अवधारणा को समझाए बिना छात्रों को याद रखने के लिए एक कड़ा नियम देना",
+      "भिन्नों के जोड़ को पूरी तरह से छोड़कर सीधे दशमलव संख्याओं पर आगे बढ़ना"
+    ]
+  },
+  "u2_113": {
+    "subject": "Maths",
+    "topic": "Mensuration",
+    "text": "What is the perimeter of a rectangular park whose length is 45 metres and breadth is 30 metres?",
+    "options": [
+      "165",
+      "150",
+      "140",
+      "135"
+    ],
+    "correctIndex": 1,
+    "textHi": "एक आयताकार पार्क का परिमाप क्या है जिसकी लंबाई 45 मीटर और चौड़ाई 30 मीटर है?",
+    "optionsHi": [
+      "165",
+      "150",
+      "140",
+      "135"
+    ]
+  },
+  "u2_119": {
+    "subject": "Maths",
+    "topic": "Mensuration",
+    "text": "A rectangular park has a length of 45 meters and a width of 30 meters. What is the cost of fencing the park with wire at the rate of 12 rupees per meter?",
+    "options": [
+      "1620",
+      "2700",
+      "1800",
+      "1350"
+    ],
+    "correctIndex": 2,
+    "textHi": "एक आयताकार पार्क की लंबाई 45 मीटर और चौड़ाई 30 मीटर है। 12 रुपये प्रति मीटर की दर से पार्क की तार से घेराबंदी करने की लागत क्या है?",
+    "optionsHi": [
+      "1620",
+      "2700",
+      "1800",
+      "1350"
+    ]
+  },
+  "u2_38": {
+    "subject": "Hindi Pedagogy",
+    "topic": "अपठित गद्यांश",
+    "text": "एक बहुभाषी कक्षा में अध्यापन करते समय शिक्षक को किस महत्वपूर्ण बात पर विशेष रूप से ध्यान देना चाहिए ताकि सभी बच्चों की अस्मिता सुरक्षित रहे?",
+    "options": [
+      "बच्चों की मातृभाषा की उपेक्षा करके केवल मानक भाषा पर ही जोर देना चाहिए",
+      "कक्षा में अनुशासन बनाए रखने के लिए सभी बच्चों पर एक ही भाषा थोपनी चाहिए",
+      "बच्चों की घर की भाषा को कक्षा में एक संसाधन के रूप में स्वीकार करना चाहिए",
+      "विभिन्न भाषाओं के प्रयोग को गृहकार्य तक ही सीमित कर देना चाहिए"
+    ],
+    "correctIndex": 2
+  },
+  "u2_48": {
+    "subject": "Hindi Pedagogy",
+    "topic": "भाषा शिक्षण",
+    "text": "बहुभाषी कक्षा में एक शिक्षक के रूप में आपकी क्या मुख्य जिम्मेदारी होनी चाहिए?",
+    "options": [
+      "बच्चों की मातृभाषा का सम्मान करते हुए उसे शिक्षण में संसाधन बनाना",
+      "अन्य भाषाओं के प्रयोग को कक्षा के भीतर पूरी तरह प्रतिबंधित करना",
+      "कक्षा में केवल मानक भाषा के प्रयोग पर ही सख्ती से बल देना",
+      "बच्चों को उनकी अपनी क्षेत्रीय भाषा में बात करने से रोकना"
+    ],
+    "correctIndex": 0
+  },
+  "u2_52": {
+    "subject": "Hindi Pedagogy",
+    "topic": "भाषा शिक्षण",
+    "text": "बहुभाषी कक्षा में शिक्षक के लिए सबसे बड़ी चुनौती किस प्रकार की होती है?",
+    "options": [
+      "प्रत्येक छात्र के घर की भाषा के आधार पर अलग-अलग पाठ्यपुस्तकें बनवाना",
+      "कक्षा में अनुशासन बनाए रखने के लिए छात्रों को अपनी मातृभाषा बोलने से रोकना",
+      "बच्चों की विभिन्न मातृभाषाओं को सम्मान देते हुए शिक्षण प्रक्रिया को संचालित करना",
+      "कक्षा के सभी विद्यार्थियों को एक ही मानक भाषा में लिखने का अभ्यास कराना"
+    ],
+    "correctIndex": 2
+  },
+  "u2_8": {
+    "subject": "Child Development",
+    "topic": "Development & Learning",
+    "text": "According to Lev Vygotsky, what does the term 'Zone of Proximal Development' (ZPD) refer to?",
+    "options": [
+      "Tasks too difficult for the child alone",
+      "Period of complete peer independence",
+      "Phase of rapid unassisted brain growth",
+      "Stage where genetic factors limit learning"
+    ],
+    "correctIndex": 0,
+    "textHi": "लेव वायगोत्สกี้ के अनुसार, 'समीपस्थ विकास क्षेत्र' (ZPD) पद से क्या तात्पर्य है?",
+    "optionsHi": [
+      "बच्चे द्वारा अकेले करने में अत्यधिक कठिन कार्य",
+      "पूर्ण सहकर्मी स्वतंत्रता की अवधि",
+      "तेजी से बिना सहायता के मस्तिष्क वृद्धि का चरण",
+      "वह चरण जहाँ आनुवंशिक कारक सीखने को सीमित करते हैं"
+    ]
+  },
+  "u2_18": {
+    "subject": "Child Development",
+    "topic": "Development & Learning",
+    "text": "According to Lev Vygotsky's socio-cultural theory, which instructional strategy effectively facilitates cognitive development through the Zone of Proximal Development (ZPD)?",
+    "options": [
+      "Offering structured scaffolding support that is gradually faded as competence grows",
+      "Providing unassisted discovery tasks to stimulate autonomous cognitive maturation",
+      "Delivering standardized lectures without peer interaction to ensure uniform focus",
+      "Enforcing rigid operant conditioning schedules to shape desired academic behaviors"
+    ],
+    "correctIndex": 0,
+    "textHi": "लेव वायगोत्स्की के सामाजिक-सांस्कृतिक सिद्धांत के अनुसार, कौन सी शिक्षण रणनीति समीपस्थ विकास क्षेत्र (ZPD) के माध्यम से संज्ञानात्मक विकास को प्रभावी ढंग से सुगम बनाती है?",
+    "optionsHi": [
+      "संरचित मचान सहायता प्रदान करना जिसे योग्यता बढ़ने के साथ धीरे-धीरे कम किया जाता है",
+      "स्वायत्त संज्ञानात्मक परिपक्वता को प्रोत्साहित करने के लिए बिना सहायता के खोज कार्य प्रदान करना",
+      "एकसमान ध्यान सुनिश्चित करने के लिए सहकर्मी संपर्क के बिना मानकीकृत व्याख्यान देना",
+      "वांछित शैक्षणिक व्यवहारों को ढालने के लिए कठोर संचालक अनुकूलन अनुसूची लागू करना"
+    ]
+  },
+  "u2_71": {
+    "subject": "English Pedagogy",
+    "topic": "Unseen Passage",
+    "text": "Read the following lines from a short poem and answer the question that follows:\n'The silver moon walked slowly through the night,\nAnd draped the sleeping hills in gentle light.'\nWhich literary device is prominently used in describing the moon as walking?",
+    "options": [
+      "Hyperbole exaggerating the height of the hills in the night",
+      "Personification attributing human action to the non-human moon",
+      "Simile comparing the bright moon directly to a silver coin",
+      "Alliteration repeating the initial sound of the sleeping hills"
+    ],
+    "correctIndex": 1,
+    "textHi": "एक छोटी कविता की निम्नलिखित पंक्तियों को पढ़िए और उसके नीचे दिए गए प्रश्न का उत्तर दीजिए:\n'द सिल्वर मून वॉक्ड स्लोली थ्रू द नाइट,\nएंड ड्रेप्ड द स्लीपिंग हिल्स इन जेंटल लाइट।'\nचंद्रमा को चलने वाले रूप में वर्णित करने में किस साहित्यिक उपकरण का प्रमुखता से उपयोग किया गया है?",
+    "optionsHi": [
+      "रात में पहाड़ियों की ऊंचाई को बढ़ा-चढ़ाकर बताने वाली अतिशयोक्ति",
+      "गैर-मानव चंद्रमा को मानवीय क्रिया का श्रेय देने वाला मानवीकरण",
+      "चमकदार चंद्रमा की चांदी के सिक्के से सीधी तुलना करने वाली उपमा",
+      "सोती हुई पहाड़ियों की प्रारंभिक ध्वनि की पुनरावृत्ति करने वाला अनुप्रास"
+    ]
+  },
+  "u2_79": {
+    "subject": "English Pedagogy",
+    "topic": "Unseen Passage",
+    "text": "Read the following lines from a poem and identify the literary device used: 'The moon was a ghostly galleon tossed upon cloudy seas.'",
+    "options": [
+      "Personification is used to give human traits to the cloudy seas.",
+      "Metaphor is used to compare the moon to a ship directly.",
+      "Simile is used to compare the moon directly to a sailing ship.",
+      "Alliteration is used with the repetition of starting sound."
+    ],
+    "correctIndex": 1,
+    "textHi": "एक कविता की निम्नलिखित पंक्तियों को पढ़िए और प्रयुक्त साहित्यिक उपकरण को पहचानिए: 'The moon was a ghostly galleon tossed upon cloudy seas.'",
+    "optionsHi": [
+      "बादलों वाले समुद्रों को मानवीय गुण देने के लिए मानवीकरण का उपयोग किया जाता है।",
+      "चंद्रमा की सीधे एक जहाज से तुलना करने के लिए रूपक का उपयोग किया जाता है।",
+      "चंद्रमा की सीधे एक नाविक जहाज से तुलना करने के लिए उपमा का उपयोग किया जाता है।",
+      "शुरुआती ध्वनि की पुनरावृत्ति के साथ अनुप्रास का उपयोग किया जाता है।"
+    ]
+  },
+  "u2_21": {
+    "subject": "Child Development",
+    "topic": "Inclusive Education",
+    "text": "In a primary classroom, a teacher notices that a few students belong to socio-economically disadvantaged backgrounds and often feel alienated during discussions. Which of the following approaches should the teacher adopt to foster a positive learning environment?",
+    "options": [
+      "Assign simpler tasks exclusively to them to avoid classroom failure",
+      "Ignore their background differences to maintain uniform standards",
+      "Provide separate remediation sessions outside the regular class hours",
+      "Connect curriculum to their lived experiences and cultural contexts"
+    ],
+    "correctIndex": 3,
+    "textHi": "एक प्राथमिक कक्षा में, एक शिक्षक देखता है कि कुछ छात्र सामाजिक-आर्थिक रूप से वंचित पृष्ठभूमि से हैं और चर्चा के दौरान अक्सर खुद को अलग-थलग महसूस करते हैं। एक सकारात्मक सीखने का माहौल बनाने के लिए शिक्षक को निम्नलिखित में से कौन सा दृष्टिकोण अपनाना चाहिए?",
+    "optionsHi": [
+      "कक्षा की विफलता से बचने के लिए विशेष रूप से उन्हें सरल कार्य सौंपना",
+      "समान मानक बनाए रखने के लिए उनकी पृष्ठभूमि की भिन्नताओं को अनदेखा करना",
+      "नियमित कक्षा के घंटों के बाहर अलग उपचारात्मक सत्र प्रदान करना",
+      "पाठ्यचर्या को उनके जीवन के अनुभवों और सांस्कृतिक संदर्भों से जोड़ना"
+    ]
+  },
+  "u2_148": {
+    "subject": "EVS",
+    "topic": "EVS Pedagogy",
+    "text": "At the primary stage, why is it recommended to use stories and poems as an effective tool in teaching Environmental Studies?",
+    "options": [
+      "To evaluate grammatical skills in language learning classes",
+      "To connect with children's experiences and foster imagination",
+      "To help students memorize scientific facts quickly for exams",
+      "To replace textbook reading with purely recreational reading tasks"
+    ],
+    "correctIndex": 1,
+    "textHi": "प्राथमिक स्तर पर, पर्यावरण अध्ययन पढ़ाने में एक प्रभावी उपकरण के रूप में कहानियों और कविताओं का उपयोग करने की सिफारिश क्यों की जाती है?",
+    "optionsHi": [
+      "भाषा सीखने की कक्षाओं में व्याकरण कौशल का मूल्यांकन करने के लिए",
+      "बच्चों के अनुभवों से जुड़ने और कल्पना को बढ़ावा देने के लिए",
+      "परीक्षाओं के लिए छात्रों को वैज्ञानिक तथ्यों को जल्दी से याद रखने में मदद करने के लिए",
+      "पाठ्यपुस्तकों को पूरी तरह से मनोरंजक पठन कार्यों से बदलने के लिए"
+    ]
+  },
+  "u2_143": {
+    "subject": "EVS",
+    "topic": "Food, Shelter & Water",
+    "text": "Which traditional water conservation system involves stepwells built deeply into the ground to store rainwater?",
+    "options": [
+      "Municipal water pipeline",
+      "Underground plastic tank",
+      "Modern borewell system",
+      "Traditional baoli system"
+    ],
+    "correctIndex": 3,
+    "textHi": "वर्षा जल को संग्रहित करने के लिए कौन सी पारंपरिक जल संरक्षण प्रणाली जमीन में गहराई से बनी बावड़ियों से जुड़ी है?",
+    "optionsHi": [
+      "नगरपालिका जल पाइपलाइन",
+      "भूमिगत प्लास्टिक टैंक",
+      "आधुनिक नलकूप प्रणाली",
+      "पारंपरिक बावड़ी प्रणाली"
+    ]
+  },
+  "u1_dyslexia": {
+    "subject": "Child Development",
+    "topic": "Inclusive Education",
+    "text": "A child who has severe difficulty in reading words, recognizing written symbols, and spelling accurately is most likely showing signs of which learning difficulty?",
+    "options": [
+      "Dyscalculia",
+      "Dyslexia",
+      "Dyspraxia",
+      "Dysgraphia"
+    ],
+    "correctIndex": 1,
+    "textHi": "एक बच्चा जिसे शब्दों को पढ़ने, लिखित प्रतीकों को पहचानने और सटीक रूप से वर्तनी लिखने में गंभीर कठिनाई होती है, वह किस अधिगम कठिनाई के लक्षण दिखा रहा है?",
+    "optionsHi": [
+      "डिसकैलकुलिया (गणितीय वैकल्य)",
+      "डिसलेक्सिया (पठन वैकल्य)",
+      "डिसप्राक्सिया (गति समन्वय वैकल्य)",
+      "डिसग्राफिया (लेखन वैकल्य)"
+    ]
+  },
+  "u1_family": {
+    "subject": "Child Development",
+    "topic": "Development & Learning",
+    "text": "Which of the following factors plays a primary role in the emotional development and socialisation of a primary school child?",
+    "options": [
+      "The family and immediate home environment",
+      "The mass media and digital screen exposure",
+      "The school textbook and formal curriculum",
+      "The peer group and active neighborhood play"
+    ],
+    "correctIndex": 0,
+    "textHi": "प्राथमिक विद्यालय के बच्चे के भावनात्मक विकास और समाजीकरण में निम्नलिखित में से कौन सा कारक प्राथमिक भूमिका निभाता है?",
+    "optionsHi": [
+      "परिवार और तात्कालिक घरेलू वातावरण",
+      "जनसंचार माध्यम और डिजिटल स्क्रीन एक्सपोजर",
+      "विद्यालय की पाठ्यपुस्तक और औपचारिक पाठ्यक्रम",
+      "साथी समूह और सक्रिय पड़ोसी खेल"
+    ]
+  },
+  "who1": {
+    "subject": "Life Skills",
+    "topic": "जीवन कौशल",
+    "text": "विश्व स्वास्थ्य संगठन (WHO) द्वारा परिभाषित जीवन कौशल शिक्षा का मुख्य उद्देश्य क्या है?",
+    "options": [
+      "व्यावसायिक प्रशिक्षण प्रदान करना",
+      "तकनीकी दक्षता को बढ़ाना",
+      "शैक्षणिक अंकों में सुधार लाना",
+      "व्यक्तिगत कौशल का विकास करना"
+    ],
+    "correctIndex": 3
+  },
+  "who2": {
+    "subject": "Life Skills",
+    "topic": "जीवन कौशल",
+    "text": "विश्व स्वास्थ्य संगठन (WHO) द्वारा प्रतिपादित जीवन कौशल प्रारूप में, निर्णय लेने की क्षमता (Decision Making) का मुख्य उद्देश्य क्या है?",
+    "options": [
+      "अतीत की घटनाओं के आधार पर भविष्य के लिए नीतियां बनाना",
+      "समूह के अन्य सदस्यों के विचारों को बिना शर्त स्वीकार करना",
+      "व्यक्तिगत समस्याओं के समाधान हेतु तर्कपूर्ण विकल्पों का चयन करना",
+      "संवेगात्मक उतार-चढ़ाव को नियंत्रित कर कार्यक्षमता बढ़ाना"
+    ],
+    "correctIndex": 2
+  },
+  "work1": {
+    "subject": "Maths",
+    "topic": "Percentage",
+    "text": "A can do a piece of work in 10 days and B can do the same work in 15 days. In how many days can both working together finish the work?",
+    "options": [
+      "5 days",
+      "7.5 days",
+      "6 days",
+      "8 days"
+    ],
+    "correctIndex": 2,
+    "textHi": "A किसी कार्य को 10 दिनों में कर सकता है और B उसी कार्य को 15 दिनों में कर सकता है। दोनों मिलकर उस कार्य को कितने दिनों में समाप्त कर सकते हैं?",
+    "optionsHi": [
+      "5 days",
+      "7.5 days",
+      "6 days",
+      "8 days"
+    ]
+  },
+  "work2": {
+    "subject": "Maths",
+    "topic": "Time & Work",
+    "text": "If 15 men can complete a work in 20 days, how many men are required to complete the same work in 10 days?",
+    "options": [
+      "35",
+      "30",
+      "25",
+      "20"
+    ],
+    "correctIndex": 1,
+    "textHi": "यदि 15 पुरुष एक कार्य को 20 दिनों में पूरा कर सकते हैं, तो उसी कार्य को 10 दिनों में पूरा करने के लिए कितने पुरुषों की आवश्यकता होगी?",
+    "optionsHi": [
+      "35",
+      "30",
+      "25",
+      "20"
+    ]
+  },
+  "shop1": {
+    "subject": "Maths",
+    "topic": "Profit & Loss",
+    "text": "A shopkeeper sells an item at a profit of 10% after giving a discount of 20% on the marked price. If the marked price is Rs. 800, what is the cost price of the item?",
+    "options": [
+      "Rs. 575",
+      "Rs. 581.8",
+      "Rs. 550",
+      "Rs. 600"
+    ],
+    "correctIndex": 1,
+    "textHi": "एक दुकानदार अंकित मूल्य पर 20% की छूट देने के बाद भी 10% का लाभ कमाता है। यदि अंकित मूल्य 800 रुपये है, तो वस्तु का क्रय मूल्य क्या है?",
+    "optionsHi": [
+      "575 रुपये",
+      "581.8 रुपये",
+      "550 रुपये",
+      "600 रुपये"
+    ]
+  },
+  "shop2": {
+    "subject": "Maths",
+    "topic": "Profit & Loss",
+    "text": "A shopkeeper marks an item 20% above its cost price and gives a discount of 10%. What is his profit percentage?",
+    "options": [
+      "10%",
+      "8%",
+      "15%",
+      "12%"
+    ],
+    "correctIndex": 1,
+    "textHi": "एक दुकानदार एक वस्तु को उसके क्रय मूल्य से 20% अधिक अंकित करता है और 10% की छूट देता है। उसका लाभ प्रतिशत क्या है?",
+    "optionsHi": [
+      "10%",
+      "8%",
+      "15%",
+      "12%"
+    ]
+  }
+}

@@ -594,6 +594,9 @@ module.exports = {
   ruleBasedCheck,
   looksLikeRepeat,
   sameFactInPaper,
+  // The third repeat check: one concept or one set of figures asked twice in
+  // a paper in other words - see services/sameIdea.js.
+  sameIdeaInPaper: require("./sameIdea").sameIdeaInPaper,
   numberSignature,
   runValidationPipeline,
   runValidationPipelineBatch,

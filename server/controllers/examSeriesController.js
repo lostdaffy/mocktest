@@ -275,6 +275,8 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
         const built = await createVerifiedQuestions({
           needed: thisBatch,
           inTest: checkAgainst(),
+          siblings,
+          onePerIdea: true,
           tag: { examStage },
           generateParams: {
             examType: examStage,
@@ -335,6 +337,8 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
         const built = await createVerifiedQuestions({
           needed: want,
           inTest: checkAgainst(),
+          siblings,
+          onePerIdea: true,
           tag: { examStage, chapter: v.chapter },
           generateParams: {
             examType: examStage,
@@ -517,9 +521,12 @@ async function replaceInMock(test, removed, position) {
   if (!sectionDef) return report(0, `${removed.subject} is not a section of this exam`);
   const figure = removed.visual?.kind === "figure";
   try {
+    const siblings = await siblingMockQuestions(test.examStage, test._id);
     const built = await createVerifiedQuestions({
       needed: 1,
-      inTest: [...test.questions, ...(await siblingMockQuestions(test.examStage, test._id))],
+      inTest: [...test.questions, ...siblings],
+      siblings,
+      onePerIdea: true,
       tag: { examStage: test.examStage, ...(figure ? { chapter: removed.chapter } : {}) },
       generateParams: {
         examType: test.examStage,
@@ -1018,12 +1025,12 @@ async function addQuestionsToMock(req, res) {
 
     const batch = Math.min(count, 12);
     const pyqExamples = await getPyqStyleExamples(test.examStage, subject);
+    const siblings = test.type === "full_mock" ? await siblingMockQuestions(test.examStage, test._id) : [];
     const built = await createVerifiedQuestions({
       needed: batch,
-      inTest: [
-        ...test.questions.map((q) => q._id),
-        ...(test.type === "full_mock" ? await siblingMockQuestions(test.examStage, test._id) : []),
-      ],
+      inTest: [...test.questions.map((q) => q._id), ...siblings],
+      siblings,
+      onePerIdea: true,
       tag: { examStage: test.examStage },
       generateParams: {
         examType: test.examStage,

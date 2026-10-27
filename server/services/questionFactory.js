@@ -3,7 +3,7 @@ const RejectedQuestion = require("../models/RejectedQuestion");
 const Test = require("../models/Test");
 const Attempt = require("../models/Attempt");
 const { generateQuestions, repairQuestion } = require("./geminiService");
-const { runValidationPipelineBatch, questionKey, looksLikeRepeat, sameFactInPaper } = require("./validationPipeline");
+const { runValidationPipelineBatch, questionKey, looksLikeRepeat, sameFactInPaper, sameIdeaInPaper } = require("./validationPipeline");
 // Through the module, not destructured, so the test stub can stand in for it.
 const visualGen = require("./visualGenerator");
 const { visualSignature, figureKey } = require("./visuals");
@@ -69,8 +69,16 @@ const MAX_ROUNDS = 8;
  *
  * A one-line note about each deletion is kept (see models/RejectedQuestion) so
  * that a gate which starts rejecting good work is visible instead of silent.
+ *
+ * `onePerIdea` is for a paper that covers a whole syllabus - a mock, a live
+ * exam: each concept and each set of figures is asked once in it, however it
+ * is worded (services/sameIdea.js). A chapter practice test drills one idea
+ * on purpose and leaves it off. `siblings` are the ids in `inTest` that belong
+ * to the exam's other mocks, not to this paper: against those only the same
+ * question reworded counts, since the syllabus brings every concept round
+ * again.
  */
-async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRounds, inTest = [] }) {
+async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRounds, inTest = [], siblings = [], onePerIdea = false }) {
   if (needed <= 0) return { ids: [], verified: 0, repaired: 0, discarded: 0, duplicates: 0, short: 0 };
 
   const rounds = maxRounds || MAX_ROUNDS;
@@ -80,9 +88,12 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
   // EVS section could both ask who chaired the Drafting Committee - Super TET
   // Mock #2 did.
   const paper = inTest.length
-    ? await Question.find({ _id: { $in: inTest } }).select("text textKey visual options correctIndex").lean()
+    ? await Question.find({ _id: { $in: inTest } })
+        .select("text textHi textKey visual options optionsHi correctIndex subject topic chapter")
+        .lean()
     : [];
   const paperPlain = paper.filter((q) => !q.visual?.kind);
+  const fromSibling = new Set(siblings.map(String));
   const paperTexts = paperPlain.map((q) => q.text);
   const copiesReference = await require("./referenceLearning")
     .referenceChecker(generateParams.examType, generateParams.subject)
@@ -267,6 +278,27 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
       if (twin) {
         duplicates++;
         await drop(q, "reworded", `the paper already asks: ${String(twin.text).slice(0, 120)}`);
+        continue;
+      }
+
+      // The same idea in other words: a concept the paper already tests
+      // ("reverses 'b' and 'd'" after "difficulty reading and spelling", both
+      // Dyslexia), or the same figures asked for something else. Another
+      // mock's question only counts when it is the same question reworded.
+      let echo = null;
+      if (onePerIdea && !q.visual?.kind) {
+        for (const p of [...paperPlain, ...accepted, ...savedRound]) {
+          const same = sameIdeaInPaper(q, p, { sibling: fromSibling.has(String(p._id)) });
+          if (same) {
+            echo = { p, same };
+            break;
+          }
+        }
+      }
+      if (echo) {
+        duplicates++;
+        const where = fromSibling.has(String(echo.p._id)) ? "another mock of this exam" : "the paper";
+        await drop(q, "reworded", `${where} already asks this idea, ${echo.same.why}:${String(echo.p.text).slice(0, 120)}`);
         continue;
       }
 
