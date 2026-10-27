@@ -30,8 +30,31 @@ const mixed = () => {
   return plan;
 };
 
+// A question the server refused as a repeat of an older bank question (in
+// no test, av-bank.js) is swapped for a new one of the same kind whose
+// numbers no other question of the chapter shows.
+const { looksLikeRepeat, numberSignature } = require("../server/services/validationPipeline");
+const { fmt } = require("./fmt");
+const bank = require("./av-bank");
+function fixBank(qs) {
+  mixed();
+  const sigs = new Set([num, age, wt].flatMap((m) => Object.values(m.topic()).flat(2)).concat(Object.keys(plan).filter((k) => k !== "spare").flatMap((k) => plan[k])).map((q) => numberSignature(q.q)));
+  const kind = num.KINDS.find((k) => k.id === "consecLargest");
+  return qs.map((q) => {
+    if (!looksLikeRepeat(q.q, bank).repeat) return q;
+    for (const p of kind.cands()) {
+      const n = fmt(kind.build(q.t, p));
+      const s = numberSignature(n.q);
+      if (sigs.has(s) || looksLikeRepeat(n.q, bank).repeat || looksLikeRepeat(n.q, ex.texts).repeat) continue;
+      sigs.add(s);
+      return n;
+    }
+    throw new Error(`no replacement for ${q.q}`);
+  });
+}
+
 const files = {
-  num: (level) => { mx.all(); return num.topic()[level].flat(); },
+  num: (level) => { mx.all(); return fixBank(num.topic()[level].flat()); },
   age: (level) => { mx.all(); return age.topic()[level].flat(); },
   wt: (level) => { mx.all(); return wt.topic()[level].flat(); },
   mixed: (level) => mixed()[level],
