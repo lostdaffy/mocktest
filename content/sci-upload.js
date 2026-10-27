@@ -30,7 +30,18 @@ const mixed = () => {
 
 const files = {
   si: (level) => si.topic()[level].flat(),
-  ci: (level) => ci.topic()[level].flat(),
+  // Compound Interest is built after Simple Interest, as in every other run:
+  // the chapter's used numbers must be the same whatever file is built.
+  ci: (level) => {
+    si.topic();
+    const tests = ci.topic()[level];
+    if (level !== "easy") return tests.flat();
+    // Easy #1-#3 went up first (59 questions; the server refused one). The one
+    // question still missing from #1-#3 goes to Easy #2.
+    const missing = tests[2].find((q) => /becomes 4 times itself in 8 years. In how many years will it become 256 times/.test(q.q));
+    if (!missing) throw new Error("CI Easy: the missing question moved");
+    return [{ ...missing, t: tests[1][0].t }, ...tests.slice(3).flat()];
+  },
   mixed: (level) => mixed()[level],
 };
 module.exports = (name, level) => files[name](level);
