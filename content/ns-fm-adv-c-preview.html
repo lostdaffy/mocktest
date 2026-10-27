@@ -1,0 +1,490 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Question batch preview</title>
+<style>
+:root { --bg:#fff; --ink:#1b1b1f; --soft:#5d5f6b; --line:#e3e4ea; --ok:#127a3a; --okbg:#e7f6ec; --bad:#b42318; }
+@media (prefers-color-scheme: dark) { :root { --bg:#16171b; --ink:#ececf1; --soft:#a3a6b3; --line:#2c2e36; --ok:#5dd38c; --okbg:#173524; --bad:#ff8a80; } }
+body { background:var(--bg); color:var(--ink); font:15px/1.55 system-ui, sans-serif; margin:0; padding:16px; }
+h1 { font-size:18px; } .q { border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin:0 0 12px; }
+.n { font-size:13px; color:var(--soft); } .t { font-weight:600; } .ok { color:var(--ok); } .bad { color:var(--bad); font-weight:700; }
+.hi { color:var(--soft); } li.right { background:var(--okbg); color:var(--ok); font-weight:600; border-radius:4px; }
+.sol { font-size:14px; } ol { padding-left:22px; }
+</style></head><body><h1>80 questions - Number System · Factors and Multiples · Advanced #7, Number System · Factors and Multiples · Advanced #8, Number System · Factors and Multiples · Advanced #9, Number System · Factors and Multiples · Advanced #10</h1>
+<div class="q">
+  <div class="n">1. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>N is a natural number with 15 factors; 2N has 20 factors and 3N has 18 factors. How many factors does N² have?</b><br><span class="hi">N एक प्राकृत संख्या है जिसके 15 गुणनखंड हैं; 2N के 20 और 3N के 18 गुणनखंड हैं। N² के कितने गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">45 ✔</li><li class="">30</li><li class="">225</li><li class="">36</li></ol>
+  <p class="sol"><b>Solution:</b> Write N = 2ᵃ × 3ᵇ × m. (a + 2)/(a + 1) = 20/15 = 4/3 gives a = 2; (b + 2)/(b + 1) = 18/15 = 6/5 gives b = 4. 3 × 5 = 15, so m = 1 and N = 2² × 3⁴. N² = 2⁴ × 3⁸ has 5 × 9 = 45 factors.<br><span class="hi">N = 2ᵃ × 3ᵇ × m लिखें। (a + 2)/(a + 1) = 20/15 = 4/3 से a = 2; (b + 2)/(b + 1) = 18/15 = 6/5 से b = 4। 3 × 5 = 15, अतः m = 1 और N = 2² × 3⁴। N² = 2⁴ × 3⁸ के 5 × 9 = 45 गुणनखंड।</span></p>
+</div>
+<div class="q">
+  <div class="n">2. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors of 7! (= 5,040) are perfect squares?</b><br><span class="hi">7! (= 5,040) के कितने गुणनखंड पूर्ण वर्ग हैं?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">4</li><li class="">8</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 7! = 2⁴ × 3² × 5 × 7. Even powers: 2: 0, 2, 4 (3 ways), 3: 0, 2 (2), 5 and 7: 0 only. 3 × 2 = 6 (1, 4, 9, 16, 36, 144).<br><span class="hi">7! = 2⁴ × 3² × 5 × 7। सम घातें: 2: 0, 2, 4 (3 तरह), 3: 0, 2 (2), 5 और 7: केवल 0। 3 × 2 = 6 (1, 4, 9, 16, 36, 144)।</span></p>
+</div>
+<div class="q">
+  <div class="n">3. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the sum of all the numbers less than 72 that are co-prime to 72?</b><br><span class="hi">72 से कम उन सभी संख्याओं का योग क्या है जो 72 के साथ सह-अभाज्य हैं?</span></p>
+  <ol type="A"><li class="right">864 ✔</li><li class="">1,728</li><li class="">792</li><li class="">936</li></ol>
+  <p class="sol"><b>Solution:</b> 72 = 2³ × 3², so there are 72 × (1/2)(2/3) = 24 such numbers, pairing as k and 72 − k: 12 × 72 = 864.<br><span class="hi">72 = 2³ × 3², अतः ऐसी 72 × (1/2)(2/3) = 24 संख्याएँ, जो k और 72 − k के जोड़ों में: 12 × 72 = 864।</span></p>
+</div>
+<div class="q">
+  <div class="n">4. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 3,000 have exactly three factors?</b><br><span class="hi">1 से 3,000 तक कितनी संख्याओं के ठीक तीन गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">16 ✔</li><li class="">15</li><li class="">17</li><li class="">54</li></ol>
+  <p class="sol"><b>Solution:</b> They are p² for primes p ≤ √3,000 ≈ 54.8. The primes up to 54 are 2, 3, 5, ..., 47, 53: 16 of them.<br><span class="hi">ये p² हैं, जहाँ अभाज्य p ≤ √3,000 ≈ 54.8। 54 तक अभाज्य 2, 3, 5, ..., 47, 53: कुल 16।</span></p>
+</div>
+<div class="q">
+  <div class="n">5. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors of 2⁸ × 3⁴ have an even number of factors themselves?</b><br><span class="hi">2⁸ × 3⁴ के कितने गुणनखंडों के स्वयं के गुणनखंडों की संख्या सम है?</span></p>
+  <ol type="A"><li class="right">30 ✔</li><li class="">15</li><li class="">45</li><li class="">20</li></ol>
+  <p class="sol"><b>Solution:</b> A number has an even number of factors exactly when it is not a perfect square. 2⁸ × 3⁴ has 9 × 5 = 45 factors, of which 5 × 3 = 15 are squares (even powers). 45 − 15 = 30.<br><span class="hi">किसी संख्या के गुणनखंडों की संख्या ठीक तब सम होती है जब वह पूर्ण वर्ग न हो। 2⁸ × 3⁴ के 9 × 5 = 45 गुणनखंड, जिनमें 5 × 3 = 15 वर्ग (सम घातें)। 45 − 15 = 30।</span></p>
+</div>
+<div class="q">
+  <div class="n">6. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many ordered pairs (a, b) of natural numbers have LCM 1,000?</b><br><span class="hi">प्राकृत संख्याओं के कितने क्रमित युग्मों (a, b) का LCM 1,000 है?</span></p>
+  <ol type="A"><li class="right">49 ✔</li><li class="">16</li><li class="">25</li><li class="">64</li></ol>
+  <p class="sol"><b>Solution:</b> 1,000 = 2³ × 5³. For each prime the larger power must be the cube: 4 × 4 − 3 × 3 = 7 ways. 7 × 7 = 49.<br><span class="hi">1,000 = 2³ × 5³। हर अभाज्य के लिए बड़ी घात घन हो: 4 × 4 − 3 × 3 = 7 तरह। 7 × 7 = 49।</span></p>
+</div>
+<div class="q">
+  <div class="n">7. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors does the LCM of the numbers 1 to 16 have?</b><br><span class="hi">1 से 16 तक की संख्याओं के LCM के कितने गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">240 ✔</li><li class="">192</li><li class="">120</li><li class="">288</li></ol>
+  <p class="sol"><b>Solution:</b> LCM(1, ..., 16) = 2⁴ × 3² × 5 × 7 × 11 × 13 = 720,720. Factors: 5 × 3 × 2⁴ = 240.<br><span class="hi">LCM(1, ..., 16) = 2⁴ × 3² × 5 × 7 × 11 × 13 = 720,720। गुणनखंड: 5 × 3 × 2⁴ = 240।</span></p>
+</div>
+<div class="q">
+  <div class="n">8. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many factors d of 720 is 720 ÷ d an odd number?</b><br><span class="hi">720 के कितने गुणनखंडों d के लिए 720 ÷ d विषम संख्या है?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">24</li><li class="">5</li><li class="">30</li></ol>
+  <p class="sol"><b>Solution:</b> 720 = 2⁴ × 3² × 5. 720 ÷ d is odd exactly when d takes all four 2s: d = 2⁴ × (a factor of 3² × 5), and 3² × 5 has 3 × 2 = 6 factors.<br><span class="hi">720 = 2⁴ × 3² × 5। 720 ÷ d ठीक तब विषम जब d में चारों 2 हों: d = 2⁴ × (3² × 5 का गुणनखंड), और 3² × 5 के 3 × 2 = 6 गुणनखंड।</span></p>
+</div>
+<div class="q">
+  <div class="n">9. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many numbers from 1 to 199 is the sum of all the factors odd?</b><br><span class="hi">1 से 199 तक कितनी संख्याओं के सभी गुणनखंडों का योग विषम है?</span></p>
+  <ol type="A"><li class="right">23 ✔</li><li class="">14</li><li class="">9</li><li class="">100</li></ol>
+  <p class="sol"><b>Solution:</b> The sum of factors is odd exactly for squares and twice squares. Squares up to 199: 14; twice squares 2k² ≤ 199: k ≤ 9, so 9. 14 + 9 = 23.<br><span class="hi">गुणनखंडों का योग ठीक वर्गों और वर्गों की दोगुनी पर विषम। 199 तक वर्ग: 14; 2k² ≤ 199: k ≤ 9, अतः 9। 14 + 9 = 23।</span></p>
+</div>
+<div class="q">
+  <div class="n">10. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Two natural numbers add up to 1,365 and their HCF is 65. How many such pairs are there (order not counted)?</b><br><span class="hi">दो प्राकृत संख्याओं का योग 1,365 और HCF 65 है। ऐसे कितने युग्म हैं (क्रम नहीं)?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">12</li><li class="">10</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> Write them as 65a and 65b with a + b = 21 and a co-prime to 21. Such a below 10.5: 1, 2, 4, 5, 8, 10. So 6 pairs.<br><span class="hi">इन्हें 65a और 65b लिखें, a + b = 21 और a, 21 के साथ सह-अभाज्य। 10.5 से कम ऐसे a: 1, 2, 4, 5, 8, 10। अतः 6 युग्म।</span></p>
+</div>
+<div class="q">
+  <div class="n">11. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>N = 2⁶ × 3⁴ × 5². How many factors of N are greater than √N?</b><br><span class="hi">N = 2⁶ × 3⁴ × 5²। N के कितने गुणनखंड √N से बड़े हैं?</span></p>
+  <ol type="A"><li class="right">52 ✔</li><li class="">53</li><li class="">105</li><li class="">51</li></ol>
+  <p class="sol"><b>Solution:</b> N has 7 × 5 × 3 = 105 factors. N is a perfect square, so √N is one factor and the other 104 pair up around it: 52 are above √N.<br><span class="hi">N के 7 × 5 × 3 = 105 गुणनखंड। N पूर्ण वर्ग है, अतः √N एक गुणनखंड और बाकी 104 उसके दोनों ओर जोड़ों में: 52, √N से बड़े।</span></p>
+</div>
+<div class="q">
+  <div class="n">12. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the sum of the even factors of 2⁴ × 3³ × 5?</b><br><span class="hi">2⁴ × 3³ × 5 के सम गुणनखंडों का योग क्या है?</span></p>
+  <ol type="A"><li class="right">7,200 ✔</li><li class="">7,440</li><li class="">3,600</li><li class="">6,960</li></ol>
+  <p class="sol"><b>Solution:</b> Even factors have 2¹ to 2⁴: (2 + 4 + 8 + 16)(1 + 3 + 9 + 27)(1 + 5) = 30 × 40 × 6 = 7,200.<br><span class="hi">सम गुणनखंडों में 2¹ से 2⁴: (2 + 4 + 8 + 16)(1 + 3 + 9 + 27)(1 + 5) = 30 × 40 × 6 = 7,200।</span></p>
+</div>
+<div class="q">
+  <div class="n">13. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Let N = 2⁵ × 3³. How many factors of N² are less than N but are not factors of N?</b><br><span class="hi">मान लें N = 2⁵ × 3³। N² के कितने गुणनखंड N से छोटे हैं पर N के गुणनखंड नहीं हैं?</span></p>
+  <ol type="A"><li class="right">15 ✔</li><li class="">38</li><li class="">53</li><li class="">23</li></ol>
+  <p class="sol"><b>Solution:</b> N² = 2¹⁰ × 3⁶ has 77 factors; apart from N they pair around N, so 38 are below N. N has 24 factors, 23 of them below N. 38 − 23 = 15.<br><span class="hi">N² = 2¹⁰ × 3⁶ के 77 गुणनखंड; N को छोड़ ये N के दोनों ओर जोड़ों में, अतः 38, N से छोटे। N के 24 गुणनखंड, जिनमें 23, N से छोटे। 38 − 23 = 15।</span></p>
+</div>
+<div class="q">
+  <div class="n">14. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Two numbers have HCF 15 and LCM 2,310. How many such pairs are there (order not counted)?</b><br><span class="hi">दो संख्याओं का HCF 15 और LCM 2,310 है। ऐसे कितने युग्म हैं (क्रम नहीं)?</span></p>
+  <ol type="A"><li class="right">4 ✔</li><li class="">8</li><li class="">2</li><li class="">16</li></ol>
+  <p class="sol"><b>Solution:</b> Write them as 15a and 15b with a, b co-prime and ab = 2,310/15 = 154 = 2 × 7 × 11. Co-prime splits: 1 × 154, 2 × 77, 7 × 22, 11 × 14. So 4 pairs.<br><span class="hi">इन्हें 15a और 15b लिखें, a, b सह-अभाज्य और ab = 2,310/15 = 154 = 2 × 7 × 11। सह-अभाज्य विभाजन: 1 × 154, 2 × 77, 7 × 22, 11 × 14। अतः 4 युग्म।</span></p>
+</div>
+<div class="q">
+  <div class="n">15. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>The product of all the factors of a number N is 2³⁰ × 3¹⁵. What is N?</b><br><span class="hi">एक संख्या N के सभी गुणनखंडों का गुणनफल 2³⁰ × 3¹⁵ है। N क्या है?</span></p>
+  <ol type="A"><li class="right">144 ✔</li><li class="">72</li><li class="">216</li><li class="">288</li></ol>
+  <p class="sol"><b>Solution:</b> With N = 2ᵃ × 3ᵇ and k factors, the product is N^(k/2): a·k/2 = 30 and b·k/2 = 15, so a = 2b. a = 4, b = 2 gives k = 15 and 4 × 7.5 = 30, 2 × 7.5 = 15. N = 2⁴ × 3² = 144.<br><span class="hi">N = 2ᵃ × 3ᵇ और k गुणनखंड हों तो गुणनफल N^(k/2): a·k/2 = 30 और b·k/2 = 15, अतः a = 2b। a = 4, b = 2 से k = 15 और 4 × 7.5 = 30, 2 × 7.5 = 15। N = 2⁴ × 3² = 144।</span></p>
+</div>
+<div class="q">
+  <div class="n">16. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Let d be the largest number that leaves the same remainder r when it divides 1,189, 1,909 and 2,773. What is d + r?</b><br><span class="hi">मान लें d वह सबसे बड़ी संख्या है जो 1,189, 1,909 और 2,773 को भाग देने पर एक ही शेष r छोड़ती है। d + r क्या है?</span></p>
+  <ol type="A"><li class="right">181 ✔</li><li class="">144</li><li class="">288</li><li class="">217</li></ol>
+  <p class="sol"><b>Solution:</b> d divides the differences 720 and 864, so d = HCF(720, 864) = 144. 1,189 = 8 × 144 + 37, so r = 37 (the others also leave 37). d + r = 181.<br><span class="hi">d अंतरों 720 और 864 को विभाजित करता है, अतः d = HCF(720, 864) = 144। 1,189 = 8 × 144 + 37, अतः r = 37 (बाकी भी 37 छोड़ते हैं)। d + r = 181।</span></p>
+</div>
+<div class="q">
+  <div class="n">17. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>In how many ways can 20! be written as the product of two co-prime factors (order not counted)?</b><br><span class="hi">20! को दो सह-अभाज्य गुणनखंडों के गुणनफल के रूप में कितने तरीकों से लिखा जा सकता है (क्रम नहीं)?</span></p>
+  <ol type="A"><li class="right">128 ✔</li><li class="">256</li><li class="">64</li><li class="">512</li></ol>
+  <p class="sol"><b>Solution:</b> 20! has the 8 distinct primes 2, 3, 5, 7, 11, 13, 17, 19, each going wholly to one factor: 2⁸ = 256 ordered ways, i.e. 128 unordered.<br><span class="hi">20! में 8 भिन्न अभाज्य 2, 3, 5, 7, 11, 13, 17, 19, हर एक पूरी एक गुणनखंड को: 2⁸ = 256 क्रमित तरीके, यानी 128।</span></p>
+</div>
+<div class="q">
+  <div class="n">18. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors of 2⁶ × 3⁶ × 5⁶ are perfect cubes but not perfect squares?</b><br><span class="hi">2⁶ × 3⁶ × 5⁶ के कितने गुणनखंड पूर्ण घन हैं पर पूर्ण वर्ग नहीं?</span></p>
+  <ol type="A"><li class="right">19 ✔</li><li class="">27</li><li class="">8</li><li class="">56</li></ol>
+  <p class="sol"><b>Solution:</b> Cubes take powers 0, 3 or 6: 3 × 3 × 3 = 27. Those that are also squares (sixth powers) take 0 or 6: 2 × 2 × 2 = 8. 27 − 8 = 19.<br><span class="hi">घनों में घात 0, 3 या 6: 3 × 3 × 3 = 27। जो वर्ग भी हों (छठी घातें), उनमें 0 या 6: 2 × 2 × 2 = 8। 27 − 8 = 19।</span></p>
+</div>
+<div class="q">
+  <div class="n">19. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>The HCF of two numbers is 14 and their LCM is 1,260. If one of the numbers is 126, what is the other?</b><br><span class="hi">दो संख्याओं का HCF 14 और LCM 1,260 है। यदि एक संख्या 126 है, तो दूसरी क्या है?</span></p>
+  <ol type="A"><li class="right">140 ✔</li><li class="">70</li><li class="">180</li><li class="">210</li></ol>
+  <p class="sol"><b>Solution:</b> HCF × LCM = product of the numbers, so the other number is 14 × 1,260 ÷ 126 = 140. Check: 126 = 14 × 9 and 140 = 14 × 10, with 9 and 10 co-prime, so the HCF is 14 and the LCM is 14 × 90 = 1,260.<br><span class="hi">HCF × LCM = संख्याओं का गुणनफल, अतः दूसरी संख्या 14 × 1,260 ÷ 126 = 140। जाँच: 126 = 14 × 9 और 140 = 14 × 10, 9 और 10 सह-अभाज्य, अतः HCF 14 और LCM 14 × 90 = 1,260।</span></p>
+</div>
+<div class="q">
+  <div class="n">20. <span class="t">Number System · Factors and Multiples · Advanced #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the HCF of 30! and 3²⁰?</b><br><span class="hi">30! और 3²⁰ का HCF क्या है?</span></p>
+  <ol type="A"><li class="right">4,782,969 ✔</li><li class="">1,594,323</li><li class="">14,348,907</li><li class="">531,441</li></ol>
+  <p class="sol"><b>Solution:</b> The HCF is the power of 3 in 30!: 10 + 3 + 1 = 14 (30 ÷ 3, 30 ÷ 9, 30 ÷ 27, rounded down). So the HCF is 3¹⁴ = 4,782,969.<br><span class="hi">HCF, 30! में 3 की घात है: 10 + 3 + 1 = 14 (30 ÷ 3, 30 ÷ 9, 30 ÷ 27 के पूर्णांक भाग)। अतः HCF = 3¹⁴ = 4,782,969।</span></p>
+</div>
+<div class="q">
+  <div class="n">21. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>N is a natural number with 14 factors; 2N has 16 factors and 3N has 21 factors. How many factors does N² have?</b><br><span class="hi">N एक प्राकृत संख्या है जिसके 14 गुणनखंड हैं; 2N के 16 और 3N के 21 गुणनखंड हैं। N² के कितने गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">39 ✔</li><li class="">28</li><li class="">49</li><li class="">45</li></ol>
+  <p class="sol"><b>Solution:</b> Write N = 2ᵃ × 3ᵇ × m. (a + 2)/(a + 1) = 16/14 = 8/7 gives a = 6; (b + 2)/(b + 1) = 21/14 = 3/2 gives b = 1. 7 × 2 = 14, so N = 2⁶ × 3. N² = 2¹² × 3² has 13 × 3 = 39 factors.<br><span class="hi">N = 2ᵃ × 3ᵇ × m लिखें। (a + 2)/(a + 1) = 16/14 = 8/7 से a = 6; (b + 2)/(b + 1) = 21/14 = 3/2 से b = 1। 7 × 2 = 14, अतः N = 2⁶ × 3। N² = 2¹² × 3² के 13 × 3 = 39 गुणनखंड।</span></p>
+</div>
+<div class="q">
+  <div class="n">22. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors of 14! are perfect squares?</b><br><span class="hi">14! के कितने गुणनखंड पूर्ण वर्ग हैं?</span></p>
+  <ol type="A"><li class="right">72 ✔</li><li class="">36</li><li class="">48</li><li class="">96</li></ol>
+  <p class="sol"><b>Solution:</b> 14! = 2¹¹ × 3⁵ × 5² × 7² × 11 × 13. Even powers: 2: 0 to 10 (6 ways), 3: 0, 2, 4 (3), 5: 0, 2 (2), 7: 0, 2 (2), 11 and 13: 0 only. 6 × 3 × 2 × 2 = 72.<br><span class="hi">14! = 2¹¹ × 3⁵ × 5² × 7² × 11 × 13। सम घातें: 2: 0 से 10 (6 तरह), 3: 0, 2, 4 (3), 5: 0, 2 (2), 7: 0, 2 (2), 11 और 13: केवल 0। 6 × 3 × 2 × 2 = 72।</span></p>
+</div>
+<div class="q">
+  <div class="n">23. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the sum of all the numbers less than 105 that are co-prime to 105?</b><br><span class="hi">105 से कम उन सभी संख्याओं का योग क्या है जो 105 के साथ सह-अभाज्य हैं?</span></p>
+  <ol type="A"><li class="right">2,520 ✔</li><li class="">5,040</li><li class="">2,415</li><li class="">2,730</li></ol>
+  <p class="sol"><b>Solution:</b> 105 = 3 × 5 × 7, so there are 105 × (2/3)(4/5)(6/7) = 48 such numbers, pairing as k and 105 − k: 24 × 105 = 2,520.<br><span class="hi">105 = 3 × 5 × 7, अतः ऐसी 105 × (2/3)(4/5)(6/7) = 48 संख्याएँ, जो k और 105 − k के जोड़ों में: 24 × 105 = 2,520।</span></p>
+</div>
+<div class="q">
+  <div class="n">24. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many four-digit numbers have exactly three factors?</b><br><span class="hi">चार अंकों की कितनी संख्याओं के ठीक तीन गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">14 ✔</li><li class="">25</li><li class="">11</li><li class="">15</li></ol>
+  <p class="sol"><b>Solution:</b> They are p² with 1,000 ≤ p² ≤ 9,999, i.e. 32 ≤ p ≤ 99. There are 25 primes up to 100 and 11 up to 31, so 25 − 11 = 14 (from 37² = 1,369 to 97² = 9,409).<br><span class="hi">ये p² हैं जहाँ 1,000 ≤ p² ≤ 9,999, यानी 32 ≤ p ≤ 99। 100 तक 25 अभाज्य और 31 तक 11, अतः 25 − 11 = 14 (37² = 1,369 से 97² = 9,409)।</span></p>
+</div>
+<div class="q">
+  <div class="n">25. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 2,000 are multiples of 12 but not of 18?</b><br><span class="hi">1 से 2,000 तक कितनी संख्याएँ 12 की गुणज हैं पर 18 की नहीं?</span></p>
+  <ol type="A"><li class="right">111 ✔</li><li class="">166</li><li class="">55</li><li class="">122</li></ol>
+  <p class="sol"><b>Solution:</b> Multiples of 12: 166. Those also divisible by 18 are multiples of LCM(12, 18) = 36: 55. 166 − 55 = 111.<br><span class="hi">12 के गुणज: 166। इनमें 18 से भी विभाज्य, यानी LCM(12, 18) = 36 के गुणज: 55। 166 − 55 = 111।</span></p>
+</div>
+<div class="q">
+  <div class="n">26. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many ordered pairs (a, b) of natural numbers have LCM 420?</b><br><span class="hi">प्राकृत संख्याओं के कितने क्रमित युग्मों (a, b) का LCM 420 है?</span></p>
+  <ol type="A"><li class="right">135 ✔</li><li class="">81</li><li class="">45</li><li class="">120</li></ol>
+  <p class="sol"><b>Solution:</b> 420 = 2² × 3 × 5 × 7. For 2: 3 × 3 − 2 × 2 = 5 ways; for each of 3, 5, 7: 2 × 2 − 1 = 3 ways. 5 × 3 × 3 × 3 = 135.<br><span class="hi">420 = 2² × 3 × 5 × 7। 2 के लिए: 3 × 3 − 2 × 2 = 5 तरह; 3, 5, 7 हर एक के लिए: 2 × 2 − 1 = 3 तरह। 5 × 3 × 3 × 3 = 135।</span></p>
+</div>
+<div class="q">
+  <div class="n">27. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors does the LCM of the numbers 1 to 8 have?</b><br><span class="hi">1 से 8 तक की संख्याओं के LCM के कितने गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">32 ✔</li><li class="">24</li><li class="">48</li><li class="">16</li></ol>
+  <p class="sol"><b>Solution:</b> LCM(1, ..., 8) = 2³ × 3 × 5 × 7 = 840. Factors: 4 × 2 × 2 × 2 = 32.<br><span class="hi">LCM(1, ..., 8) = 2³ × 3 × 5 × 7 = 840। गुणनखंड: 4 × 2 × 2 × 2 = 32।</span></p>
+</div>
+<div class="q">
+  <div class="n">28. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the least number that leaves a remainder of 1 when divided by each of 2, 3, 4, 5 and 6, and is divisible by 13?</b><br><span class="hi">वह न्यूनतम संख्या कौन-सी है जो 2, 3, 4, 5 और 6 में से प्रत्येक से भाग देने पर 1 शेष छोड़ती है और 13 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">481 ✔</li><li class="">61</li><li class="">221</li><li class="">541</li></ol>
+  <p class="sol"><b>Solution:</b> The number is 60k + 1. 60 = 13 × 4 + 8, so 8k + 1 must be a multiple of 13: k = 8 (65). 60 × 8 + 1 = 481 = 13 × 37.<br><span class="hi">संख्या 60k + 1 है। 60 = 13 × 4 + 8, अतः 8k + 1, 13 का गुणज हो: k = 8 (65)। 60 × 8 + 1 = 481 = 13 × 37।</span></p>
+</div>
+<div class="q">
+  <div class="n">29. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many numbers from 1 to 1,999 is the sum of all the factors odd?</b><br><span class="hi">1 से 1,999 तक कितनी संख्याओं के सभी गुणनखंडों का योग विषम है?</span></p>
+  <ol type="A"><li class="right">75 ✔</li><li class="">44</li><li class="">31</li><li class="">1,000</li></ol>
+  <p class="sol"><b>Solution:</b> The sum of factors is odd exactly for squares and twice squares. Squares up to 1,999: 44 (44² = 1,936); twice squares 2k² ≤ 1,999: k ≤ 31, so 31. 44 + 31 = 75.<br><span class="hi">गुणनखंडों का योग ठीक वर्गों और वर्गों की दोगुनी पर विषम। 1,999 तक वर्ग: 44 (44² = 1,936); 2k² ≤ 1,999: k ≤ 31, अतः 31। 44 + 31 = 75।</span></p>
+</div>
+<div class="q">
+  <div class="n">30. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Two natural numbers add up to 2,025 and their HCF is 45. How many such pairs are there (order not counted)?</b><br><span class="hi">दो प्राकृत संख्याओं का योग 2,025 और HCF 45 है। ऐसे कितने युग्म हैं (क्रम नहीं)?</span></p>
+  <ol type="A"><li class="right">12 ✔</li><li class="">24</li><li class="">22</li><li class="">15</li></ol>
+  <p class="sol"><b>Solution:</b> Write them as 45a and 45b with a + b = 45 and a co-prime to 45. There are 45 × (2/3)(4/5) = 24 such a from 1 to 44, giving 12 unordered pairs.<br><span class="hi">इन्हें 45a और 45b लिखें, a + b = 45 और a, 45 के साथ सह-अभाज्य। 1 से 44 में ऐसे 45 × (2/3)(4/5) = 24 a, जिनसे 12 युग्म।</span></p>
+</div>
+<div class="q">
+  <div class="n">31. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the sum of the odd factors of 2⁵ × 3³ × 5²?</b><br><span class="hi">2⁵ × 3³ × 5² के विषम गुणनखंडों का योग क्या है?</span></p>
+  <ol type="A"><li class="right">1,240 ✔</li><li class="">1,209</li><li class="">2,480</li><li class="">1,271</li></ol>
+  <p class="sol"><b>Solution:</b> Odd factors leave out the 2s: (1 + 3 + 9 + 27)(1 + 5 + 25) = 40 × 31 = 1,240.<br><span class="hi">विषम गुणनखंडों में 2 नहीं: (1 + 3 + 9 + 27)(1 + 5 + 25) = 40 × 31 = 1,240।</span></p>
+</div>
+<div class="q">
+  <div class="n">32. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Let N = 360. How many factors of N² are less than N but are not factors of N?</b><br><span class="hi">मान लें N = 360। N² के कितने गुणनखंड N से छोटे हैं पर N के गुणनखंड नहीं हैं?</span></p>
+  <ol type="A"><li class="right">29 ✔</li><li class="">52</li><li class="">81</li><li class="">23</li></ol>
+  <p class="sol"><b>Solution:</b> N = 2³ × 3² × 5, so N² = 2⁶ × 3⁴ × 5² has 7 × 5 × 3 = 105 factors; apart from N they pair around N, so 52 are below N. N has 24 factors, 23 below N. 52 − 23 = 29.<br><span class="hi">N = 2³ × 3² × 5, अतः N² = 2⁶ × 3⁴ × 5² के 7 × 5 × 3 = 105 गुणनखंड; N को छोड़ ये जोड़ों में, अतः 52, N से छोटे। N के 24 गुणनखंड, 23, N से छोटे। 52 − 23 = 29।</span></p>
+</div>
+<div class="q">
+  <div class="n">33. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Two numbers have HCF 10 and LCM 2,100. How many such pairs are there (order not counted)?</b><br><span class="hi">दो संख्याओं का HCF 10 और LCM 2,100 है। ऐसे कितने युग्म हैं (क्रम नहीं)?</span></p>
+  <ol type="A"><li class="right">8 ✔</li><li class="">16</li><li class="">4</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> Write them as 10a and 10b with a, b co-prime and ab = 210 = 2 × 3 × 5 × 7. Each prime goes wholly to a or b: 2⁴ = 16 ordered splits, i.e. 8 pairs.<br><span class="hi">इन्हें 10a और 10b लिखें, a, b सह-अभाज्य और ab = 210 = 2 × 3 × 5 × 7। हर अभाज्य पूरा a या b को: 2⁴ = 16 क्रमित विभाजन, यानी 8 युग्म।</span></p>
+</div>
+<div class="q">
+  <div class="n">34. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>The product of all the factors of a number N is 10⁹. What is N?</b><br><span class="hi">एक संख्या N के सभी गुणनखंडों का गुणनफल 10⁹ है। N क्या है?</span></p>
+  <ol type="A"><li class="right">100 ✔</li><li class="">1,000</li><li class="">10</li><li class="">10,000</li></ol>
+  <p class="sol"><b>Solution:</b> With N = 2ᵃ × 5ᵇ and k factors, the product is N^(k/2), so a·k/2 = 9 and b·k/2 = 9: a = b. a = b = 2 gives k = 9 and 2 × 4.5 = 9. N = 10² = 100.<br><span class="hi">N = 2ᵃ × 5ᵇ और k गुणनखंड हों तो गुणनफल N^(k/2), अतः a·k/2 = 9 और b·k/2 = 9: a = b। a = b = 2 से k = 9 और 2 × 4.5 = 9। N = 10² = 100।</span></p>
+</div>
+<div class="q">
+  <div class="n">35. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Let d be the largest number that leaves the same remainder r when it divides 1,433, 2,153 and 3,233. What is d + r?</b><br><span class="hi">मान लें d वह सबसे बड़ी संख्या है जो 1,433, 2,153 और 3,233 को भाग देने पर एक ही शेष r छोड़ती है। d + r क्या है?</span></p>
+  <ol type="A"><li class="right">713 ✔</li><li class="">360</li><li class="">353</li><li class="">720</li></ol>
+  <p class="sol"><b>Solution:</b> d divides the differences 720 and 1,080, so d = HCF(720, 1,080) = 360. 1,433 = 3 × 360 + 353, so r = 353 (the others also leave 353). d + r = 713.<br><span class="hi">d अंतरों 720 और 1,080 को विभाजित करता है, अतः d = HCF(720, 1,080) = 360। 1,433 = 3 × 360 + 353, अतः r = 353 (बाकी भी 353 छोड़ते हैं)। d + r = 713।</span></p>
+</div>
+<div class="q">
+  <div class="n">36. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>In how many ways can 18! be written as the product of two co-prime factors (order not counted)?</b><br><span class="hi">18! को दो सह-अभाज्य गुणनखंडों के गुणनफल के रूप में कितने तरीकों से लिखा जा सकता है (क्रम नहीं)?</span></p>
+  <ol type="A"><li class="right">64 ✔</li><li class="">128</li><li class="">32</li><li class="">256</li></ol>
+  <p class="sol"><b>Solution:</b> 18! has the 7 distinct primes 2, 3, 5, 7, 11, 13, 17, each going wholly to one factor: 2⁷ = 128 ordered ways, i.e. 64 unordered.<br><span class="hi">18! में 7 भिन्न अभाज्य 2, 3, 5, 7, 11, 13, 17, हर एक पूरी एक गुणनखंड को: 2⁷ = 128 क्रमित तरीके, यानी 64।</span></p>
+</div>
+<div class="q">
+  <div class="n">37. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the HCF of the fractions 4/9, 10/21 and 8/15?</b><br><span class="hi">भिन्नों 4/9, 10/21 और 8/15 का HCF क्या है?</span></p>
+  <ol type="A"><li class="right">2/315 ✔</li><li class="">40/3</li><li class="">2/3</li><li class="">1/315</li></ol>
+  <p class="sol"><b>Solution:</b> HCF of fractions = HCF of the numerators ÷ LCM of the denominators = HCF(4, 10, 8) ÷ LCM(9, 21, 15) = 2 ÷ 315 = 2/315.<br><span class="hi">भिन्नों का HCF = अंशों का HCF ÷ हरों का LCM = HCF(4, 10, 8) ÷ LCM(9, 21, 15) = 2 ÷ 315 = 2/315।</span></p>
+</div>
+<div class="q">
+  <div class="n">38. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 100,000 have exactly five factors?</b><br><span class="hi">1 से 100,000 तक कितनी संख्याओं के ठीक पाँच गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">6</li><li class="">8</li><li class="">17</li></ol>
+  <p class="sol"><b>Solution:</b> Five factors means p⁴. p⁴ ≤ 100,000 means p ≤ 17 (17⁴ = 83,521, 19⁴ = 130,321): 2, 3, 5, 7, 11, 13, 17. That is 7.<br><span class="hi">पाँच गुणनखंड का अर्थ p⁴। p⁴ ≤ 100,000 का अर्थ p ≤ 17 (17⁴ = 83,521, 19⁴ = 130,321): 2, 3, 5, 7, 11, 13, 17। कुल 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">39. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 1,000 are co-prime to 42?</b><br><span class="hi">1 से 1,000 तक कितनी संख्याएँ 42 के साथ सह-अभाज्य हैं?</span></p>
+  <ol type="A"><li class="right">286 ✔</li><li class="">285</li><li class="">288</li><li class="">284</li></ol>
+  <p class="sol"><b>Solution:</b> Every block of 42 has 42 × (1/2)(2/3)(6/7) = 12 such numbers. 1,000 = 23 × 42 + 34: 23 × 12 = 276, and 967 to 1,000 behaves like 1 to 34, which has 10 (1, 5, 11, 13, 17, 19, 23, 25, 29, 31). 276 + 10 = 286.<br><span class="hi">हर 42 के खंड में 42 × (1/2)(2/3)(6/7) = 12 ऐसी संख्याएँ। 1,000 = 23 × 42 + 34: 23 × 12 = 276, और 967 से 1,000, 1 से 34 जैसा है, जिसमें 10 (1, 5, 11, 13, 17, 19, 23, 25, 29, 31)। 276 + 10 = 286।</span></p>
+</div>
+<div class="q">
+  <div class="n">40. <span class="t">Number System · Factors and Multiples · Advanced #8</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the HCF of 10²⁰ − 1 and 10³⁰ − 1?</b><br><span class="hi">10²⁰ − 1 और 10³⁰ − 1 का HCF क्या है?</span></p>
+  <ol type="A"><li class="right">9,999,999,999 ✔</li><li class="">99,999</li><li class="">999</li><li class="">99</li></ol>
+  <p class="sol"><b>Solution:</b> HCF(10ᵐ − 1, 10ⁿ − 1) = 10^HCF(m, n) − 1. HCF(20, 30) = 10, so the HCF is 10¹⁰ − 1 = 9,999,999,999 (ten nines).<br><span class="hi">HCF(10ᵐ − 1, 10ⁿ − 1) = 10^HCF(m, n) − 1। HCF(20, 30) = 10, अतः HCF = 10¹⁰ − 1 = 9,999,999,999 (दस नौ)।</span></p>
+</div>
+<div class="q">
+  <div class="n">41. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>N is a natural number with 16 factors; 2N and 3N each have 20 factors. How many factors does N² have?</b><br><span class="hi">N एक प्राकृत संख्या है जिसके 16 गुणनखंड हैं; 2N और 3N दोनों के 20 गुणनखंड हैं। N² के कितने गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">49 ✔</li><li class="">64</li><li class="">36</li><li class="">40</li></ol>
+  <p class="sol"><b>Solution:</b> Write N = 2ᵃ × 3ᵇ × m. (a + 2)/(a + 1) = 20/16 = 5/4 gives a = 3, and the same for b: b = 3. 4 × 4 = 16, so N = 2³ × 3³ = 216. N² = 2⁶ × 3⁶ has 7 × 7 = 49 factors.<br><span class="hi">N = 2ᵃ × 3ᵇ × m लिखें। (a + 2)/(a + 1) = 20/16 = 5/4 से a = 3, और b के लिए भी: b = 3। 4 × 4 = 16, अतः N = 2³ × 3³ = 216। N² = 2⁶ × 3⁶ के 7 × 7 = 49 गुणनखंड।</span></p>
+</div>
+<div class="q">
+  <div class="n">42. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors of 15! are perfect cubes?</b><br><span class="hi">15! के कितने गुणनखंड पूर्ण घन हैं?</span></p>
+  <ol type="A"><li class="right">24 ✔</li><li class="">12</li><li class="">36</li><li class="">18</li></ol>
+  <p class="sol"><b>Solution:</b> 15! = 2¹¹ × 3⁶ × 5³ × 7² × 11 × 13. Powers must be multiples of 3: 2: 0, 3, 6, 9 (4 ways), 3: 0, 3, 6 (3), 5: 0, 3 (2), the rest: 0 only. 4 × 3 × 2 = 24.<br><span class="hi">15! = 2¹¹ × 3⁶ × 5³ × 7² × 11 × 13। घातें 3 की गुणज हों: 2: 0, 3, 6, 9 (4 तरह), 3: 0, 3, 6 (3), 5: 0, 3 (2), बाकी: केवल 0। 4 × 3 × 2 = 24।</span></p>
+</div>
+<div class="q">
+  <div class="n">43. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the sum of all the numbers less than 126 that are co-prime to 126?</b><br><span class="hi">126 से कम उन सभी संख्याओं का योग क्या है जो 126 के साथ सह-अभाज्य हैं?</span></p>
+  <ol type="A"><li class="right">2,268 ✔</li><li class="">4,536</li><li class="">2,142</li><li class="">2,520</li></ol>
+  <p class="sol"><b>Solution:</b> 126 = 2 × 3² × 7, so there are 126 × (1/2)(2/3)(6/7) = 36 such numbers, pairing as k and 126 − k: 18 × 126 = 2,268.<br><span class="hi">126 = 2 × 3² × 7, अतः ऐसी 126 × (1/2)(2/3)(6/7) = 36 संख्याएँ, जो k और 126 − k के जोड़ों में: 18 × 126 = 2,268।</span></p>
+</div>
+<div class="q">
+  <div class="n">44. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest natural number that has exactly 28 factors?</b><br><span class="hi">ठीक 28 गुणनखंडों वाली सबसे छोटी प्राकृत संख्या कौन-सी है?</span></p>
+  <ol type="A"><li class="right">960 ✔</li><li class="">1,344</li><li class="">5,184</li><li class="">2,240</li></ol>
+  <p class="sol"><b>Solution:</b> 28 = 7 × 2 × 2 gives 2⁶ × 3 × 5 = 960. Other patterns are larger: 7 × 4 gives 2⁶ × 3³ = 1,728, 14 × 2 gives 2¹³ × 3. So 960.<br><span class="hi">28 = 7 × 2 × 2 से 2⁶ × 3 × 5 = 960। बाकी रूप बड़े: 7 × 4 से 2⁶ × 3³ = 1,728, 14 × 2 से 2¹³ × 3। अतः 960।</span></p>
+</div>
+<div class="q">
+  <div class="n">45. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest odd number that has exactly 8 factors?</b><br><span class="hi">ठीक 8 गुणनखंडों वाली सबसे छोटी विषम संख्या कौन-सी है?</span></p>
+  <ol type="A"><li class="right">105 ✔</li><li class="">135</li><li class="">189</li><li class="">165</li></ol>
+  <p class="sol"><b>Solution:</b> With odd primes: 3 × 5 × 7 = 105, 3³ × 5 = 135, 3³ × 7 = 189, 3⁷ is far larger. So 105.<br><span class="hi">विषम अभाज्यों से: 3 × 5 × 7 = 105, 3³ × 5 = 135, 3³ × 7 = 189, 3⁷ बहुत बड़ा। अतः 105।</span></p>
+</div>
+<div class="q">
+  <div class="n">46. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 1,000 are multiples of 6 or of 10, but not of both?</b><br><span class="hi">1 से 1,000 तक कितनी संख्याएँ 6 या 10 की गुणज हैं, पर दोनों की नहीं?</span></p>
+  <ol type="A"><li class="right">200 ✔</li><li class="">233</li><li class="">266</li><li class="">167</li></ol>
+  <p class="sol"><b>Solution:</b> Multiples of 6: 166, of 10: 100, of both (that is, of 30): 33. Exactly one: (166 − 33) + (100 − 33) = 133 + 67 = 200.<br><span class="hi">6 के गुणज: 166, 10 के: 100, दोनों के (यानी 30 के): 33। ठीक एक के: (166 − 33) + (100 − 33) = 133 + 67 = 200।</span></p>
+</div>
+<div class="q">
+  <div class="n">47. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many numbers n from 1 to 500 is HCF(n, 500) = 20?</b><br><span class="hi">1 से 500 तक कितनी संख्याओं n के लिए HCF(n, 500) = 20 है?</span></p>
+  <ol type="A"><li class="right">20 ✔</li><li class="">25</li><li class="">10</li><li class="">16</li></ol>
+  <p class="sol"><b>Solution:</b> n = 20m with m ≤ 25. 500 = 2² × 5³, so HCF(20m, 500) = 20 exactly when m is not a multiple of 5. 25 − 5 = 20.<br><span class="hi">n = 20m, m ≤ 25। 500 = 2² × 5³, अतः HCF(20m, 500) = 20 ठीक तब जब m, 5 का गुणज न हो। 25 − 5 = 20।</span></p>
+</div>
+<div class="q">
+  <div class="n">48. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 300 are divisible by exactly one of 2, 3 and 5?</b><br><span class="hi">1 से 300 तक कितनी संख्याएँ 2, 3 और 5 में से ठीक एक से विभाज्य हैं?</span></p>
+  <ol type="A"><li class="right">140 ✔</li><li class="">220</li><li class="">80</li><li class="">150</li></ol>
+  <p class="sol"><b>Solution:</b> Only 2: 150 − 50 − 30 + 10 = 80. Only 3: 100 − 50 − 20 + 10 = 40. Only 5: 60 − 30 − 20 + 10 = 20. (50, 30, 20 count multiples of 6, 10, 15; 10 counts multiples of 30.) 80 + 40 + 20 = 140.<br><span class="hi">केवल 2: 150 − 50 − 30 + 10 = 80। केवल 3: 100 − 50 − 20 + 10 = 40। केवल 5: 60 − 30 − 20 + 10 = 20। (50, 30, 20 - 6, 10, 15 के गुणज; 10 - 30 के गुणज।) 80 + 40 + 20 = 140।</span></p>
+</div>
+<div class="q">
+  <div class="n">49. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 100 have exactly eight factors?</b><br><span class="hi">1 से 100 तक कितनी संख्याओं के ठीक आठ गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">10 ✔</li><li class="">8</li><li class="">12</li><li class="">16</li></ol>
+  <p class="sol"><b>Solution:</b> Eight factors means p⁷, p³ × q or p × q × r. 8 × q: 24, 40, 56, 88 (4). 27 × 2 = 54 (1). p × q × r: 30, 42, 66, 78, 70 (5). p⁷ ≥ 128 is too big. 4 + 1 + 5 = 10.<br><span class="hi">आठ गुणनखंड का अर्थ p⁷, p³ × q या p × q × r। 8 × q: 24, 40, 56, 88 (4)। 27 × 2 = 54 (1)। p × q × r: 30, 42, 66, 78, 70 (5)। p⁷ ≥ 128 बड़ा। 4 + 1 + 5 = 10।</span></p>
+</div>
+<div class="q">
+  <div class="n">50. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Two co-prime numbers have product 9,699,690 (= 2 × 3 × 5 × 7 × 11 × 13 × 17 × 19). What is the smallest possible value of their sum?</b><br><span class="hi">दो सह-अभाज्य संख्याओं का गुणनफल 9,699,690 (= 2 × 3 × 5 × 7 × 11 × 13 × 17 × 19) है। उनके योग का न्यूनतम संभव मान क्या है?</span></p>
+  <ol type="A"><li class="right">6,229 ✔</li><li class="">6,231</li><li class="">6,233</li><li class="">6,251</li></ol>
+  <p class="sol"><b>Solution:</b> The sum is least when the parts are closest to √9,699,690 ≈ 3,114.4. 3,094 = 2 × 7 × 13 × 17 and 3,135 = 3 × 5 × 11 × 19 use every prime once, giving 3,094 + 3,135 = 6,229; no split comes closer.<br><span class="hi">योग न्यूनतम जब भाग √9,699,690 ≈ 3,114.4 के सबसे पास। 3,094 = 2 × 7 × 13 × 17 और 3,135 = 3 × 5 × 11 × 19 हर अभाज्य एक बार लेते हैं, योग 3,094 + 3,135 = 6,229; कोई विभाजन इससे पास नहीं।</span></p>
+</div>
+<div class="q">
+  <div class="n">51. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the least number that leaves a remainder of 3 when divided by each of 4, 6, 10 and 15, and is divisible by 7?</b><br><span class="hi">वह न्यूनतम संख्या कौन-सी है जो 4, 6, 10 और 15 में से प्रत्येक से भाग देने पर 3 शेष छोड़ती है और 7 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">63 ✔</li><li class="">123</li><li class="">183</li><li class="">423</li></ol>
+  <p class="sol"><b>Solution:</b> LCM(4, 6, 10, 15) = 60, so the number is 60k + 3: 63, 123, ... 63 = 7 × 9 already works. So 63.<br><span class="hi">LCM(4, 6, 10, 15) = 60, अतः संख्या 60k + 3: 63, 123, ...। 63 = 7 × 9 पहले से सही। अतः 63।</span></p>
+</div>
+<div class="q">
+  <div class="n">52. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors of 6! (= 720) are greater than 6?</b><br><span class="hi">6! (= 720) के कितने गुणनखंड 6 से बड़े हैं?</span></p>
+  <ol type="A"><li class="right">24 ✔</li><li class="">15</li><li class="">30</li><li class="">25</li></ol>
+  <p class="sol"><b>Solution:</b> 720 = 2⁴ × 3² × 5 has 5 × 3 × 2 = 30 factors. All of 1 to 6 divide 6!, so 6 factors are at most 6. 30 − 6 = 24.<br><span class="hi">720 = 2⁴ × 3² × 5 के 5 × 3 × 2 = 30 गुणनखंड। 1 से 6 सभी 6! को विभाजित करते हैं, अतः 6 गुणनखंड 6 तक। 30 − 6 = 24।</span></p>
+</div>
+<div class="q">
+  <div class="n">53. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the sum of the factors of 2,000 that are greater than 100?</b><br><span class="hi">2,000 के उन गुणनखंडों का योग क्या है जो 100 से बड़े हैं?</span></p>
+  <ol type="A"><li class="right">4,475 ✔</li><li class="">4,836</li><li class="">3,475</li><li class="">4,350</li></ol>
+  <p class="sol"><b>Solution:</b> 2,000 = 2⁴ × 5³. The factors above 100 are 125, 200, 250, 400, 500, 1,000 and 2,000. Sum = 4,475.<br><span class="hi">2,000 = 2⁴ × 5³। 100 से बड़े गुणनखंड 125, 200, 250, 400, 500, 1,000 और 2,000। योग = 4,475।</span></p>
+</div>
+<div class="q">
+  <div class="n">54. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest four-digit number which, when increased by 7, is divisible by each of 12, 15 and 20?</b><br><span class="hi">चार अंकों की वह सबसे छोटी संख्या कौन-सी है जिसमें 7 जोड़ने पर वह 12, 15 और 20 में से प्रत्येक से विभाज्य हो जाती है?</span></p>
+  <ol type="A"><li class="right">1,013 ✔</li><li class="">1,020</li><li class="">1,007</li><li class="">1,053</li></ol>
+  <p class="sol"><b>Solution:</b> LCM(12, 15, 20) = 60. n + 7 must be a multiple of 60 that is at least 1,007: 60 × 17 = 1,020. So n = 1,013.<br><span class="hi">LCM(12, 15, 20) = 60। n + 7, 60 का ऐसा गुणज हो जो कम से कम 1,007 हो: 60 × 17 = 1,020। अतः n = 1,013।</span></p>
+</div>
+<div class="q">
+  <div class="n">55. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors of 2⁹ × 3⁶ are perfect squares or perfect cubes?</b><br><span class="hi">2⁹ × 3⁶ के कितने गुणनखंड पूर्ण वर्ग या पूर्ण घन हैं?</span></p>
+  <ol type="A"><li class="right">28 ✔</li><li class="">32</li><li class="">20</li><li class="">24</li></ol>
+  <p class="sol"><b>Solution:</b> Squares: 2: 0, 2, 4, 6, 8 (5), 3: 0, 2, 4, 6 (4) - 20. Cubes: 2: 0, 3, 6, 9 (4), 3: 0, 3, 6 (3) - 12. Sixth powers: 2: 0, 6 and 3: 0, 6 - 4. 20 + 12 − 4 = 28.<br><span class="hi">वर्ग: 2: 0, 2, 4, 6, 8 (5), 3: 0, 2, 4, 6 (4) - 20। घन: 2: 0, 3, 6, 9 (4), 3: 0, 3, 6 (3) - 12। छठी घातें: 2: 0, 6 और 3: 0, 6 - 4। 20 + 12 − 4 = 28।</span></p>
+</div>
+<div class="q">
+  <div class="n">56. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 1,000 are divisible by each of 2, 3 and 5 but not by 7?</b><br><span class="hi">1 से 1,000 तक कितनी संख्याएँ 2, 3 और 5 में से प्रत्येक से विभाज्य हैं पर 7 से नहीं?</span></p>
+  <ol type="A"><li class="right">29 ✔</li><li class="">33</li><li class="">4</li><li class="">28</li></ol>
+  <p class="sol"><b>Solution:</b> Divisible by 2, 3 and 5 means a multiple of 30: 33 of them up to 1,000 (30 × 33 = 990). Those also divisible by 7 are multiples of 210: 210, 420, 630, 840 (4). 33 − 4 = 29.<br><span class="hi">2, 3 और 5 से विभाज्य का अर्थ 30 का गुणज: 1,000 तक 33 (30 × 33 = 990)। इनमें 7 से भी विभाज्य, यानी 210 के गुणज: 210, 420, 630, 840 (4)। 33 − 4 = 29।</span></p>
+</div>
+<div class="q">
+  <div class="n">57. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the sum of the reciprocals of all the factors of 672?</b><br><span class="hi">672 के सभी गुणनखंडों के व्युत्क्रमों का योग क्या है?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">2</li><li class="">5/2</li><li class="">7/2</li></ol>
+  <p class="sol"><b>Solution:</b> Sum of reciprocals = (sum of factors) ÷ 672. 672 = 2⁵ × 3 × 7, so the sum of factors is 63 × 4 × 8 = 2,016 = 3 × 672. The answer is 3.<br><span class="hi">व्युत्क्रमों का योग = (गुणनखंडों का योग) ÷ 672। 672 = 2⁵ × 3 × 7, अतः गुणनखंडों का योग 63 × 4 × 8 = 2,016 = 3 × 672। उत्तर 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">58. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>N = p³ × q², where p and q are different primes. How many factors does N² have?</b><br><span class="hi">N = p³ × q², जहाँ p और q भिन्न अभाज्य हैं। N² के कितने गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">35 ✔</li><li class="">24</li><li class="">144</li><li class="">30</li></ol>
+  <p class="sol"><b>Solution:</b> N² = p⁶ × q⁴, so it has (6 + 1)(4 + 1) = 35 factors (for example 72² = 5,184 has 35).<br><span class="hi">N² = p⁶ × q⁴, अतः इसके (6 + 1)(4 + 1) = 35 गुणनखंड (जैसे 72² = 5,184 के 35)।</span></p>
+</div>
+<div class="q">
+  <div class="n">59. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors of 10! (= 3,628,800) end in the digit 0?</b><br><span class="hi">10! (= 3,628,800) के कितने गुणनखंड अंक 0 पर समाप्त होते हैं?</span></p>
+  <ol type="A"><li class="right">160 ✔</li><li class="">270</li><li class="">200</li><li class="">135</li></ol>
+  <p class="sol"><b>Solution:</b> 10! = 2⁸ × 3⁴ × 5² × 7. A factor ending in 0 is a multiple of 10: 2¹ to 2⁸ (8 ways), 3⁰ to 3⁴ (5), 5¹ to 5² (2), 7⁰ or 7¹ (2). 8 × 5 × 2 × 2 = 160.<br><span class="hi">10! = 2⁸ × 3⁴ × 5² × 7। 0 पर समाप्त गुणनखंड 10 का गुणज: 2¹ से 2⁸ (8 तरह), 3⁰ से 3⁴ (5), 5¹ से 5² (2), 7⁰ या 7¹ (2)। 8 × 5 × 2 × 2 = 160।</span></p>
+</div>
+<div class="q">
+  <div class="n">60. <span class="t">Number System · Factors and Multiples · Advanced #9</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Two numbers have HCF 6 and LCM 360, and they add up to 114. What is their difference?</b><br><span class="hi">दो संख्याओं का HCF 6 और LCM 360 है, और उनका योग 114 है। उनका अंतर क्या है?</span></p>
+  <ol type="A"><li class="right">66 ✔</li><li class="">54</li><li class="">42</li><li class="">78</li></ol>
+  <p class="sol"><b>Solution:</b> Write them as 6a and 6b with a, b co-prime: ab = 360/6 = 60 and a + b = 114/6 = 19. So a, b = 4, 15, and the numbers are 24 and 90. Difference = 66.<br><span class="hi">इन्हें 6a और 6b लिखें, a, b सह-अभाज्य: ab = 360/6 = 60 और a + b = 114/6 = 19। अतः a, b = 4, 15, और संख्याएँ 24 और 90। अंतर = 66।</span></p>
+</div>
+<div class="q">
+  <div class="n">61. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>N is a natural number with 12 factors; 2N has 18 factors and 3N has 14 factors. How many factors does N² have?</b><br><span class="hi">N एक प्राकृत संख्या है जिसके 12 गुणनखंड हैं; 2N के 18 और 3N के 14 गुणनखंड हैं। N² के कितने गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">33 ✔</li><li class="">24</li><li class="">35</li><li class="">45</li></ol>
+  <p class="sol"><b>Solution:</b> Write N = 2ᵃ × 3ᵇ × m. (a + 2)/(a + 1) = 18/12 = 3/2 gives a = 1; (b + 2)/(b + 1) = 14/12 = 7/6 gives b = 5. 2 × 6 = 12, so N = 2 × 3⁵. N² = 2² × 3¹⁰ has 3 × 11 = 33 factors.<br><span class="hi">N = 2ᵃ × 3ᵇ × m लिखें। (a + 2)/(a + 1) = 18/12 = 3/2 से a = 1; (b + 2)/(b + 1) = 14/12 = 7/6 से b = 5। 2 × 6 = 12, अतः N = 2 × 3⁵। N² = 2² × 3¹⁰ के 3 × 11 = 33 गुणनखंड।</span></p>
+</div>
+<div class="q">
+  <div class="n">62. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many numbers n from 1 to 100 are n and n + 6 co-prime?</b><br><span class="hi">1 से 100 तक कितनी संख्याओं n के लिए n और n + 6 सह-अभाज्य हैं?</span></p>
+  <ol type="A"><li class="right">33 ✔</li><li class="">34</li><li class="">50</li><li class="">67</li></ol>
+  <p class="sol"><b>Solution:</b> HCF(n, n + 6) = HCF(n, 6), so n must be co-prime to 6, i.e. n leaves 1 or 5 on division by 6: 1, 7, ..., 97 (17) and 5, 11, ..., 95 (16). 17 + 16 = 33.<br><span class="hi">HCF(n, n + 6) = HCF(n, 6), अतः n, 6 के साथ सह-अभाज्य, यानी 6 से भाग पर शेष 1 या 5: 1, 7, ..., 97 (17) और 5, 11, ..., 95 (16)। 17 + 16 = 33।</span></p>
+</div>
+<div class="q">
+  <div class="n">63. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the sum of all the numbers less than 150 that are co-prime to 150?</b><br><span class="hi">150 से कम उन सभी संख्याओं का योग क्या है जो 150 के साथ सह-अभाज्य हैं?</span></p>
+  <ol type="A"><li class="right">3,000 ✔</li><li class="">6,000</li><li class="">3,750</li><li class="">2,850</li></ol>
+  <p class="sol"><b>Solution:</b> 150 = 2 × 3 × 5², so there are 150 × (1/2)(2/3)(4/5) = 40 such numbers, pairing as k and 150 − k: 20 × 150 = 3,000.<br><span class="hi">150 = 2 × 3 × 5², अतः ऐसी 150 × (1/2)(2/3)(4/5) = 40 संख्याएँ, जो k और 150 − k के जोड़ों में: 20 × 150 = 3,000।</span></p>
+</div>
+<div class="q">
+  <div class="n">64. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest natural number that has exactly 40 factors?</b><br><span class="hi">ठीक 40 गुणनखंडों वाली सबसे छोटी प्राकृत संख्या कौन-सी है?</span></p>
+  <ol type="A"><li class="right">1,680 ✔</li><li class="">2,160</li><li class="">3,240</li><li class="">5,040</li></ol>
+  <p class="sol"><b>Solution:</b> 40 = 5 × 2 × 2 × 2 gives 2⁴ × 3 × 5 × 7 = 1,680. Other patterns are larger: 5 × 4 × 2 gives 2⁴ × 3³ × 5 = 2,160, 10 × 2 × 2 gives 2⁹ × 3 × 5. So 1,680.<br><span class="hi">40 = 5 × 2 × 2 × 2 से 2⁴ × 3 × 5 × 7 = 1,680। बाकी रूप बड़े: 5 × 4 × 2 से 2⁴ × 3³ × 5 = 2,160, 10 × 2 × 2 से 2⁹ × 3 × 5। अतः 1,680।</span></p>
+</div>
+<div class="q">
+  <div class="n">65. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>The LCM of 2⁴ × 3ˣ × 5 and 2ʸ × 3² × 5³ is 2⁶ × 3⁵ × 5³. What is x + y?</b><br><span class="hi">2⁴ × 3ˣ × 5 और 2ʸ × 3² × 5³ का LCM 2⁶ × 3⁵ × 5³ है। x + y क्या है?</span></p>
+  <ol type="A"><li class="right">11 ✔</li><li class="">9</li><li class="">10</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> The LCM takes the larger power of each prime. For 3: max(x, 2) = 5, so x = 5. For 2: max(4, y) = 6, so y = 6. x + y = 11.<br><span class="hi">LCM हर अभाज्य की बड़ी घात लेता है। 3 के लिए: max(x, 2) = 5, अतः x = 5। 2 के लिए: max(4, y) = 6, अतः y = 6। x + y = 11।</span></p>
+</div>
+<div class="q">
+  <div class="n">66. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 1,000 are multiples of 5 or 7 but not of 3?</b><br><span class="hi">1 से 1,000 तक कितनी संख्याएँ 5 या 7 की गुणज हैं पर 3 की नहीं?</span></p>
+  <ol type="A"><li class="right">210 ✔</li><li class="">314</li><li class="">228</li><li class="">200</li></ol>
+  <p class="sol"><b>Solution:</b> Multiples of 5 or 7: 200 + 142 − 28 = 314. Those also divisible by 3 are multiples of 15 or 21: 66 + 47 − 9 = 104. 314 − 104 = 210.<br><span class="hi">5 या 7 के गुणज: 200 + 142 − 28 = 314। इनमें 3 से भी विभाज्य, यानी 15 या 21 के गुणज: 66 + 47 − 9 = 104। 314 − 104 = 210।</span></p>
+</div>
+<div class="q">
+  <div class="n">67. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many numbers n from 1 to 240 is HCF(n, 240) = 8?</b><br><span class="hi">1 से 240 तक कितनी संख्याओं n के लिए HCF(n, 240) = 8 है?</span></p>
+  <ol type="A"><li class="right">8 ✔</li><li class="">16</li><li class="">30</li><li class="">10</li></ol>
+  <p class="sol"><b>Solution:</b> n = 8m with m ≤ 30. 240 = 2⁴ × 3 × 5, so HCF(8m, 240) = 8 × HCF(m, 30) must be 8: m co-prime to 30, i.e. m = 1, 7, 11, 13, 17, 19, 23, 29. That is 8.<br><span class="hi">n = 8m, m ≤ 30। 240 = 2⁴ × 3 × 5, अतः HCF(8m, 240) = 8 × HCF(m, 30) = 8: m, 30 के साथ सह-अभाज्य, यानी m = 1, 7, 11, 13, 17, 19, 23, 29। कुल 8।</span></p>
+</div>
+<div class="q">
+  <div class="n">68. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors of 2²⁰ are greater than 10,000?</b><br><span class="hi">2²⁰ के कितने गुणनखंड 10,000 से बड़े हैं?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">6</li><li class="">10</li><li class="">11</li></ol>
+  <p class="sol"><b>Solution:</b> The factors of 2²⁰ are 2⁰, 2¹, ..., 2²⁰. 2¹³ = 8,192 is below 10,000 and 2¹⁴ = 16,384 is above, so 2¹⁴ to 2²⁰ qualify: 7.<br><span class="hi">2²⁰ के गुणनखंड 2⁰, 2¹, ..., 2²⁰ हैं। 2¹³ = 8,192, 10,000 से कम और 2¹⁴ = 16,384 अधिक, अतः 2¹⁴ से 2²⁰: 7।</span></p>
+</div>
+<div class="q">
+  <div class="n">69. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many pairs of co-prime natural numbers add up to 60 (order not counted)?</b><br><span class="hi">सह-अभाज्य प्राकृत संख्याओं के कितने युग्मों का योग 60 है (क्रम नहीं)?</span></p>
+  <ol type="A"><li class="right">8 ✔</li><li class="">16</li><li class="">10</li><li class="">12</li></ol>
+  <p class="sol"><b>Solution:</b> HCF(a, 60 − a) = HCF(a, 60), so a must be co-prime to 60. Below 30: 1, 7, 11, 13, 17, 19, 23, 29. That is 8 pairs.<br><span class="hi">HCF(a, 60 − a) = HCF(a, 60), अतः a, 60 के साथ सह-अभाज्य। 30 से कम: 1, 7, 11, 13, 17, 19, 23, 29। कुल 8 युग्म।</span></p>
+</div>
+<div class="q">
+  <div class="n">70. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the least number that leaves a remainder of 5 when divided by each of 8, 12 and 18, and is divisible by 13?</b><br><span class="hi">वह न्यूनतम संख्या कौन-सी है जो 8, 12 और 18 में से प्रत्येक से भाग देने पर 5 शेष छोड़ती है और 13 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">221 ✔</li><li class="">77</li><li class="">149</li><li class="">1,157</li></ol>
+  <p class="sol"><b>Solution:</b> LCM(8, 12, 18) = 72, so the number is 72k + 5: 77, 149, 221, ... 72 leaves 7 on division by 13, so 7k + 5 must be a multiple of 13: k = 3 (26). 72 × 3 + 5 = 221 = 13 × 17.<br><span class="hi">LCM(8, 12, 18) = 72, अतः संख्या 72k + 5: 77, 149, 221, ...। 13 से भाग पर 72 का शेष 7, अतः 7k + 5, 13 का गुणज हो: k = 3 (26)। 72 × 3 + 5 = 221 = 13 × 17।</span></p>
+</div>
+<div class="q">
+  <div class="n">71. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors of 8! (= 40,320) are greater than 8?</b><br><span class="hi">8! (= 40,320) के कितने गुणनखंड 8 से बड़े हैं?</span></p>
+  <ol type="A"><li class="right">88 ✔</li><li class="">48</li><li class="">96</li><li class="">87</li></ol>
+  <p class="sol"><b>Solution:</b> 8! = 2⁷ × 3² × 5 × 7 has 8 × 3 × 2 × 2 = 96 factors. All of 1 to 8 divide 8!, so 8 factors are at most 8. 96 − 8 = 88.<br><span class="hi">8! = 2⁷ × 3² × 5 × 7 के 8 × 3 × 2 × 2 = 96 गुणनखंड। 1 से 8 सभी 8! को विभाजित करते हैं, अतः 8 गुणनखंड 8 तक। 96 − 8 = 88।</span></p>
+</div>
+<div class="q">
+  <div class="n">72. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the largest four-digit number that leaves a remainder of 5 when divided by each of 16, 24 and 40?</b><br><span class="hi">चार अंकों की वह सबसे बड़ी संख्या कौन-सी है जो 16, 24 और 40 में से प्रत्येक से भाग देने पर 5 शेष छोड़ती है?</span></p>
+  <ol type="A"><li class="right">9,845 ✔</li><li class="">9,840</li><li class="">9,605</li><li class="">9,965</li></ol>
+  <p class="sol"><b>Solution:</b> LCM(16, 24, 40) = 240. The largest four-digit multiple of 240 is 240 × 41 = 9,840, and 9,840 + 5 = 9,845 is still four digits.<br><span class="hi">LCM(16, 24, 40) = 240। 240 का चार अंकों वाला सबसे बड़ा गुणज 240 × 41 = 9,840, और 9,840 + 5 = 9,845 भी चार अंकों का।</span></p>
+</div>
+<div class="q">
+  <div class="n">73. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Two numbers are in the ratio 3 : 7 and their LCM is 630. What is their sum?</b><br><span class="hi">दो संख्याएँ 3 : 7 के अनुपात में हैं और उनका LCM 630 है। उनका योग क्या है?</span></p>
+  <ol type="A"><li class="right">300 ✔</li><li class="">210</li><li class="">90</li><li class="">630</li></ol>
+  <p class="sol"><b>Solution:</b> The numbers are 3k and 7k with LCM 21k = 630, so k = 30. The numbers are 90 and 210, with sum 300.<br><span class="hi">संख्याएँ 3k और 7k, LCM 21k = 630, अतः k = 30। संख्याएँ 90 और 210, योग 300।</span></p>
+</div>
+<div class="q">
+  <div class="n">74. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the sum of all the numbers from 1 to 400 that have an odd number of factors?</b><br><span class="hi">1 से 400 तक की उन सभी संख्याओं का योग क्या है जिनके गुणनखंडों की संख्या विषम है?</span></p>
+  <ol type="A"><li class="right">2,870 ✔</li><li class="">2,485</li><li class="">3,311</li><li class="">210</li></ol>
+  <p class="sol"><b>Solution:</b> Only perfect squares have an odd number of factors. 1² + 2² + ... + 20² = 20 × 21 × 41 / 6 = 2,870.<br><span class="hi">केवल पूर्ण वर्गों के गुणनखंडों की संख्या विषम होती है। 1² + 2² + ... + 20² = 20 × 21 × 41 / 6 = 2,870।</span></p>
+</div>
+<div class="q">
+  <div class="n">75. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest multiple of 15 that has exactly 6 factors?</b><br><span class="hi">15 का वह सबसे छोटा गुणज कौन-सा है जिसके ठीक 6 गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">45 ✔</li><li class="">75</li><li class="">60</li><li class="">90</li></ol>
+  <p class="sol"><b>Solution:</b> 6 factors means p⁵ or p² × q. Containing 3 and 5: 3² × 5 = 45 or 3 × 5² = 75. The smaller is 45.<br><span class="hi">6 गुणनखंड का अर्थ p⁵ या p² × q। 3 और 5 सहित: 3² × 5 = 45 या 3 × 5² = 75। छोटा 45।</span></p>
+</div>
+<div class="q">
+  <div class="n">76. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors of 1,800 are not factors of 600?</b><br><span class="hi">1,800 के कितने गुणनखंड 600 के गुणनखंड नहीं हैं?</span></p>
+  <ol type="A"><li class="right">12 ✔</li><li class="">24</li><li class="">36</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> 1,800 = 2³ × 3² × 5² and 600 = 2³ × 3 × 5². A factor of 1,800 fails to divide 600 only when it has 3²: 4 × 1 × 3 = 12.<br><span class="hi">1,800 = 2³ × 3² × 5² और 600 = 2³ × 3 × 5²। 1,800 का गुणनखंड 600 को तभी नहीं बाँटता जब उसमें 3² हो: 4 × 1 × 3 = 12।</span></p>
+</div>
+<div class="q">
+  <div class="n">77. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 100 have exactly two different prime factors?</b><br><span class="hi">1 से 100 तक कितनी संख्याओं के ठीक दो भिन्न अभाज्य गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">56 ✔</li><li class="">30</li><li class="">42</li><li class="">60</li></ol>
+  <p class="sol"><b>Solution:</b> Count by the primes involved (allowing powers): with 2 and 3: 6, 12, 18, 24, 36, 48, 54, 72, 96 (9); 2 and 5: 10, 20, 40, 50, 80, 100 (6); 2 and 7: 14, 28, 56, 98 (4); 2 and 11 to 47: 22, 44, 88, 26, 52, 34, 68, 38, 76, 46, 92, 58, 62, 74, 82, 86, 94 (17); 3 and 5: 15, 45, 75 (3); 3 and 7: 21, 63 (2); 3 and 11 to 31: 33, 99, 39, 51, 57, 69, 87, 93 (8); 5 and 7 to 19: 35, 55, 65, 85, 95 (5); 7 and 11, 13: 77, 91 (2). Total 56.<br><span class="hi">शामिल अभाज्यों के अनुसार गिनें (घातें सहित): 2 और 3: 9; 2 और 5: 6; 2 और 7: 4; 2 और 11 से 47: 17; 3 और 5: 3; 3 और 7: 2; 3 और 11 से 31: 8; 5 के साथ 7 से 19: 5; 7 और 11, 13: 2। कुल 56।</span></p>
+</div>
+<div class="q">
+  <div class="n">78. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Two numbers have HCF 7 and LCM 882, and they add up to 161. What is their difference?</b><br><span class="hi">दो संख्याओं का HCF 7 और LCM 882 है, और उनका योग 161 है। उनका अंतर क्या है?</span></p>
+  <ol type="A"><li class="right">35 ✔</li><li class="">49</li><li class="">21</li><li class="">63</li></ol>
+  <p class="sol"><b>Solution:</b> Write them as 7a and 7b with a, b co-prime: ab = 882/7 = 126 and a + b = 161/7 = 23. So a, b = 9, 14, and the numbers are 63 and 98. Difference = 35.<br><span class="hi">इन्हें 7a और 7b लिखें, a, b सह-अभाज्य: ab = 882/7 = 126 और a + b = 161/7 = 23। अतः a, b = 9, 14, और संख्याएँ 63 और 98। अंतर = 35।</span></p>
+</div>
+<div class="q">
+  <div class="n">79. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>N = p × q × r, where p, q and r are different primes. How many factors does N⁴ have?</b><br><span class="hi">N = p × q × r, जहाँ p, q और r भिन्न अभाज्य हैं। N⁴ के कितने गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">125 ✔</li><li class="">64</li><li class="">32</li><li class="">81</li></ol>
+  <p class="sol"><b>Solution:</b> N⁴ = p⁴ × q⁴ × r⁴, so it has 5 × 5 × 5 = 125 factors (for example 30⁴ = 810,000 has 125).<br><span class="hi">N⁴ = p⁴ × q⁴ × r⁴, अतः इसके 5 × 5 × 5 = 125 गुणनखंड (जैसे 30⁴ = 810,000 के 125)।</span></p>
+</div>
+<div class="q">
+  <div class="n">80. <span class="t">Number System · Factors and Multiples · Advanced #10</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many factors does 18⁸ have?</b><br><span class="hi">18⁸ के कितने गुणनखंड हैं?</span></p>
+  <ol type="A"><li class="right">153 ✔</li><li class="">81</li><li class="">162</li><li class="">144</li></ol>
+  <p class="sol"><b>Solution:</b> 18⁸ = (2 × 3²)⁸ = 2⁸ × 3¹⁶. Number of factors = 9 × 17 = 153.<br><span class="hi">18⁸ = (2 × 3²)⁸ = 2⁸ × 3¹⁶। गुणनखंडों की संख्या = 9 × 17 = 153।</span></p>
+</div></body></html>
