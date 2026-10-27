@@ -22,11 +22,17 @@ const REPLACE = {
   ],
 };
 
+const BANK_REPEATS = { easy: ["A dealer marks his goods 20% above the cost price and gives a discount of 10%. What is his profit percentage?"] };
+
 let plan;
 const mixed = () => {
   if (!plan) {
     dd.topic();
     plan = fitAround({ topic: mx.topic(), prefix: mx.PREFIX, existing: { easy: { 1: 12 }, medium: { 1: 12 }, hard: { 1: 12 }, advanced: { 1: 12 } } });
+    // Refused by the server as a repeat of a question already in the chapter's bank.
+    for (const level of Object.keys(BANK_REPEATS)) {
+      plan[level] = plan[level].map((q) => (BANK_REPEATS[level].includes(q.q) ? { ...plan.spare[level].shift(), t: q.t } : q));
+    }
     for (const level of Object.keys(REPLACE)) {
       for (const [id, why] of REPLACE[level]) {
         const q = plan.spare[level].shift();
