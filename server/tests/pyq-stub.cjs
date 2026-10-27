@@ -51,7 +51,7 @@ ex.extractPages = async (b64, { first, last, withNextPage }) => {
         q(4, 2, "Which figure completes the series shown below?", ["Figure A", "Figure B", "Figure C", "Figure D"], "B", { needsFigure: true }),
         q(5, 3, "A number increased by 10% is 110. The number is", ["90", "100", "105", "120"], "(2)"),
         { ...q(6, 4, "", [], "(ख)"), textHi: "60 का 50% क्या है?", optionsHi: ["20", "30", "40", "50"] },
-        q(7, 4, "From the passage, how many students passed?", ["12", "15", "18", "20", "25"], "b", {
+        q(7, 4, "From the passage, how many students passed?", ["12", "15", "18", "20", "25", "30"], "b", {
           passage: "In a class of 40 students, 15 passed the exam and the rest failed. Of those who failed, half took a retest the following week.",
         }),
       ],

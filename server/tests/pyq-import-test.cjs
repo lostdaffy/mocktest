@@ -146,7 +146,12 @@ async function waitFor(fn, ms = 60000) {
   check("questions that agree with the AI need nothing", !flags[1] && !flags[2] && !flags[5] && !flags[6], JSON.stringify(flags));
   check("paper key and AI disagree -> answer_mismatch", flags[3] === "answer_mismatch", flags[3]);
   check("a figure question waits for its picture", flags[4] === "needs_figure", flags[4]);
-  check("five printed options are flagged, never cut to four", flags[7] === "option_count" && byNo(7).options.length === 5, flags[7]);
+  check("six printed options are flagged, never cut to four", flags[7] === "option_count" && byNo(7).options.length === 6, flags[7]);
+  const { flagsFor } = require(path.join(SERVER, "services/pyqImport"));
+  check(
+    "five printed options (UPSSSC PET's (E) None of the above) are kept, not flagged",
+    !flagsFor({ text: "Which is right?", options: ["a", "b", "c", "d", "None of the above"], paperAnswer: 4, aiAnswer: 4 }).includes("option_count")
+  );
   check("no key, and a passage that is not there", flags[8] === "no_answer,passage_missing", flags[8]);
 
   // ---------------------------------------------------------------- review
