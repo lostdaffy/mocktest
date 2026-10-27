@@ -46,7 +46,8 @@ function parseCorrect(value) {
 /** correctIndex from a program: 0-3, zero-based, as the model stores it. */
 function parseCorrectIndex(value) {
   const n = Number(value);
-  return Number.isInteger(n) && n >= 0 && n <= 3 ? n : null;
+  // 4 only reaches a five-option past paper; the gate refuses it anywhere else.
+  return Number.isInteger(n) && n >= 0 && n <= 4 ? n : null;
 }
 
 const clean = (v) => (v === undefined || v === null ? "" : String(v).trim());
@@ -116,7 +117,7 @@ function prepareRow(row, { examType, source, subjectFallback, pyq, strict = fals
   // Three separate "no Hindi ..." lines drowned out the warnings that
   // matter, like two identical options. One line, and last.
   const sentHindi = [question.textHi, ...(question.optionsHi || []), noSolution ? "" : question.solutionHi].filter(Boolean).length;
-  const wantedHindi = 1 + 4 + (noSolution ? 0 : 1);
+  const wantedHindi = 1 + question.options.length + (noSolution ? 0 : 1);
   if (sentHindi === 0) warnings.push("no Hindi version");
   else if (sentHindi < wantedHindi) warnings.push("Hindi version is incomplete");
 

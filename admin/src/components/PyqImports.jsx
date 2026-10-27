@@ -590,7 +590,7 @@ function RowCard({ row, importId, onSave, onReplace }) {
             <textarea className="rv-input w-full mt-1" rows={2} value={draft.textHi} onChange={(e) => setDraft({ ...draft, textHi: e.target.value })} />
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {[0, 1, 2, 3].map((i) => (
+            {(draft.options.length === 5 ? [0, 1, 2, 3, 4] : [0, 1, 2, 3]).map((i) => (
               <div key={i} className="flex gap-1.5">
                 <span className="text-xs font-semibold pt-2">{LETTERS[i]}</span>
                 <input
@@ -600,7 +600,7 @@ function RowCard({ row, importId, onSave, onReplace }) {
                   onChange={(e) => {
                     const next = [...draft.options];
                     next[i] = e.target.value;
-                    setDraft({ ...draft, options: next.slice(0, 4) });
+                    setDraft({ ...draft, options: next.slice(0, 5) });
                   }}
                 />
                 <input
@@ -610,15 +610,15 @@ function RowCard({ row, importId, onSave, onReplace }) {
                   onChange={(e) => {
                     const next = [...draft.optionsHi];
                     next[i] = e.target.value;
-                    setDraft({ ...draft, optionsHi: next.slice(0, 4) });
+                    setDraft({ ...draft, optionsHi: next.slice(0, 5) });
                   }}
                 />
               </div>
             ))}
           </div>
-          {options.length > 4 && (
+          {options.length > 5 && (
             <p className="text-xs text-warn">
-              The paper printed {options.length} options; only the first four are kept when you save. Put the right ones in these four boxes.
+              The paper printed {options.length} options; only the first five are kept when you save.
             </p>
           )}
           <label className="block text-xs text-slate">

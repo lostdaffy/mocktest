@@ -238,7 +238,9 @@ function readEdit(b) {
   const four = (k) => {
     if (b[k] === undefined || (b[k] === null && k === "optionsHi")) return;
     if (k === "optionsHi" && Array.isArray(b[k]) && b[k].length === 0) return (updates[k] = []);
-    if (!Array.isArray(b[k]) || b[k].length !== 4 || b[k].some((x) => typeof x !== "string")) {
+    // Five only for a past paper that printed five - checked against the
+    // question in updateQuestion.
+    if (!Array.isArray(b[k]) || ![4, 5].includes(b[k].length) || b[k].some((x) => typeof x !== "string")) {
       throw new Error(`${k} must be four pieces of text`);
     }
     updates[k] = b[k].map((x) => x.slice(0, 1000));
@@ -247,7 +249,7 @@ function readEdit(b) {
   four("options");
   four("optionsHi");
   if (b.correctIndex !== undefined) {
-    if (![0, 1, 2, 3].includes(b.correctIndex)) throw new Error("correctIndex must be 0, 1, 2 or 3");
+    if (![0, 1, 2, 3, 4].includes(b.correctIndex)) throw new Error("correctIndex must be 0, 1, 2 or 3");
     updates.correctIndex = b.correctIndex;
   }
   if (b.difficulty !== undefined) {
@@ -284,6 +286,17 @@ async function updateQuestion(req, res) {
 
   const before = await Question.findById(req.params.id).lean();
   if (!before) return res.status(404).json({ message: "Question not found" });
+
+  // The option count stays what it was: four, or five for a past paper that
+  // printed five. An editor that shows four boxes must not quietly drop (E).
+  const count = (updates.options || before.options || []).length;
+  const allowed = before.source === "pyq" ? (before.options || []).length : 4;
+  if (count !== allowed || (updates.optionsHi && updates.optionsHi.length && updates.optionsHi.length !== allowed)) {
+    return res.status(400).json({ message: `This question has ${allowed} options; send all ${allowed}` });
+  }
+  if ((updates.correctIndex ?? before.correctIndex) >= allowed) {
+    return res.status(400).json({ message: "The correct answer must be one of the options" });
+  }
 
   const { ruleBasedCheck } = require("../services/validationPipeline");
   const { plainMathsUpdate } = require("../services/mathNotation");

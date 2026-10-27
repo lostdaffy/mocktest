@@ -113,7 +113,7 @@ export default function QuestionEditor({ question, onClose, onSaved, canApprove 
               onChange={(e) => set({ correctIndex: Number(e.target.value) })}
               className="rv-input"
             >
-              {[0, 1, 2, 3].map((i) => (
+              {(draft.options?.length === 5 ? [0, 1, 2, 3, 4] : [0, 1, 2, 3]).map((i) => (
                 <option key={i} value={i}>
                   {String.fromCharCode(65 + i)}
                 </option>

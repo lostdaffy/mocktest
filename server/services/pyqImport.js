@@ -12,6 +12,7 @@ const { sectionRulesFrom } = require("../utils/marking");
 const { prepareRow } = require("./manualQuestions");
 const { hasMixedScript } = require("./validationPipeline");
 const { refersToAPassage, carriesItsPassage } = require("../utils/comprehension");
+const { normaliseChart } = require("./visuals");
 // Through the module, so the tests can stand in for the model.
 const extractor = require("./pyqExtractor");
 
@@ -109,7 +110,8 @@ function matchOption(answerText, options) {
 function flagsFor(row) {
   const flags = [];
   const options = row.options || [];
-  if (options.length !== 4) flags.push("option_count");
+  // Four, or the five a paper like UPSSSC PET prints ((E) "None of the above").
+  if (options.length !== 4 && options.length !== 5) flags.push("option_count");
   if (!String(row.text || "").trim() || options.some((o) => !String(o || "").trim())) flags.push("incomplete");
   if (!row.answerConfirmed) {
     if (row.paperAnswer === null || row.paperAnswer === undefined) flags.push("no_answer");
@@ -681,7 +683,7 @@ async function publishImport(imp, { by } = {}) {
         text: join(r.passage, r.text),
         textHi: r.textHi ? join(r.passageHi, r.textHi) : "",
         options: r.options,
-        optionsHi: r.optionsHi && r.optionsHi.length === 4 ? r.optionsHi : [],
+        optionsHi: r.optionsHi && r.optionsHi.length === r.options.length ? r.optionsHi : [],
         correctIndex: r.correctIndex,
         solution: r.solution || (aiFits ? r.aiWorking : ""),
         solutionHi: r.solutionHi || (aiFits && r.aiWorkingHi && r.aiWorkingHi !== "-" ? r.aiWorkingHi : ""),
@@ -693,6 +695,11 @@ async function publishImport(imp, { by } = {}) {
     if (errs.length) errors.push({ id: r._id, number: r.number, errors: errs });
     question.difficulty = "exam";
     if (r.imageId) question.visual = { kind: "figure", figure: { imageId: r.imageId, answerCheck: "by_eye", uploadedAt: new Date(), uploadedBy: by || "admin" } };
+    // A table or graph from the paper, kept as its numbers so the app draws
+    // it (services/visuals.js). The questions on one chart share chartSet.
+    else if (r.chart) {
+      question.visual = { kind: "chart", setId: r.chartSet || undefined, chart: normaliseChart(r.chart), ...(r.chartFormula ? { formula: r.chartFormula } : {}) };
+    }
     prepared.push({ row: r, question });
   }
   if (errors.length) throw fail(400, `${errors.length} question(s) cannot be saved as they are`, { rowErrors: errors });

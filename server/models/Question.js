@@ -6,14 +6,36 @@ const questionSchema = new mongoose.Schema(
     text: { type: String, required: true },
     textHi: { type: String }, // Hindi version
 
+    // Four options. A real past paper that printed five - UPSSSC PET adds
+    // (E) "None of the above", and it is sometimes the answer - is kept as
+    // printed; only source "pyq" may carry five. (On an update query `this`
+    // is not the document, so five is refused there; the PYQ paths save
+    // documents.)
     options: {
       type: [String],
-      validate: (v) => v.length === 4,
+      validate: {
+        validator: function (v) {
+          return v.length === 4 || (v.length === 5 && this?.source === "pyq");
+        },
+        message: "A question needs exactly four options (five only for a past paper that printed five)",
+      },
       required: true,
     },
     optionsHi: [{ type: String }],
 
-    correctIndex: { type: Number, required: true, min: 0, max: 3 },
+    correctIndex: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 4,
+      validate: {
+        validator: function (v) {
+          const n = Array.isArray(this?.options) ? this.options.length : 4;
+          return v < n;
+        },
+        message: "The correct answer must be one of the options",
+      },
+    },
 
     solution: { type: String, required: true },
 

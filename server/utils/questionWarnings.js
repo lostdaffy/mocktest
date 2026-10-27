@@ -14,10 +14,10 @@ const { refersToAPassage, carriesItsPassage } = require("./comprehension");
 function checkEditedQuestion(q) {
   const warnings = [];
 
-  if ((q.options || []).length !== 4) {
+  if ((q.options || []).length !== 4 && !((q.options || []).length === 5 && q.source === "pyq")) {
     warnings.push("This question doesn't have four options.");
   }
-  if (q.correctIndex == null || q.correctIndex < 0 || q.correctIndex > 3) {
+  if (q.correctIndex == null || q.correctIndex < 0 || q.correctIndex >= Math.max(4, (q.options || []).length)) {
     warnings.push("No correct option is marked.");
   }
 

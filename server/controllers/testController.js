@@ -692,7 +692,7 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
       $inc: {
         timesAttempted: 1,
         ...(isCorrect ? { timesCorrect: 1 } : {}),
-        ...(Number.isInteger(selectedIndex) && selectedIndex >= 0 && selectedIndex <= 3 ? { [`picks.${selectedIndex}`]: 1 } : {}),
+        ...(Number.isInteger(selectedIndex) && selectedIndex >= 0 && selectedIndex <= 4 ? { [`picks.${selectedIndex}`]: 1 } : {}),
       },
     };
 

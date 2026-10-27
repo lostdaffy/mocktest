@@ -322,7 +322,9 @@ function ruleBasedCheck(q) {
   const options = (q.options || []).map((o) => String(o ?? "").trim());
   const solution = (q.solution || "").trim();
 
-  if (options.length !== 4) issues.push("must have exactly 4 options");
+  // A past paper that printed five options keeps them (see models/Question.js).
+  const optionCountOk = options.length === 4 || (options.length === 5 && q.source === "pyq");
+  if (!optionCountOk) issues.push("must have exactly 4 options");
 
   // A chart or figure question is only as good as its picture. Checked again
   // here (the generator checked it first) so a question that reaches the
@@ -350,7 +352,7 @@ function ruleBasedCheck(q) {
   }
   if (options.some((o) => !o)) issues.push("an option is empty");
   if (new Set(options.map((o) => o.toLowerCase())).size !== options.length) issues.push("duplicate options found");
-  if (q.correctIndex === undefined || q.correctIndex === null || q.correctIndex < 0 || q.correctIndex > 3)
+  if (q.correctIndex === undefined || q.correctIndex === null || q.correctIndex < 0 || q.correctIndex > Math.max(3, options.length - 1))
     issues.push("correctIndex out of range");
 
   // A real exam question is a sentence, not a fragment.
@@ -416,7 +418,7 @@ function ruleBasedCheck(q) {
   // question without Hindi is half a question for them.
   const optionsHi = (q.optionsHi || []).map((o) => String(o ?? "").trim());
   if (!(q.textHi || "").trim()) issues.push("Hindi question missing");
-  if (optionsHi.length !== 4 || optionsHi.some((o) => !o)) issues.push("Hindi options missing");
+  if (optionsHi.length !== (q.options || []).length || optionsHi.length < 4 || optionsHi.some((o) => !o)) issues.push("Hindi options missing");
   if (!(q.solutionHi || "").trim()) issues.push("Hindi solution missing");
 
   // ...and where the subject IS Hindi, a translation is not enough: the

@@ -51,6 +51,11 @@ const rowSchema = new mongoose.Schema(
     // Which language the paper did not print and was translated in.
     translated: { type: String, enum: ["en", "hi", null], default: null },
     imageId: { type: mongoose.Schema.Types.ObjectId, ref: "QuestionImage" },
+    // A table or graph the question is about, as numbers (services/visuals.js
+    // normaliseChart); published as the question's chart for the app to draw.
+    chart: { type: mongoose.Schema.Types.Mixed },
+    chartSet: String, // the questions on one chart share this
+    chartFormula: String, // the sum over the chart that gives the answer
     flags: [{ type: String, enum: FLAGS }],
     removed: { type: Boolean, default: false },
     // Once published, the question this row became.
