@@ -18,6 +18,40 @@ const TABLE_1 = {
 };
 const DIR_TABLE_21 = ["निर्देश : निम्नलिखित सारणी का अध्ययन कीजिए और उसके बाद दिए गए प्रश्नों (21 से 25) के उत्तर दीजिए :", "Direction : Study the following table and answer the questions (21 to 25) that follow :"];
 
+// The paper prints two pie charts (graduate, postgraduate). A chart here holds
+// one pie, so the same percentages are kept as a table; the totals are in its
+// title, as printed under the pies.
+const PIES_56 = {
+  type: "table",
+  title: "Distribution of students of graduate and postgraduate levels in seven institutes M, N, P, Q, R, S and T (Total graduate level students = 27300; total postgraduate level students = 24700)",
+  titleHi: "स्नातक और स्नातकोत्तर स्तर के छात्रों का सात संस्थानों M, N, P, Q, R, S और T में वितरण (स्नातक स्तर के छात्रों की कुल संख्या = 27300; स्नातकोत्तर स्तर के छात्रों की कुल संख्या = 24700)",
+  unit: "%",
+  categories: ["M", "N", "P", "Q", "R", "S", "T"],
+  series: [
+    { name: "Graduate (%)", values: [17, 12, 12, 13, 18, 14, 14] },
+    { name: "Postgraduate (%)", values: [8, 15, 12, 13, 14, 21, 17] },
+  ],
+};
+const DIR_PIE_56 = ["निर्देश : निम्नलिखित पाई-चार्टों का अध्ययन कीजिए और उसके बाद दिए गए प्रश्नों (56 से 60) के उत्तर दीजिए :", "Direction : Study the following pie-charts and answer the questions (56 to 60) that follow :"];
+
+const PASSAGE_46 = `निर्देश : निम्नलिखित अपठित गद्यांश को ध्यानपूर्वक पढ़िए और उस पर आधारित प्रश्नों (46 से 50) के उत्तर दीजिए :
+
+परोपकार मनुष्य के उन श्रेष्ठ गुणों में से है, जो उसे केवल अपने हित के बारे में सोचने से ऊपर उठाकर दूसरों के सुख-दुःख से जोड़ता है। इसका अर्थ केवल किसी जरूरतमंद को धन या वस्तु देना नहीं है। किसी व्यक्ति को कठिन समय में उचित सलाह देना, किसी विद्यार्थी को पढ़ाई में सहायता करना, किसी वृद्ध को आवश्यक कार्य में सहयोग देना या किसी अनजान व्यक्ति को संकट में देखकर उसकी मदद करना भी परोपकार के ही रूप हैं। इसमें सहायता की मात्रा से अधिक भावना और उद्देश्य का महत्त्व होता है।
+
+वास्तविक परोपकार वह है जिसमें व्यक्ति किसी प्रतिफल, प्रशंसा या सामाजिक प्रतिष्ठा की अपेक्षा किए बिना दूसरों के हित में कार्य करता है। यदि सहायता केवल प्रसिद्धि प्राप्त करने या बदले में लाभ पाने के उद्देश्य से की जाए, तो उसके पीछे परोपकार की भावना कमजोर पड़ जाती है। परोपकार व्यक्ति के भीतर करुणा, सहानुभूति और सामाजिक उत्तरदायित्व जैसे गुणों को विकसित करता है। इससे व्यक्ति यह समझ पाता है कि समाज में उसकी भूमिका केवल अपने अधिकारों तक सीमित नहीं है, बल्कि दूसरों के प्रति उसके कुछ दायित्व भी हैं।
+
+आज के व्यस्त और प्रतिस्पर्धात्मक जीवन में परोपकार का महत्त्व और बढ़ गया है। आर्थिक सहायता के अतिरिक्त समय, ज्ञान और कौशल का उपयोग भी समाज के लिए किया जा सकता है। कोई चिकित्सक जरूरतमंदों को निःशुल्क परामर्श दे सकता है, कोई शिक्षक वंचित बच्चों को पढ़ा सकता है और कोई युवा अपने समय का उपयोग सामुदायिक कार्यों में कर सकता है। छोटे-छोटे सहयोग मिलकर सामाजिक विश्वास को मजबूत करते हैं। परोपकार का उद्देश्य किसी को सदैव अपने ऊपर निर्भर बनाना नहीं, बल्कि जहाँ संभव हो, उसे सक्षम बनाना भी होना चाहिए। इस दृष्टि से परोपकार केवल दया का प्रदर्शन नहीं, बल्कि मानवीय संवेदना और सामाजिक जिम्मेदारी का सक्रिय रूप है।`;
+
+// The scan cuts off the first letters of six lines near the end of the third
+// paragraph; each is the only word the sentence allows (marked in the report).
+const PASSAGE_51 = `निर्देश : निम्नलिखित अपठित गद्यांश को ध्यानपूर्वक पढ़िए और उस पर आधारित प्रश्नों (51 से 55) के उत्तर दीजिए :
+
+अनुशासन मनुष्य के जीवन को व्यवस्थित और उद्देश्यपूर्ण बनाने वाली वह शक्ति है, जो उसे अपनी इच्छाओं, समय और कार्यों पर उचित नियंत्रण रखना सिखाती है। सामान्यतः अनुशासन को नियमों का पालन करने तक सीमित समझ लिया जाता है, जबकि इसका वास्तविक अर्थ इससे कहीं व्यापक है। अनुशासन व्यक्ति को यह समझने की क्षमता देता है कि किसी कार्य को कब, क्यों और किस प्रकार करना उचित है। इसलिए अनुशासित व्यक्ति केवल बाहरी निर्देशों का पालन नहीं करता, बल्कि परिस्थितियों के अनुसार स्वयं भी सही निर्णय लेने का प्रयास करता है।
+
+विद्यार्थी जीवन में अनुशासन का विशेष महत्त्व है। नियमित अध्ययन, समय का उचित विभाजन, विद्यालय के नियमों का पालन और अपने दायित्वों के प्रति सजग रहना उसके व्यक्तित्व को मजबूत बनाते हैं। इसके विपरीत, बिना योजना के कार्य करना और तत्काल मिलने वाले मनोरंजन को प्राथमिकता देना धीरे-धीरे उसकी एकाग्रता और कार्यक्षमता को प्रभावित कर सकते हैं। अनुशासन का उद्देश्य जीवन को कठोर या नीरस बनाना नहीं, बल्कि व्यक्ति को अपनी प्राथमिकताओं के प्रति सजग बनाना है।
+
+आज के समय में अनुशासन की आवश्यकता और भी बढ़ गई है। डिजिटल माध्यमों ने ज्ञान और मनोरंजन के अनेक अवसर उपलब्ध कराए हैं, परंतु इनके अनियंत्रित उपयोग से समय और ध्यान दोनों प्रभावित हो सकते हैं। ऐसे में वास्तविक अनुशासन तकनीकी से दूरी बनाना नहीं, बल्कि उसके उपयोग की सीमा और उद्देश्य निर्धारित करना है। जो व्यक्ति अपने समय और व्यवहार को स्वयं नियंत्रित करना सीख लेता है, वह बाहरी दबाव के बिना भी अपने लक्ष्यों की ओर निरंतर बढ़ सकता है। इस प्रकार अनुशासन केवल सफलता प्राप्त करने का साधन नहीं, बल्कि स्वतंत्र, जिम्मेदार और संतुलित जीवन जीने की आधारशिला है।`;
+
 module.exports = [
   q(1, "GK", "Books, Awards & Sports",
     ["विश्व वानिकी दिवस (World Forestry Day) प्रति वर्ष किस तारीख को मनाया जाता है ?", "18 मार्च", "24 मार्च", "21 मार्च", "22 मार्च", E_HI],
@@ -108,5 +142,101 @@ module.exports = [
   q(28, "GK", "Ancient India",
     ["निम्नलिखित में से किस शासक ने 606 – 647 ईसवी के दौरान कन्नौज पर शासन किया था ?", "शशांक", "पुलकेशिन द्वितीय", "हर्षवर्धन", "यशोधर्मन", E_HI],
     ["Who among the following was the ruler of Kannauj during the period 606 – 647 CE ?", "Shashanka", "Pulakeshin II", "Harshavardhana", "Yashodharman", E_EN], "C"),
-  // @@PART2
+  q(29, "GK", "Modern India",
+    ["“मानवजाति के लिए एक जाति, एक धर्म, एक ईश्वर” के सिद्धांत का समर्थन निम्नलिखित में से किस समाज सुधारक ने किया ?", "ज्योतिराव फुले", "स्वामी विवेकानन्द", "श्री नारायण गुरु", "रामकृष्ण परमहंस", E_HI],
+    ["Who among the following social reformers advocated the principle of “One Caste, One Religion, One God for Mankind” ?", "Jyotirao Phule", "Swami Vivekananda", "Sree Narayana Guru", "Ramakrishna Paramahamsa", E_EN], "C"),
+  q(30, "GK", "Ancient India",
+    ["निम्नलिखित में से कौन-सा गौतम बुद्ध द्वारा उपदेशित आर्य अष्टांगिक मार्ग का घटक नहीं है ?", "सम्यक् स्मृति", "सम्यक् दृष्टि", "सम्यक् आजीविका", "सम्यक् भक्ति", E_HI],
+    ["Which of the following is not a component of the Noble Eightfold Path taught by Gautama Buddha ?", "Right Mindfulness", "Right View", "Right Livelihood", "Right Devotion", E_EN], "D"),
+  q(31, "GK", "Physical Geography",
+    ["वायुमंडल की कौन-सी परत है जिसमें ऊँचाई बढ़ने के साथ तापमान में कमी आती है और पृथ्वी के वायुमंडल में सबसे कम तापमान होता है ?", "क्षोभमंडल (ट्रोपोस्फीयर)", "समतापमंडल (स्ट्रेटोस्फीयर)", "बाह्य वायुमंडल (थर्मोस्फीयर)", "मध्यमंडल (मेसोस्फीयर)", E_HI],
+    ["Which atmospheric layer is characterized by a decrease in temperature with increasing altitude and contains the coldest temperatures in the Earth’s atmosphere ?", "Troposphere", "Stratosphere", "Thermosphere", "Mesosphere", E_EN], "D"),
+  q(32, "GK", "Indian Geography",
+    ["उस नदी के लिए भौगोलिक शब्द क्या है जो किसी बड़ी नदी या झील में जाकर मिलती है, जैसे यमुना नदी गंगा में मिलती है ?", "जलवितरिका", "सहायक नदी", "ज्वारनदमुख (एश्चुअरी)", "डेल्टा", E_HI],
+    ["What is the geographical term for a river that flows into a larger river or lake, such as the Yamuna flowing into the Ganga ?", "Distributary", "Tributary", "Estuary", "Delta", E_EN], "B"),
+  q(33, "GK", "Physical Geography",
+    ["मॉस को इस प्रकार परिभाषित किया जाता है :", "पर्वतीय वनों में पाई जाने वाली एक प्रकार की झाड़ी", "फूलों और वास्तविक जड़ों से रहित एक छोटा हरा पौधा", "चट्टानों से चिपका हुआ पौधे के समान जीव", "पहाड़ी क्षेत्रों में पाया जाने वाला एक बड़ा पेड़", E_HI],
+    ["A moss is defined as :", "A type of shrub found in montane forests", "A small green plant lacking flowers or true roots", "A plant-like organism clinging to rocks", "A large tree found in mountainous regions", E_EN], "B"),
+  q(34, "GK", "Indian Geography",
+    ["निम्नलिखित में से कौन-सी पर्वतमाला मध्य उच्च-भूमि (सेंट्रल हाइलैंड्स) की पश्चिमी सीमा और शुरुआत को चिह्नित करती है ?", "विंध्य पर्वतमाला", "अरावली पर्वतमाला", "सतपुड़ा पर्वतमाला", "मैकाल पर्वतमाला", E_HI],
+    ["Which of the following mountain ranges marks the western boundary and beginning of the Central Highlands ?", "Vindhya Range", "Aravalli Range", "Satpura Range", "Maikal Range", E_EN], "B"),
+  q(35, "GK", "Indian Geography",
+    ["निम्नलिखित अंतर्राष्ट्रीय सीमा रेखाओं और उनसे संबंधित देशों के युग्मों पर विचार कीजिए :\nI. रेडक्लिफ रेखा — भारत और पाकिस्तान\nII. मैकमहोन रेखा — भारत और नेपाल\nIII. डूरंड रेखा — पाकिस्तान और अफगानिस्तान\nIV. 24वीं समानांतर (पैरेलल) — भारत और म्याँमार\nउपर्युक्त में से कौन-से युग्म सही सुमेलित हैं ?", "केवल II और III", "केवल I और III", "केवल II और IV", "केवल I और IV", E_HI],
+    ["Consider the following pairs of international boundary lines and their associated countries :\nI. Radcliffe Line — India and Pakistan\nII. McMahon Line — India and Nepal\nIII. Durand Line — Pakistan and Afghanistan\nIV. 24th Parallel — India and Myanmar\nWhich of the above pairs are correctly matched ?", "II and III only", "I and III only", "II and IV only", "I and IV only", E_EN], "B"),
+  q(36, "Current Affairs", "National Affairs",
+    ["निम्नलिखित में से किसे मार्च 2026 में दिल्ली का उपराज्यपाल नियुक्त किया गया था ?", "तरनजीत सिंह संधू", "देवेन्द्र कुमार जोशी", "बी.डी. मिश्रा", "के. कैलाशनाथन", E_HI],
+    ["Who among the following was appointed Lieutenant Governor of Delhi in March 2026 ?", "Taranjit Singh Sandhu", "Devendra Kumar Joshi", "B.D. Mishra", "K. Kailashnathan", E_EN], "A",
+    { unsure: "after my knowledge cut-off; A is what the student ticked" }),
+  q(37, "Current Affairs", "National Affairs",
+    ["व्हाट्सएप के ज़रिए एबी पीएम-जेएवाई (AB PM-JAY) सेवाएँ देने के लिए जून 2026 में कौन-सी डिजिटल सेवा शुरू की गई थी ?", "पोषण ट्रैकर", "ई-संजीवनी", "आयुष्मान सारथी", "आरोग्य सेतु", E_HI],
+    ["Which digital service was launched in June 2026 to provide AB PM-JAY services through WhatsApp ?", "Poshan Tracker", "eSanjeevani", "Ayushman Sarathi", "Aarogya Setu", E_EN], "C",
+    { unsure: "after my knowledge cut-off; C by its name, the student struck out D" }),
+  q(38, "GK", "Indian Economy",
+    ["निम्नलिखित में से कौन-सा घाटा भारत सरकार की कुल उधार (ऋण) की आवश्यकता को दर्शाता है ?", "राजकोषीय घाटा", "राजस्व घाटा", "प्रभावी राजस्व घाटा", "प्राथमिक घाटा", E_HI],
+    ["Which of the following deficits represents the total borrowing requirement of the Government of India ?", "Fiscal Deficit", "Revenue Deficit", "Effective Revenue Deficit", "Primary Deficit", E_EN], "A"),
+  q(39, "Current Affairs", "International Affairs",
+    ["विश्व जल दिवस 2026 का आधिकारिक विषय क्या था ?", "जल और जलवायु", "जल और जेंडर", "हिमनद संरक्षण", "शांति के लिए जल", E_HI],
+    ["What was the official theme of World Water Day 2026 ?", "Water and Climate", "Water and Gender", "Glacier Preservation", "Water for Peace", E_EN], "B"),
+  q(40, "Current Affairs", "National Affairs",
+    ["2025 में, किस मिशन ने भारत को अंतरिक्ष में डॉकिंग का सफल प्रदर्शन करने वाला चौथा देश बनाया ?", "SpaDeX", "आदित्य-एल1", "गगनयान", "चंद्रयान-3", E_HI],
+    ["In 2025, which mission made India the fourth country to successfully demonstrate space docking ?", "SpaDeX", "Aditya-L1", "Gaganyaan", "Chandrayaan-3", E_EN], "A"),
+  q(41, "Current Affairs", "Sports News",
+    ["ICC चैंपियंस ट्रॉफी 2025 किस देश ने जीती ?", "ऑस्ट्रेलिया", "इंग्लैंड", "दक्षिण अफ्रीका", "भारत", E_HI],
+    ["Which country won the ICC Champions Trophy 2025 ?", "Australia", "England", "South Africa", "India", E_EN], "D"),
+  q(42, "Current Affairs", "Awards & Honours",
+    ["सितंबर 2025 में प्रकाशित (जारी) पुस्तक ‘मदर मैरी कम्स टू मी’ निम्नलिखित में से किस भारतीय लेखिका का संस्मरण है ?", "गीतांजलि श्री", "किरण देसाई", "अरुंधति रॉय", "अनीता देसाई", E_HI],
+    ["The book ‘Mother Mary Comes to Me’ released in September 2025, is a memoir by which of the following Indian authors ?", "Geetanjali Shree", "Kiran Desai", "Arundhati Roy", "Anita Desai", E_EN], "C"),
+  q(43, "Current Affairs", "International Affairs",
+    ["संयुक्त सैन्य अभ्यास ‘मैत्री-XV’ (2026) का 15वाँ संस्करण भारत और किस अन्य देश के बीच आयोजित किया गया था ?", "थाइलैंड", "कंबोडिया", "वियतनाम", "म्याँमार", E_HI],
+    ["The 15th edition of the Joint Military Exercise ‘MAITREE-XV’ (2026) was conducted between India and which other country ?", "Thailand", "Cambodia", "Vietnam", "Myanmar", E_EN], "A"),
+  q(44, "Current Affairs", "International Affairs",
+    ["मई 2026 में स्वीडन ने प्रधानमंत्री नरेन्द्र मोदी को किस सम्मान से सम्मानित किया था ?", "ऑर्डर ऑफ द फाल्कन", "ऑर्डर ऑफ द पोलर स्टार", "ऑर्डर ऑफ द व्हाइट रोज", "ऑर्डर ऑफ द एलिफेंट", E_HI],
+    ["Which honour was conferred on Prime Minister Narendra Modi by Sweden in May 2026 ?", "Order of the Falcon", "Order of the Polar Star", "Order of the White Rose", "Order of the Elephant", E_EN], "B",
+    { unsure: "after my knowledge cut-off; Polar Star is Sweden's order (Falcon is Iceland's, White Rose Finland's, Elephant Denmark's)" }),
+  q(45, "Current Affairs", "International Affairs",
+    ["“हबल की जननी” के नाम से जानी जाने वाली खगोलशास्त्री के सम्मान में 2026 में नासा की कौन-सी अंतरिक्ष दूरबीन (टेलिस्कोप) प्रक्षेपित की गई थी ?", "नैन्सी ग्रेस रोमन स्पेस टेलिस्कोप", "वेब स्पेस टेलिस्कोप", "हबल स्पेस टेलिस्कोप", "केप्लर स्पेस टेलिस्कोप", E_HI],
+    ["Which NASA space telescope was launched in 2026 in honour of the astronomer known as the “Mother of Hubble” ?", "Nancy Grace Roman Space Telescope", "Webb Space Telescope", "Hubble Space Telescope", "Kepler Space Telescope", E_EN], "A"),
+  q(46, "अपठित गद्यांश", "अपठित गद्यांश",
+    ["गद्यांश के अनुसार परोपकार का व्यापक अर्थ क्या है ?", "दूसरों के सुख-दुःख में सहयोग करना", "सामाजिक प्रतिष्ठा बढ़ाना", "जरूरतमंदों को धन देना", "दूसरों को सदैव अपने ऊपर निर्भर बनाना", E_HI],
+    null, "A", { passage: PASSAGE_46 }),
+  q(47, "अपठित गद्यांश", "अपठित गद्यांश",
+    ["वास्तविक परोपकार की प्रमुख विशेषता क्या है ?", "सहायता का बड़ा होना", "कार्य का सार्वजनिक होना", "लाभ का साझा होना", "किसी प्रतिफल की अपेक्षा न होना", E_HI],
+    null, "D", { passage: PASSAGE_46 }),
+  q(48, "अपठित गद्यांश", "अपठित गद्यांश",
+    ["परोपकार व्यक्ति में कौन-से गुण विकसित करता है ?", "नेतृत्व और प्रतिस्पर्धा", "अनुशासन और कार्यकुशलता", "आत्मविश्वास और महत्त्वाकांक्षा", "करुणा और सहानुभूति", E_HI],
+    null, "D", { passage: PASSAGE_46 }),
+  q(49, "अपठित गद्यांश", "अपठित गद्यांश",
+    ["परोपकार में सहायता की मात्रा से अधिक किसका महत्त्व बताया गया है ?", "समय और धन", "सहायता और साधन", "प्रसिद्धि और प्रभाव", "भावना और उद्देश्य", E_HI],
+    null, "D", { passage: PASSAGE_46 }),
+  q(50, "अपठित गद्यांश", "अपठित गद्यांश",
+    ["गद्यांश के अनुसार परोपकार के लिए धन के अतिरिक्त किसका उपयोग किया जा सकता है ?", "समय, ज्ञान और कौशल", "पद, प्रभाव और प्रतिष्ठा", "संपत्ति, साधन और संपर्क", "अधिकार, अनुभव और अवसर", E_HI],
+    null, "A", { passage: PASSAGE_46 }),
+  q(51, "अपठित गद्यांश", "अपठित गद्यांश",
+    ["विद्यार्थी के संदर्भ में निम्नलिखित में से कौन-सा कथन गद्यांश के विचारों से सर्वाधिक मेल खाता है ?", "नियमितता और समय-प्रबंधन विद्यार्थी की कार्यक्षमता को मजबूत करते हैं।", "अध्ययन में सफलता मुख्यतः कठोर दिनचर्या पर निर्भर करती है।", "विद्यार्थी के लिए मनोरंजन का पूर्ण त्याग आवश्यक है।", "अनुशासन का अर्थ केवल विद्यालय के नियमों का पालन करना है।", E_HI],
+    null, "A", { passage: PASSAGE_51 }),
+  q(52, "अपठित गद्यांश", "अपठित गद्यांश",
+    ["विद्यार्थी जीवन में किसका विशेष महत्त्व है ?", "पर्यटन", "मनोरंजन", "मित्रता", "अनुशासन", E_HI],
+    null, "D", { passage: PASSAGE_51 }),
+  q(53, "अपठित गद्यांश", "अपठित गद्यांश",
+    ["गद्यांश के अनुसार अनुशासित व्यक्ति को किसका प्रयास करना चाहिए ?", "परिस्थितियों के अनुसार सही निर्णय लेना", "कठिन परिस्थितियों में दूसरों के निर्देशों पर निर्भर रहना", "सभी सामाजिक नियमों का बिना प्रश्न किए पालन करना", "दैनिक जीवन में कठोर दिनचर्या बनाए रखना", E_HI],
+    null, "A", { passage: PASSAGE_51 }),
+  q(54, "अपठित गद्यांश", "अपठित गद्यांश",
+    ["अनुशासन किस प्रकार का जीवन जीने की आधारशिला है ?", "स्वतंत्र, जिम्मेदार और संतुलित", "कठिन और नीरस", "निष्क्रिय और उद्देश्यहीन", "असंतुलित और मनोरंजक", E_HI],
+    null, "A", { passage: PASSAGE_51 }),
+  q(55, "अपठित गद्यांश", "अपठित गद्यांश",
+    ["डिजिटल माध्यमों के संदर्भ में लेखक किस प्रकार के अनुशासन की बात करता है ?", "मनोरंजन के लिए तकनीकी का अधिकतम उपयोग", "केवल शैक्षिक कार्यों के लिए तकनीकी का अनिवार्य उपयोग", "तकनीकी के उपयोग की सीमा और उद्देश्य का निर्धारण", "तकनीकी साधनों का पूर्ण बहिष्कार", E_HI],
+    null, "C", { passage: PASSAGE_51 }),
+  q(56, "Maths", "Data Interpretation",
+    ["संस्थान S में क्रमशः स्नातकोत्तर और स्नातक स्तर पर अध्ययन कर रहे छात्रों की संख्या के बीच का अनुपात क्या है ?", "19 : 21", "19 : 14", "14 : 19", "17 : 21", E_HI],
+    ["What is the ratio between the number of students studying at postgraduate and graduate levels respectively in Institute S ?", "19 : 21", "19 : 14", "14 : 19", "17 : 21", E_EN], "B",
+    { chart: PIES_56, set: "s1-pie-56", dir: DIR_PIE_56, check: "21% of 24700 = 5187 : 14% of 27300 = 3822 = 19 : 14" }),
+  q(57, "Maths", "Data Interpretation",
+    ["संस्थानों N और P में स्नातकोत्तर स्तर पर अध्ययन कर रहे छात्रों की कुल संख्या है :", "7004", "5601", "6669", "5944", E_HI],
+    ["The total number of students studying at the postgraduate level at Institutes N and P is :", "7004", "5601", "6669", "5944", E_EN], "C",
+    { chart: PIES_56, set: "s1-pie-56", dir: DIR_PIE_56, formula: "(v(\"Postgraduate (%)\",\"N\") + v(\"Postgraduate (%)\",\"P\")) * 24700 / 100" }),
+  q(58, "Maths", "Data Interpretation",
+    ["संस्थान R में स्नातक और स्नातकोत्तर स्तर के छात्रों की कुल संख्या कितनी है ?", "9116", "8372", "5320", "7916", E_HI],
+    ["What is the total number of graduate and postgraduate level students in Institute R ?", "9116", "8372", "5320", "7916", E_EN], "B",
+    { chart: PIES_56, set: "s1-pie-56", dir: DIR_PIE_56, formula: "v(\"Graduate (%)\",\"R\") * 27300 / 100 + v(\"Postgraduate (%)\",\"R\") * 24700 / 100" }),
+  // @@PART4
 ];
