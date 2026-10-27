@@ -57,6 +57,28 @@ General Awareness 10, **Graph 10, Table 10, Hindi unseen passage 10** – exactl
 - Hindi passage and English: easy if read; options differ by one idea.
 - Rough mix: 40 % easy, 45 % medium, 15 % hard.
 
+## 1b. Second shift (25 Oct 2026, series GJ4) – what changed and what held
+
+Same split exactly (DI 20, Hindi passage 10, current affairs 10, and 5 each for the rest), same
+5 options. Differences that matter for generation:
+- **Block order is not fixed.** Shift 2 opened with economy, then a table set at Q6–10; the
+  pie set came at Q16–20 and history was last. Only the split is fixed, not the order.
+- **More formats than shift 1:** match List I–List II with coded options (a-ii, b-i …), events
+  in chronological order (arrow sequences), "which pair is NOT correctly matched" (twice),
+  "who was NOT a member". About 5 in 100.
+- **(E) "None of the above" was the right answer about 3 times**: an average that matched
+  none of A–D, a rank question, a "which continent" question with no correct option.
+- **One Hindi passage was factual**, about a real movement (people, village, year, slogan,
+  the government decision that followed). The other was an essay on science and technology.
+- DI: a table that needs a product first (employees × salary), fractions over 31, a pie in
+  degrees with a "new central angle" what-if, a bar graph with "net = sold − returned".
+- UP angle: a Ramsar site in UP, Rani Lakshmibai's samadhi.
+- Maths: square roots of decimals, reciprocal / proper fraction, cube root, simple %.
+- Reasoning: class rank with boys and girls, clock hands opposite, letter-to-digit coding.
+- English: "which of the two", plural of compound nouns, a word's meaning in a passage.
+
+Guides G0–G7 below are the two-shift versions; both papers' 200 questions are in the copy check.
+
 ## 2. Rankveer's UPSSSC PET today (read-only check, 2026-10-27)
 
 ExamPattern `UPSSSC_PET` (120 min, 0.25 negative):
@@ -132,40 +154,40 @@ model's 20 MB limit for one file.
 
 #### G0 – Subject: *Whole paper* – Title: "PET 2026 real paper – whole paper"
 ```
-Real UPSSSC PET (Oct 2026) standard. Short direct one-line questions, one fact each; no long stems. Mostly "which/who/when"; about 3 in 100 are "which is NOT" questions; only 1 in 100 is a statement/pairs format (I-IV, "which pairs are correctly matched", options like "I and III only"). Wrong options are always four real items of the same kind (four real committees, four real ranges, four leaders of the same era). Level: 40% easy, 45% medium, 15% hard. Hindi unseen passage questions: the passage is reflective, essay-style prose on a value (service, discipline, honesty, environment); ask its central meaning, a quality it names, what it says matters more than something, which statement best matches it, and what it says about a modern situation; wrong options are opposite or exaggerated ideas ("complete giving up", "only rules").
+Real UPSSSC PET standard (both shifts, Oct 2026). Short direct questions, one fact each. Mostly "which/who/when"; about 5 in 100 use another format: "which is NOT / which pair is NOT correctly matched" (NOT in bold), match List I with List II (4 pairs, coded options like a-ii, b-i, c-iii, d-iv), arrange events in chronological order (options are arrow sequences), "which pairs are correctly matched". Wrong options are always four real items of the same kind. Option (E) "None of the above" is sometimes the correct answer (about 3 in 100), so a computed answer may legitimately match none of A-D. Level: 40% easy, 45% medium, 15% hard. Hindi unseen passages: one value or social-issue essay (science and technology as a double-edged sword, service, discipline) and one factual passage about a real movement or event (people, place, year, slogan, result); questions ask the central idea, what the text compares something to, named facts from the text, and what is needed for a stated goal; wrong options are opposite or exaggerated ("completely end", "only").
 ```
 
 #### G1 – Subject: *GK* – Title: "PET 2026 real paper – GK"
 ```
-Per 35 GK questions: General awareness 10 (important days, world currencies and countries, books and authors, first holders of offices, neighbours and borders, national symbols, Padma/national awards, Indian scientific organisations, venues of world sports events, recent government schemes), Ancient-medieval history and culture 5 (Ain-i-Akbari terms, foreign travellers and their books, rulers from their dates, Buddhism/Jainism teachings, social reformers' slogans), National movement 5, Geography 5 (atmosphere, river and landform terms, physiographic regions and their bounding ranges, international boundary lines, plants/vegetation terms), Polity and administration 5 (DPSP and other articles, district administration in UP, making of the Constitution, history of courts, ex-officio posts), Economy 5 (taxes subsumed in GST, committees behind institutions, Five-Year Plan models, economists' terms, bank history, types of deficit). National movement is the hardest part: ask the less-famous detail of a famous person, event, flag or Act, not the headline fact.
+Per 35 GK questions: General awareness 10 (books/novels and authors, awards with edition and year, important days, HQs of world bodies, state capitals and winter capitals, folk dances and theatre by state, sports cups and their games, neighbours' nicknames, famous titles like "father of", samadhis and monuments, quality marks), Ancient-medieval history 5 (inscriptions and prashastis, foreign travellers and scholars, dynasties and their order, Buddhism/Jainism firsts, reform movements and sects with their founders), National movement 5 (Acts and their other names, why a movement was called off, pacts and who signed them, commission/mission members, chronological order), Geography 5 (dams on rivers, world mountain ranges and peaks, biosphere reserves, latitudes and continents, pressure belts and atmosphere, physiographic regions), Polity 5 (DPSP, Fundamental Duties and the PM then, Panchayati Raj reservation, key dates of the Constitution, first holders, district administration history), Economy 5 (committees and their reports, employment schemes and launch years, portals and launch dates, RBI rates defined, GST, Plans). History and National movement ask the less famous detail of a famous topic.
 ```
 
 #### G2 – Subject: *Current Affairs* – Title: "PET 2026 real paper – current affairs"
 ```
-10 dated questions from the last 12-18 months before the exam, most from the last 12. Each names the month or year in the stem ("in March 2026", "in 2025"). Types: appointments (Lt Governors, Governors, heads of bodies), new digital services of central schemes, official themes of world days, Indian space missions and firsts, winners of ICC and other major tournaments, new books and their authors, joint military exercises and the partner country with edition number, foreign honours given to the Prime Minister, international space missions. Never static GK (founding years, headquarters) - that belongs to GK.
+10 dated questions from the last 12-18 months; the stem names the month or year. Types: new books and authors, a central scheme coming into effect (date), themes of world days, Ramsar sites and other new designations (often one in Uttar Pradesh), ISRO missions and analog missions, film and international awards with edition, hosts of world tournaments, summits held in India, appointments, joint military exercises, foreign honours to the PM. One or two may be standing facts that are always current (where an annual meeting is held, first holder of an office).
 ```
 
 #### G3 – Subject: *Science* – Title: "PET 2026 real paper – science"
 ```
-5 questions, NCERT class 9-10, one fact each: chemical formula or common name of a compound, a process in the human body, other name of a law in physics, one one-step numeric (mechanical advantage, mole mass, speed), basic units. Options are four real terms of the same kind (four processes, four laws, four formulas).
+5 questions, NCERT class 9-10, one fact each: amphoteric/acidic/basic oxides, a normal body value (blood pressure, temperature), which organ does a job, SI units of physics quantities, uses of lenses and mirrors, chemical formulas and common names, one one-step numeric. Options are four real terms of the same kind; values written as in textbooks (120/80 mm Hg).
 ```
 
 #### G4 – Subject: *Maths* – Title: "PET 2026 real paper – maths and DI"
 ```
-Real paper: 20 data-interpretation questions in 4 sets of 5 (table, table, pie chart pair with given totals, double bar graph) and only 5 arithmetic questions. DI data: 5-7 items, two columns or two series, round numbers, a given total. In every set ask: % increase between two columns; ratio of a combined pair to another combined pair; % or fraction of the total (options as fractions over the same denominator); difference of two averages; and one "what if" (some units moved from one item to another, one value up or down by a %, a target % to reach) asking the new ratio, difference or shortfall. Answers come out as clean ratios, exact counts or mixed-number percentages like 6 2/3%. Arithmetic: algebraic identity value, number of factors, largest perfect square up to N, successive % change over two years, missing value from a given average. Wrong options come from a common slip: wrong rows, wrong base for the %, changing only one side in the "what if".
+Real paper: 20 data-interpretation questions in 4 sets of 5 (two tables, one pie chart with degrees and a given total, one double bar graph or a pie pair) and 5 arithmetic questions. DI data: 5-7 items, two columns or two series, round numbers; some tables need a product first (employees x salary). In every set ask: a total or a combined value; a ratio of combined pairs; a fraction of the total (options as fractions over the same denominator, e.g. ?/31); a % or a difference of averages; and one "what if" (units moved from one item to another, a value up by one-sixth or 50%, new students added, new central angle) asking the new ratio, % or angle. Arithmetic: surds and square roots of decimals, reciprocal and proper fractions, cubes and cube roots, simple percentage, missing number from averages, number of factors, algebraic identities. Wrong options come from a common slip: wrong rows, wrong base, changing one side only. Sometimes the right answer is none of the four values.
 ```
 
 #### G5 – Subject: *General Hindi* – Title: "PET 2026 real paper – Hindi"
 ```
-व्याकरण के 5 प्रश्न, हर प्रकार से एक: वाक्यांश के लिए एक शब्द, विलोम शब्द, शुद्ध वर्तनी वाला शब्द चुनें (चारों विकल्प एक ही शब्द के रूप), संधि-विच्छेद, मुहावरे का अर्थ। सरल, सीधे, एक पंक्ति के प्रश्न; समास और लोकोक्तियाँ कम। विकल्प एक-दूसरे के बहुत पास: वर्तनी में केवल मात्रा का अंतर, संधि में केवल स्वर का अंतर।
+व्याकरण के 5 प्रश्न: वाक्यांश के लिए एक शब्द, विलोम (कभी 'कौन-सा युग्म सुमेलित नहीं है' रूप में), शुद्ध वर्तनी (चारों विकल्प एक ही शब्द के रूप, केवल मात्रा का अंतर), संधि-विच्छेद, मुहावरे का अर्थ या क्रिया-विशेषण का भेद। सरल, सीधे, एक पंक्ति के प्रश्न।
 ```
 
 #### G6 – Subject: *English* – Title: "PET 2026 real paper – English"
 ```
-5 questions: an antonym of a common verb, a conditional sentence needing the right verb form (if + past perfect -> would have + V3), a modal in a sentence of advice, and two questions on one short passage (about 120 words, a famous person's character) asking how the person differed from others and what a phrase in it refers to. Easy level; options differ by one tense or one idea.
+5 questions: two on one short passage (about 120 words, a person or a place) asking a stated difference or what a word in it means in context; one antonym; one or two grammar blanks (conditional verb forms, modals, which/who/whom, plural of compound nouns like brothers-in-law). Easy level; options differ by one form.
 ```
 
 #### G7 – Subject: *Reasoning* – Title: "PET 2026 real paper – reasoning"
 ```
-5 questions, one of each: odd one out by category (one city among states), coding where a word's code is the sum of its letter positions, linear seating of 6 people facing north with left/right clues, which year has the same calendar as a given year (leap-year rule), three-generation blood relation. Options are close numbers or relations; one-step or two-step.
+5 questions, one each from: rank/position in a class with boys and girls, clock hands (straight line, opposite, coincide - times in a day), coding where letters map to fixed digits, blood relation in a spoken statement, odd group of numbers or odd word, linear seating, calendar repeat year. One-step or two-step; options are close numbers or relations; sometimes none of A-D is right.
 ```
