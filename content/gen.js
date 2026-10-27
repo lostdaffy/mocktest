@@ -49,7 +49,9 @@ function fillTests({ kinds, level, from, to, title, used = new Set(), size = 20 
     const pool = pools.get(k.id);
     while (pool.length) {
       const p = pool.shift();
-      const key = `${k.group || k.id}|${numbersOf(p)}`;
+      // k.key, when a kind has one, says what makes two sets the same (e.g.
+      // the numbers the question shows, across every kind of a chapter).
+      const key = k.key ? k.key(p) : `${k.group || k.id}|${numbersOf(p)}`;
       if (used.has(key)) continue;
       used.add(key);
       return p;

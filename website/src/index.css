@@ -119,7 +119,7 @@
     @apply border-[#C9DCFF] bg-[#EAF1FF] text-[#2563EB];
   }
   .tint-violet {
-    @apply border-[#E0D2FF] bg-[#F3EDFF] text-[#7C3AED];
+    @apply border-[#E0D4FB] bg-[#F3EEFD] text-[#7B4FE0];
   }
   .tint-green {
     @apply border-[#BCE8CD] bg-[#EAF8F0] text-[#16A34A];
@@ -180,7 +180,7 @@
     border: 2px solid transparent;
     background:
       linear-gradient(#fff, #fff) padding-box,
-      linear-gradient(135deg, #2563eb 0%, #4f46e5 55%, #7c3aed 100%) border-box;
+      linear-gradient(135deg, #2D2A82 0%, #4F3CC9 50%, #8455E6 100%) border-box;
   }
 
   /* ---- faq */

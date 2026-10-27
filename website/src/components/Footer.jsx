@@ -23,7 +23,8 @@ export default function Footer() {
             <img src="/images/logo.png" alt={site.brandName} width="166" height="44" loading="lazy" className="h-10 w-auto" />
           </Link>
           <p className="mt-4 max-w-[340px] text-[14.5px] text-slate">
-            Mock tests, previous year papers and live exams for SSC, Railway, UP Police, Banking and CTET — in Hindi and English.
+            Mock tests, previous year papers, chapter-wise practice and live exams for SSC, Railway, UP Police, UPSSSC PET, teaching exams,
+            Banking and Agniveer — in Hindi and English.
           </p>
         </div>
 
@@ -53,7 +54,7 @@ export default function Footer() {
       <div className="wrap mt-12 grid gap-2 border-t border-line py-6 text-[13px] text-slate lg:grid-cols-[auto_1fr] lg:items-center lg:gap-8">
         <p>© {__BUILD_YEAR__} {legalName}. All rights reserved.</p>
         <p className="lg:text-right">
-          {site.brandName} is an independent practice platform and is not affiliated with SSC, RRB, UPPRPB, IBPS, CBSE or any government body.
+          {site.brandName} is an independent practice platform and is not affiliated with SSC, RRB, UPPRPB, UPSSSC, UPESSB, IBPS, CBSE, the Indian Army or any government body.
         </p>
       </div>
     </footer>

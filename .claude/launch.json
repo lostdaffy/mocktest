@@ -84,6 +84,14 @@
       "env": {
         "VITE_API_URL": "http://localhost:5056/api"
       }
+    },
+    {
+      "name": "api-local-demo",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "C:/Users/satya/AppData/Local/Temp/claude/D--WebEscalation-Projects-RankVeer/9f8d401a-4191-46ca-9fdb-ea6a4d0a2316/scratchpad/local-demo-api.cjs"
+      ],
+      "port": 5056
     }
   ]
 }

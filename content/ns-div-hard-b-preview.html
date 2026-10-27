@@ -1,0 +1,370 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Question batch preview</title>
+<style>
+:root { --bg:#fff; --ink:#1b1b1f; --soft:#5d5f6b; --line:#e3e4ea; --ok:#127a3a; --okbg:#e7f6ec; --bad:#b42318; }
+@media (prefers-color-scheme: dark) { :root { --bg:#16171b; --ink:#ececf1; --soft:#a3a6b3; --line:#2c2e36; --ok:#5dd38c; --okbg:#173524; --bad:#ff8a80; } }
+body { background:var(--bg); color:var(--ink); font:15px/1.55 system-ui, sans-serif; margin:0; padding:16px; }
+h1 { font-size:18px; } .q { border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin:0 0 12px; }
+.n { font-size:13px; color:var(--soft); } .t { font-weight:600; } .ok { color:var(--ok); } .bad { color:var(--bad); font-weight:700; }
+.hi { color:var(--soft); } li.right { background:var(--okbg); color:var(--ok); font-weight:600; border-radius:4px; }
+.sol { font-size:14px; } ol { padding-left:22px; }
+</style></head><body><h1>60 questions - Number System · Divisibility Rules · Hard #5, Number System · Divisibility Rules · Hard #6, Number System · Divisibility Rules · Hard #7</h1>
+<div class="q">
+  <div class="n">1. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest number written using only the digit 4 (4, 44, 444, ...) that is divisible by 12?</b><br><span class="hi">केवल अंक 4 से लिखी (4, 44, 444, ...) वह सबसे छोटी संख्या कौन-सी है जो 12 से विभाज्य हो?</span></p>
+  <ol type="A"><li class="right">444 ✔</li><li class="">44</li><li class="">4,444</li><li class="">444,444</li></ol>
+  <p class="sol"><b>Solution:</b> 12 = 4 × 3. Any such number from 44 on ends in 44, which is divisible by 4. For 3 the digit sum 4 × (number of 4s) must be a multiple of 3, so three 4s are needed: 444 = 12 × 37.<br><span class="hi">12 = 4 × 3। 44 से आगे हर ऐसी संख्या 44 पर समाप्त होती है, जो 4 से विभाज्य है। 3 के लिए अंकों का योग 4 × (4 की संख्या), 3 का गुणज हो, अतः तीन 4 चाहिए: 444 = 12 × 37।</span></p>
+</div>
+<div class="q">
+  <div class="n">2. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many choices of the digits a and b is the six-digit number a1234b divisible by 36?</b><br><span class="hi">अंकों a और b के कितने चयनों के लिए छह अंकों की संख्या a1234b, 36 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">2</li><li class="">4</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 36 = 4 × 9. For 4 the last two digits 4b must be divisible by 4: b = 0, 4 or 8. For 9 the digit sum a + b + 10 must be 18 or 27, so a + b = 8 or 17. b = 0 gives a = 8; b = 4 gives a = 4; b = 8 gives a = 9 (a = 0 is not allowed as the first digit). So 3 choices.<br><span class="hi">36 = 4 × 9। 4 के लिए अंतिम दो अंक 4b, 4 से विभाज्य हों: b = 0, 4 या 8। 9 के लिए अंकों का योग a + b + 10, 18 या 27 हो, अतः a + b = 8 या 17। b = 0 से a = 8; b = 4 से a = 4; b = 8 से a = 9 (पहला अंक a = 0 नहीं हो सकता)। अतः 3 चयन।</span></p>
+</div>
+<div class="q">
+  <div class="n">3. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the largest power of 3 that divides 100!?</b><br><span class="hi">100! को विभाजित करने वाली 3 की सबसे बड़ी घात कौन-सी है?</span></p>
+  <ol type="A"><li class="right">3⁴⁸ ✔</li><li class="">3³³</li><li class="">3⁴⁷</li><li class="">3⁴⁴</li></ol>
+  <p class="sol"><b>Solution:</b> Count the factors of 3: 100 ÷ 3 gives 33 multiples of 3, 100 ÷ 9 gives 11 multiples of 9, 100 ÷ 27 gives 3 multiples of 27 and 100 ÷ 81 gives 1. 33 + 11 + 3 + 1 = 48, so 3⁴⁸.<br><span class="hi">3 के गुणनखंड गिनें: 100 ÷ 3 से 3 के 33 गुणज, 100 ÷ 9 से 9 के 11 गुणज, 100 ÷ 27 से 27 के 3 गुणज और 100 ÷ 81 से 1। 33 + 11 + 3 + 1 = 48, अतः 3⁴⁸।</span></p>
+</div>
+<div class="q">
+  <div class="n">4. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For every natural number n, n⁵ − n is divisible by:</b><br><span class="hi">प्रत्येक प्राकृत संख्या n के लिए n⁵ − n किससे विभाज्य है?</span></p>
+  <ol type="A"><li class="right">30 ✔</li><li class="">60</li><li class="">25</li><li class="">20</li></ol>
+  <p class="sol"><b>Solution:</b> n⁵ − n = (n − 1)n(n + 1)(n² + 1). Three consecutive numbers give factors 2 and 3. For 5: if n leaves 0, 1 or 4 on division by 5, one of n, n − 1, n + 1 is a multiple of 5; if it leaves 2 or 3, n² + 1 is. So 30 always divides it. n = 2 gives 30 itself, so 60, 25 and 20 do not.<br><span class="hi">n⁵ − n = (n − 1)n(n + 1)(n² + 1)। तीन क्रमागत संख्याओं से 2 और 3 मिलते हैं। 5 के लिए: यदि n का 5 से शेष 0, 1 या 4 हो तो n, n − 1, n + 1 में से एक 5 का गुणज; यदि 2 या 3 हो तो n² + 1। अतः 30 सदा विभाजित करता है। n = 2 पर मान 30 ही है, अतः 60, 25 और 20 नहीं।</span></p>
+</div>
+<div class="q">
+  <div class="n">5. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 1,000 are divisible by 6 or by 10, but not by 15?</b><br><span class="hi">1 से 1,000 तक कितनी संख्याएँ 6 या 10 से विभाज्य हैं, पर 15 से नहीं?</span></p>
+  <ol type="A"><li class="right">200 ✔</li><li class="">233</li><li class="">167</li><li class="">166</li></ol>
+  <p class="sol"><b>Solution:</b> Multiples of 6: 166, of 10: 100, of both (that is, of 30): 33, so 166 + 100 − 33 = 233 are divisible by 6 or 10. Such a number is divisible by 15 only if it is a multiple of 30: 33 of them. 233 − 33 = 200.<br><span class="hi">6 के गुणज: 166, 10 के: 100, दोनों के (यानी 30 के): 33, अतः 166 + 100 − 33 = 233 संख्याएँ 6 या 10 से विभाज्य। इनमें 15 से विभाज्य केवल 30 के गुणज: 33। 233 − 33 = 200।</span></p>
+</div>
+<div class="q">
+  <div class="n">6. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest number that is divisible by 7 and leaves a remainder of 1 when divided by each of 2, 3, 4, 5 and 6?</b><br><span class="hi">वह सबसे छोटी संख्या कौन-सी है जो 7 से विभाज्य है और 2, 3, 4, 5 तथा 6 में से प्रत्येक से भाग देने पर 1 शेष छोड़ती है?</span></p>
+  <ol type="A"><li class="right">301 ✔</li><li class="">121</li><li class="">721</li><li class="">181</li></ol>
+  <p class="sol"><b>Solution:</b> The LCM of 2, 3, 4, 5 and 6 is 60, so the number is 60k + 1: 61, 121, 181, 241, 301, ... On division by 7 these leave 5, 2, 6, 3, 0. The first multiple of 7 is 301 = 7 × 43.<br><span class="hi">2, 3, 4, 5 और 6 का LCM 60, अतः संख्या 60k + 1: 61, 121, 181, 241, 301, ...। 7 से इनके शेष 5, 2, 6, 3, 0। 7 का पहला गुणज 301 = 7 × 43।</span></p>
+</div>
+<div class="q">
+  <div class="n">7. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many five-digit numbers that use each of the digits 0, 1, 2, 3 and 6 exactly once are divisible by 12?</b><br><span class="hi">अंकों 0, 1, 2, 3 और 6 में से हर एक को ठीक एक बार प्रयोग करने वाली पाँच अंकों की कितनी संख्याएँ 12 से विभाज्य हैं?</span></p>
+  <ol type="A"><li class="right">28 ✔</li><li class="">24</li><li class="">36</li><li class="">32</li></ol>
+  <p class="sol"><b>Solution:</b> The digits add to 12, so every such number is divisible by 3; it must also be divisible by 4. Possible last two digits: 12, 16, 20, 32, 36, 60. For 20 and 60 the other three digits (no 0 among them) can be arranged in 3! = 6 ways each: 12. For 12, 16, 32 and 36 the other three include 0, which cannot lead: 6 − 2 = 4 ways each: 16. Total 28.<br><span class="hi">अंकों का योग 12, अतः हर ऐसी संख्या 3 से विभाज्य; 4 से भी विभाज्य होनी चाहिए। संभव अंतिम दो अंक: 12, 16, 20, 32, 36, 60। 20 और 60 के लिए बाकी तीन अंक (उनमें 0 नहीं) 3! = 6 तरह से: 12। 12, 16, 32 और 36 के लिए बाकी तीन में 0 है, जो आगे नहीं आ सकता: 6 − 2 = 4 तरह से: 16। कुल 28।</span></p>
+</div>
+<div class="q">
+  <div class="n">8. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For every natural number n, 3²ⁿ⁺¹ + 2ⁿ⁺² is divisible by:</b><br><span class="hi">प्रत्येक प्राकृत संख्या n के लिए 3²ⁿ⁺¹ + 2ⁿ⁺² किससे विभाज्य है?</span></p>
+  <ol type="A"><li class="right">7 ✔</li><li class="">5</li><li class="">11</li><li class="">13</li></ol>
+  <p class="sol"><b>Solution:</b> 3²ⁿ⁺¹ + 2ⁿ⁺² = 3 × 9ⁿ + 4 × 2ⁿ. 9 = 7 + 2, so 9ⁿ leaves the same remainder as 2ⁿ on division by 7, and the sum leaves the same as 3 × 2ⁿ + 4 × 2ⁿ = 7 × 2ⁿ, i.e. 0. n = 1 gives 35 and n = 2 gives 259 = 7 × 37, so 5, 11 and 13 fail.<br><span class="hi">3²ⁿ⁺¹ + 2ⁿ⁺² = 3 × 9ⁿ + 4 × 2ⁿ। 9 = 7 + 2, अतः 7 से भाग पर 9ⁿ का शेष 2ⁿ जैसा, और योग का शेष 3 × 2ⁿ + 4 × 2ⁿ = 7 × 2ⁿ जैसा, यानी 0। n = 1 पर 35 और n = 2 पर 259 = 7 × 37, अतः 5, 11 और 13 नहीं।</span></p>
+</div>
+<div class="q">
+  <div class="n">9. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many two-digit numbers with no 0 among their digits are divisible by each of their own digits?</b><br><span class="hi">जिनमें कोई अंक 0 नहीं है, ऐसी दो अंकों की कितनी संख्याएँ अपने प्रत्येक अंक से विभाज्य हैं?</span></p>
+  <ol type="A"><li class="right">14 ✔</li><li class="">12</li><li class="">9</li><li class="">15</li></ol>
+  <p class="sol"><b>Solution:</b> The nine numbers with equal digits (11, 22, ..., 99) all work. Of the rest, only 12, 15, 24, 36 and 48 are divisible by both digits. 9 + 5 = 14.<br><span class="hi">समान अंकों वाली नौ संख्याएँ (11, 22, ..., 99) सभी चलती हैं। बाकी में केवल 12, 15, 24, 36 और 48 अपने दोनों अंकों से विभाज्य हैं। 9 + 5 = 14।</span></p>
+</div>
+<div class="q">
+  <div class="n">10. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many digits a is the eight-digit number 1a1a1a1a divisible by 99?</b><br><span class="hi">कितने अंकों a के लिए आठ अंकों की संख्या 1a1a1a1a, 99 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">0 ✔</li><li class="">1</li><li class="">2</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> For 11 the alternate sums are 4 (the four 1s) and 4a (the four a's): 4a − 4 must be a multiple of 11, which only a = 1 gives. But 11,111,111 has digit sum 8, not a multiple of 9. So no digit works: 0.<br><span class="hi">11 के लिए एकांतर योग 4 (चार 1) और 4a (चार a): 4a − 4, 11 का गुणज हो, जो केवल a = 1 से होता है। पर 11,111,111 के अंकों का योग 8, जो 9 का गुणज नहीं। अतः कोई अंक नहीं: 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">11. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the largest number that always divides the product of any four consecutive odd numbers?</b><br><span class="hi">किन्हीं चार क्रमागत विषम संख्याओं के गुणनफल को सदा विभाजित करने वाली सबसे बड़ी संख्या कौन-सी है?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">15</li><li class="">105</li><li class="">21</li></ol>
+  <p class="sol"><b>Solution:</b> Among four consecutive odd numbers one is always a multiple of 3 (odd numbers run through the remainders 1, 0, 2 on division by 3). Nothing else is forced: 1 × 3 × 5 × 7 = 105, 7 × 9 × 11 × 13 = 9,009 and 9 × 11 × 13 × 15 = 19,305 have HCF 3. So 3.<br><span class="hi">चार क्रमागत विषम संख्याओं में एक सदा 3 का गुणज है (विषम संख्याओं के 3 से शेष 1, 0, 2 के क्रम में आते हैं)। इसके अलावा कुछ तय नहीं: 1 × 3 × 5 × 7 = 105, 7 × 9 × 11 × 13 = 9,009 और 9 × 11 × 13 × 15 = 19,305 का HCF 3। अतः 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">12. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many perfect cubes from 1 to 10,000 are divisible by 6?</b><br><span class="hi">1 से 10,000 तक कितने पूर्ण घन 6 से विभाज्य हैं?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">1</li><li class="">4</li><li class="">2</li></ol>
+  <p class="sol"><b>Solution:</b> n³ is divisible by 2 only if n is, and by 3 only if n is, so n must be a multiple of 6. The cubes up to 10,000 are 1³ to 21³ (21³ = 9,261), and the multiples of 6 there are 6, 12 and 18: 3 cubes.<br><span class="hi">n³, 2 से तभी विभाज्य जब n हो, और 3 से तभी जब n हो, अतः n, 6 का गुणज हो। 10,000 तक के घन 1³ से 21³ (21³ = 9,261), और उनमें 6 के गुणज 6, 12 और 18: 3 घन।</span></p>
+</div>
+<div class="q">
+  <div class="n">13. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the largest number that always divides n(n + 1)(2n + 1) for every natural number n?</b><br><span class="hi">वह सबसे बड़ी संख्या कौन-सी है जो प्रत्येक प्राकृत संख्या n के लिए n(n + 1)(2n + 1) को सदा विभाजित करती है?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">12</li><li class="">18</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> n and n + 1 give a factor 2. One of n, n + 1, 2n + 1 is a multiple of 3: if n leaves 0 on division by 3, n is; if it leaves 2, n + 1 is; if it leaves 1, 2n + 1 is. So 6 always divides it, and n = 1 gives 1 × 2 × 3 = 6 itself, so nothing larger does.<br><span class="hi">n और n + 1 से गुणनखंड 2 मिलता है। n, n + 1, 2n + 1 में से एक 3 का गुणज है (यदि n का 3 से शेष 1 हो, तो 2n + 1 का शेष 2 × 1 + 1 = 3, यानी 0)। अतः 6 सदा विभाजित करता है, और n = 1 पर 1 × 2 × 3 = 6 ही है, अतः इससे बड़ी कोई नहीं।</span></p>
+</div>
+<div class="q">
+  <div class="n">14. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>By what smallest number must 2⁶ × 3⁵ × 5⁴ be multiplied so that the product is divisible by 6⁷?</b><br><span class="hi">2⁶ × 3⁵ × 5⁴ को किस सबसे छोटी संख्या से गुणा करें कि गुणनफल 6⁷ से विभाज्य हो?</span></p>
+  <ol type="A"><li class="right">18 ✔</li><li class="">6</li><li class="">12</li><li class="">36</li></ol>
+  <p class="sol"><b>Solution:</b> 6⁷ = 2⁷ × 3⁷. The number has 2⁶ and 3⁵, so it is short of one 2 and two 3s: multiply by 2 × 3² = 18.<br><span class="hi">6⁷ = 2⁷ × 3⁷। संख्या में 2⁶ और 3⁵ हैं, अतः एक 2 और दो 3 कम हैं: 2 × 3² = 18 से गुणा करें।</span></p>
+</div>
+<div class="q">
+  <div class="n">15. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>The three-digit number 2a3 is added to 326 to give the three-digit number 5b9. If 5b9 is divisible by 9, what is a + b?</b><br><span class="hi">तीन अंकों की संख्या 2a3 को 326 में जोड़ने पर तीन अंकों की संख्या 5b9 मिलती है। यदि 5b9, 9 से विभाज्य है, तो a + b का मान क्या है?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">10</li><li class="">4</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 2a3 + 326 = 5b9 means b = a + 2 (no carry from the units, 3 + 6 = 9). For 9 the digit sum 5 + b + 9 = 14 + b must be 18, so b = 4 and a = 2. a + b = 6 (223 + 326 = 549 = 9 × 61).<br><span class="hi">2a3 + 326 = 5b9 का अर्थ b = a + 2 (इकाई से हासिल नहीं, 3 + 6 = 9)। 9 के लिए अंकों का योग 5 + b + 9 = 14 + b, 18 हो, अतः b = 4 और a = 2। a + b = 6 (जाँच: 223 + 326 = 549 = 9 × 61)।</span></p>
+</div>
+<div class="q">
+  <div class="n">16. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many natural numbers n from 1 to 90 is n² + 3n + 2 divisible by 6?</b><br><span class="hi">1 से 90 तक कितनी प्राकृत संख्याओं n के लिए n² + 3n + 2, 6 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">60 ✔</li><li class="">30</li><li class="">45</li><li class="">90</li></ol>
+  <p class="sol"><b>Solution:</b> n² + 3n + 2 = (n + 1)(n + 2), two consecutive numbers, so it is always even. It is divisible by 3 unless n is itself a multiple of 3 (then neither n + 1 nor n + 2 is). From 1 to 90 there are 30 multiples of 3, so 90 − 30 = 60.<br><span class="hi">n² + 3n + 2 = (n + 1)(n + 2), दो क्रमागत संख्याएँ, अतः सदा सम। यह 3 से विभाज्य है, सिवाय जब n स्वयं 3 का गुणज हो (तब न n + 1, न n + 2)। 1 से 90 में 3 के 30 गुणज, अतः 90 − 30 = 60।</span></p>
+</div>
+<div class="q">
+  <div class="n">17. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If the five-digit number 653xy is divisible by 80, what is the value of x + y?</b><br><span class="hi">यदि पाँच अंकों की संख्या 653xy, 80 से विभाज्य है, तो x + y का मान क्या है?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">2</li><li class="">4</li><li class="">8</li></ol>
+  <p class="sol"><b>Solution:</b> 80 = 16 × 5. For 5 and 2, y = 0. Then 653x0 = 10 × 653x, so 653x must be divisible by 8: among 6,530 to 6,539 only 6,536 = 8 × 817 is. x = 6, y = 0, x + y = 6.<br><span class="hi">80 = 16 × 5। 5 और 2 के लिए y = 0। तब 653x0 = 10 × 653x, अतः 653x, 8 से विभाज्य हो: 6,530 से 6,539 में केवल 6,536 = 8 × 817। x = 6, y = 0, x + y = 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">18. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many choices of the digits a, b and c is the five-digit number 4a5bc divisible by 125?</b><br><span class="hi">अंकों a, b और c के कितने चयनों के लिए पाँच अंकों की संख्या 4a5bc, 125 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">10 ✔</li><li class="">4</li><li class="">1</li><li class="">40</li></ol>
+  <p class="sol"><b>Solution:</b> A number is divisible by 125 when its last three digits are: 000, 125, 250, 375, 500, 625, 750 or 875. Here they are 5bc, so only 500 fits: b = c = 0. The digit a is free: 10 choices.<br><span class="hi">कोई संख्या 125 से तब विभाज्य जब उसके अंतिम तीन अंक हों: 000, 125, 250, 375, 500, 625, 750 या 875। यहाँ वे 5bc हैं, अतः केवल 500: b = c = 0। अंक a स्वतंत्र: 10 चयन।</span></p>
+</div>
+<div class="q">
+  <div class="n">19. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For every natural number n, 7²ⁿ − 4²ⁿ is divisible by:</b><br><span class="hi">प्रत्येक प्राकृत संख्या n के लिए 7²ⁿ − 4²ⁿ किससे विभाज्य है?</span></p>
+  <ol type="A"><li class="right">33 ✔</li><li class="">65</li><li class="">13</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 7²ⁿ − 4²ⁿ = 49ⁿ − 16ⁿ, and aⁿ − bⁿ is always divisible by a − b = 49 − 16 = 33. n = 1 gives 33 itself, so 65, 13 and 9 do not always divide it.<br><span class="hi">7²ⁿ − 4²ⁿ = 49ⁿ − 16ⁿ, और aⁿ − bⁿ सदा a − b = 49 − 16 = 33 से विभाज्य है। n = 1 पर मान 33 ही है, अतः 65, 13 और 9 सदा नहीं।</span></p>
+</div>
+<div class="q">
+  <div class="n">20. <span class="t">Number System · Divisibility Rules · Hard #5</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest natural number which, multiplied by 7, gives a number written only with the digit 5?</b><br><span class="hi">वह सबसे छोटी प्राकृत संख्या कौन-सी है जिसे 7 से गुणा करने पर केवल अंक 5 से लिखी संख्या मिलती है?</span></p>
+  <ol type="A"><li class="right">79,365 ✔</li><li class="">7,937</li><li class="">793,651</li><li class="">71,365</li></ol>
+  <p class="sol"><b>Solution:</b> We need the smallest number 55...5 divisible by 7. 5, 55, 555, 5,555 and 55,555 leave 5, 6, 2, 4 and 6 on division by 7; 555,555 = 5 × 111,111 = 5 × 7 × 15,873 is the first. 555,555 ÷ 7 = 79,365.<br><span class="hi">7 से विभाज्य सबसे छोटी 55...5 चाहिए। 5, 55, 555, 5,555 और 55,555 के 7 से शेष 5, 6, 2, 4 और 6; पहली 555,555 = 5 × 111,111 = 5 × 7 × 15,873। 555,555 ÷ 7 = 79,365।</span></p>
+</div>
+<div class="q">
+  <div class="n">21. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest number written using only the digit 2 (2, 22, 222, ...) that is divisible by 24?</b><br><span class="hi">केवल अंक 2 से लिखी (2, 22, 222, ...) वह सबसे छोटी संख्या कौन-सी है जो 24 से विभाज्य हो?</span></p>
+  <ol type="A"><li class="right">No such number <span class="hi">/ ऐसी कोई संख्या नहीं</span> ✔</li><li class="">222</li><li class="">2,222</li><li class="">222,222</li></ol>
+  <p class="sol"><b>Solution:</b> 24 = 8 × 3, and a number is divisible by 8 only if its last three digits are. From 222 on, every such number ends in 222 = 8 × 27 + 6, and 2 and 22 are not multiples of 8 either. So none of them is divisible by 8, let alone 24: No such number.<br><span class="hi">24 = 8 × 3, और कोई संख्या 8 से तभी विभाज्य जब उसके अंतिम तीन अंक हों। 222 से आगे हर ऐसी संख्या 222 = 8 × 27 + 6 पर समाप्त होती है, और 2 तथा 22 भी 8 के गुणज नहीं। अतः कोई भी 8 से विभाज्य नहीं, 24 से तो दूर: ऐसी कोई संख्या नहीं।</span></p>
+</div>
+<div class="q">
+  <div class="n">22. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many choices of the digits a and b is the six-digit number 2a5b84 divisible by 132?</b><br><span class="hi">अंकों a और b के कितने चयनों के लिए छह अंकों की संख्या 2a5b84, 132 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">8 ✔</li><li class="">7</li><li class="">9</li><li class="">4</li></ol>
+  <p class="sol"><b>Solution:</b> 132 = 4 × 3 × 11. The last two digits 84 make it divisible by 4. For 11 the alternate sums are (4 + b + a) and (8 + 5 + 2) = 15, so a + b − 11 must be a multiple of 11: a + b = 11. Then the digit sum is 19 + 11 = 30, divisible by 3. a + b = 11 has 8 solutions (a from 2 to 9).<br><span class="hi">132 = 4 × 3 × 11। अंतिम दो अंक 84 से 4 से विभाज्य। 11 के लिए एकांतर योग (4 + b + a) और (8 + 5 + 2) = 15, अतः a + b − 11, 11 का गुणज हो: a + b = 11। तब अंकों का योग 19 + 11 = 30, 3 से विभाज्य। a + b = 11 के 8 हल (a = 2 से 9)।</span></p>
+</div>
+<div class="q">
+  <div class="n">23. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the largest power of 10 that divides 300!?</b><br><span class="hi">300! को विभाजित करने वाली 10 की सबसे बड़ी घात कौन-सी है?</span></p>
+  <ol type="A"><li class="right">10⁷⁴ ✔</li><li class="">10⁶⁰</li><li class="">10⁷²</li><li class="">10⁷⁵</li></ol>
+  <p class="sol"><b>Solution:</b> Each 10 needs a 2 and a 5, and 5s are the scarcer. Factors of 5 in 300!: 300 ÷ 5 = 60, 300 ÷ 25 = 12, 300 ÷ 125 = 2. 60 + 12 + 2 = 74, so 10⁷⁴.<br><span class="hi">हर 10 के लिए एक 2 और एक 5 चाहिए, और 5 कम हैं। 300! में 5 के गुणनखंड: 300 ÷ 5 = 60, 300 ÷ 25 = 12, 300 ÷ 125 = 2। 60 + 12 + 2 = 74, अतः 10⁷⁴।</span></p>
+</div>
+<div class="q">
+  <div class="n">24. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the largest number that divides n³ − n for every odd natural number n?</b><br><span class="hi">वह सबसे बड़ी संख्या कौन-सी है जो प्रत्येक विषम प्राकृत संख्या n के लिए n³ − n को विभाजित करती है?</span></p>
+  <ol type="A"><li class="right">24 ✔</li><li class="">48</li><li class="">36</li><li class="">18</li></ol>
+  <p class="sol"><b>Solution:</b> n³ − n = (n − 1)n(n + 1). For odd n, n − 1 and n + 1 are consecutive even numbers, one of them a multiple of 4, so their product is divisible by 8; and one of the three consecutive numbers is a multiple of 3. So 24 divides it, and n = 3 gives 2 × 3 × 4 = 24 itself.<br><span class="hi">n³ − n = (n − 1)n(n + 1)। विषम n के लिए n − 1 और n + 1 क्रमागत सम संख्याएँ हैं, उनमें एक 4 का गुणज, अतः गुणनफल 8 से विभाज्य; और तीन क्रमागत संख्याओं में एक 3 का गुणज। अतः 24 विभाजित करता है, और n = 3 पर 2 × 3 × 4 = 24 ही।</span></p>
+</div>
+<div class="q">
+  <div class="n">25. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 1,000 are divisible by exactly one of 4 and 6?</b><br><span class="hi">1 से 1,000 तक कितनी संख्याएँ 4 और 6 में से ठीक एक से विभाज्य हैं?</span></p>
+  <ol type="A"><li class="right">250 ✔</li><li class="">333</li><li class="">167</li><li class="">83</li></ol>
+  <p class="sol"><b>Solution:</b> Multiples of 4: 250; of 6: 166; of both (that is, of 12): 83. Exactly one: (250 − 83) + (166 − 83) = 167 + 83 = 250.<br><span class="hi">4 के गुणज: 250; 6 के: 166; दोनों के (यानी 12 के): 83। ठीक एक: (250 − 83) + (166 − 83) = 167 + 83 = 250।</span></p>
+</div>
+<div class="q">
+  <div class="n">26. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the least number that must be subtracted from 1,000,000 to make it divisible by 7, 11 and 13?</b><br><span class="hi">1,000,000 में से कम से कम कौन-सी संख्या घटाएँ कि वह 7, 11 और 13 से विभाज्य हो जाए?</span></p>
+  <ol type="A"><li class="right">1 ✔</li><li class="">999</li><li class="">2</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> Divisible by 7, 11 and 13 means divisible by 7 × 11 × 13 = 1,001. 999 × 1,001 = 999,999, so 1,000,000 leaves 1: subtract 1.<br><span class="hi">7, 11 और 13 से विभाज्य का अर्थ 7 × 11 × 13 = 1,001 से विभाज्य। 999 × 1,001 = 999,999, अतः 1,000,000 का शेष 1: 1 घटाएँ।</span></p>
+</div>
+<div class="q">
+  <div class="n">27. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many four-digit numbers with all digits different can be formed from the digits 1, 2, 3, 4, 5 and 6 that are divisible by 25?</b><br><span class="hi">अंकों 1, 2, 3, 4, 5 और 6 से भिन्न अंकों वाली चार अंकों की कितनी संख्याएँ बन सकती हैं जो 25 से विभाज्य हों?</span></p>
+  <ol type="A"><li class="right">12 ✔</li><li class="">24</li><li class="">6</li><li class="">20</li></ol>
+  <p class="sol"><b>Solution:</b> A number is divisible by 25 when it ends in 00, 25, 50 or 75. Without 0 and 7 only 25 is possible. The first two places take two of the remaining four digits in order: 4 × 3 = 12.<br><span class="hi">कोई संख्या 25 से तब विभाज्य जब वह 00, 25, 50 या 75 पर समाप्त हो। 0 और 7 के बिना केवल 25 संभव। पहले दो स्थानों पर बचे चार में से दो अंक क्रम से: 4 × 3 = 12।</span></p>
+</div>
+<div class="q">
+  <div class="n">28. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For every natural number n, 11ⁿ⁺² + 12²ⁿ⁺¹ is divisible by:</b><br><span class="hi">प्रत्येक प्राकृत संख्या n के लिए 11ⁿ⁺² + 12²ⁿ⁺¹ किससे विभाज्य है?</span></p>
+  <ol type="A"><li class="right">133 ✔</li><li class="">121</li><li class="">143</li><li class="">169</li></ol>
+  <p class="sol"><b>Solution:</b> 11ⁿ⁺² + 12²ⁿ⁺¹ = 121 × 11ⁿ + 12 × 144ⁿ. 144 = 133 + 11, so 144ⁿ leaves the same remainder as 11ⁿ on division by 133, and the sum leaves the same as 121 × 11ⁿ + 12 × 11ⁿ = 133 × 11ⁿ, i.e. 0. n = 1 gives 3,059 = 133 × 23, which 121, 143 and 169 do not divide.<br><span class="hi">11ⁿ⁺² + 12²ⁿ⁺¹ = 121 × 11ⁿ + 12 × 144ⁿ। 144 = 133 + 11, अतः 133 से भाग पर 144ⁿ का शेष 11ⁿ जैसा, और योग का शेष 121 × 11ⁿ + 12 × 11ⁿ = 133 × 11ⁿ जैसा, यानी 0। n = 1 पर 3,059 = 133 × 23, जिसे 121, 143 और 169 विभाजित नहीं करते।</span></p>
+</div>
+<div class="q">
+  <div class="n">29. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>A two-digit number minus the number formed by reversing its digits is 45. How many such two-digit numbers are there?</b><br><span class="hi">दो अंकों की एक संख्या में से उसके अंक उलटकर बनी संख्या घटाने पर 45 मिलता है। ऐसी कितनी दो अंकों की संख्याएँ हैं?</span></p>
+  <ol type="A"><li class="right">5 ✔</li><li class="">4</li><li class="">6</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> 10a + b − (10b + a) = 9(a − b) = 45, so a − b = 5: 50, 61, 72, 83 and 94 (50 reversed is 05 = 5, and 50 − 5 = 45). That is 5 numbers.<br><span class="hi">10a + b − (10b + a) = 9(a − b) = 45, अतः a − b = 5: 50, 61, 72, 83 और 94 (50 उलटकर 05 = 5, और 50 − 5 = 45)। कुल 5 संख्याएँ।</span></p>
+</div>
+<div class="q">
+  <div class="n">30. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Which of 3,553, 3,563, 4,673 and 5,729 is divisible by 19?</b><br><span class="hi">3,553, 3,563, 4,673 और 5,729 में से कौन-सी संख्या 19 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">3,553 ✔</li><li class="">3,563</li><li class="">4,673</li><li class="">5,729</li></ol>
+  <p class="sol"><b>Solution:</b> Test for 19: add twice the last digit to the rest. 3,553 → 355 + 6 = 361 = 19 × 19, so 3,553 = 19 × 187 is divisible. 3,563 → 356 + 6 = 362, 4,673 → 467 + 6 = 473, 5,729 → 572 + 18 = 590, none a multiple of 19.<br><span class="hi">19 की जाँच: अंतिम अंक का दोगुना बाकी में जोड़ें। 3,553 → 355 + 6 = 361 = 19 × 19, अतः 3,553 = 19 × 187 विभाज्य। 3,563 → 356 + 6 = 362, 4,673 → 467 + 6 = 473, 5,729 → 572 + 18 = 590, कोई 19 का गुणज नहीं।</span></p>
+</div>
+<div class="q">
+  <div class="n">31. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many natural numbers n from 1 to 60 is 2ⁿ − 1 divisible by 9?</b><br><span class="hi">1 से 60 तक कितनी प्राकृत संख्याओं n के लिए 2ⁿ − 1, 9 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">10 ✔</li><li class="">20</li><li class="">6</li><li class="">15</li></ol>
+  <p class="sol"><b>Solution:</b> Powers of 2 on division by 9 leave 2, 4, 8, 7, 5, 1 and then repeat every 6. So 2ⁿ − 1 is divisible by 9 exactly when n is a multiple of 6: 6, 12, ..., 60, that is 10 values.<br><span class="hi">9 से भाग पर 2 की घातों के शेष 2, 4, 8, 7, 5, 1 और फिर हर 6 पर दोहराव। अतः 2ⁿ − 1, 9 से तभी विभाज्य जब n, 6 का गुणज हो: 6, 12, ..., 60, यानी 10 मान।</span></p>
+</div>
+<div class="q">
+  <div class="n">32. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Which of the following divides the product 1 × 3 × 5 × 7 × ... × 99 of all odd numbers from 1 to 99?</b><br><span class="hi">1 से 99 तक की सभी विषम संख्याओं के गुणनफल 1 × 3 × 5 × 7 × ... × 99 को निम्नलिखित में से कौन विभाजित करता है?</span></p>
+  <ol type="A"><li class="right">225 ✔</li><li class="">100</li><li class="">98</li><li class="">64</li></ol>
+  <p class="sol"><b>Solution:</b> The product is odd, so 100, 98 and 64 (all even) cannot divide it. 225 = 9 × 25 = 3² × 5², and the product contains 3 and 9 (two more 3s) and 5 and 25 (more than two 5s). So 225.<br><span class="hi">गुणनफल विषम है, अतः 100, 98 और 64 (सभी सम) विभाजित नहीं कर सकते। 225 = 9 × 25 = 3² × 5², और गुणनफल में 3 और 9 (दो से अधिक 3) तथा 5 और 25 (दो से अधिक 5) हैं। अतः 225।</span></p>
+</div>
+<div class="q">
+  <div class="n">33. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many natural numbers n from 1 to 100 is n² − 1 divisible by 24?</b><br><span class="hi">1 से 100 तक कितनी प्राकृत संख्याओं n के लिए n² − 1, 24 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">33 ✔</li><li class="">34</li><li class="">50</li><li class="">25</li></ol>
+  <p class="sol"><b>Solution:</b> n² − 1 = (n − 1)(n + 1) is divisible by 24 exactly when n is divisible by neither 2 nor 3, i.e. n leaves 1 or 5 on division by 6. From 1 to 100: 1, 7, ..., 97 (17 numbers) and 5, 11, ..., 95 (16 numbers): 33.<br><span class="hi">n² − 1 = (n − 1)(n + 1), 24 से ठीक तब विभाज्य जब n न 2 से विभाज्य हो न 3 से, यानी n का 6 से शेष 1 या 5। 1 से 100 में: 1, 7, ..., 97 (17 संख्याएँ) और 5, 11, ..., 95 (16 संख्याएँ): 33।</span></p>
+</div>
+<div class="q">
+  <div class="n">34. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the largest four-digit number divisible by 88 whose digits add up to 20?</b><br><span class="hi">88 से विभाज्य चार अंकों की वह सबसे बड़ी संख्या कौन-सी है जिसके अंकों का योग 20 हो?</span></p>
+  <ol type="A"><li class="right">9,416 ✔</li><li class="">8,624</li><li class="">9,680</li><li class="">9,504</li></ol>
+  <p class="sol"><b>Solution:</b> Go down the multiples of 88 from 9,944: 9,944 (sum 26), 9,856 (28), 9,768 (30), 9,680 (23), 9,592 (25), 9,504 (18), 9,416 (20). The first with digit sum 20 is 9,416 = 88 × 107.<br><span class="hi">9,944 से 88 के गुणज नीचे देखें: 9,944 (योग 26), 9,856 (28), 9,768 (30), 9,680 (23), 9,592 (25), 9,504 (18), 9,416 (20)। अंकों का योग 20 वाली पहली 9,416 = 88 × 107।</span></p>
+</div>
+<div class="q">
+  <div class="n">35. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For every natural number n, 10ⁿ + 3 × 4ⁿ⁺² + 5 is divisible by:</b><br><span class="hi">प्रत्येक प्राकृत संख्या n के लिए 10ⁿ + 3 × 4ⁿ⁺² + 5 किससे विभाज्य है?</span></p>
+  <ol type="A"><li class="right">9 ✔</li><li class="">27</li><li class="">7</li><li class="">13</li></ol>
+  <p class="sol"><b>Solution:</b> 10ⁿ leaves 1 on division by 9, so the number leaves the same remainder as 1 + 3 × 4ⁿ⁺² + 5 = 6 + 3 × 4ⁿ⁺². 4ⁿ⁺² leaves 1 on division by 3, so 3 × 4ⁿ⁺² leaves 3 on division by 9, and 6 + 3 = 9 leaves 0. n = 1 gives 10 + 192 + 5 = 207 = 9 × 23. 207 is not divisible by 27, 7 or 13.<br><span class="hi">9 से भाग पर 10ⁿ का शेष 1, अतः n = 1 पर 10 + 192 + 5 = 207 = 9 × 23; सामान्यतः शेष 1 + 3 × 4ⁿ⁺² + 5 = 6 + 3 × 4ⁿ⁺² जैसा, और 4ⁿ⁺² का 3 से शेष 1 है, अतः 3 × 4ⁿ⁺² का 9 से शेष 3। 6 + 3 = 9। 207, 27, 7 या 13 से विभाज्य नहीं।</span></p>
+</div>
+<div class="q">
+  <div class="n">36. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 1,000 are divisible by both 6 and 9 but not by 27?</b><br><span class="hi">1 से 1,000 तक कितनी संख्याएँ 6 और 9 दोनों से विभाज्य हैं, पर 27 से नहीं?</span></p>
+  <ol type="A"><li class="right">37 ✔</li><li class="">55</li><li class="">18</li><li class="">36</li></ol>
+  <p class="sol"><b>Solution:</b> Divisible by both 6 and 9 means divisible by their LCM 18: 55 numbers. Of these, the ones divisible by 27 are the multiples of 54: 18. 55 − 18 = 37.<br><span class="hi">6 और 9 दोनों से विभाज्य का अर्थ उनके LCM 18 से विभाज्य: 55 संख्याएँ। इनमें 27 से विभाज्य, 54 के गुणज: 18। 55 − 18 = 37।</span></p>
+</div>
+<div class="q">
+  <div class="n">37. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the sum of all two-digit numbers that are divisible by 7 but not by 3?</b><br><span class="hi">उन सभी दो अंकों की संख्याओं का योग क्या है जो 7 से विभाज्य हैं पर 3 से नहीं?</span></p>
+  <ol type="A"><li class="right">518 ✔</li><li class="">728</li><li class="">210</li><li class="">532</li></ol>
+  <p class="sol"><b>Solution:</b> The two-digit multiples of 7 run from 14 to 98: 13 numbers, sum 13 × (14 + 98) ÷ 2 = 728. Those also divisible by 3 are the multiples of 21: 21 + 42 + 63 + 84 = 210. 728 − 210 = 518.<br><span class="hi">7 के दो अंकों के गुणज 14 से 98: 13 संख्याएँ, योग 13 × (14 + 98) ÷ 2 = 728। इनमें 3 से भी विभाज्य, 21 के गुणज: 21 + 42 + 63 + 84 = 210। 728 − 210 = 518।</span></p>
+</div>
+<div class="q">
+  <div class="n">38. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest natural number n for which 1 + 2 + 3 + ... + n is divisible by 100?</b><br><span class="hi">वह सबसे छोटी प्राकृत संख्या n कौन-सी है जिसके लिए 1 + 2 + 3 + ... + n, 100 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">24 ✔</li><li class="">99</li><li class="">49</li><li class="">25</li></ol>
+  <p class="sol"><b>Solution:</b> 1 + ... + n = n(n + 1)/2, so n(n + 1) must be divisible by 200 = 8 × 25. One of n, n + 1 must hold the 25 and one the 8. Trying n + 1 = 25: n = 24 is divisible by 8, and 24 × 25 ÷ 2 = 300. n = 24 (smaller choices give no multiple of 25 next to a multiple of 8).<br><span class="hi">1 + ... + n = n(n + 1)/2, अतः n(n + 1), 200 = 8 × 25 से विभाज्य हो। n, n + 1 में एक में 25 और एक में 8 हो। n + 1 = 25 लेने पर n = 24, जो 8 से विभाज्य है, और 24 × 25 ÷ 2 = 300। n = 24 (इससे छोटे में 25 का गुणज 8 के गुणज के साथ नहीं आता)।</span></p>
+</div>
+<div class="q">
+  <div class="n">39. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For every natural number n, 5ⁿ − 4n − 1 is divisible by:</b><br><span class="hi">प्रत्येक प्राकृत संख्या n के लिए 5ⁿ − 4n − 1 किससे विभाज्य है?</span></p>
+  <ol type="A"><li class="right">16 ✔</li><li class="">32</li><li class="">25</li><li class="">12</li></ol>
+  <p class="sol"><b>Solution:</b> 5ⁿ = (1 + 4)ⁿ = 1 + 4n + (terms each containing 4² = 16). So 5ⁿ − 4n − 1 is a sum of multiples of 16. n = 2 gives 25 − 9 = 16 itself, so 32, 25 and 12 do not always divide it.<br><span class="hi">5ⁿ = (1 + 4)ⁿ = 1 + 4n + (ऐसे पद जिनमें 4² = 16 है)। अतः 5ⁿ − 4n − 1, 16 के गुणजों का योग है। n = 2 पर 25 − 9 = 16 ही, अतः 32, 25 और 12 सदा नहीं।</span></p>
+</div>
+<div class="q">
+  <div class="n">40. <span class="t">Number System · Divisibility Rules · Hard #6</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>A two-digit number is added to the number formed by reversing its digits, and the sum is a perfect square. How many such two-digit numbers are there?</b><br><span class="hi">दो अंकों की एक संख्या को उसके अंक उलटकर बनी संख्या में जोड़ने पर योग पूर्ण वर्ग है। ऐसी कितनी दो अंकों की संख्याएँ हैं?</span></p>
+  <ol type="A"><li class="right">8 ✔</li><li class="">9</li><li class="">7</li><li class="">6</li></ol>
+  <p class="sol"><b>Solution:</b> 10a + b + 10b + a = 11(a + b). For this to be a perfect square, a + b must be 11 (it is at most 18): 29, 38, 47, 56, 65, 74, 83, 92. That is 8 numbers.<br><span class="hi">10a + b + 10b + a = 11(a + b)। पूर्ण वर्ग के लिए a + b = 11 हो (यह अधिकतम 18 है): 29, 38, 47, 56, 65, 74, 83, 92। कुल 8 संख्याएँ।</span></p>
+</div>
+<div class="q">
+  <div class="n">41. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>By which of the following is 10²⁵ − 7 divisible?</b><br><span class="hi">10²⁵ − 7 निम्नलिखित में से किससे विभाज्य है?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">9</li><li class="">7</li><li class="">11</li></ol>
+  <p class="sol"><b>Solution:</b> 10²⁵ − 7 = 99...993 (twenty-four 9s then 3), digit sum 24 × 9 + 3 = 219: divisible by 3 but not by 9. On division by 7, 10²⁵ leaves 3, so 10²⁵ − 7 leaves 3; on division by 11, 10²⁵ leaves 10, so 10²⁵ − 7 leaves 3. So only 3.<br><span class="hi">10²⁵ − 7 = 99...993 (चौबीस 9 फिर 3), अंकों का योग 24 × 9 + 3 = 219: 3 से विभाज्य, 9 से नहीं। 7 से भाग पर 10²⁵ का शेष 3, अतः 10²⁵ − 7 का शेष 3; 11 से भाग पर 10²⁵ का शेष 10, अतः 10²⁵ − 7 का शेष 3। अतः केवल 3।</span></p>
+</div>
+<div class="q">
+  <div class="n">42. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>The three digits of a three-digit number are in arithmetic progression (like 147 or 864). Such a number is always divisible by:</b><br><span class="hi">तीन अंकों की एक संख्या के तीनों अंक समांतर श्रेढ़ी में हैं (जैसे 147 या 864)। ऐसी संख्या सदा किससे विभाज्य है?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">9</li><li class="">6</li><li class="">11</li></ol>
+  <p class="sol"><b>Solution:</b> If the digits are a, b, c with a + c = 2b, the digit sum is 3b, a multiple of 3. So the number is divisible by 3. 147 (digit sum 12) is not divisible by 9, 6 or 11.<br><span class="hi">यदि अंक a, b, c हैं और a + c = 2b, तो अंकों का योग 3b, 3 का गुणज। अतः संख्या 3 से विभाज्य। 147 (अंकों का योग 12) 9, 6 या 11 से विभाज्य नहीं।</span></p>
+</div>
+<div class="q">
+  <div class="n">43. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the largest number that always divides n²(n² − 1) for every natural number n?</b><br><span class="hi">वह सबसे बड़ी संख्या कौन-सी है जो प्रत्येक प्राकृत संख्या n के लिए n²(n² − 1) को सदा विभाजित करती है?</span></p>
+  <ol type="A"><li class="right">12 ✔</li><li class="">24</li><li class="">6</li><li class="">48</li></ol>
+  <p class="sol"><b>Solution:</b> n²(n² − 1) = n × (n − 1)n(n + 1). The three consecutive numbers give 3. For 4: if n is even, n² is a multiple of 4; if n is odd, (n − 1)(n + 1) is a multiple of 8. So 12 always divides it, and n = 2 gives 4 × 3 = 12 itself.<br><span class="hi">n²(n² − 1) = n × (n − 1)n(n + 1)। तीन क्रमागत संख्याओं से 3। 4 के लिए: n सम हो तो n², 4 का गुणज; n विषम हो तो (n − 1)(n + 1), 8 का गुणज। अतः 12 सदा विभाजित करता है, और n = 2 पर 4 × 3 = 12 ही।</span></p>
+</div>
+<div class="q">
+  <div class="n">44. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many four-digit numbers can be written using only the digits 1, 2, 3, 4 and 5 (repetition allowed) that are divisible by 4?</b><br><span class="hi">केवल अंकों 1, 2, 3, 4 और 5 से (दोहराव की अनुमति) चार अंकों की कितनी संख्याएँ लिखी जा सकती हैं जो 4 से विभाज्य हों?</span></p>
+  <ol type="A"><li class="right">125 ✔</li><li class="">100</li><li class="">150</li><li class="">25</li></ol>
+  <p class="sol"><b>Solution:</b> The last two digits must form a multiple of 4 from these digits: 12, 24, 32, 44, 52 - 5 endings. The first two digits are free: 5 × 5 = 25. 5 × 25 = 125.<br><span class="hi">अंतिम दो अंक इन्हीं अंकों से 4 का गुणज बनाएँ: 12, 24, 32, 44, 52 - 5 अंत। पहले दो अंक स्वतंत्र: 5 × 5 = 25। 5 × 25 = 125।</span></p>
+</div>
+<div class="q">
+  <div class="n">45. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many numbers from 1 to 10,000 are divisible by 7 but not by 49?</b><br><span class="hi">1 से 10,000 तक कितनी संख्याएँ 7 से विभाज्य हैं, पर 49 से नहीं?</span></p>
+  <ol type="A"><li class="right">1,224 ✔</li><li class="">1,428</li><li class="">1,204</li><li class="">1,232</li></ol>
+  <p class="sol"><b>Solution:</b> Multiples of 7: 10,000 ÷ 7 gives 1,428. Multiples of 49: 10,000 ÷ 49 gives 204. 1,428 − 204 = 1,224.<br><span class="hi">7 के गुणज: 10,000 ÷ 7 से 1,428। 49 के गुणज: 10,000 ÷ 49 से 204। 1,428 − 204 = 1,224।</span></p>
+</div>
+<div class="q">
+  <div class="n">46. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Which of the following divides 2¹² × 3⁵ × 5³ × 7?</b><br><span class="hi">निम्नलिखित में से कौन 2¹² × 3⁵ × 5³ × 7 को विभाजित करता है?</span></p>
+  <ol type="A"><li class="right">2¹⁰ × 3⁵ × 7 ✔</li><li class="">3⁶ × 5</li><li class="">2⁴ × 7²</li><li class="">5⁴ × 2</li></ol>
+  <p class="sol"><b>Solution:</b> A product of prime powers divides the number only if no prime appears to a higher power than in 2¹² × 3⁵ × 5³ × 7. 3⁶ needs six 3s (there are five), 7² needs two 7s (there is one), 5⁴ needs four 5s (there are three). 2¹⁰ × 3⁵ × 7 fits.<br><span class="hi">अभाज्य घातों का गुणनफल तभी विभाजित करता है जब कोई अभाज्य 2¹² × 3⁵ × 5³ × 7 से अधिक घात में न हो। 3⁶ को छह 3 चाहिए (पाँच हैं), 7² को दो 7 (एक है), 5⁴ को चार 5 (तीन हैं)। 2¹⁰ × 3⁵ × 7 ठीक बैठता है।</span></p>
+</div>
+<div class="q">
+  <div class="n">47. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the least number that must be added to 2⁵⁰ to make it divisible by 7?</b><br><span class="hi">2⁵⁰ में कम से कम कौन-सी संख्या जोड़ें कि वह 7 से विभाज्य हो जाए?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">4</li><li class="">1</li><li class="">5</li></ol>
+  <p class="sol"><b>Solution:</b> 2³ = 8 leaves 1 on division by 7, so 2⁴⁸ = (2³)¹⁶ leaves 1 and 2⁵⁰ = 2⁴⁸ × 4 leaves 4. Adding 3 makes the remainder 7, i.e. 0.<br><span class="hi">2³ = 8 का 7 से शेष 1, अतः 2⁴⁸ = (2³)¹⁶ का शेष 1 और 2⁵⁰ = 2⁴⁸ × 4 का शेष 4। 3 जोड़ने पर शेष 7, यानी 0।</span></p>
+</div>
+<div class="q">
+  <div class="n">48. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If the five-digit number 6a1b5 is divisible by 63, what is the value of a + b?</b><br><span class="hi">यदि पाँच अंकों की संख्या 6a1b5, 63 से विभाज्य है, तो a + b का मान क्या है?</span></p>
+  <ol type="A"><li class="right">6 ✔</li><li class="">9</li><li class="">15</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> 63 = 9 × 7. For 9 the digit sum 12 + a + b must be 18 or 27, so a + b = 6 or 15. Testing these for 7, only 60,165 = 63 × 955 works (a = 0, b = 6). So a + b = 6.<br><span class="hi">63 = 9 × 7। 9 के लिए अंकों का योग 12 + a + b, 18 या 27 हो, अतः a + b = 6 या 15। इन्हें 7 से जाँचने पर केवल 60,165 = 63 × 955 चलती है (a = 0, b = 6)। अतः a + b = 6।</span></p>
+</div>
+<div class="q">
+  <div class="n">49. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>Which of 3,537, 1,899, 4,599 and 7,659 is divisible by 27?</b><br><span class="hi">3,537, 1,899, 4,599 और 7,659 में से कौन-सी संख्या 27 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">3,537 ✔</li><li class="">1,899</li><li class="">4,599</li><li class="">7,659</li></ol>
+  <p class="sol"><b>Solution:</b> There is no digit-sum test for 27: 1,899 and 4,599 have digit sum 27 but 1,899 = 27 × 70 + 9 and 4,599 = 27 × 170 + 9. Dividing: 3,537 = 27 × 131 exactly, while 7,659 = 27 × 283 + 18.<br><span class="hi">27 के लिए अंकों के योग की जाँच नहीं चलती: 1,899 और 4,599 के अंकों का योग 27 है पर 1,899 = 27 × 70 + 9 और 4,599 = 27 × 170 + 9। भाग देने पर: 3,537 = 27 × 131 पूरा, जबकि 7,659 = 27 × 283 + 18।</span></p>
+</div>
+<div class="q">
+  <div class="n">50. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For every prime number p greater than 3, p² + 2 is divisible by:</b><br><span class="hi">3 से बड़ी प्रत्येक अभाज्य संख्या p के लिए p² + 2 किससे विभाज्य है?</span></p>
+  <ol type="A"><li class="right">3 ✔</li><li class="">9</li><li class="">5</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> A prime greater than 3 is not a multiple of 3, so it leaves 1 or 2 on division by 3 and its square leaves 1. p² + 2 then leaves 1 + 2 = 3, i.e. 0. p = 7 gives 51 = 3 × 17, not divisible by 9, 5 or 7.<br><span class="hi">3 से बड़ा अभाज्य 3 का गुणज नहीं, अतः 3 से शेष 1 या 2 और उसके वर्ग का शेष 1। तब p² + 2 का शेष 1 + 2 = 3, यानी 0। p = 7 पर 51 = 3 × 17, जो 9, 5 या 7 से विभाज्य नहीं।</span></p>
+</div>
+<div class="q">
+  <div class="n">51. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the largest number that always divides the sum of any 15 consecutive natural numbers?</b><br><span class="hi">किन्हीं 15 क्रमागत प्राकृत संख्याओं के योग को सदा विभाजित करने वाली सबसे बड़ी संख्या कौन-सी है?</span></p>
+  <ol type="A"><li class="right">15 ✔</li><li class="">30</li><li class="">105</li><li class="">45</li></ol>
+  <p class="sol"><b>Solution:</b> a + (a + 1) + ... + (a + 14) = 15a + 105 = 15(a + 7). So 15 always divides it. a = 1 gives 120 and a = 2 gives 135, whose HCF is 15, so nothing larger does.<br><span class="hi">a + (a + 1) + ... + (a + 14) = 15a + 105 = 15(a + 7)। अतः 15 सदा विभाजित करता है। a = 1 पर 120 और a = 2 पर 135, जिनका HCF 15, अतः इससे बड़ी कोई नहीं।</span></p>
+</div>
+<div class="q">
+  <div class="n">52. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the largest number that divides 3³ⁿ − 26n − 1 for every natural number n?</b><br><span class="hi">वह सबसे बड़ी संख्या कौन-सी है जो प्रत्येक प्राकृत संख्या n के लिए 3³ⁿ − 26n − 1 को विभाजित करती है?</span></p>
+  <ol type="A"><li class="right">676 ✔</li><li class="">338</li><li class="">169</li><li class="">52</li></ol>
+  <p class="sol"><b>Solution:</b> 3³ⁿ = 27ⁿ = (1 + 26)ⁿ = 1 + 26n + (terms each containing 26² = 676). So 27ⁿ − 26n − 1 is a multiple of 676, and n = 2 gives 729 − 53 = 676 itself.<br><span class="hi">3³ⁿ = 27ⁿ = (1 + 26)ⁿ = 1 + 26n + (ऐसे पद जिनमें 26² = 676 है)। अतः 27ⁿ − 26n − 1, 676 का गुणज है, और n = 2 पर 729 − 53 = 676 ही।</span></p>
+</div>
+<div class="q">
+  <div class="n">53. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many multiples of 12 from 1,000 to 2,000 have digits that add up to 12?</b><br><span class="hi">1,000 से 2,000 तक 12 के कितने गुणजों के अंकों का योग 12 है?</span></p>
+  <ol type="A"><li class="right">18 ✔</li><li class="">21</li><li class="">15</li><li class="">24</li></ol>
+  <p class="sol"><b>Solution:</b> A multiple of 12 is a multiple of 4 and 3; digit sum 12 already gives 3, so count the multiples of 4 from 1,000 to 2,000 with digit sum 12. The first digit is 1, so the last three digits add to 11 and the last two form a multiple of 4. They are 1,056, 1,092, 1,128, 1,164, 1,236, 1,272, 1,308, 1,344, 1,380, 1,416, 1,452, 1,524, 1,560, 1,632, 1,704, 1,740, 1,812 and 1,920: 18 numbers.<br><span class="hi">12 का गुणज = 4 और 3 का गुणज; अंकों का योग 12 से 3 तो हो ही जाता है, अतः 4 के वे गुणज गिनें जिनके अंकों का योग 12। पहला अंक 1, अतः बाकी तीन का योग 11 और अंतिम दो 4 का गुणज। ये हैं 1,056, 1,092, 1,128, 1,164, 1,236, 1,272, 1,308, 1,344, 1,380, 1,416, 1,452, 1,524, 1,560, 1,632, 1,704, 1,740, 1,812 और 1,920: 18 संख्याएँ।</span></p>
+</div>
+<div class="q">
+  <div class="n">54. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest three-digit number that is divisible by each of 2, 3, 4, 5 and 6 but not by 7?</b><br><span class="hi">तीन अंकों की वह सबसे छोटी संख्या कौन-सी है जो 2, 3, 4, 5 और 6 में से प्रत्येक से विभाज्य है पर 7 से नहीं?</span></p>
+  <ol type="A"><li class="right">120 ✔</li><li class="">180</li><li class="">105</li><li class="">140</li></ol>
+  <p class="sol"><b>Solution:</b> Divisible by 2, 3, 4, 5 and 6 means divisible by their LCM 60. The three-digit multiples of 60 start 120, 180, ...; 120 = 7 × 17 + 1 is not divisible by 7. So 120.<br><span class="hi">2, 3, 4, 5 और 6 से विभाज्य का अर्थ उनके LCM 60 से विभाज्य। 60 के तीन अंकों के गुणज 120, 180, ... से; 120 = 7 × 17 + 1, 7 से विभाज्य नहीं। अतः 120।</span></p>
+</div>
+<div class="q">
+  <div class="n">55. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many natural numbers n from 1 to 100 is n³ − n divisible by 120?</b><br><span class="hi">1 से 100 तक कितनी प्राकृत संख्याओं n के लिए n³ − n, 120 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">37 ✔</li><li class="">40</li><li class="">30</li><li class="">35</li></ol>
+  <p class="sol"><b>Solution:</b> n³ − n = (n − 1)n(n + 1) is always divisible by 3, so we need 8 and 5. For 8: n odd (then (n − 1)(n + 1) has 8) or n a multiple of 8 - 25 of every 40 numbers. For 5: n leaves 0, 1 or 4 on division by 5 - 3 of every 5. Together 15 of every 40: 1, 5, 9, 11, 15, 16, 19, 21, 24, 25, 29, 31, 35, 39, 40. From 1 to 100 that is 15 + 15 + 7 = 37.<br><span class="hi">n³ − n = (n − 1)n(n + 1) सदा 3 से विभाज्य, अतः 8 और 5 चाहिए। 8 के लिए: n विषम (तब (n − 1)(n + 1) में 8) या n, 8 का गुणज - हर 40 में 25। 5 के लिए: n का 5 से शेष 0, 1 या 4 - हर 5 में 3। मिलाकर हर 40 में 15: 1, 5, 9, 11, 15, 16, 19, 21, 24, 25, 29, 31, 35, 39, 40। 1 से 100 में 15 + 15 + 7 = 37।</span></p>
+</div>
+<div class="q">
+  <div class="n">56. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>If the six-digit number 4a3b2c is divisible by 125 and by 9, what is the largest possible value of a + b?</b><br><span class="hi">यदि छह अंकों की संख्या 4a3b2c, 125 और 9 दोनों से विभाज्य है, तो a + b का अधिकतम संभव मान क्या है?</span></p>
+  <ol type="A"><li class="right">13 ✔</li><li class="">4</li><li class="">17</li><li class="">7</li></ol>
+  <p class="sol"><b>Solution:</b> For 125 the last three digits b2c must be one of 000, 125, 250, 375, 500, 625, 750, 875; with 2 in the middle that leaves 125 and 625. b2c = 125: the digit sum 15 + a must be 18, so a = 3 and a + b = 4. b2c = 625: the digit sum 20 + a must be 27, so a = 7 and a + b = 13. The largest is 13 (473,625 = 1,125 × 421).<br><span class="hi">125 के लिए अंतिम तीन अंक b2c इनमें से हों: 000, 125, 250, 375, 500, 625, 750, 875; बीच में 2 वाले 125 और 625। b2c = 125: अंकों का योग 15 + a, 18 हो, अतः a = 3 और a + b = 4। b2c = 625: अंकों का योग 20 + a, 27 हो, अतः a = 7 और a + b = 13। अधिकतम 13 (473,625 = 1,125 × 421)।</span></p>
+</div>
+<div class="q">
+  <div class="n">57. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>How many three-digit numbers are divisible by 5 and have digits that add up to 15?</b><br><span class="hi">तीन अंकों की कितनी संख्याएँ 5 से विभाज्य हैं और उनके अंकों का योग 15 है?</span></p>
+  <ol type="A"><li class="right">13 ✔</li><li class="">10</li><li class="">15</li><li class="">9</li></ol>
+  <p class="sol"><b>Solution:</b> The last digit is 0 or 5. Last digit 0: the first two add to 15 - 69, 78, 87, 96: 4 numbers. Last digit 5: the first two add to 10 - 19, 28, 37, 46, 55, 64, 73, 82, 91: 9 numbers. 4 + 9 = 13.<br><span class="hi">अंतिम अंक 0 या 5। अंतिम अंक 0: पहले दो का योग 15 - 69, 78, 87, 96: 4 संख्याएँ। अंतिम अंक 5: पहले दो का योग 10 - 19, 28, 37, 46, 55, 64, 73, 82, 91: 9 संख्याएँ। 4 + 9 = 13।</span></p>
+</div>
+<div class="q">
+  <div class="n">58. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the largest number that always divides the product of any two consecutive even numbers?</b><br><span class="hi">किन्हीं दो क्रमागत सम संख्याओं के गुणनफल को सदा विभाजित करने वाली सबसे बड़ी संख्या कौन-सी है?</span></p>
+  <ol type="A"><li class="right">8 ✔</li><li class="">4</li><li class="">16</li><li class="">24</li></ol>
+  <p class="sol"><b>Solution:</b> (2k)(2k + 2) = 4 × k(k + 1), and k(k + 1) is even, so the product is a multiple of 8. 2 × 4 = 8 itself, so nothing larger always divides it.<br><span class="hi">(2k)(2k + 2) = 4 × k(k + 1), और k(k + 1) सम है, अतः गुणनफल 8 का गुणज। 2 × 4 = 8 ही है, अतः इससे बड़ी कोई सदा नहीं।</span></p>
+</div>
+<div class="q">
+  <div class="n">59. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>For how many digits d is the number 3d3d3d (six digits) divisible by 7?</b><br><span class="hi">कितने अंकों d के लिए छह अंकों की संख्या 3d3d3d, 7 से विभाज्य है?</span></p>
+  <ol type="A"><li class="right">10 ✔</li><li class="">0</li><li class="">1</li><li class="">3</li></ol>
+  <p class="sol"><b>Solution:</b> 3d3d3d = 3d × 10,101, and 10,101 = 3 × 7 × 13 × 37 is divisible by 7. So the number is divisible by 7 whatever d is: all 10 digits.<br><span class="hi">3d3d3d = 3d × 10,101, और 10,101 = 3 × 7 × 13 × 37, 7 से विभाज्य है। अतः d कुछ भी हो, संख्या 7 से विभाज्य: सभी 10 अंक।</span></p>
+</div>
+<div class="q">
+  <div class="n">60. <span class="t">Number System · Divisibility Rules · Hard #7</span> <span class="ok">✔ checked in code</span></div>
+  <p><b>What is the smallest number of the form 1, 11, 111, 1,111, ... that is divisible by 41?</b><br><span class="hi">1, 11, 111, 1,111, ... के रूप की वह सबसे छोटी संख्या कौन-सी है जो 41 से विभाज्य हो?</span></p>
+  <ol type="A"><li class="right">11,111 ✔</li><li class="">111,111</li><li class="">1,111</li><li class="">111</li></ol>
+  <p class="sol"><b>Solution:</b> 1, 11, 111 and 1,111 leave 1, 11, 29 and 4 on division by 41. 11,111 = 41 × 271 is the first that is divisible.<br><span class="hi">1, 11, 111 और 1,111 के 41 से शेष 1, 11, 29 और 4। 11,111 = 41 × 271 पहली जो विभाज्य है।</span></p>
+</div></body></html>

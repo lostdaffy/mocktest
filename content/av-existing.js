@@ -1,0 +1,77 @@
+// The Average practice questions already on the server (admin API,
+// 2026-10-27): the four Mixed Practice #1 tests, 12 questions each, made by
+// the AI. New questions must not repeat them.
+module.exports = {
+  ids: {
+    easy: "6ab64e74f1950f403dbb2cc9",
+    medium: "6ab64ee6f1950f403dbb2ce8",
+    hard: "6ab64fb1f1950f403dbb2d21",
+    advanced: "6ab652d8f1950f403dbb2d7f",
+  },
+  texts: [
+    // easy
+    "What is the average of the first five prime numbers?",
+    "The average of 5 consecutive odd numbers is 25. What is the largest number?",
+    "The average weight of 8 men is 60 kg. If a new man weighing 69 kg joins them, what will be the new average weight?",
+    "Find the average of the first 10 multiples of 5.",
+    "The average age of 10 students in a class is 15 years. If the teacher's age is included, the average becomes 16 years. What is the teacher's age?",
+    "The average of 4 numbers is 20. If each number is increased by 5, what will be the new average?",
+    "The average of 7 numbers is 12. If each number is multiplied by 2, what will be the new average?",
+    "The average of 6 numbers is 15. If one number 10 is removed, what is the new average of the remaining 5 numbers?",
+    "Find the average of the first 5 even natural numbers.",
+    "The average of 5 results is 50. If the average of the first 3 results is 48 and the average of the last 3 results is 52, what is the 3rd result?",
+    "A cricketer scores 40, 50, 60, and 70 runs in 4 innings. What is his average score?",
+    "The average age of 5 students in a class is 14 years. If a new student joins the class, the new average age becomes 15 years. What is the age of the new student?",
+    // medium
+    "The average weight of 15 students in a class is 40 kg. If the teacher's weight is included, the average weight increases by 2 kg. What is the weight of the teacher?",
+    "A batsman has a certain average score in 11 innings. In the 12th inning, he scores 90 runs, thereby increasing his average by 5 runs. What is his average after the 12th inning?",
+    "The average monthly income of A and B is Rs. 5050, of B and C is Rs. 6250, and of A and C is Rs. 5200. What is the monthly income of A?",
+    "The average age of a husband and wife, who were married 7 years ago, was 25 years at that time. What is their current average age now?",
+    "The average of 7 numbers is 18. If one number 17 is replaced by 31, then what is the new average?",
+    "The average marks of 30 students in a class is 45. It was later found that a score of 52 was incorrectly recorded as 22. What is the correct average marks?",
+    "A man buys 5 chairs at Rs. 400 each and 3 tables at Rs. 600 each. What is the average cost of an item?",
+    "The average weight of A, B and C is 45 kg. If the average weight of A and B is 40 kg and that of B and C is 43 kg, then what is the weight of B?",
+    "The average of 5 numbers is 50. If each number is multiplied by 3, what will be the new average?",
+    "The average weight of 15 students in a class is 40 kg. If a new student weighing 56 kg joins the class, what will be the new average weight of the students?",
+    "The average of 5 consecutive odd numbers is 27. What is the largest of these numbers?",
+    "A batsman scores 87 runs in his 17th inning, due to which his average increases by 3 runs. What is his average after the 17th inning?",
+    // hard
+    "The average of 11 results is 50. If the average of the first 6 results is 49 and that of the last 6 is 52, what is the 6th result?",
+    "The average monthly income of a person in a family of 4 is Rs 10,000. If one family member whose monthly income is Rs 12,000 passes away, what will be the new average monthly income of the family?",
+    "The average of 8 consecutive even numbers is 93. What is the sum of the smallest and largest numbers among them?",
+    "The average weight of 24 students is 35 kg. If the weight of the teacher is included, the average weight increases by 400 grams. What is the weight of the teacher?",
+    "The average of 5 numbers is 27. If one number is excluded, the average becomes 25. What is the excluded number?",
+    "The average of 9 observations is 40. If each observation is multiplied by 3, what will be the new average?",
+    "The average of 11 numbers is 60. If the average of the first 6 numbers is 58 and the average of the last 6 numbers is 63, what is the 6th number?",
+    "The average weight of a class of 30 students is 45 kg. If the teacher's weight is included, the average weight increases by 1 kg. If a student weighing 40 kg is replaced by another student weighing 52 kg, and the teacher is excluded, what is the new average weight of the class?",
+    "The average age of a husband, wife and their child 3 years ago was 27 years and that of the wife and the child 5 years ago was 20 years. What is the present age of the husband?",
+    "The average weight of 8 persons is increased by 2.5 kg when a new person comes in place of one of them weighing 65 kg. What is the weight of the new person?",
+    "The average of 5 consecutive odd numbers is 65. What is the sum of the largest and the smallest number?",
+    "The average age of 24 students in a class is 15 years. If the age of the teacher is included, the average age increases by 1 year. If the teacher's age is replaced by a new student whose age is 10 years less than the teacher's age, what is the new average age of the class?",
+    // advanced
+    "A cricketer has a certain average for 10 innings. In the 11th inning, he scores 108 runs, thereby increasing his average by 6 runs. What is his new average?",
+    "The average salary of all employees in a company is Rs 8000. The average salary of 7 technicians is Rs 12000 and the average salary of the rest is Rs 6000. How many employees are there in the company?",
+    "The average of 11 numbers is 30. If the average of the first 6 numbers is 28 and the average of the last 6 numbers is 32, what is the 6th number?",
+    "A batsman has a certain average in 11 innings. In the 12th inning, he scores 90 runs, thereby increasing his average by 5 runs. What is his new average?",
+    "The average of 11 results is 50. If the average of the first six results is 49 and that of the last six is 52, find the sixth result.",
+    "The average weight of a group of 25 students is 45 kg. If the weight of the teacher is included, the average weight increases by 800 grams. If the weight of another student is also included, the average weight becomes 46 kg. What is the weight of the new student?",
+    "The average of 5 consecutive even numbers is 26. What is the difference between the largest and the smallest number?",
+    "A batsman's average for 40 innings is 50 runs. His highest score exceeds his lowest score by 172 runs. If these two innings are excluded, the average of the remaining 38 innings is 48 runs. Find his highest score.",
+    "The average of 8 numbers is 20. The average of the first two is 15.5 and the average of the next three is 21 1/3. If the 6th number is 4 less than the 7th and 7 less than the 8th, what is the 8th number?",
+    "The average salary of 20 workers in an office is Rs. 4,500 per month. If the manager's salary is added, the average salary becomes Rs. 4,800. What is the manager's monthly salary?",
+    "The average age of 30 boys in a class is 15 years. If the age of the class teacher is included, the average age increases by 1 year. What is the age of the teacher?",
+    "A batsman makes a score of 87 runs in the 17th inning and thus increases his average by 3 runs. What is his average after the 17th inning?",
+  ],
+  // Found wrong when read on 2026-10-27; replaced in place.
+  bad: {
+    hard: [
+      ["6ab64f35f1950f403dbb2cfb", "Marked answer 9,333 is not exact: 28,000 ÷ 3 = ₹9,333.33"],
+    ],
+    advanced: [
+      ["6ab6528ff1950f403dbb2d69", "Same question as Medium #1 (11 innings, 90 runs, average up by 5)"],
+      ["6ab652a1f1950f403dbb2d70", "Same question as Hard #1 (11 results, 49 and 52)"],
+      ["6ab8aba79cccc2c0f08dac2f", "No option is right: the new student weighs 1,242 − 1,190.8 = 51.2 kg, marked 52 kg"],
+      ["6ab8abbd9cccc2c0f08dac42", "Same question as Medium #1 (87 runs in the 17th innings, average up by 3)"],
+    ],
+  },
+};
