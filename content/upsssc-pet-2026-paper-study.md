@@ -109,9 +109,15 @@ Limits of today's code (these need a code change – ask first):
 - The reference-guide subject list only offers catalogue subjects, so section 6 is covered by
   the "Whole paper" PET guide (G0 below), not one of its own.
 
-### 3b. AI References (Admin → AI References) – paste these
+### 3b. AI References (Admin → AI References)
 
-For each block below: Exam = **UPSSSC PET**, Subject = as named, Type = **Pasted text**,
+**Done 2026-10-27:** all 8 blocks below are live as UPSSSC PET references (ready, active,
+guide text exactly as written). G0 also holds the paper's 100 questions for the copy check,
+so a generated question that rewords one of them is thrown out. To change one, edit its guide
+box on the AI References page. The pattern in 3a is applied with `content/pet-pattern-2026.js`
+once the testTopUp cap is deployed.
+
+How they were meant to be added by hand, for reference – for each block below: Exam = **UPSSSC PET**, Subject = as named, Type = **Pasted text**,
 Title as given. When it shows *Ready*, replace the text in its guide box with the same block
 and press **Save**, so the guide is exactly this text and not the model's rewording.
 (Each is kept short: the generator reads at most 3,500 characters of guides per batch,

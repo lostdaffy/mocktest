@@ -181,7 +181,10 @@ async function refillMock(test, { from, target, max }) {
   const sectionOf = (subject) => pattern.sections.findIndex((s) => s.subject === subject || (s.sources || []).includes(subject));
   const siblings = await siblingMockQuestions(test.examStage, test._id);
 
-  let budget = max || target;
+  // Never past the paper's size. After an exam pattern changes, an old mock
+  // looks short in the new sections while it is over in the old ones; topping
+  // every short section up made a 100-question mock grow to 124.
+  let budget = Math.min(max || Infinity, target - from);
   let added = 0;
   let why;
   const visualPlan = await visualChaptersFor(pattern, (section) => section.syllabus);
