@@ -6,3 +6,6 @@ dist-ssr/
 
 # Upload bundle for cPanel - regenerate from dist/
 *-upload.zip
+
+# APK is uploaded to the server by hand, never committed
+*.apk

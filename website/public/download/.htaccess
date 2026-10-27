@@ -1,0 +1,10 @@
+# Direct APK download while the app is not on Google Play yet.
+# The APK itself is uploaded by hand to public_html/download/ (it is not in git).
+AddType application/vnd.android.package-archive .apk
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.apk$">
+    Header set Content-Disposition "attachment"
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+</IfModule>

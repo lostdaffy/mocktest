@@ -595,6 +595,24 @@ function Download() {
                 <PhoneIcon />
                 Get it on Google Play
               </a>
+            ) : site.apkUrl ? (
+              <>
+                <a href={site.apkUrl} download className="btn btn-light btn-lg mt-7">
+                  <PhoneIcon />
+                  Download Android app
+                </a>
+                <p className="mt-3.5 text-sm text-white/70">
+                  Version {site.apkVersion} · {site.apkSizeMb} MB · Android 7 or newer
+                </p>
+                <ol className="mx-auto mt-6 max-w-[460px] list-decimal space-y-1.5 pl-5 text-left text-[15px] text-white/90">
+                  <li>Tap the button and let the file download.</li>
+                  <li>Open the downloaded file. If your phone asks, allow your browser to “install unknown apps”.</li>
+                  <li>Tap Install, then open Rankveer.</li>
+                </ol>
+                <p className="mx-auto mt-5 max-w-[520px] text-sm text-white/75">
+                  Download Rankveer only from rankveer.com. It is coming to Google Play soon, and you won’t need to reinstall it then.
+                </p>
+              </>
             ) : (
               <>
                 <span aria-disabled="true" className="btn btn-light btn-lg btn-soon mt-7">

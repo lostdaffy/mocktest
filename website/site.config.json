@@ -27,5 +27,10 @@
   "_playStoreUrl": "Leave empty until the app is live - the site shows 'coming soon' instead of a broken link.",
   "playStoreUrl": "",
 
+  "_apkUrl": "Direct download while the app is not on Google Play yet. Use ONLY the 'Signed, universal APK' from Play Console (App bundle explorer > Downloads) so people can later update from Google Play without reinstalling. Upload it to public_html/download/. Clear apkUrl once playStoreUrl is set.",
+  "apkUrl": "/download/rankveer-1.2.1.apk",
+  "apkVersion": "1.2.1",
+  "apkSizeMb": 91,
+
   "policyEffectiveDate": "21 September 2026"
 }
