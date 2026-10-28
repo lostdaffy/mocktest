@@ -107,7 +107,7 @@ const visuals = require(path.join(SERVER, "services/visuals"));
 let v = 0;
 visualGen.generateVisualQuestions = async (params) => {
   const { kind, count } = params;
-  fs.appendFileSync(CALLS, JSON.stringify({ visual: kind, subject: params.subject, count, syllabusTopics: params.syllabusTopics || [] }) + "\n");
+  fs.appendFileSync(CALLS, JSON.stringify({ visual: kind, subject: params.subject, count, syllabusTopics: params.syllabusTopics || [], chartType: params.chartType || null }) + "\n");
   let raw;
   if (kind === "chart") {
     v += 1;
@@ -156,6 +156,30 @@ visualGen.generateVisualQuestions = async (params) => {
     raw = { questions: qs };
   }
   return visualGen.buildVisualQuestions(kind, raw, params).questions.slice(0, count);
+};
+
+// Passage sets: one passage and its questions. The model is faked; the
+// building of the set (passage into every question, one passageSetId) is the
+// real code.
+const passageGen = require(path.join(SERVER, "services/passageSetGenerator"));
+// Started at random, so a second process loading this stub (a test calling
+// the refill in-process) does not write the server's first passage again.
+let p = Math.floor(Math.random() * 100000);
+passageGen.generatePassageSet = async (params) => {
+  p += 1;
+  fs.appendFileSync(CALLS, JSON.stringify({ passageSet: true, subject: params.subject, count: params.count }) + "\n");
+  const words = Array.from({ length: 160 }, (_, i) => `शब्द${(i * 7 + p) % 97}`).join(" ");
+  const raw = {
+    passage: `गद्यांश ${p}: ${words}`,
+    questions: Array.from({ length: params.count }, (_, i) => ({
+      question: `गद्यांश ${p} का प्रश्न ${i + 1}: लेखक ${STUB_WORDS[(p * 5 + i) % STUB_WORDS.length]} के बारे में क्या कहता है ?`,
+      options: [`${p}${i}क`, `${p}${i}ख`, `${p}${i}ग`, `${p}${i}घ`],
+      correctIndex: 0,
+      solution: "गद्यांश की दूसरी पंक्ति में यही कहा गया है।",
+    })),
+  };
+  const built = passageGen.buildPassageSet(raw, { hindi: true });
+  return gemini.tagGenerated(built.questions, params);
 };
 
 console.log("[stub] Gemini generation stubbed");

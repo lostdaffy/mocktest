@@ -101,6 +101,11 @@ const questionSchema = new mongoose.Schema(
 
     createdBy: { type: String, enum: ["ai", "admin", "import"], default: "ai" },
 
+    // The questions written on one shared passage (a section with
+    // passageSets, e.g. UPSSSC PET's Hindi passages) carry the same id and
+    // the passage in each text. Absent on every other question.
+    passageSetId: { type: String },
+
     // A question that needs a picture - see services/visuals.js.
     //
     //  chart:  Data Interpretation. The numbers are stored and the app draws

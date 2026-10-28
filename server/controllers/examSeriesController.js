@@ -58,10 +58,14 @@ function syllabusSlice(topics, offset, size = 8) {
 // Questions already used by another mock of the same exam are avoided
 // first, so two mocks don't end up looking like the same paper; they're
 // only reused if the bank can't supply enough fresh ones.
-async function pickPyqQuestions(examStage, subject, wanted, excludeIds = []) {
+async function pickPyqQuestions(examStage, subject, wanted, excludeIds = [], { noCharts = false, notTopics = [] } = {}) {
   if (wanted <= 0) return [];
 
   const base = {
+    // A section that writes its own chart or passage sets takes no loose
+    // chart or passage question from a past paper (see buildMockForExam).
+    ...(noCharts ? { "visual.kind": { $ne: "chart" } } : {}),
+    ...(notTopics.length ? { topic: { $nin: notTopics } } : {}),
     source: "pyq",
     // NOT examStage: the Question schema has no such field, so the value the
     // PYQ extractor sets is dropped by Mongoose and only examType survives.
@@ -148,6 +152,29 @@ async function listExamMocks(req, res) {
  * Throws rather than returning an error shape: the caller decides whether
  * that becomes a 500 or a failed job.
  */
+// Shuffles a section's questions as units: a chart set (visual.setId) or a
+// passage set (passageSetId) moves as one block, in its own order.
+async function shuffleKeepingSets(ids) {
+  const docs = await Question.find({ _id: { $in: ids } }).select("visual.setId passageSetId").lean();
+  const unitOf = new Map(docs.map((q) => [String(q._id), q.passageSetId ? `p:${q.passageSetId}` : q.visual?.setId ? `c:${q.visual.setId}` : null]));
+  const units = [];
+  const byKey = new Map();
+  for (const id of ids) {
+    const key = unitOf.get(String(id));
+    if (key && byKey.has(key)) byKey.get(key).push(id);
+    else {
+      const unit = [id];
+      if (key) byKey.set(key, unit);
+      units.push(unit);
+    }
+  }
+  for (let x = units.length - 1; x > 0; x--) {
+    const y = Math.floor(Math.random() * (x + 1));
+    [units[x], units[y]] = [units[y], units[x]];
+  }
+  return units.flat();
+}
+
 async function buildMockForExam(examStage, { vacancyId } = {}) {
   const pattern = await ExamPattern.findOne({ examType: examStage, isActive: true });
   if (!pattern) {
@@ -222,8 +249,12 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
   // Which chart/figure chapters a section already has a set from, so a
   // resumed mock does not get a second one.
   const visualsInSection = pattern.sections.map(() => new Set());
+  // How many chart sets of each chapter a section already holds, for the
+  // sections that name several (section.chartSets): counted by setId.
+  const chartSetsInSection = pattern.sections.map(() => new Map());
+  const setsOf = (k, chapter) => chartSetsInSection[k].get(chapter) || chartSetsInSection[k].set(chapter, new Set()).get(chapter);
   if (test.questions.length) {
-    const have = await Question.find({ _id: { $in: test.questions } }).select("subject source chapter visual.kind").lean();
+    const have = await Question.find({ _id: { $in: test.questions } }).select("subject source chapter visual.kind visual.setId").lean();
     const byId = new Map(have.map((q) => [String(q._id), q]));
     for (const id of test.questions) {
       const q = byId.get(String(id));
@@ -234,6 +265,7 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
         buckets[k].push(q._id);
         if (q.source === "pyq") pyqInSection[k] += 1;
         if (q.visual?.kind) visualsInSection[k].add(q.chapter);
+        if (q.visual?.kind === "chart") setsOf(k, q.chapter).add(q.visual.setId || String(q._id));
       }
     }
   }
@@ -266,7 +298,11 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
     while (remaining > 0 && !allowanceGone) {
       const thisBatch = Math.min(CHUNK, remaining);
       const offset = syllabusOffsets.get(section.subject) || 0;
-      const topics = syllabusSlice(syllabusOf(section), offset);
+      // A section with its own chart sets writes its Data Interpretation as
+      // charts only; the text questions come from the rest of its syllabus.
+      const chartChapters = new Set((section.chartSets?.length ? visualPlan[k] || [] : []).map((v) => v.chapter.toLowerCase()));
+      const textSyllabus = (syllabusOf(section) || []).filter((t) => !chartChapters.has(String(typeof t === "string" ? t : t?.topic || "").toLowerCase()));
+      const topics = syllabusSlice(textSyllabus, offset);
       syllabusOffsets.set(section.subject, offset + (topics.length || 1));
       try {
         // Only questions that pass the rule checks AND the AI's own re-solve
@@ -313,9 +349,15 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
     const shortBy = Math.max(0, section.questionCount - buckets[k].length);
     if (shortBy === 0) continue;
 
-    const pyqTarget = Math.round((section.questionCount * PYQ_MIX_PERCENT) / 100);
+    // Named chart and passage sets are written whole, never made of past-paper
+    // questions; the past-paper share is taken from the rest of the section.
+    const setQuestions = (section.chartSets?.length || 0) * 5 + (section.passageSets?.count || 0) * (section.passageSets?.perPassage || 5);
+    const pyqTarget = Math.round((Math.max(0, section.questionCount - setQuestions) * PYQ_MIX_PERCENT) / 100);
+    // A paper with a passage section: its past-paper passage questions belong
+    // there, not in the section of the subject they were filed under.
+    const passageSections = pattern.sections.filter((s) => s.passageSets?.count && s !== section).map((s) => s.subject);
     const pyqWanted = Math.min(shortBy, Math.max(0, pyqTarget - pyqInSection[k]));
-    const pyqIds = pyqWanted > 0 ? await pickPyqQuestions(examStage, section.subject, pyqWanted, everyId()) : [];
+    const pyqIds = pyqWanted > 0 ? await pickPyqQuestions(examStage, section.subject, pyqWanted, everyId(), { noCharts: !!section.chartSets?.length, notTopics: passageSections }) : [];
     if (pyqIds.length > 0) {
       buckets[k].push(...pyqIds);
       pyqUsed += pyqIds.length;
@@ -327,7 +369,10 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
     // five questions, or three figure questions. Figures still need their
     // pictures uploaded before the mock can be published.
     for (const v of visualPlan[k] || []) {
-      if (allowanceGone || visualsInSection[k].has(v.chapter)) continue;
+      if (allowanceGone) continue;
+      // One of several named chart sets: done when the section already holds
+      // more sets of this chapter than this one's place in the list.
+      if (v.slot !== undefined ? setsOf(k, v.chapter).size > v.slot : visualsInSection[k].has(v.chapter)) continue;
       const room = section.questionCount - buckets[k].length;
       const want = Math.min(room, v.kind === "chart" ? 5 : 3);
       if (want < (v.kind === "chart" ? 3 : 1)) continue;
@@ -345,11 +390,15 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
             examLevel: pattern.examLevel,
             syllabusTopics: v.topics,
             visualKind: v.kind,
+            ...(v.chartType ? { chartType: v.chartType } : {}),
           },
         });
         for (const key of Object.keys(tally)) tally[key] += built[key] || 0;
         buckets[k].push(...built.ids);
-        if (built.ids.length) visualsInSection[k].add(v.chapter);
+        if (built.ids.length) {
+          visualsInSection[k].add(v.chapter);
+          if (v.slot !== undefined) setsOf(k, v.chapter).add(`slot-${v.slot}`);
+        }
         await saveProgress();
       } catch (err) {
         hadFailure = true;
@@ -359,11 +408,53 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
     }
     if (allowanceGone) break;
 
+    // A section with passage sets (UPSSSC PET's two Hindi passages of five)
+    // gets them whole: one passage, its questions together. One round each,
+    // so a set is never topped up from a second passage; anything a set
+    // comes up short is filled below like any other question.
+    if (section.passageSets?.count && !allowanceGone) {
+      const per = section.passageSets.perPassage || 5;
+      const have = await Question.find({ _id: { $in: buckets[k] } }).select("passageSetId").lean();
+      const done = new Set(have.map((q) => q.passageSetId).filter(Boolean)).size;
+      for (let p = done; p < section.passageSets.count && !allowanceGone; p++) {
+        const want = Math.min(per, section.questionCount - buckets[k].length);
+        if (want < 1) break;
+        try {
+          const built = await createVerifiedQuestions({
+            needed: want,
+            maxRounds: 1,
+            inTest: checkAgainst(),
+            tag: { examStage },
+            generateParams: {
+              examType: examStage,
+              examDisplayName: vacancy ? vacancy.name : pattern.displayName,
+              subject: section.subject,
+              topic: section.subject,
+              difficulty: "medium",
+              examLevel: pattern.examLevel,
+              syllabusTopics: syllabusOf(section),
+              passageSet: true,
+            },
+          });
+          for (const key of Object.keys(tally)) tally[key] += built[key] || 0;
+          buckets[k].push(...built.ids);
+          await saveProgress();
+        } catch (err) {
+          hadFailure = true;
+          if (/every model has used its allowance|PerDay|per day|quota exceeded/i.test(err.message || "")) allowanceGone = true;
+          console.log(`Passage set failed (${section.subject}): ${err.message}`);
+        }
+        await new Promise((r) => setTimeout(r, GEMINI_PAUSE_MS));
+      }
+    }
+    if (allowanceGone) break;
+
     // Whatever the PYQ bank couldn't supply is generated instead, so a thin
     // bank means a more AI-heavy mock, never a short one.
     const aiNeeded = Math.max(0, section.questionCount - buckets[k].length);
     const easy = Math.round((aiNeeded * (section.difficultyMix?.easy ?? 30)) / 100);
-    const medium = Math.round((aiNeeded * (section.difficultyMix?.medium ?? 50)) / 100);
+    // Never more than is needed: 50/50 of 5 rounds to 3 + 3.
+    const medium = Math.min(Math.round((aiNeeded * (section.difficultyMix?.medium ?? 50)) / 100), aiNeeded - easy);
     const perDifficulty = {
       easy,
       medium,
@@ -376,10 +467,16 @@ async function buildMockForExam(examStage, { vacancyId } = {}) {
 
     // Shuffle within the section, otherwise every real question sits at the
     // top of its subject and the mock reads in two obvious halves.
-    const b = buckets[k];
-    for (let x = b.length - 1; x > 0; x--) {
-      const y = Math.floor(Math.random() * (x + 1));
-      [b[x], b[y]] = [b[y], b[x]];
+    if (section.chartSets?.length || section.passageSets?.count) {
+      // A section with named chart or passage sets shuffles whole sets, so
+      // the five questions on one chart or passage stay one after another.
+      buckets[k] = await shuffleKeepingSets(buckets[k]);
+    } else {
+      const b = buckets[k];
+      for (let x = b.length - 1; x > 0; x--) {
+        const y = Math.floor(Math.random() * (x + 1));
+        [b[x], b[y]] = [b[y], b[x]];
+      }
     }
     await saveProgress();
   }

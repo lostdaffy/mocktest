@@ -74,6 +74,19 @@ const examPatternSchema = new mongoose.Schema(
             subTopics: [{ type: String }],
           },
         ],
+        // Data Interpretation sets this section carries, one entry per set,
+        // naming its chart type: ["table", "table", "pie", "bar"] is UPSSSC
+        // PET's four sets of five. Empty - every other exam - keeps the
+        // default of one set per chart chapter the syllabus names.
+        chartSets: { type: [String], default: undefined },
+        // Passage sets: N passages with M questions each, the passage
+        // printed with every question of its set (UPSSSC PET: two Hindi
+        // passages of five). Unset - every other exam - keeps the default of
+        // a short passage of its own in each comprehension question.
+        passageSets: {
+          type: { count: Number, perPassage: Number, _id: false },
+          default: undefined,
+        },
         difficultyMix: {
           easy: { type: Number, default: 30 }, // percentage
           medium: { type: Number, default: 50 },

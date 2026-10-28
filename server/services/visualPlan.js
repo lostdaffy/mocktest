@@ -24,8 +24,19 @@ async function visualChaptersFor(pattern, syllabusOf) {
         }
       }
     }
-    return out.slice(0, 2);
+    return expandChartSets(section, out.slice(0, 2));
   });
 }
 
-module.exports = { visualChaptersFor };
+// A section that names its chart sets (section.chartSets, e.g. UPSSSC PET's
+// ["table", "table", "pie", "bar"]) gets one entry per set, each with its
+// chart type and its place in the list (slot). Without it the plan is as it
+// always was: one set per chart chapter.
+function expandChartSets(section, plan) {
+  const types = (section.chartSets || []).filter(Boolean);
+  const chart = plan.find((v) => v.kind === "chart");
+  if (!types.length || !chart) return plan;
+  return [...types.map((chartType, slot) => ({ ...chart, chartType, slot })), ...plan.filter((v) => v.kind !== "chart")];
+}
+
+module.exports = { visualChaptersFor, expandChartSets };

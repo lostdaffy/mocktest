@@ -6,6 +6,7 @@ const { generateQuestions, repairQuestion } = require("./geminiService");
 const { runValidationPipelineBatch, questionKey, looksLikeRepeat, sameFactInPaper } = require("./validationPipeline");
 // Through the module, not destructured, so the test stub can stand in for it.
 const visualGen = require("./visualGenerator");
+const passageGen = require("./passageSetGenerator");
 const { visualSignature, figureKey } = require("./visuals");
 const { attachDrawings } = require("./figureImage");
 const { patternCount, MAX_PER_PATTERN } = require("./qualityRules");
@@ -146,7 +147,15 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
     // A chart or figure chapter is written by the visual generator, which
     // checks every answer against its chart or figure in code before the
     // question gets this far.
-    const raw = generateParams.visualKind
+    // A passage set (a pattern section with passageSets) is one passage and
+    // its questions, written together by the passage generator.
+    const raw = generateParams.passageSet
+      ? await passageGen.generatePassageSet({
+          ...generateParams,
+          count: remaining,
+          avoidTexts: accepted.map((q) => q.passageStem || q.text).slice(0, 10),
+        })
+      : generateParams.visualKind
       ? await visualGen.generateVisualQuestions({
           ...generateParams,
           kind: generateParams.visualKind,
@@ -233,7 +242,11 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
       // A copy of one of the admin's reference questions, even with the
       // numbers or a word changed, is thrown out: references teach the level,
       // they are not a source of questions.
-      const copied = q.visual?.kind ? { copy: false } : copiesReference(q.text);
+      // A passage question is judged by its own question, not the passage
+      // its siblings share - otherwise the second question on a passage is
+      // "a repeat" of the first.
+      const own = q.passageStem || q.text;
+      const copied = q.visual?.kind ? { copy: false } : copiesReference(own);
       if (copied.copy) {
         duplicates++;
         await drop(q, "reference_copy", `copies a question from the reference "${copied.title}": ${String(copied.of).slice(0, 100)}`);
@@ -242,7 +255,7 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
 
       const reworded = q.visual?.kind
         ? { repeat: false }
-        : looksLikeRepeat(q.text, [...bankTexts, ...paperTexts, ...accepted.map((a) => a.text)]);
+        : looksLikeRepeat(own, [...bankTexts, ...paperTexts, ...accepted.map((a) => a.passageStem || a.text)]);
       if (reworded.repeat) {
         duplicates++;
         await drop(q, "reworded", `already asked as: ${String(reworded.of).slice(0, 120)}`);
@@ -251,7 +264,7 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
 
       // One idea drilled over and over with new numbers: at most a few
       // questions of one pattern in a paper (services/qualityRules.js).
-      if (!q.visual?.kind) {
+      if (!q.visual?.kind && !q.passageSetId) {
         const paperSoFar = [...paperTexts, ...accepted.map((a) => a.text), ...savedRound.map((s) => s.text)];
         if (patternCount(q.text, paperSoFar) >= MAX_PER_PATTERN) {
           duplicates++;
@@ -261,7 +274,7 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
       }
 
       // The same fact asked again elsewhere in the paper, with the same answer.
-      const twin = inTest.length && !q.visual?.kind
+      const twin = inTest.length && !q.visual?.kind && !q.passageSetId
         ? [...paperPlain, ...accepted, ...savedRound].find((p) => sameFactInPaper(q, p))
         : null;
       if (twin) {
@@ -271,7 +284,7 @@ async function createVerifiedQuestions({ needed, generateParams, tag = {}, maxRo
       }
 
       acceptedKeys.add(key);
-      bankTexts.push(q.text);
+      bankTexts.push(own);
       savedRound.push(q);
       if (accepted.length + savedRound.length === needed) break;
     }

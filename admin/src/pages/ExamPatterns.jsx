@@ -107,6 +107,9 @@ export default function ExamPatterns() {
         negativeMarking: s.negativeMarking ?? null,
         durationMinutes: s.durationMinutes ?? null,
         difficultyMix: { easy: 30, medium: 50, hard: 20, ...(s.difficultyMix || {}) },
+        // Not edited here, but carried through so saving the form keeps them.
+        ...(s.chartSets?.length ? { chartSets: s.chartSets } : {}),
+        ...(s.passageSets?.count ? { passageSets: s.passageSets } : {}),
         syllabus: (s.syllabus || []).map((t) =>
           typeof t === "string" ? t : t.subTopics?.length ? `${t.topic}: ${t.subTopics.join(", ")}` : t.topic
         ),

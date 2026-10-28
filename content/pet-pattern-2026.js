@@ -1,6 +1,10 @@
 // UPSSSC PET exam pattern -> the real paper's split (25 Oct 2026, 1st shift).
 // See content/upsssc-pet-2026-paper-study.md.
 //
+// Since 2026-10-28 it also names the Maths chart sets and the Hindi passage
+// sets (ExamPattern section.chartSets / passageSets); run it again after the
+// server that understands them is deployed - the rest is unchanged.
+//
 //   node content/pet-pattern-2026.js           dry run: prints old and new, writes nothing
 //   node content/pet-pattern-2026.js --apply   saves a backup of the old pattern next to this
 //                                              file, then writes the new one
@@ -56,6 +60,8 @@ const SECTIONS = [
   },
   {
     subject: "Maths", questionCount: 25, sources: [], difficultyMix: mix(35, 50, 15),
+    // The real paper's four Data Interpretation sets of five.
+    chartSets: ["table", "table", "pie", "bar"],
     syllabus: [
       t("Data Interpretation", "Tabulation", "Bar Graph", "Pie Chart"),
       t("Algebra", "value from algebraic identities"),
@@ -70,6 +76,8 @@ const SECTIONS = [
   },
   {
     subject: "अपठित गद्यांश", questionCount: 10, sources: [], difficultyMix: mix(50, 40, 10),
+    // Two passages of about 250 words, five questions each, as printed.
+    passageSets: { count: 2, perPassage: 5 },
     syllabus: [t("अपठित गद्यांश", "मूल्य-आधारित निबंधात्मक गद्यांश (परोपकार, अनुशासन, ईमानदारी, पर्यावरण)", "केंद्रीय भाव", "गद्यांश से मेल खाता कथन")],
   },
   {
@@ -99,7 +107,7 @@ const EXAM_LEVEL =
   const total = SECTIONS.reduce((n, s) => n + s.questionCount, 0);
   if (total !== 100) throw new Error(`New sections add up to ${total}, not 100`);
   console.log("OLD:", p.sections.map((s) => `${s.subject} ${s.questionCount}`).join(", "));
-  console.log("NEW:", SECTIONS.map((s) => `${s.subject} ${s.questionCount}`).join(", "));
+  console.log("NEW:", SECTIONS.map((s) => `${s.subject} ${s.questionCount}${s.chartSets ? ` (chart sets: ${s.chartSets.join("/")})` : ""}${s.passageSets ? ` (${s.passageSets.count} passages x ${s.passageSets.perPassage})` : ""}`).join(", "));
 
   // Drafts that would end up over a section's count.
   const sectionOf = (subject) => SECTIONS.findIndex((s) => s.subject === subject || (s.sources || []).includes(subject));

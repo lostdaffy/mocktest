@@ -191,7 +191,7 @@ async function refillMock(test, { from, target, max }) {
   for (let k = 0; k < pattern.sections.length && budget > 0; k++) {
     const section = pattern.sections[k];
     const paper = (await Test.findById(test._id).select("questions").lean())?.questions || [];
-    const docs = await Question.find({ _id: { $in: paper } }).select("subject chapter visual.kind").lean();
+    const docs = await Question.find({ _id: { $in: paper } }).select("subject chapter visual.kind visual.setId passageSetId").lean();
     const subjects = new Map(docs.map((q) => [String(q._id), q.subject]));
     const inSection = paper.filter((id) => sectionOf(subjects.get(String(id))) === k);
     let short = Math.min(budget, Math.max(0, section.questionCount - inSection.length));
@@ -199,10 +199,15 @@ async function refillMock(test, { from, target, max }) {
 
     // The section's figure and chart sets first: a figure question taken out
     // comes back as a figure, so the paper does not lose the topic.
+    let setsMade = 0; // named chart sets added in this pass (see slot below)
     for (const v of visualPlan[k] || []) {
-      const have = docs.filter((q) => q.visual?.kind === v.kind && q.chapter === v.chapter && sectionOf(q.subject) === k).length;
+      const mine = docs.filter((q) => q.visual?.kind === v.kind && q.chapter === v.chapter && sectionOf(q.subject) === k);
+      const have = mine.length;
       const setSize = v.kind === "chart" ? 5 : 3;
-      const want = Math.min(short, setSize - have);
+      // One of a section's named chart sets (section.chartSets): due when the
+      // section holds no more sets of the chapter than this one's place.
+      if (v.slot !== undefined && new Set(mine.map((q) => q.visual?.setId || String(q._id))).size + setsMade > v.slot) continue;
+      const want = Math.min(short, v.slot !== undefined ? setSize : setSize - have);
       if (want < (v.kind === "chart" ? 3 : 1)) continue;
       let built;
       try {
@@ -219,11 +224,13 @@ async function refillMock(test, { from, target, max }) {
             examLevel: pattern.examLevel,
             syllabusTopics: v.topics,
             visualKind: v.kind,
+            ...(v.chartType ? { chartType: v.chartType } : {}),
           },
         });
       } catch (err) {
         return report(added, err.message);
       }
+      if (v.slot !== undefined && built.ids.length) setsMade++;
       if (!built.ids.length) return report(added, `no ${v.kind} question for ${v.chapter} passed the checks`);
       const lastAt = paper.reduce((at, id, i) => (sectionOf(subjects.get(String(id))) === k ? i : at), -1);
       await Test.updateOne({ _id: test._id }, { $push: { questions: { $each: built.ids, $position: lastAt >= 0 ? lastAt + 1 : paper.length } } });
@@ -234,9 +241,50 @@ async function refillMock(test, { from, target, max }) {
     }
     if (!short) continue;
 
+    // Passage sets (section.passageSets): a whole passage with its questions,
+    // before any loose question - a removed passage question comes back as a
+    // set only when its set is gone; otherwise it is filled below.
+    if (section.passageSets?.count) {
+      const per = section.passageSets.perPassage || 5;
+      const sets = new Set(docs.filter((q) => sectionOf(q.subject) === k).map((q) => q.passageSetId).filter(Boolean)).size;
+      for (let p = sets; p < section.passageSets.count && short >= per; p++) {
+        const now = (await Test.findById(test._id).select("questions").lean())?.questions || [];
+        let built;
+        try {
+          built = await createVerifiedQuestions({
+            needed: per,
+            maxRounds: 1,
+            inTest: [...now, ...siblings],
+            tag: { examStage: test.examStage },
+            generateParams: {
+              examType: test.examStage,
+              examDisplayName: pattern.displayName,
+              subject: section.subject,
+              topic: section.subject,
+              difficulty: "medium",
+              examLevel: pattern.examLevel,
+              syllabusTopics: section.syllabus || [],
+              passageSet: true,
+            },
+          });
+        } catch (err) {
+          return report(added, err.message);
+        }
+        if (!built.ids.length) break;
+        const lastAt = now.reduce((at, id, i) => (sectionOf(subjects.get(String(id))) === k ? i : at), -1);
+        await Test.updateOne({ _id: test._id }, { $push: { questions: { $each: built.ids, $position: lastAt >= 0 ? lastAt + 1 : now.length } } });
+        for (const id of built.ids) subjects.set(String(id), section.subject);
+        added += built.ids.length;
+        budget -= built.ids.length;
+        short -= built.ids.length;
+      }
+    }
+    if (!short) continue;
+
     const mix = section.difficultyMix || { easy: 30, medium: 50, hard: 20 };
     const easy = Math.round((short * (mix.easy ?? 30)) / 100);
-    const medium = Math.round((short * (mix.medium ?? 50)) / 100);
+    // Never more than is short: 50/50 of 5 rounds to 3 + 3.
+    const medium = Math.min(Math.round((short * (mix.medium ?? 50)) / 100), short - easy);
     const plan = Object.entries({ easy, medium, hard: Math.max(0, short - easy - medium) }).filter(([, n]) => n > 0);
     for (const [difficulty, count] of plan) {
       let left = count;
