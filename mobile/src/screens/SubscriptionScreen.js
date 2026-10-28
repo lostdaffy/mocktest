@@ -79,7 +79,14 @@ const BENEFITS = [
 
 // perDay is derived rather than hardcoded so it can never drift out of
 // sync with the price sitting right above it.
+// A plan with no mrp/off shows just its price (no struck-out MRP, no badge).
 const PLANS = [
+  {
+    id: "monthly",
+    label: "1 Month",
+    price: 59,
+    days: 30,
+  },
   {
     id: "quarterly",
     label: "3 Months",
@@ -549,19 +556,21 @@ export default function SubscriptionScreen({
                       {item.label}
                     </Text>
 
-                    <View
-                      style={
-                        styles.offBadge
-                      }
-                    >
-                      <Text
+                    {!!item.off && (
+                      <View
                         style={
-                          styles.offText
+                          styles.offBadge
                         }
                       >
-                        {item.off}
-                      </Text>
-                    </View>
+                        <Text
+                          style={
+                            styles.offText
+                          }
+                        >
+                          {item.off}
+                        </Text>
+                      </View>
+                    )}
                   </View>
 
                   <Text
@@ -591,13 +600,15 @@ export default function SubscriptionScreen({
                     styles.priceBlock
                   }
                 >
-                  <Text
-                    style={
-                      styles.mrp
-                    }
-                  >
-                    ₹{item.mrp}
-                  </Text>
+                  {!!item.mrp && (
+                    <Text
+                      style={
+                        styles.mrp
+                      }
+                    >
+                      ₹{item.mrp}
+                    </Text>
+                  )}
 
                   <Text
                     style={[
@@ -760,11 +771,13 @@ export default function SubscriptionScreen({
               style={styles.footerAmount}
             >
               ₹
-              {Math.max(
-                plan.price -
+              {plan.price -
+                Math.min(
                   credits,
-                0
-              )}
+                  Math.floor(
+                    plan.price * 0.5
+                  )
+                )}
             </Text>
 
             {credits > 0 && (

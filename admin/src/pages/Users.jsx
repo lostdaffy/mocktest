@@ -17,6 +17,7 @@ import { useToast } from "../components/Toast";
 
 const PAGE_SIZE = 25;
 const PLAN_LABELS = {
+  monthly: "1mo",
   quarterly: "3mo",
   half_yearly: "6mo",
   yearly: "12mo",
@@ -878,6 +879,7 @@ export default function Users() {
                   onChange={(e) => setSubPlan(e.target.value)}
                   className="w-full rv-input text-sm"
                 >
+                  <option value="monthly">1 Month</option>
                   <option value="quarterly">3 Months</option>
                   <option value="half_yearly">6 Months</option>
                   <option value="yearly">12 Months</option>

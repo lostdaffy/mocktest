@@ -255,12 +255,17 @@ async function continueLearning(user, { showVisuals = true } = {}) {
  * resume, a finished one to review. Live exams are left out: they cannot
  * be resumed once their window closes.
  */
+const shareOf = (a) => {
+  const total = (a.correctCount || 0) + (a.wrongCount || 0) + (a.skippedCount || 0);
+  return total > 0 ? Math.round(((a.correctCount || 0) / total) * 100) : Math.round(a.accuracy || 0);
+};
+
 async function recentTests(user, { limit = 3 } = {}) {
   const rows = await Attempt.find({ user: user._id })
     .sort({ updatedAt: -1 })
     .limit(25)
     .populate({ path: "test", select: "title type examType isFree questions publishStatus" })
-    .select("test status accuracy answers updatedAt")
+    .select("test status accuracy answers updatedAt correctCount wrongCount skippedCount")
     .lean();
   const seen = new Set();
   const out = [];
@@ -277,7 +282,9 @@ async function recentTests(user, { limit = 3 } = {}) {
       dailyQuiz: t.examType === "DAILY_GK",
       inProgress,
       attemptId: a._id,
-      accuracy: inProgress ? null : Math.round(a.accuracy || 0),
+      // Right answers out of every question (1 right, 19 skipped is 5%, not
+      // the 100% of right / attempted).
+      accuracy: inProgress ? null : shareOf(a),
       answered: inProgress ? (a.answers || []).filter((x) => x.selectedIndex !== null && x.selectedIndex !== undefined).length : null,
       total: (t.questions || []).length,
       isFree: !!t.isFree,

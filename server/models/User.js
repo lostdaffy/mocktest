@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema(
     // Subscription snapshot (source of truth is Subscription collection, this is a fast-read cache)
     subscriptionStatus: { type: String, enum: ["free", "active", "expired"], default: "free" },
     subscriptionExpiresAt: { type: Date },
-    subscriptionPlan: { type: String, enum: ["quarterly", "half_yearly", "yearly"] }, // mirrors the Subscription doc, for quick display in admin
+    subscriptionPlan: { type: String, enum: ["monthly", "quarterly", "half_yearly", "yearly"] }, // mirrors the Subscription doc, for quick display in admin
     // When an admin last granted, extended or revoked the plan. App versions
     // before 1.2.0 keep the plan they saw at sign-in and never ask again, so
     // a token older than this is sent back to sign in (middleware/auth.js).

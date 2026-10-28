@@ -206,11 +206,16 @@ async function getPyqPapersByYear(req, res) {
 // Attaches the CURRENT student's attempt status to a list of tests, so the
 // UI can show "Completed 82%" / "Resume" instead of every card looking
 // identical regardless of history. One batch query, not N+1.
+const scoreShare = (a) => {
+  const total = (a.correctCount || 0) + (a.wrongCount || 0) + (a.skippedCount || 0);
+  return total > 0 ? Math.round(((a.correctCount || 0) / total) * 100) : Math.round(a.accuracy || 0);
+};
+
 async function withAttemptStatus(tests, userId) {
   const testIds = tests.map((t) => t._id);
   const attempts = await Attempt.find({ user: userId, test: { $in: testIds } })
     .sort({ createdAt: -1 })
-    .select("test status accuracy score totalMarks");
+    .select("test status accuracy score totalMarks correctCount wrongCount skippedCount");
 
   const byTest = {};
   for (const a of attempts) {
@@ -228,7 +233,9 @@ async function withAttemptStatus(tests, userId) {
     return {
       ...obj,
       attemptStatus: completed ? "completed" : inProgress ? "in_progress" : "not_started",
-      bestAccuracy: completed ? Math.round(completed.accuracy) : null,
+      // Right answers out of every question, skipped ones included: 1 right
+      // and 19 skipped is 5%, not the 100% "accuracy" (right / attempted).
+      bestAccuracy: completed ? scoreShare(completed) : null,
     };
   });
 }
@@ -685,7 +692,10 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
       if (isCorrect) topicUpdates[key].correct++;
     }
 
-    // Update global question stats (used to auto-flag confusing questions)
+    // Update global question stats (used to auto-flag confusing questions).
+    // A skipped question was not answered, so it says nothing about how
+    // confusing the question is: counting it as wrong flagged good questions.
+    if (selectedIndex === null || selectedIndex === undefined) continue;
     const timesAttempted = (q.timesAttempted || 0) + 1;
     const timesCorrect = (q.timesCorrect || 0) + (isCorrect ? 1 : 0);
     const wrongAnswerRate = timesAttempted > 0 ? 1 - timesCorrect / timesAttempted : 0;
@@ -824,7 +834,10 @@ async function finalizeAttempt(test, userId, answers, options = {}) {
   // student's mastery for that chapter and possibly promote them a level.
   let levelUpdate = null;
   if (test.examType === "CHAPTER_PRACTICE" && test.subject && test.topic) {
-    levelUpdate = await updateChapterMastery(userId, test.subject, test.topic, accuracy);
+    // Promotion goes by right answers out of every question: answering one
+    // and skipping the rest must not move a student up a level.
+    const share = test.questions.length ? Math.round((correctCount / test.questions.length) * 100) : 0;
+    levelUpdate = await updateChapterMastery(userId, test.subject, test.topic, share);
   }
 
   return {

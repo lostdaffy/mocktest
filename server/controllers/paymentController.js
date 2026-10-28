@@ -9,12 +9,14 @@ const { resolveCoupon } = require("./couponController");
 // new key here is all it takes to offer another plan; every duration and
 // price lookup in the app reads from these two maps.
 const PLAN_PRICES = {
+  monthly: 59,
   quarterly: 149,
   half_yearly: 249,
   yearly: 449,
 };
 
 const PLAN_DURATION_MONTHS = {
+  monthly: 1,
   quarterly: 3,
   half_yearly: 6,
   yearly: 12,
@@ -57,7 +59,7 @@ function getRazorpayInstance() {
   });
 }
 
-// POST /api/payments/create-order  { plan: "quarterly" | "half_yearly" | "yearly", useCredits: boolean }
+// POST /api/payments/create-order  { plan: "monthly" | "quarterly" | "half_yearly" | "yearly", useCredits: boolean }
 async function createOrder(req, res) {
   try {
     if (!paymentsEnabled()) return res.status(503).json(PAYMENTS_OFF);

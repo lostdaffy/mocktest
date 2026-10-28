@@ -321,14 +321,6 @@ export default function ResultScreen({
       answers?.[0]?.question
     );
 
-  const wrongAnswers =
-    answers.filter(
-      (a) =>
-        a.question &&
-        !a.isCorrect &&
-        a.selectedIndex !== null
-    );
-
   const pct =
     attempt.totalMarks > 0
       ? Math.round(
@@ -992,120 +984,28 @@ export default function ResultScreen({
         <View
           style={styles.sectionHeaderText}
         >
-          <View
-            style={
-              styles.sectionTitleRow
-            }
+          <Text
+            style={styles.sectionTitle}
           >
-            <Text
-              style={styles.sectionTitle}
-            >
-              Learn from mistakes
-            </Text>
-
-            {wrongAnswers.length >
-              0 && (
-              <View
-                style={
-                  styles.mistakePill
-                }
-              >
-                <Text
-                  style={
-                    styles.mistakePillText
-                  }
-                >
-                  REVIEW
-                </Text>
-              </View>
-            )}
-          </View>
+            Review all questions
+          </Text>
 
           <Text
             style={styles.sectionSubtitle}
           >
-            Review questions you missed
+            Right, wrong and skipped - each with its answer and solution
           </Text>
         </View>
-
-        {wrongAnswers.length >
-          0 && (
-          <View
-            style={styles.countBadge}
-          >
-            <Text
-              style={
-                styles.countBadgeText
-              }
-            >
-              {wrongAnswers.length}
-            </Text>
-          </View>
-        )}
       </View>
 
       {/* =================================================
-          NO MISTAKES
+          REVIEW LIST
       ================================================= */}
 
-      {wrongAnswers.length ===
-      0 ? (
-        <View
-          style={styles.allCorrectBox}
-        >
-          <View
-            style={styles.allCorrectIcon}
-          >
-            <Ionicons
-              name="checkmark"
-              size={22}
-              color={colors.success}
-            />
-          </View>
-
-          <View
-            style={styles.allCorrectContent}
-          >
-            <Text
-              style={styles.allCorrectTitle}
-            >
-              Perfect attempt
-            </Text>
-
-            <Text
-              style={styles.allCorrectText}
-            >
-              Outstanding work — all
-              attempted questions were
-              correct.
-            </Text>
-          </View>
-
-          <Ionicons
-            name="sparkles"
-            size={18}
-            color={colors.success}
-          />
-        </View>
-      ) : (
-        wrongAnswers.map(
-          (answer, idx) => (
-            <WrongAnswerCard
-              key={
-                answer._id ||
-                answer.question?._id ||
-                idx
-              }
-              answer={answer}
-              index={idx}
-              language={getTestLanguage(
-                attempt,
-                answer.question
-              )}
-            />
-          )
-        )
-      )}
+      <ReviewList
+        answers={answers}
+        attempt={attempt}
+      />
 
       {/* =================================================
           ACTIONS
@@ -1281,14 +1181,150 @@ function AnalysisStat({
 }
 
 /* =========================================================
-   WRONG ANSWER CARD
+   REVIEW LIST
+   Every question of the attempt in test order, with a filter.
+   A skipped question is reviewed too: the student most needs
+   the solution of the one they could not attempt.
+========================================================= */
+
+const statusOf = (a) =>
+  a.selectedIndex === null ||
+  a.selectedIndex === undefined
+    ? "skipped"
+    : a.isCorrect
+    ? "correct"
+    : "wrong";
+
+function ReviewList({
+  answers,
+  attempt,
+}) {
+  const items = answers
+    .map((a, i) => ({
+      answer: a,
+      number: i + 1,
+      status: statusOf(a),
+    }))
+    .filter((x) => x.answer.question);
+
+  const counts = {
+    all: items.length,
+    wrong: items.filter((x) => x.status === "wrong").length,
+    skipped: items.filter((x) => x.status === "skipped").length,
+    correct: items.filter((x) => x.status === "correct").length,
+  };
+
+  // Opens on the mistakes when there are any - that is what a
+  // student looks for first - and on everything otherwise.
+  const [filter, setFilter] =
+    useState(
+      counts.wrong > 0
+        ? "wrong"
+        : "all"
+    );
+
+  const shown =
+    filter === "all"
+      ? items
+      : items.filter(
+          (x) => x.status === filter
+        );
+
+  const TABS = [
+    ["all", "All", colors.brand],
+    ["wrong", "Wrong", colors.danger],
+    ["skipped", "Skipped", colors.slate],
+    ["correct", "Correct", colors.success],
+  ];
+
+  return (
+    <View>
+      <View style={styles.filterRow}>
+        {TABS.map(([key, label, color]) => {
+          const on = filter === key;
+          return (
+            <TouchableOpacity
+              key={key}
+              activeOpacity={0.8}
+              onPress={() => setFilter(key)}
+              style={[
+                styles.filterChip,
+                on && {
+                  backgroundColor: color + "16",
+                  borderColor: color,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  on && { color },
+                ]}
+              >
+                {label} {counts[key]}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {shown.length === 0 ? (
+        <View style={styles.filterEmpty}>
+          <Text style={styles.filterEmptyText}>
+            {filter === "wrong"
+              ? "No wrong answers."
+              : filter === "skipped"
+              ? "No question was skipped."
+              : filter === "correct"
+              ? "No correct answers this time."
+              : "No questions to show."}
+          </Text>
+        </View>
+      ) : (
+        shown.map((x) => (
+          <WrongAnswerCard
+            key={
+              x.answer._id ||
+              x.answer.question?._id ||
+              x.number
+            }
+            answer={x.answer}
+            index={x.number - 1}
+            status={x.status}
+            language={getTestLanguage(
+              attempt,
+              x.answer.question
+            )}
+          />
+        ))
+      )}
+    </View>
+  );
+}
+
+/* =========================================================
+   ANSWER CARD (wrong, correct or skipped)
 ========================================================= */
 
 function WrongAnswerCard({
   answer,
   index,
   language,
+  status = "wrong",
 }) {
+  const tone =
+    status === "correct"
+      ? colors.success
+      : status === "skipped"
+      ? colors.slate
+      : colors.danger;
+  const toneLight =
+    status === "correct"
+      ? colors.successLight
+      : status === "skipped"
+      ? colors.slateLight
+      : colors.dangerLight;
+
   const question =
     answer.question;
 
@@ -1324,7 +1360,10 @@ function WrongAnswerCard({
 
   return (
     <View
-      style={styles.wrongCard}
+      style={[
+        styles.wrongCard,
+        { borderLeftColor: tone },
+      ]}
     >
       {/* HEADER */}
 
@@ -1332,14 +1371,16 @@ function WrongAnswerCard({
         style={styles.wrongHeader}
       >
         <View
-          style={
-            styles.questionNumber
-          }
+          style={[
+            styles.questionNumber,
+            { backgroundColor: toneLight },
+          ]}
         >
           <Text
-            style={
-              styles.questionNumberText
-            }
+            style={[
+              styles.questionNumberText,
+              { color: tone },
+            ]}
           >
             Q{index + 1}
           </Text>
@@ -1351,24 +1392,39 @@ function WrongAnswerCard({
           <Text
             style={styles.wrongHeaderLabel}
           >
-            Incorrect answer
+            {status === "correct"
+              ? "Correct answer"
+              : status === "skipped"
+              ? "Not answered"
+              : "Incorrect answer"}
           </Text>
 
           <View
             style={styles.questionStatus}
           >
             <Ionicons
-              name="close-circle"
+              name={
+                status === "correct"
+                  ? "checkmark-circle"
+                  : status === "skipped"
+                  ? "remove-circle"
+                  : "close-circle"
+              }
               size={11}
-              color={colors.danger}
+              color={tone}
             />
 
             <Text
-              style={
-                styles.questionStatusText
-              }
+              style={[
+                styles.questionStatusText,
+                { color: tone },
+              ]}
             >
-              Needs review
+              {status === "correct"
+                ? "Well done"
+                : status === "skipped"
+                ? "Skipped"
+                : "Needs review"}
             </Text>
           </View>
         </View>
@@ -1389,6 +1445,8 @@ function WrongAnswerCard({
       <View
         style={styles.answerBox}
       >
+        {status !== "correct" && (
+        <>
         <View
           style={styles.answerRow}
         >
@@ -1422,8 +1480,10 @@ function WrongAnswerCard({
                 styles.wrongAnswerText
               }
             >
-              {selectedAnswer ||
-                "—"}
+              {status === "skipped"
+                ? "Not answered"
+                : selectedAnswer ||
+                  "—"}
             </Text>
           </View>
         </View>
@@ -1431,6 +1491,8 @@ function WrongAnswerCard({
         <View
           style={styles.answerDivider}
         />
+        </>
+        )}
 
         <View
           style={styles.answerRow}
@@ -1457,7 +1519,9 @@ function WrongAnswerCard({
             <Text
               style={styles.answerLabel}
             >
-              CORRECT ANSWER
+              {status === "correct"
+                ? "YOUR ANSWER - CORRECT"
+                : "CORRECT ANSWER"}
             </Text>
 
             <Text
@@ -2320,6 +2384,45 @@ const styles =
       lineHeight: 17,
       color: colors.slate,
       marginTop: 2,
+    },
+
+    /* =====================================================
+       REVIEW FILTER
+    ===================================================== */
+
+    filterRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 7,
+      marginBottom: 12,
+    },
+
+    filterChip: {
+      paddingHorizontal: 11,
+      paddingVertical: 6,
+      borderRadius: radius.full,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+
+    filterChipText: {
+      fontSize: 11,
+      fontWeight: "800",
+      color: colors.slate,
+    },
+
+    filterEmpty: {
+      ...card,
+      padding: 16,
+      marginBottom: 12,
+      alignItems: "center",
+    },
+
+    filterEmptyText: {
+      fontSize: 12,
+      color: colors.slate,
+      fontWeight: "600",
     },
 
     /* =====================================================

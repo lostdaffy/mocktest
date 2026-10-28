@@ -21,7 +21,7 @@ const KIND = {
   grant: { label: "Free grant", tone: "info" },
   pending: { label: "Not completed", tone: "warn" },
 };
-const PLAN = { quarterly: "3 months", half_yearly: "6 months", yearly: "12 months" };
+const PLAN = { monthly: "1 month", quarterly: "3 months", half_yearly: "6 months", yearly: "12 months" };
 const rupees = (n) => "₹" + Number(n || 0).toLocaleString("en-IN");
 const when = (d) => new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
 

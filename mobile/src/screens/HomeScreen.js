@@ -863,7 +863,7 @@ function PremiumCard({
                 styles.price
               }
             >
-              ₹149
+              ₹59
             </Text>
 
             <Text

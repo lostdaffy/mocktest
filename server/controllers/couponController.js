@@ -22,6 +22,9 @@ async function resolveCoupon(code, basePrice) {
     finalAmount = Math.max(1, Math.round(basePrice - (basePrice * coupon.value) / 100));
   }
 
+  // A coupon never raises the price: a ₹99 fixed-price coupon on the ₹59
+  // plan leaves it at ₹59.
+  finalAmount = Math.min(basePrice, finalAmount);
   return { coupon, finalAmount };
 }
 

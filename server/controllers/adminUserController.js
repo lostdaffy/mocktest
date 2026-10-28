@@ -6,7 +6,7 @@ const Report = require("../models/Report");
 const Session = require("../models/Session");
 const ExamPattern = require("../models/ExamPattern");
 const { deleteAccountData } = require("../services/accountDeletion");
-const PLAN_DURATION_MONTHS = { quarterly: 3, half_yearly: 6, yearly: 12 };
+const PLAN_DURATION_MONTHS = { monthly: 1, quarterly: 3, half_yearly: 6, yearly: 12 };
 
 // Builds the Mongo filter shared by list/stats/export, so the three stay
 // in sync - a filter combination always means the same thing everywhere.
