@@ -28,8 +28,8 @@
   "playStoreUrl": "",
 
   "_apkUrl": "Direct download while the app is not on Google Play yet. Use ONLY the 'Signed, universal APK' from Play Console (App bundle explorer > Downloads) so people can later update from Google Play without reinstalling. Upload it to public_html/download/. Clear apkUrl once playStoreUrl is set. Play Console > Protected with Play > Automatic protection must stay OFF while this is offered, or the APK shows 'Get this app from Play' on every launch.",
-  "apkUrl": "/download/rankveer-1.2.2.apk",
-  "apkVersion": "1.2.2",
+  "apkUrl": "/download/rankveer-1.2.3.apk",
+  "apkVersion": "1.2.3",
   "apkSizeMb": 91,
 
   "policyEffectiveDate": "21 September 2026"
