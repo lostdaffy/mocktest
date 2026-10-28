@@ -316,8 +316,11 @@ async function getPracticeSeries(req, res) {
   // waiting for tests. A topic named like the chapter is the chapter itself.
   // (subtopics above stays as it was: app 1.2.0 shows a chip for each one,
   // and a chip with nothing behind it would be a dead end.)
+  // "Ratio and Proportion" is the chapter "Ratio & Proportion", not a topic
+  // of it: "&" and "and" are the same word here.
+  const sameName = (s) => String(s).toLowerCase().replace(/&/g, " and ").replace(/\s+/g, " ").trim();
   const allSubtopics = topics
-    .filter((t) => t.trim().toLowerCase() !== String(chapter).trim().toLowerCase())
+    .filter((t) => sameName(t) !== sameName(chapter))
     .map((name) => ({ name, tests: count.get(name) || 0 }));
 
   // isFree is the admin's own choice made at publish time (see
