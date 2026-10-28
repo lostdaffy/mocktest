@@ -134,7 +134,18 @@ export default function PaymentScreen({
     amount,
     label,
     credits = 0,
+    // From the server (/payments/referral-info) via the plan screen; an
+    // older plan screen sends neither, and 50% / coupons-on is what it meant.
+    creditPercent = 50,
+    couponsAllowed = true,
   } = route.params;
+
+  const maxCredit = Math.min(
+    credits,
+    Math.floor(
+      (amount * creditPercent) / 100
+    )
+  );
 
   const { refreshUser } = useAuth();
 
@@ -148,7 +159,7 @@ export default function PaymentScreen({
     useState(false);
 
   const [useCredits, setUseCredits] =
-    useState(credits > 0);
+    useState(maxCredit > 0);
 
   const [showCheckout, setShowCheckout] =
     useState(false);
@@ -613,12 +624,7 @@ export default function PaymentScreen({
   const creditDiscount =
     !appliedCoupon &&
     useCredits
-      ? Math.min(
-          credits,
-          Math.floor(
-            amount * 0.5
-          )
-        )
+      ? maxCredit
       : 0;
 
   const payable =
@@ -881,6 +887,7 @@ export default function PaymentScreen({
             COUPON
         ================================================= */}
 
+        {couponsAllowed && (
         <View
           style={
             styles.sectionBlock
@@ -1105,12 +1112,13 @@ export default function PaymentScreen({
             </>
           )}
         </View>
+        )}
 
         {/* =================================================
             REFERRAL CREDITS
         ================================================= */}
 
-        {credits > 0 &&
+        {maxCredit > 0 &&
           !appliedCoupon && (
             <TouchableOpacity
               style={[
@@ -1181,14 +1189,10 @@ export default function PaymentScreen({
                   }
                 >
                   Use ₹
-                  {Math.min(
-                    credits,
-                    Math.floor(
-                      amount * 0.5
-                    )
-                  )}{" "}
-                  credit and save
-                  up to 50%.
+                  {maxCredit}{" "}
+                  credit - up to{" "}
+                  {creditPercent}% of
+                  this plan.
                 </Text>
               </View>
 

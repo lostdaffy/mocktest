@@ -38,6 +38,9 @@ async function validateCoupon(req, res) {
     const PLAN_PRICES = require("./paymentController").PLAN_PRICES;
     const basePrice = PLAN_PRICES[plan];
     if (!basePrice) return res.status(400).json({ valid: false, message: "Invalid plan" });
+    if (require("./paymentController").NO_COUPON_PLANS.has(plan)) {
+      return res.json({ valid: false, message: "Coupons do not apply to the 1 Month plan" });
+    }
 
     const { finalAmount } = await resolveCoupon(code, basePrice);
     res.json({ valid: true, basePrice, finalAmount, discount: basePrice - finalAmount });

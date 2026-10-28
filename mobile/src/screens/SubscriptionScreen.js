@@ -131,6 +131,10 @@ export default function SubscriptionScreen({
   const [credits, setCredits] =
     useState(0);
 
+  // Per plan: { creditPercent, coupons } from the server.
+  const [planRules, setPlanRules] =
+    useState({});
+
   // Defaults to the plan marked `best` so the recommended option is
   // pre-selected without hardcoding an id that could go stale.
   const [selected, setSelected] =
@@ -163,10 +167,18 @@ export default function SubscriptionScreen({
             "/payments/referral-info"
           );
 
+        // The server sends referralCredits; "credits" is only there from
+        // the 1 Month release on. Reading only "credits" left every
+        // student's credit at 0, so it was never offered at checkout.
         setCredits(
           Number(
-            res.data?.credits || 0
+            res.data?.referralCredits ??
+              res.data?.credits ??
+              0
           )
+        );
+        setPlanRules(
+          res.data?.plans || {}
         );
       } catch (err) {
         // Referral credit is non-critical.
@@ -217,6 +229,24 @@ export default function SubscriptionScreen({
       (item) =>
         item.id === selected
     ) || PLANS[1];
+
+  // The 1 Month plan takes no credit and no coupon; the server says so
+  // too, this is only the default until it answers.
+  const rule =
+    planRules[plan.id] || {
+      creditPercent:
+        plan.id === "monthly" ? 0 : 50,
+      coupons: plan.id !== "monthly",
+    };
+
+  const creditUse = Math.min(
+    credits,
+    Math.floor(
+      (plan.price *
+        rule.creditPercent) /
+        100
+    )
+  );
 
   /* =======================================================
      RENDER
@@ -382,8 +412,7 @@ export default function SubscriptionScreen({
               <Text
                 style={styles.creditSub}
               >
-                ₹{credits} will apply
-                automatically at checkout
+                ₹{credits} available - pays part of a longer plan (not the 1 Month plan)
               </Text>
             </View>
 
@@ -759,7 +788,7 @@ export default function SubscriptionScreen({
           <Text
             style={styles.footerFrom}
           >
-            {credits > 0
+            {creditUse > 0
               ? "After credit"
               : "Total"}
           </Text>
@@ -771,16 +800,10 @@ export default function SubscriptionScreen({
               style={styles.footerAmount}
             >
               ₹
-              {plan.price -
-                Math.min(
-                  credits,
-                  Math.floor(
-                    plan.price * 0.5
-                  )
-                )}
+              {plan.price - creditUse}
             </Text>
 
-            {credits > 0 && (
+            {creditUse > 0 && (
               <Text
                 style={
                   styles.footerOriginal
@@ -814,6 +837,10 @@ export default function SubscriptionScreen({
                 amount: plan.price,
                 label: plan.label,
                 credits,
+                creditPercent:
+                  rule.creditPercent,
+                couponsAllowed:
+                  rule.coupons,
               }
             )
           }

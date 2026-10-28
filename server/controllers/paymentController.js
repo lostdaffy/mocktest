@@ -28,8 +28,21 @@ const PLAN_DURATION_MONTHS = {
 const { REFERRAL_SIGNUP_REWARD, REFERRAL_OFFER_ACTIVE } = require("../config/referral");
 
 // Cap how much of a purchase can be paid with referral credits, so a plan
-// is never fully free (protects revenue and discourages fraud rings).
+// is never fully free (protects revenue and discourages fraud rings). Set
+// per plan: the ₹59 month is the entry price and takes no credit and no
+// coupon - every rupee of it comes from the bank. App 1.2.3+ reads these
+// from /payments/referral-info, so they can change without an app update;
+// older apps assume 50%, so keep the longer plans at 50 until most
+// students are on 1.2.3.
 const MAX_CREDIT_DISCOUNT_PERCENT = 50;
+const PLAN_CREDIT_PERCENT = {
+  monthly: 0,
+  quarterly: 50,
+  half_yearly: 50,
+  yearly: 50,
+};
+const NO_COUPON_PLANS = new Set(["monthly"]);
+const creditPercentFor = (plan) => PLAN_CREDIT_PERCENT[plan] ?? MAX_CREDIT_DISCOUNT_PERCENT;
 
 // How long an unpaid order holds one of a coupon's remaining uses.
 const COUPON_HOLD_MINUTES = 15;
@@ -73,6 +86,10 @@ async function createOrder(req, res) {
     let discount = 0;
     let finalAmount = basePrice;
     let appliedCoupon = null;
+
+    if (couponCode && NO_COUPON_PLANS.has(plan)) {
+      return res.status(400).json({ message: "Coupons do not apply to the 1 Month plan" });
+    }
 
     if (couponCode) {
       // A coupon replaces the referral-credit discount rather than
@@ -118,7 +135,7 @@ async function createOrder(req, res) {
         }
       }
     } else if (useCredits && user.referralCredits > 0) {
-      const maxDiscount = Math.floor((basePrice * MAX_CREDIT_DISCOUNT_PERCENT) / 100);
+      const maxDiscount = Math.floor((basePrice * creditPercentFor(plan)) / 100);
       discount = Math.min(user.referralCredits, maxDiscount);
       finalAmount = basePrice - discount;
     }
@@ -334,8 +351,15 @@ async function getReferralInfo(req, res) {
     rewardPerSignup: REFERRAL_SIGNUP_REWARD,
     offerActive: REFERRAL_OFFER_ACTIVE,
     maxDiscountPercent: MAX_CREDIT_DISCOUNT_PERCENT,
+    // What each plan allows, for the app's plan and payment screens.
+    credits: user.referralCredits,
+    plans: Object.fromEntries(Object.keys(PLAN_PRICES).map((p) => [p, {
+      price: PLAN_PRICES[p],
+      creditPercent: creditPercentFor(p),
+      coupons: !NO_COUPON_PLANS.has(p),
+    }])),
     shareMessage: `Practise on Rankveer! Use my referral code "${user.referralCode}" when you sign up. Unlimited mock tests, PYQs and live exams for SSC, UP Police, Railway, Banking and CTET.`,
   });
 }
 
-module.exports = { createOrder, verifyPayment, razorpayWebhook, getReferralInfo, PLAN_PRICES, paymentsEnabled };
+module.exports = { createOrder, verifyPayment, razorpayWebhook, getReferralInfo, PLAN_PRICES, NO_COUPON_PLANS, paymentsEnabled };
