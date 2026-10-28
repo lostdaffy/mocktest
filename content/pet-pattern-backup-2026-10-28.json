@@ -1,0 +1,421 @@
+{
+  "_id": "6ab59942238fe774de4e411d",
+  "examType": "UPSSSC_PET",
+  "displayName": "UPSSSC PET",
+  "examGroup": "UP",
+  "postName": "Preliminary Eligibility Test",
+  "durationMinutes": 120,
+  "negativeMarking": 0.25,
+  "marksPerQuestion": 1,
+  "examLevel": "Preliminary eligibility test for Uttar Pradesh Group B and C posts, 100 questions in fixed blocks: static GK and history/geography/polity/economy (35), current affairs of the last 12-18 months (10), science (5), 20 graph and table interpretation plus 5 elementary maths, Hindi grammar (5), two Hindi unseen passages (10), English (5), reasoning (5). Short one-line factual questions, bilingual Hindi-first. Broad, not deep - except history, which asks the less famous detail.",
+  "sections": [
+    {
+      "difficultyMix": {
+        "easy": 40,
+        "medium": 45,
+        "hard": 15
+      },
+      "subject": "GK",
+      "sources": [],
+      "questionCount": 35,
+      "negativeMarking": null,
+      "marksPerQuestion": null,
+      "durationMinutes": null,
+      "syllabus": [
+        {
+          "topic": "Ancient India",
+          "subTopics": [
+            "foreign travellers and their accounts",
+            "rulers identified from their dates",
+            "Buddhism and Jainism teachings"
+          ],
+          "_id": "6ae17c540cf8016045201cbb"
+        },
+        {
+          "topic": "Medieval India",
+          "subTopics": [
+            "Ain-i-Akbari and Mughal administration terms",
+            "Bhakti and Sufi saints"
+          ],
+          "_id": "6ae17c540cf8016045201cbc"
+        },
+        {
+          "topic": "Modern India",
+          "subTopics": [
+            "social reformers and their slogans",
+            "courts and institutions of British India"
+          ],
+          "_id": "6ae17c540cf8016045201cbd"
+        },
+        {
+          "topic": "Freedom Movement",
+          "subTopics": [
+            "lesser-known role of a known leader",
+            "movements and their other names",
+            "Acts of 1909, 1919 and 1935 and what they created",
+            "flags and symbols of the movement"
+          ],
+          "_id": "6ae17c540cf8016045201cbe"
+        },
+        {
+          "topic": "Indian Geography",
+          "subTopics": [
+            "physiographic regions and their bounding ranges",
+            "rivers and river terms",
+            "international boundary lines"
+          ],
+          "_id": "6ae17c540cf8016045201cbf"
+        },
+        {
+          "topic": "Physical Geography",
+          "subTopics": [
+            "atmosphere layers",
+            "landforms and vegetation terms"
+          ],
+          "_id": "6ae17c540cf8016045201cc0"
+        },
+        {
+          "topic": "Constitution",
+          "subTopics": [
+            "Directive Principles and other articles",
+            "making of the Constitution"
+          ],
+          "_id": "6ae17c540cf8016045201cc1"
+        },
+        {
+          "topic": "Parliament & Judiciary",
+          "subTopics": [
+            "ex-officio posts and first holders",
+            "district and state administration in Uttar Pradesh"
+          ],
+          "_id": "6ae17c540cf8016045201cc2"
+        },
+        {
+          "topic": "Indian Economy",
+          "subTopics": [
+            "taxes and GST",
+            "committees behind institutions",
+            "Five-Year Plans and their models",
+            "banking history",
+            "types of deficit"
+          ],
+          "_id": "6ae17c540cf8016045201cc3"
+        },
+        {
+          "topic": "Books, Awards & Sports",
+          "subTopics": [
+            "books and authors",
+            "Padma and national awards",
+            "important days",
+            "venues of world sports events",
+            "world countries and currencies"
+          ],
+          "_id": "6ae17c540cf8016045201cc4"
+        }
+      ],
+      "_id": "6ae17c540cf8016045201cba"
+    },
+    {
+      "difficultyMix": {
+        "easy": 30,
+        "medium": 55,
+        "hard": 15
+      },
+      "subject": "Current Affairs",
+      "sources": [],
+      "questionCount": 10,
+      "negativeMarking": null,
+      "marksPerQuestion": null,
+      "durationMinutes": null,
+      "syllabus": [
+        {
+          "topic": "National Affairs",
+          "subTopics": [
+            "appointments",
+            "new schemes and digital services",
+            "Indian space missions"
+          ],
+          "_id": "6ae17c540cf8016045201cc6"
+        },
+        {
+          "topic": "International Affairs",
+          "subTopics": [
+            "joint military exercises",
+            "foreign honours to India's leaders",
+            "world days and their themes",
+            "international space missions"
+          ],
+          "_id": "6ae17c540cf8016045201cc7"
+        },
+        {
+          "topic": "Sports News",
+          "subTopics": [
+            "winners of ICC and major tournaments"
+          ],
+          "_id": "6ae17c540cf8016045201cc8"
+        },
+        {
+          "topic": "Awards & Honours",
+          "subTopics": [
+            "new books and their authors",
+            "national awards of the year"
+          ],
+          "_id": "6ae17c540cf8016045201cc9"
+        }
+      ],
+      "_id": "6ae17c540cf8016045201cc5"
+    },
+    {
+      "difficultyMix": {
+        "easy": 50,
+        "medium": 40,
+        "hard": 10
+      },
+      "subject": "Science",
+      "sources": [],
+      "questionCount": 5,
+      "negativeMarking": null,
+      "marksPerQuestion": null,
+      "durationMinutes": null,
+      "syllabus": [
+        {
+          "topic": "Physics",
+          "subTopics": [
+            "laws and their other names",
+            "one-step numerics"
+          ],
+          "_id": "6ae17c540cf8016045201ccb"
+        },
+        {
+          "topic": "Chemistry",
+          "subTopics": [
+            "formulas and common names",
+            "mole concept"
+          ],
+          "_id": "6ae17c540cf8016045201ccc"
+        },
+        {
+          "topic": "Biology",
+          "subTopics": [
+            "processes in the human body",
+            "plant groups"
+          ],
+          "_id": "6ae17c540cf8016045201ccd"
+        }
+      ],
+      "_id": "6ae17c540cf8016045201cca"
+    },
+    {
+      "difficultyMix": {
+        "easy": 35,
+        "medium": 50,
+        "hard": 15
+      },
+      "subject": "Maths",
+      "sources": [],
+      "questionCount": 25,
+      "negativeMarking": null,
+      "marksPerQuestion": null,
+      "durationMinutes": null,
+      "syllabus": [
+        {
+          "topic": "Data Interpretation",
+          "subTopics": [
+            "Tabulation",
+            "Bar Graph",
+            "Pie Chart"
+          ],
+          "_id": "6ae17c540cf8016045201ccf"
+        },
+        {
+          "topic": "Algebra",
+          "subTopics": [
+            "value from algebraic identities"
+          ],
+          "_id": "6ae17c540cf8016045201cd0"
+        },
+        {
+          "topic": "Number System",
+          "subTopics": [
+            "number of factors",
+            "nearest perfect square"
+          ],
+          "_id": "6ae17c540cf8016045201cd1"
+        },
+        {
+          "topic": "Percentage",
+          "subTopics": [
+            "successive change over two years",
+            "population growth"
+          ],
+          "_id": "6ae17c540cf8016045201cd2"
+        },
+        {
+          "topic": "Average",
+          "subTopics": [
+            "missing value from a given average"
+          ],
+          "_id": "6ae17c540cf8016045201cd3"
+        }
+      ],
+      "_id": "6ae17c540cf8016045201cce"
+    },
+    {
+      "difficultyMix": {
+        "easy": 45,
+        "medium": 45,
+        "hard": 10
+      },
+      "subject": "General Hindi",
+      "sources": [],
+      "questionCount": 5,
+      "negativeMarking": null,
+      "marksPerQuestion": null,
+      "durationMinutes": null,
+      "syllabus": [
+        {
+          "topic": "व्याकरण",
+          "subTopics": [
+            "वाक्यांश के लिए एक शब्द",
+            "विलोम शब्द",
+            "शुद्ध वर्तनी"
+          ],
+          "_id": "6ae17c540cf8016045201cd5"
+        },
+        {
+          "topic": "संधि",
+          "subTopics": [
+            "संधि-विच्छेद"
+          ],
+          "_id": "6ae17c540cf8016045201cd6"
+        },
+        {
+          "topic": "मुहावरे और लोकोक्तियाँ",
+          "subTopics": [
+            "मुहावरे का अर्थ"
+          ],
+          "_id": "6ae17c540cf8016045201cd7"
+        }
+      ],
+      "_id": "6ae17c540cf8016045201cd4"
+    },
+    {
+      "difficultyMix": {
+        "easy": 50,
+        "medium": 40,
+        "hard": 10
+      },
+      "subject": "अपठित गद्यांश",
+      "sources": [],
+      "questionCount": 10,
+      "negativeMarking": null,
+      "marksPerQuestion": null,
+      "durationMinutes": null,
+      "syllabus": [
+        {
+          "topic": "अपठित गद्यांश",
+          "subTopics": [
+            "मूल्य-आधारित निबंधात्मक गद्यांश (परोपकार, अनुशासन, ईमानदारी, पर्यावरण)",
+            "केंद्रीय भाव",
+            "गद्यांश से मेल खाता कथन"
+          ],
+          "_id": "6ae17c540cf8016045201cd9"
+        }
+      ],
+      "_id": "6ae17c540cf8016045201cd8"
+    },
+    {
+      "difficultyMix": {
+        "easy": 50,
+        "medium": 40,
+        "hard": 10
+      },
+      "subject": "English",
+      "sources": [],
+      "questionCount": 5,
+      "negativeMarking": null,
+      "marksPerQuestion": null,
+      "durationMinutes": null,
+      "syllabus": [
+        {
+          "topic": "Synonyms & Antonyms",
+          "subTopics": [
+            "Antonyms"
+          ],
+          "_id": "6ae17c540cf8016045201cdb"
+        },
+        {
+          "topic": "Fill in the Blanks",
+          "subTopics": [
+            "conditional verb forms",
+            "modals"
+          ],
+          "_id": "6ae17c540cf8016045201cdc"
+        },
+        {
+          "topic": "Reading Comprehension",
+          "subTopics": [
+            "short passage on a person's character"
+          ],
+          "_id": "6ae17c540cf8016045201cdd"
+        }
+      ],
+      "_id": "6ae17c540cf8016045201cda"
+    },
+    {
+      "difficultyMix": {
+        "easy": 45,
+        "medium": 45,
+        "hard": 10
+      },
+      "subject": "Reasoning",
+      "sources": [],
+      "questionCount": 5,
+      "negativeMarking": null,
+      "marksPerQuestion": null,
+      "durationMinutes": null,
+      "syllabus": [
+        {
+          "topic": "Classification",
+          "subTopics": [
+            "odd one out by category"
+          ],
+          "_id": "6ae17c540cf8016045201cdf"
+        },
+        {
+          "topic": "Coding-Decoding",
+          "subTopics": [
+            "sum of letter positions"
+          ],
+          "_id": "6ae17c540cf8016045201ce0"
+        },
+        {
+          "topic": "Seating Arrangement",
+          "subTopics": [
+            "linear arrangement facing one direction"
+          ],
+          "_id": "6ae17c540cf8016045201ce1"
+        },
+        {
+          "topic": "Blood Relation",
+          "subTopics": [
+            "family tree with three generations"
+          ],
+          "_id": "6ae17c540cf8016045201ce2"
+        },
+        {
+          "topic": "Calendar",
+          "subTopics": [
+            "year with the same calendar"
+          ],
+          "_id": "6ae17c540cf8016045201ce3"
+        }
+      ],
+      "_id": "6ae17c540cf8016045201cde"
+    }
+  ],
+  "isActive": true,
+  "createdAt": "2026-09-24T21:42:26.381Z",
+  "updatedAt": "2026-10-28T04:38:44.750Z",
+  "__v": 0
+}
