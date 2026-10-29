@@ -1,0 +1,2365 @@
+[
+ {
+  "name": "Maths",
+  "chapters": [
+   {
+    "name": "Percentage",
+    "topics": [
+     "Percentage",
+     "Successive Percentage Change",
+     "Population Growth and Depreciation",
+     "Percentage in Income and Expenditure"
+    ],
+    "pub": 160,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 40,
+      "draft": 0
+     },
+     "medium": {
+      "published": 40,
+      "draft": 0
+     },
+     "hard": {
+      "published": 40,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 40,
+      "draft": 0
+     }
+    },
+    "sub": {
+     "Population Growth and Depreciation": {
+      "published": 40,
+      "draft": 0
+     },
+     "Percentage in Income and Expenditure": {
+      "published": 40,
+      "draft": 0
+     },
+     "Successive Percentage Change": {
+      "published": 40,
+      "draft": 0
+     }
+    }
+   },
+   {
+    "name": "Profit & Loss",
+    "topics": [
+     "Profit and Loss",
+     "Cost Price and Selling Price",
+     "Discount and Marked Price",
+     "Dishonest Dealer"
+    ],
+    "pub": 160,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 40,
+      "draft": 0
+     },
+     "medium": {
+      "published": 40,
+      "draft": 0
+     },
+     "hard": {
+      "published": 40,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 40,
+      "draft": 0
+     }
+    },
+    "sub": {
+     "Discount and Marked Price": {
+      "published": 40,
+      "draft": 0
+     },
+     "Dishonest Dealer": {
+      "published": 40,
+      "draft": 0
+     },
+     "Cost Price and Selling Price": {
+      "published": 40,
+      "draft": 0
+     }
+    }
+   },
+   {
+    "name": "Simple & Compound Interest",
+    "topics": [
+     "Simple Interest",
+     "Compound Interest"
+    ],
+    "pub": 120,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 30,
+      "draft": 0
+     },
+     "medium": {
+      "published": 30,
+      "draft": 0
+     },
+     "hard": {
+      "published": 30,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 30,
+      "draft": 0
+     }
+    },
+    "sub": {
+     "Simple Interest": {
+      "published": 40,
+      "draft": 0
+     },
+     "Compound Interest": {
+      "published": 40,
+      "draft": 0
+     }
+    }
+   },
+   {
+    "name": "Number System",
+    "topics": [
+     "Number System",
+     "Divisibility Rules",
+     "Unit Digit",
+     "Remainder Theorem",
+     "Factors and Multiples"
+    ],
+    "pub": 200,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 50,
+      "draft": 0
+     },
+     "medium": {
+      "published": 50,
+      "draft": 0
+     },
+     "hard": {
+      "published": 50,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 50,
+      "draft": 0
+     }
+    },
+    "sub": {
+     "Factors and Multiples": {
+      "published": 40,
+      "draft": 0
+     },
+     "Remainder Theorem": {
+      "published": 40,
+      "draft": 0
+     },
+     "Divisibility Rules": {
+      "published": 40,
+      "draft": 0
+     },
+     "Unit Digit": {
+      "published": 40,
+      "draft": 0
+     }
+    }
+   },
+   {
+    "name": "Average",
+    "topics": [
+     "Average",
+     "Average of Numbers",
+     "Average Age",
+     "Replacement and Weighted Average"
+    ],
+    "pub": 160,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 40,
+      "draft": 0
+     },
+     "medium": {
+      "published": 40,
+      "draft": 0
+     },
+     "hard": {
+      "published": 40,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 40,
+      "draft": 0
+     }
+    },
+    "sub": {
+     "Replacement and Weighted Average": {
+      "published": 40,
+      "draft": 0
+     },
+     "Average Age": {
+      "published": 40,
+      "draft": 0
+     },
+     "Average of Numbers": {
+      "published": 40,
+      "draft": 0
+     }
+    }
+   },
+   {
+    "name": "Ratio & Proportion",
+    "topics": [
+     "Ratio",
+     "Proportion",
+     "Partnership",
+     "Problems on Ages"
+    ],
+    "pub": 200,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 50,
+      "draft": 0
+     },
+     "medium": {
+      "published": 50,
+      "draft": 0
+     },
+     "hard": {
+      "published": 50,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 50,
+      "draft": 0
+     }
+    },
+    "sub": {
+     "Problems on Ages": {
+      "published": 40,
+      "draft": 0
+     },
+     "Partnership": {
+      "published": 40,
+      "draft": 0
+     },
+     "Ratio": {
+      "published": 40,
+      "draft": 0
+     },
+     "Proportion": {
+      "published": 40,
+      "draft": 0
+     }
+    }
+   },
+   {
+    "name": "HCF & LCM",
+    "topics": [
+     "HCF and LCM",
+     "HCF of Numbers",
+     "LCM of Numbers",
+     "HCF and LCM Word Problems"
+    ],
+    "pub": 121,
+    "draft": 3,
+    "levels": {
+     "easy": {
+      "published": 40,
+      "draft": 0
+     },
+     "medium": {
+      "published": 40,
+      "draft": 0
+     },
+     "hard": {
+      "published": 40,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 1,
+      "draft": 3
+     }
+    },
+    "sub": {
+     "LCM of Numbers": {
+      "published": 30,
+      "draft": 0
+     },
+     "HCF and LCM Word Problems": {
+      "published": 30,
+      "draft": 0
+     },
+     "HCF of Numbers": {
+      "published": 30,
+      "draft": 0
+     }
+    }
+   },
+   {
+    "name": "Time & Work",
+    "topics": [
+     "Time and Work",
+     "Work and Efficiency",
+     "Pipes and Cisterns",
+     "Work and Wages"
+    ],
+    "pub": 8,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 2,
+      "draft": 0
+     },
+     "medium": {
+      "published": 2,
+      "draft": 0
+     },
+     "hard": {
+      "published": 2,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 2,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Pipes & Cisterns",
+    "topics": [
+     "Filling and Emptying",
+     "Leakage Problems",
+     "Pipes Opened Alternately"
+    ],
+    "pub": 2,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 1,
+      "draft": 0
+     },
+     "hard": {
+      "published": 0,
+      "draft": 2
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 2
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Boats & Streams",
+    "topics": [
+     "Upstream and Downstream Speed",
+     "Speed of Boat and Stream",
+     "Round Trip Problems"
+    ],
+    "pub": 3,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 1,
+      "draft": 1
+     },
+     "hard": {
+      "published": 1,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 2
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Trains",
+    "topics": [
+     "Train Crossing a Pole or Person",
+     "Train Crossing a Platform or Bridge",
+     "Two Trains Crossing Each Other"
+    ],
+    "pub": 1,
+    "draft": 6,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 0,
+      "draft": 2
+     },
+     "hard": {
+      "published": 0,
+      "draft": 2
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 2
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Time, Speed & Distance",
+    "topics": [
+     "Time Speed Distance",
+     "Relative Speed",
+     "Problems on Trains",
+     "Boats and Streams",
+     "Average Speed"
+    ],
+    "pub": 4,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 1,
+      "draft": 0
+     },
+     "hard": {
+      "published": 1,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 1,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Partnership",
+    "topics": [
+     "Simple Partnership",
+     "Compound Partnership",
+     "Working and Sleeping Partners"
+    ],
+    "pub": 1,
+    "draft": 6,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 0,
+      "draft": 2
+     },
+     "hard": {
+      "published": 0,
+      "draft": 2
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 2
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Simplification",
+    "topics": [
+     "Simplification",
+     "BODMAS",
+     "Surds and Indices",
+     "Fractions and Decimals",
+     "Approximation"
+    ],
+    "pub": 40,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 10,
+      "draft": 0
+     },
+     "medium": {
+      "published": 10,
+      "draft": 0
+     },
+     "hard": {
+      "published": 10,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 10,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Mixture & Alligation",
+    "topics": [
+     "Mixture and Alligation",
+     "Rule of Alligation",
+     "Mixture of Liquids",
+     "Replacement in Mixtures"
+    ],
+    "pub": 4,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 1,
+      "draft": 0
+     },
+     "hard": {
+      "published": 1,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 1,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Geometry",
+    "topics": [
+     "Lines and Angles",
+     "Triangles",
+     "Circles",
+     "Quadrilaterals and Polygons",
+     "Coordinate Geometry"
+    ],
+    "pub": 3,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 1,
+      "draft": 1
+     },
+     "hard": {
+      "published": 1,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 2
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Trigonometry",
+    "topics": [
+     "Trigonometric Ratios",
+     "Trigonometric Identities",
+     "Heights and Distances"
+    ],
+    "pub": 1,
+    "draft": 6,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 0,
+      "draft": 2
+     },
+     "hard": {
+      "published": 0,
+      "draft": 2
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 2
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Mensuration 2D & 3D",
+    "topics": [
+     "Area",
+     "Perimeter",
+     "Volume",
+     "Height",
+     "Radius",
+     "Diagonal"
+    ],
+    "pub": 1,
+    "draft": 6,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 0,
+      "draft": 2
+     },
+     "hard": {
+      "published": 0,
+      "draft": 2
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 2
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Algebra",
+    "topics": [
+     "Algebraic Identities",
+     "Linear Equations",
+     "Polynomials and Factorisation",
+     "Surds and Indices"
+    ],
+    "pub": 1,
+    "draft": 6,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 0,
+      "draft": 2
+     },
+     "hard": {
+      "published": 0,
+      "draft": 2
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 2
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Data Interpretation",
+    "topics": [
+     "Tabulation",
+     "Bar Graph",
+     "Line Graph",
+     "Pie Chart",
+     "Caselet DI",
+     "Mixed Graphs"
+    ],
+    "pub": 15,
+    "draft": 3,
+    "levels": {
+     "easy": {
+      "published": 11,
+      "draft": 0
+     },
+     "medium": {
+      "published": 2,
+      "draft": 3
+     },
+     "hard": {
+      "published": 1,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 1,
+      "draft": 0
+     }
+    },
+    "sub": {
+     "Tabulation": {
+      "published": 2,
+      "draft": 0
+     }
+    }
+   }
+  ]
+ },
+ {
+  "name": "Reasoning",
+  "chapters": [
+   {
+    "name": "Analogy",
+    "topics": [
+     "Analogy",
+     "Word Analogy",
+     "Number Analogy",
+     "Letter Analogy"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Classification",
+    "topics": [
+     "Classification",
+     "Word Classification",
+     "Number Classification",
+     "Letter Classification"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Number & Letter Series",
+    "topics": [
+     "Number Series",
+     "Letter Series"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Coding-Decoding",
+    "topics": [
+     "Coding Decoding",
+     "Letter Coding",
+     "Number Coding",
+     "Symbol Coding"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Blood Relation",
+    "topics": [
+     "Blood Relation",
+     "Family Tree",
+     "Coded Blood Relation"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Direction Sense",
+    "topics": [
+     "Direction Sense",
+     "Distance and Direction",
+     "Shadow Based Direction"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Syllogism",
+    "topics": [
+     "Syllogism",
+     "Two Statement Syllogism",
+     "Three Statement Syllogism",
+     "Possibility Cases"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Seating Arrangement",
+    "topics": [
+     "Seating Arrangement",
+     "Linear Arrangement",
+     "Circular Arrangement"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Non-Verbal Reasoning",
+    "topics": [
+     "Figure Series",
+     "Mirror Images",
+     "Water Images",
+     "Figure Analogy",
+     "Odd Figure Out"
+    ],
+    "pub": 3,
+    "draft": 1,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 1,
+      "draft": 0
+     },
+     "hard": {
+      "published": 1,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 1,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   }
+  ]
+ },
+ {
+  "name": "GK",
+  "chapters": [
+   {
+    "name": "Ancient India",
+    "topics": [
+     "Ancient India",
+     "Indus Valley Civilisation",
+     "Vedic Period",
+     "Mauryan Empire",
+     "Gupta Empire"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Medieval India",
+    "topics": [
+     "Medieval India",
+     "Delhi Sultanate",
+     "Mughal Empire",
+     "Bhakti and Sufi Movement",
+     "Vijayanagara Empire"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Modern India",
+    "topics": [
+     "Modern India",
+     "British Expansion in India",
+     "Governor Generals and Viceroys",
+     "Social Reform Movements"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Freedom Movement",
+    "topics": [
+     "Freedom Movement",
+     "Revolt of 1857",
+     "Indian National Congress",
+     "Gandhian Movements",
+     "Revolutionary Movements"
+    ],
+    "pub": 0,
+    "draft": 5,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 2
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Constitution",
+    "topics": [
+     "Indian Constitution",
+     "Fundamental Rights",
+     "Directive Principles",
+     "Constitutional Amendments",
+     "Constitutional Bodies"
+    ],
+    "pub": 0,
+    "draft": 5,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 2
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Parliament & Judiciary",
+    "topics": [
+     "Parliament",
+     "Judiciary"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Physical Geography",
+    "topics": [
+     "Physical Geography",
+     "Solar System",
+     "Interior of the Earth",
+     "Atmosphere",
+     "Rocks and Landforms"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Indian Geography",
+    "topics": [
+     "Indian Geography",
+     "Rivers of India",
+     "Soils and Agriculture",
+     "Climate of India",
+     "Mountains and Plateaus"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Indian Economy",
+    "topics": [
+     "Indian Economy",
+     "Banking and RBI",
+     "Budget and Taxation",
+     "Planning and NITI Aayog",
+     "Government Schemes"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Books, Awards & Sports",
+    "topics": [
+     "Books and Authors",
+     "Awards",
+     "Sports"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   }
+  ]
+ },
+ {
+  "name": "Science",
+  "chapters": [
+   {
+    "name": "Physics",
+    "topics": [
+     "Physics",
+     "Motion and Force",
+     "Light and Sound"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Chemistry",
+    "topics": [
+     "Chemistry",
+     "Elements and Compounds",
+     "Acids and Bases"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Biology",
+    "topics": [
+     "Biology",
+     "Human Body",
+     "Plants and Animals"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   }
+  ]
+ },
+ {
+  "name": "Current Affairs",
+  "chapters": [
+   {
+    "name": "National Affairs",
+    "topics": [
+     "National Current Affairs"
+    ],
+    "pub": 0,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 0
+     },
+     "medium": {
+      "published": 0,
+      "draft": 0
+     },
+     "hard": {
+      "published": 0,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "International Affairs",
+    "topics": [
+     "International Current Affairs"
+    ],
+    "pub": 0,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 0
+     },
+     "medium": {
+      "published": 0,
+      "draft": 0
+     },
+     "hard": {
+      "published": 0,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Sports News",
+    "topics": [
+     "Sports Current Affairs"
+    ],
+    "pub": 0,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 0
+     },
+     "medium": {
+      "published": 0,
+      "draft": 0
+     },
+     "hard": {
+      "published": 0,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Awards & Honours",
+    "topics": [
+     "Awards and Honours"
+    ],
+    "pub": 0,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 0
+     },
+     "medium": {
+      "published": 0,
+      "draft": 0
+     },
+     "hard": {
+      "published": 0,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   }
+  ]
+ },
+ {
+  "name": "English",
+  "chapters": [
+   {
+    "name": "Error Spotting",
+    "topics": [
+     "Error Spotting",
+     "Subject Verb Agreement",
+     "Tenses",
+     "Articles and Prepositions"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Fill in the Blanks",
+    "topics": [
+     "Fill in the Blanks",
+     "Vocabulary Blanks",
+     "Grammar Blanks"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Synonyms & Antonyms",
+    "topics": [
+     "Synonyms",
+     "Antonyms"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Idioms & Phrases",
+    "topics": [
+     "Idioms and Phrases"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Reading Comprehension",
+    "topics": [
+     "Reading Comprehension"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   }
+  ]
+ },
+ {
+  "name": "General Hindi",
+  "chapters": [
+   {
+    "name": "व्याकरण",
+    "topics": [
+     "Hindi Grammar",
+     "संज्ञा",
+     "सर्वनाम",
+     "विशेषण",
+     "क्रिया",
+     "लिंग और वचन"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "संधि",
+    "topics": [
+     "Sandhi",
+     "स्वर संधि",
+     "व्यंजन संधि",
+     "विसर्ग संधि"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "समास",
+    "topics": [
+     "Samas",
+     "तत्पुरुष समास",
+     "द्वंद्व समास",
+     "बहुव्रीहि समास",
+     "अव्ययीभाव समास"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "मुहावरे और लोकोक्तियाँ",
+    "topics": [
+     "Muhavare",
+     "Lokoktiyan"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   }
+  ]
+ },
+ {
+  "name": "Child Development",
+  "chapters": [
+   {
+    "name": "Development & Learning",
+    "topics": [
+     "Child Development",
+     "Principles of Development",
+     "Piaget Theory",
+     "Vygotsky Theory",
+     "Kohlberg Moral Development"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Inclusive Education",
+    "topics": [
+     "Inclusive Education",
+     "Children with Special Needs",
+     "Learning Disabilities",
+     "Gifted Children"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Learning & Pedagogy",
+    "topics": [
+     "Learning and Pedagogy",
+     "Motivation and Learning",
+     "Thinking and Problem Solving",
+     "Assessment for Learning"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   }
+  ]
+ },
+ {
+  "name": "EVS",
+  "chapters": [
+   {
+    "name": "Family & Friends",
+    "topics": [
+     "EVS Family",
+     "Family and Relationships",
+     "Animals and Plants"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Food, Shelter & Water",
+    "topics": [
+     "EVS Food and Shelter",
+     "Food and Nutrition",
+     "Shelter",
+     "Water Conservation"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "EVS Pedagogy",
+    "topics": [
+     "EVS Pedagogy",
+     "Scope of EVS",
+     "Activities and Experiments",
+     "Evaluation in EVS"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   }
+  ]
+ },
+ {
+  "name": "Hindi Pedagogy",
+  "chapters": [
+   {
+    "name": "भाषा शिक्षण",
+    "topics": [
+     "Hindi Language Teaching",
+     "भाषा अर्जन",
+     "भाषा कौशल",
+     "भाषा शिक्षण विधियाँ"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "अपठित गद्यांश",
+    "topics": [
+     "Hindi Comprehension"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   }
+  ]
+ },
+ {
+  "name": "English Pedagogy",
+  "chapters": [
+   {
+    "name": "Language Teaching",
+    "topics": [
+     "English Language Teaching",
+     "Language Acquisition",
+     "Language Skills",
+     "English Teaching Methods"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Unseen Passage",
+    "topics": [
+     "English Comprehension Passage"
+    ],
+    "pub": 0,
+    "draft": 4,
+    "levels": {
+     "easy": {
+      "published": 0,
+      "draft": 1
+     },
+     "medium": {
+      "published": 0,
+      "draft": 1
+     },
+     "hard": {
+      "published": 0,
+      "draft": 1
+     },
+     "advanced": {
+      "published": 0,
+      "draft": 1
+     }
+    },
+    "sub": {}
+   }
+  ]
+ },
+ {
+  "name": "Sanskrit",
+  "chapters": [
+   {
+    "name": "Sanskrit Grammar",
+    "topics": [
+     "सन्धि",
+     "समास",
+     "कारक एवं विभक्ति",
+     "प्रत्यय",
+     "शब्द रूप",
+     "धातु रूप"
+    ],
+    "pub": 4,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 1,
+      "draft": 0
+     },
+     "hard": {
+      "published": 1,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 1,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Sanskrit Comprehension & Literature",
+    "topics": [
+     "अपठित गद्यांश",
+     "संस्कृत कवि एवं रचनाएँ",
+     "सूक्तियाँ"
+    ],
+    "pub": 4,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 1,
+      "draft": 0
+     },
+     "hard": {
+      "published": 1,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 1,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   }
+  ]
+ },
+ {
+  "name": "Teaching Skills",
+  "chapters": [
+   {
+    "name": "Teaching Methods",
+    "topics": [
+     "शिक्षण विधियाँ",
+     "शिक्षण सूत्र",
+     "शिक्षण सहायक सामग्री"
+    ],
+    "pub": 4,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 1,
+      "draft": 0
+     },
+     "hard": {
+      "published": 1,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 1,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Lesson Planning & Evaluation",
+    "topics": [
+     "पाठ योजना",
+     "सतत एवं व्यापक मूल्यांकन",
+     "निदानात्मक एवं उपचारात्मक शिक्षण"
+    ],
+    "pub": 4,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 1,
+      "draft": 0
+     },
+     "hard": {
+      "published": 1,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 1,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "School Management & Education Policy",
+    "topics": [
+     "विद्यालय प्रबंधन",
+     "शिक्षा का अधिकार अधिनियम 2009",
+     "राष्ट्रीय शिक्षा नीति 2020"
+    ],
+    "pub": 4,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 1,
+      "draft": 0
+     },
+     "hard": {
+      "published": 1,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 1,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   }
+  ]
+ },
+ {
+  "name": "Life Skills",
+  "chapters": [
+   {
+    "name": "Life Skills & Attitude",
+    "topics": [
+     "जीवन कौशल के प्रकार",
+     "निर्णय क्षमता",
+     "संप्रेषण कौशल",
+     "समस्या समाधान"
+    ],
+    "pub": 4,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 1,
+      "draft": 0
+     },
+     "hard": {
+      "published": 1,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 1,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Management & Leadership",
+    "topics": [
+     "प्रबंधन के सिद्धांत",
+     "नेतृत्व",
+     "समय प्रबंधन",
+     "तनाव प्रबंधन"
+    ],
+    "pub": 4,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 1,
+      "draft": 0
+     },
+     "hard": {
+      "published": 1,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 1,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   }
+  ]
+ },
+ {
+  "name": "Information Technology",
+  "chapters": [
+   {
+    "name": "Computer Basics",
+    "topics": [
+     "हार्डवेयर एवं सॉफ्टवेयर",
+     "ऑपरेटिंग सिस्टम",
+     "MS Office"
+    ],
+    "pub": 6,
+    "draft": 1,
+    "levels": {
+     "easy": {
+      "published": 3,
+      "draft": 1
+     },
+     "medium": {
+      "published": 1,
+      "draft": 0
+     },
+     "hard": {
+      "published": 1,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 1,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   },
+   {
+    "name": "Internet & Digital Education",
+    "topics": [
+     "इंटरनेट एवं ईमेल",
+     "साइबर सुरक्षा",
+     "डिजिटल शिक्षण संसाधन (DIKSHA)"
+    ],
+    "pub": 4,
+    "draft": 0,
+    "levels": {
+     "easy": {
+      "published": 1,
+      "draft": 0
+     },
+     "medium": {
+      "published": 1,
+      "draft": 0
+     },
+     "hard": {
+      "published": 1,
+      "draft": 0
+     },
+     "advanced": {
+      "published": 1,
+      "draft": 0
+     }
+    },
+    "sub": {}
+   }
+  ]
+ }
+]
