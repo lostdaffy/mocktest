@@ -47,7 +47,7 @@ export default function Terms() {
             <h2>3. Free plan and paid plans</h2>
             <ul>
               <li>The free plan gives limited access to some features. We may change what the free plan includes.</li>
-              <li>Paid plans are for a fixed period (for example 3, 6 or 12 months), paid once in advance. <strong>Plans do not renew automatically.</strong></li>
+              <li>Paid plans are for a fixed period (1, 3, 6 or 12 months), paid once in advance. <strong>Plans do not renew automatically.</strong></li>
               <li>A plan starts as soon as payment is confirmed. If you buy a plan while one is still active, the new period is added after your current plan ends.</li>
               <li>Prices are shown in Indian Rupees in the app before you pay. We may change prices for future purchases; this never affects a plan you have already bought.</li>
               <li>Refunds are covered by our <Link to="/refund-policy/">refund &amp; cancellation policy</Link>.</li>

@@ -100,15 +100,17 @@ const EXAMS = [
   { abbr: "GD", tint: "tint-teal", name: "Defence", exams: ["Agniveer Army GD"] },
 ];
 
-// Same list, same order and same prices as the app's Premium screen
-// (mobile/src/screens/SubscriptionScreen.js) and the server's
-// controllers/paymentController.js - change all three together.
+// What each plan unlocks, as the server enforces it
+// (server/controllers/testController.js, server/config/freeLimits.js).
+// Prices are the app's Premium screen (mobile/src/screens/SubscriptionScreen.js)
+// and the server's controllers/paymentController.js - change all three together.
 const PREMIUM = [
-  "Unlimited access to all mock tests",
-  "Full previous-year question library",
-  "Chapter-wise practice — easy to advanced",
-  "Live exams with all-India ranking",
-  "Detailed analysis of every attempt",
+  "Every mock test in every series",
+  "All previous-year papers, every year",
+  "Unlimited live exams with all-India rank",
+  "Every chapter practice test — Easy to Advanced",
+  "Personalised daily test, every day",
+  "Weekly revision test from your own mistakes",
   "Pay once · no auto-debit",
 ];
 
@@ -122,13 +124,15 @@ const PLANS = [
     cta: "Start free",
     features: [
       "First mock of every mock series",
-      "This year's & last year's papers",
-      "3 live exams",
+      "This year's & last year's previous-year papers",
+      "3 live exams with all-India rank",
       "Selected chapter practice tests",
       "Daily GK Quiz, every day",
+      "Personalised daily test for 7 days",
       "Detailed analysis of every test",
     ],
   },
+  { name: "1 Month", price: 59, days: 30, cta: "Get 1 month", features: PREMIUM },
   { name: "3 Months", price: 149, mrp: 449, off: "67% OFF", days: 90, cta: "Get 3 months", features: PREMIUM },
   { name: "6 Months", price: 249, mrp: 899, off: "72% OFF", days: 180, cta: "Get 6 months", features: PREMIUM, featured: true },
   { name: "12 Months", price: 449, mrp: 1799, off: "75% OFF", days: 365, cta: "Get 12 months", features: PREMIUM },
@@ -137,7 +141,7 @@ const PLANS = [
 const FAQS = [
   {
     q: "Is Rankveer free?",
-    a: "Yes, you can start without paying. Free users get the first mock of every exam's mock series, this year's and last year's previous-year papers, 3 live exams, selected chapter practice tests and the Daily GK Quiz every day. Upgrade only when you want everything.",
+    a: "Yes, you can start without paying. Free users get the first mock of every exam's mock series, this year's and last year's previous-year papers, 3 live exams, selected chapter practice tests, the Daily GK Quiz every day and a personalised daily test for the first 7 days. Plans start at ₹59 for a month when you want everything.",
   },
   {
     q: "Which exams can I prepare for?",
@@ -549,7 +553,7 @@ function Pricing() {
           <p className="section-lead">One-time payment for the period you choose. No auto-renewal and no hidden charges.</p>
         </Reveal>
 
-        <div className="grid items-stretch gap-[18px] sm:grid-cols-2 min-[1100px]:grid-cols-4 min-[1100px]:gap-4">
+        <div className="grid items-stretch gap-[18px] sm:grid-cols-2 lg:grid-cols-3 min-[1280px]:grid-cols-5 min-[1280px]:gap-4">
           {PLANS.map(({ name, price, mrp, off, days, sub, cta, features, featured }, i) => (
             <Reveal
               as="article"
@@ -557,8 +561,8 @@ function Pricing() {
               delay={i * 70}
               // `top` rather than a transform for the raised card: the reveal
               // animation owns transform and would snap it 10px on finishing.
-              className={`relative flex flex-col rounded-xl px-6 pb-6 pt-[30px] ${
-                featured ? "price-featured min-[1100px]:-top-2.5" : "border border-line bg-surface shadow-soft"
+              className={`relative flex flex-col rounded-xl px-6 pb-6 pt-[30px] min-[1280px]:px-5 ${
+                featured ? "price-featured min-[1280px]:-top-2.5" : "border border-line bg-surface shadow-soft"
               }`}
             >
               {featured && (
@@ -567,11 +571,11 @@ function Pricing() {
                 </span>
               )}
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-[17px] font-bold text-ink-soft">{name}</h3>
-                {off && <span className="rounded-full bg-success-light px-2.5 py-1 text-xs font-bold text-success">{off}</span>}
+                <h3 className="whitespace-nowrap text-[17px] font-bold text-ink-soft min-[1280px]:text-base">{name}</h3>
+                {off && <span className="whitespace-nowrap rounded-full bg-success-light px-2.5 py-1 text-xs font-bold text-success min-[1280px]:px-2 min-[1280px]:text-[11px]">{off}</span>}
               </div>
               <p className="mt-3.5 flex items-baseline gap-2.5">
-                <span className="font-display text-[44px] font-extrabold leading-none tracking-[-0.03em]">₹{price}</span>
+                <span className="font-display text-[44px] font-extrabold leading-none tracking-[-0.03em] min-[1280px]:text-[38px]">₹{price}</span>
                 {mrp && (
                   <s className="text-lg font-semibold text-slate-soft">
                     <span className="sr-only">was </span>₹{mrp}
@@ -597,7 +601,8 @@ function Pricing() {
         <Reveal as="p" className="mx-auto mt-[34px] max-w-[660px] text-center text-[14.5px] text-slate">
           Plans are bought inside the app. Payments are processed securely by Razorpay — UPI, cards and net banking. Renew before your plan
           ends and the new period is added on top, so you never lose remaining days. Invite friends with your referral code and earn ₹5
-          credit for each one who joins — credits can pay for up to half of a plan.
+          credit for each one who joins — credits can pay for up to half of a 3, 6 or 12-month plan. The 1 Month plan takes no credits
+          or coupons.
         </Reveal>
       </div>
     </section>
