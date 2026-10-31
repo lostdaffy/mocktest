@@ -24,13 +24,20 @@
   "_jurisdictionCity": "REQUIRED. City whose courts govern the Terms, usually where you are based, e.g. Lucknow",
   "jurisdictionCity": "Saharanpur",
 
-  "_playStoreUrl": "Leave empty until the app is live - the site shows 'coming soon' instead of a broken link.",
-  "playStoreUrl": "",
+  "_playStoreUrl": "The app on Google Play (live since 29 Oct 2026). Every download button points here.",
+  "playStoreUrl": "https://play.google.com/store/apps/details?id=com.satya.smarttestengine",
 
   "_apkUrl": "Direct download while the app is not on Google Play yet. Use ONLY the 'Signed, universal APK' from Play Console (App bundle explorer > Downloads) so people can later update from Google Play without reinstalling. Upload it to public_html/download/. Clear apkUrl once playStoreUrl is set. Play Console > Protected with Play > Automatic protection must stay OFF while this is offered, or the APK shows 'Get this app from Play' on every launch.",
   "apkUrl": "/download/rankveer-1.2.3.apk",
+  "_apkNote": "Since the app is on Google Play the APK is only a small fallback link under the Play button. Keep it in step with the Play release or clear apkUrl.",
   "apkVersion": "1.2.3",
   "apkSizeMb": 91,
+
+  "_stats": "Numbers shown on the homepage. Count them again before changing - never round up past the real figure. statsAsOf is printed under them.",
+  "stats": { "exams": 14, "questions": "36,000+", "practiceTests": "1,400+" },
+  "statsAsOf": "October 2026",
+  "_pyqAvailable": "Previous year papers actually in the app, named on the homepage so nobody expects more than exists.",
+  "pyqAvailable": "UPSSSC PET 2026",
 
   "policyEffectiveDate": "21 September 2026"
 }

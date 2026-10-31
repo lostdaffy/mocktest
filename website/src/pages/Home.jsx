@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
 import Countdown from "../components/Countdown";
+import PlayButton from "../components/PlayButton";
 import { site } from "../components/SiteInfo";
 import {
   BarChartIcon,
@@ -12,26 +13,37 @@ import {
   FileTextIcon,
   LanguageIcon,
   LayersIcon,
-  PhoneIcon,
   ShieldCheckIcon,
   TrendingUpIcon,
   TrophyIcon,
 } from "../components/icons";
 
 export const meta = {
-  title: "Rankveer – Mock Tests, PYQs & Practice for SSC, Railway, UP Police, UPSSSC PET, TET & Banking",
+  title: "Rankveer – Mock Tests & Practice for SSC, Railway, UP Police, UPSSSC PET, TET, Banking & Agniveer",
   description:
-    "Practice like the real exam. Exam-pattern mock tests, previous year papers, chapter-wise practice, live exams and a free Daily GK Quiz – in Hindi and English. Free to start.",
+    "Mock tests on each exam's official pattern, chapter-wise practice with a solution for every question, and a free Daily GK Quiz – in Hindi and English. Free to start. Get it on Google Play.",
   organizationSchema: true,
 };
 
+// Everything on this page describes what the app does today. Numbers come
+// from site.config.json (counted, never rounded up); anything not built yet
+// is not promised. Results depend on the student - nothing here implies
+// selection, marks or rank.
+
 /* ------------------------------------------------------------------ data */
 
+const STATS = [
+  { value: site.stats?.exams, label: "exams covered" },
+  { value: site.stats?.questions, label: "practice questions" },
+  { value: site.stats?.practiceTests, label: "chapter practice tests" },
+  { value: "2", label: "languages — हिंदी & English" },
+];
+
 const HIGHLIGHTS = [
-  { Icon: LayersIcon, tint: "tint-blue", title: "Real exam pattern", text: "Same sections, timing and negative marking" },
-  { Icon: ShieldCheckIcon, tint: "tint-green", title: "Genuine PYQs", text: "Actual previous-year questions, not look-alikes" },
-  { Icon: BroadcastIcon, tint: "tint-red", title: "Live all-India rank", text: "Same paper, same start time for everyone" },
+  { Icon: LayersIcon, tint: "tint-blue", title: "Official exam pattern", text: "Sections, timing and negative marking as each exam notifies them" },
+  { Icon: FileTextIcon, tint: "tint-green", title: "A solution for every question", text: "Worked step by step, in Hindi and English" },
   { Icon: LanguageIcon, tint: "tint-violet", title: <><span lang="hi">हिंदी</span> + English</>, text: "Switch language any time during a test" },
+  { Icon: ShieldCheckIcon, tint: "tint-orange", title: "Report a mistake", text: "Flag any question from inside the test — we review every report" },
 ];
 
 const FEATURES = [
@@ -39,89 +51,88 @@ const FEATURES = [
     Icon: ClipboardCheckIcon,
     tint: "tint-blue",
     title: "Full-length mock tests",
-    text: "A mock series for each exam with the same sections, number of questions, time limit and negative marking as the real paper.",
+    text: "A mock series for each exam with the same sections, number of questions, time limit and negative marking as the official pattern. New mocks are added to each series over time.",
     tag: "First mock of every series free",
-  },
-  {
-    Icon: FileTextIcon,
-    tint: "tint-green",
-    title: "Previous year papers",
-    text: "Real questions from past papers, organised by exam and year — practise them exactly as they were asked.",
-    tag: "This year & last year free",
-  },
-  {
-    Icon: BroadcastIcon,
-    tint: "tint-red",
-    title: "Live exams",
-    text: "One paper, one start time, one all-India rank. Every attempt is submitted automatically when time runs out.",
   },
   {
     Icon: TrendingUpIcon,
     tint: "tint-orange",
     title: "Chapter-wise practice",
-    text: "Practise a whole chapter mixed or one topic at a time, at four levels — Easy, Medium, Hard and Advanced — with a step-by-step solution for every question.",
+    text: `${site.stats?.practiceTests || "Hundreds of"} practice tests, chapter by chapter and topic by topic, at four levels — Easy, Medium, Hard and Advanced — each question with a step-by-step solution.`,
   },
   {
     Icon: TrophyIcon,
     tint: "tint-teal",
-    title: "Daily GK Quiz & today's plan",
-    text: "A fresh 20-question GK quiz every day with a ranking, plus a short daily plan: the quiz, one practice test and a mock of the week.",
-    tag: "Daily quiz always free",
+    title: "Daily GK Quiz",
+    text: "A fresh 20-question general-knowledge quiz every day, the same for everyone, with a ranking among that day's players.",
+    tag: "Always free",
   },
   {
     Icon: BarChartIcon,
     tint: "tint-violet",
-    title: "Detailed analysis",
-    text: "Topic-by-topic accuracy with your weakest areas first — and whether you lose marks to speed or to concepts.",
+    title: "Result analysis",
+    text: "Topic-by-topic accuracy with your weakest topic first, and every wrong or skipped answer with its solution, so you know what to practise next.",
+  },
+  {
+    Icon: FileTextIcon,
+    tint: "tint-green",
+    title: "Previous year papers",
+    text: `Questions from actual past papers, added exam by exam. Available now: ${site.pyqAvailable}.`,
+  },
+  {
+    Icon: BroadcastIcon,
+    tint: "tint-red",
+    title: "Live exams",
+    text: "Scheduled exams where everyone takes the same paper at the same time and gets an all-India rank. Each one is announced in the app.",
   },
 ];
 
 const STEPS = [
-  { title: "Choose your exam", text: "Pick from 13 exams — SSC, Railway, UP Police, UPSSSC PET, teaching exams, Banking and Agniveer — and the subjects you're studying." },
-  { title: "Practise and take mocks", text: "Build concepts chapter by chapter, then test yourself on full mocks and real previous-year papers." },
-  { title: "Compete and improve", text: "Join live exams for an all-India rank, and use your analysis to fix weak topics before the real exam." },
+  { title: "Choose your exam", text: `Pick from ${site.stats?.exams || "our"} exams — SSC, Railway, UP Police, UPSSSC PET, teaching exams, Banking and Agniveer. Your subjects and chapters follow from it.` },
+  { title: "Practise chapter by chapter", text: "Start at Easy and move up to Advanced. Read the solution after every test and redo the questions you got wrong." },
+  { title: "Test yourself on the full pattern", text: "Take full-length mocks under real timing, check your weak topics in the analysis, and go back to those chapters." },
 ];
 
 const LIVE_POINTS = [
   "Starts at the same time for everyone — joining late doesn't buy extra time",
   "Every attempt is submitted automatically when time runs out",
   "Ranks are released once the exam ends, so every result is compared fairly",
-  "A reminder notification before the exam begins, so you never miss one",
+  "Announced in the app, with a reminder before it begins — keep notifications on",
 ];
 
 // The exams the app offers (server /api/exams/catalog), grouped the way
-// students think of them.
+// students think of them. Keep the total equal to site.stats.exams.
 const EXAMS = [
   { abbr: "SSC", tint: "tint-blue", name: "SSC", exams: ["CGL Tier 1", "CHSL Tier 1", "MTS & Havaldar", "GD Constable"] },
   { abbr: "RRB", tint: "tint-orange", name: "Railway", exams: ["RRB NTPC CBT 1", "RRB Group D"] },
   { abbr: "UP", tint: "tint-red", name: "UP Police & UPSSSC", exams: ["UP Police Constable", "UPSSSC PET"] },
   { abbr: "TET", tint: "tint-violet", name: "Teaching", exams: ["CTET Paper 1", "UPTET Paper 1", "UP Super TET"] },
   { abbr: "IBPS", tint: "tint-green", name: "Banking", exams: ["IBPS PO Prelims"] },
-  { abbr: "GD", tint: "tint-teal", name: "Defence", exams: ["Agniveer Army GD"] },
+  { abbr: "ARMY", tint: "tint-teal", name: "Defence", exams: ["Agniveer Army GD", "Agniveer Army Technical"] },
 ];
 
 // What each plan unlocks, as the server enforces it
 // (server/controllers/testController.js, server/config/freeLimits.js).
 // Prices are the app's Premium screen (mobile/src/screens/SubscriptionScreen.js)
 // and the server's controllers/paymentController.js - change all three together.
+// No struck-out "MRP" here: a price is shown only if it is the price charged.
 const PREMIUM = [
   "Every mock test in every series",
-  "All previous-year papers, every year",
-  "Unlimited live exams with all-India rank",
+  "Every previous-year paper in the app",
+  "Every live exam, with all-India rank",
   "Every chapter practice test — Easy to Advanced",
   "Personalised daily test, every day",
   "Weekly revision test from your own mistakes",
-  "Pay once · no auto-debit",
+  "Pay once · no auto-renewal",
 ];
 
-const perDay = (price, days) => `₹${(price / days).toFixed(2)}/day`;
+const perDay = (price, days) => `₹${(price / days).toFixed(2)} a day`;
 
 const PLANS = [
   {
     name: "Free",
     price: 0,
     sub: "No payment needed",
-    cta: "Start free",
     features: [
       "First mock of every mock series",
       "This year's & last year's previous-year papers",
@@ -129,44 +140,61 @@ const PLANS = [
       "Selected chapter practice tests",
       "Daily GK Quiz, every day",
       "Personalised daily test for 7 days",
-      "Detailed analysis of every test",
+      "Result analysis of every test",
     ],
   },
-  { name: "1 Month", price: 59, days: 30, cta: "Get 1 month", features: PREMIUM },
-  { name: "3 Months", price: 149, mrp: 449, off: "67% OFF", days: 90, cta: "Get 3 months", features: PREMIUM },
-  { name: "6 Months", price: 249, mrp: 899, off: "72% OFF", days: 180, cta: "Get 6 months", features: PREMIUM, featured: true },
-  { name: "12 Months", price: 449, mrp: 1799, off: "75% OFF", days: 365, cta: "Get 12 months", features: PREMIUM },
+  { name: "1 Month", price: 59, days: 30, features: PREMIUM },
+  { name: "3 Months", price: 149, days: 90, features: PREMIUM },
+  { name: "6 Months", price: 249, days: 180, features: PREMIUM, featured: true },
+  { name: "12 Months", price: 449, days: 365, features: PREMIUM, lowest: true },
 ];
 
 const FAQS = [
   {
+    q: "Where do I download Rankveer?",
+    a: (
+      <>
+        Rankveer is on <a href={site.playStoreUrl} target="_blank" rel="noopener">Google Play</a> for Android phones. Search
+        “Rankveer” or use the button on this page. An iPhone version is not available yet.
+      </>
+    ),
+  },
+  {
     q: "Is Rankveer free?",
-    a: "Yes, you can start without paying. Free users get the first mock of every exam's mock series, this year's and last year's previous-year papers, 3 live exams, selected chapter practice tests, the Daily GK Quiz every day and a personalised daily test for the first 7 days. Plans start at ₹59 for a month when you want everything.",
+    a: "You can start without paying. Free users get the first mock of every exam's mock series, this year's and last year's previous-year papers, 3 live exams, selected chapter practice tests, the Daily GK Quiz every day and a personalised daily test for the first 7 days. Paid plans start at ₹59 for a month.",
   },
   {
     q: "Which exams can I prepare for?",
-    a: "SSC CGL, CHSL, MTS and GD; RRB NTPC and Group D; UP Police Constable; UPSSSC PET; CTET, UPTET and UP Super TET; IBPS PO; and Agniveer Army GD. More are being added regularly.",
+    a: "SSC CGL, CHSL, MTS and GD; RRB NTPC and Group D; UP Police Constable; UPSSSC PET; CTET, UPTET and UP Super TET; IBPS PO; and Agniveer Army GD and Technical. The number of mocks and papers differs from exam to exam and grows over time.",
   },
   {
-    q: "What is the Daily GK Quiz?",
-    a: "A free 20-question general-knowledge quiz that is new every day. Everyone gets the same quiz, so you can see your rank among everyone who took it that day.",
+    q: "Is Rankveer connected to SSC, the Army or any exam body?",
+    a: "No. Rankveer is an independent practice platform. It is not affiliated with or endorsed by SSC, RRB, UPPRPB, UPSSSC, UPESSB, IBPS, CBSE, the Indian Army or any government body. Our tests follow each exam's published pattern and syllabus, but they are practice papers, not official ones.",
+  },
+  {
+    q: "Will practising here get me selected?",
+    a: "No app can promise that, and we don't. Rankveer gives you structured practice and shows where you are losing marks; your result in the real exam depends on your own preparation.",
   },
   {
     q: "Can I take tests in Hindi?",
-    a: "Yes. Tests are available in Hindi and English, and you can switch language during the test. When you review your result, solutions are shown in the language you took the test in.",
+    a: "Yes. Tests are available in Hindi and English, and you can switch language during the test. Solutions are shown in the language you took the test in.",
+  },
+  {
+    q: "What if I find a wrong question or answer?",
+    a: "Report it from inside the test with the report option on that question. We check every report and correct the question if it is wrong. Our answers may occasionally differ from an official answer key.",
   },
   {
     q: "How do live exams work?",
-    a: "A live exam opens at a fixed time for everyone and runs for a fixed duration. If you join late, you only get the time that's left. When time is up, every attempt is submitted automatically, and ranks are released once the exam has ended. You'll get a reminder notification before it starts.",
+    a: "A live exam opens at a fixed time for everyone and runs for a fixed duration. If you join late, you only get the time that's left. When time is up, every attempt is submitted automatically, and ranks are released once the exam has ended. Live exams are announced in the app with a reminder before they start.",
   },
-  { q: "Are the previous year papers real?", a: "Yes. The questions are taken from actual past papers — they are not written to look like them." },
+  { q: "Are the previous year papers real?", a: `Yes. The questions are taken from actual past papers, not written to look like them. Papers are added exam by exam; available now: ${site.pyqAvailable}.` },
   {
     q: "Can I use my account on two phones?",
-    a: "One device at a time. Logging in on a new phone automatically logs you out of the old one, which keeps your account and subscription safe.",
+    a: "One device at a time. Logging in on a new phone automatically logs you out of the old one, which keeps your account and plan safe.",
   },
   {
     q: "What happens when my plan ends?",
-    a: "Your account, test history and progress stay exactly as they are — the free-plan limits simply apply again. You can renew any time, and renewing early adds the new period on top of the days you have left.",
+    a: "Nothing is charged automatically. Your account, test history and progress stay as they are, and the free-plan limits apply again. You can buy a new plan any time; buying early adds the new period after the days you have left.",
   },
   {
     q: "How do I get help or request a refund?",
@@ -188,9 +216,10 @@ export default function Home() {
   return (
     <>
       <Hero />
+      <Stats />
 
       {/* HIGHLIGHTS */}
-      <section aria-label="Highlights" className="relative pb-2">
+      <section aria-label="Highlights" className="relative pb-2 pt-10">
         <div className="wrap">
           <Reveal className="grid gap-1 rounded-xl border border-line bg-surface p-3.5 shadow-card sm:grid-cols-2 lg:grid-cols-4 lg:gap-0 lg:px-3 lg:py-[22px] lg:[&>*+*]:border-l lg:[&>*+*]:border-line">
             {HIGHLIGHTS.map(({ Icon, tint, title, text }) => (
@@ -212,9 +241,9 @@ export default function Home() {
       <section id="features" className="section">
         <div className="wrap">
           <Reveal className="section-head">
-            <p className="kicker">Everything you need</p>
-            <h2 className="section-title">One app for your whole preparation</h2>
-            <p className="section-lead">From your first chapter to your final mock — practise, measure and improve in one place.</p>
+            <p className="kicker">What's inside</p>
+            <h2 className="section-title">Practice, mocks and analysis in one app</h2>
+            <p className="section-lead">Learn a chapter, test it, take a full mock, then see exactly which topics to go back to.</p>
           </Reveal>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-[22px]">
@@ -223,7 +252,7 @@ export default function Home() {
                 as="article"
                 key={title}
                 delay={stagger(i, 3)}
-                className="card p-[26px] transition duration-200 hover:-translate-y-[3px] hover:border-brand/25 hover:shadow-card"
+                className="card group p-[26px] transition duration-200 hover:-translate-y-[3px] hover:border-brand/25 hover:shadow-card"
               >
                 <span className={`icon-tile ${tint}`}>
                   <Icon />
@@ -242,12 +271,12 @@ export default function Home() {
         <div className="wrap">
           <Reveal className="section-head">
             <p className="kicker">How it works</p>
-            <h2 className="section-title">From sign-up to rank in three steps</h2>
+            <h2 className="section-title">A simple way to prepare</h2>
           </Reveal>
 
-          <ol className="grid gap-4 min-[880px]:grid-cols-3 min-[880px]:gap-[22px]">
+          <ol className="relative grid gap-4 min-[880px]:grid-cols-3 min-[880px]:gap-[22px]">
             {STEPS.map(({ title, text }, i) => (
-              <Reveal as="li" key={title} delay={i * 70} className="rounded-lg border border-line bg-surface px-[26px] py-7">
+              <Reveal as="li" key={title} delay={i * 70} className="rounded-lg border border-line bg-surface px-[26px] py-7 shadow-soft">
                 <span className="grid h-10 w-10 place-items-center rounded-sm bg-brand-gradient font-display text-base font-bold text-white shadow-brand">
                   {i + 1}
                 </span>
@@ -259,21 +288,19 @@ export default function Home() {
         </div>
       </section>
 
-      <LiveExamsBand />
-
       {/* EXAMS */}
       <section id="exams" className="section">
         <div className="wrap">
           <Reveal className="section-head">
             <p className="kicker">Exams covered</p>
-            <h2 className="section-title">Built for the exam you're preparing for</h2>
-            <p className="section-lead">13 exams, each with its own pattern, sections and timing.</p>
+            <h2 className="section-title">Built around the exam you're preparing for</h2>
+            <p className="section-lead">{site.stats?.exams} exams, each with its own pattern, sections, syllabus and timing.</p>
           </Reveal>
 
           <ul className="grid gap-3.5 min-[560px]:grid-cols-2 lg:grid-cols-3 lg:gap-[18px]">
             {EXAMS.map(({ abbr, tint, name, exams }, i) => (
               <Reveal as="li" key={name} delay={stagger(i, 3)} className="card flex items-start gap-3.5 rounded-md p-[18px] lg:p-[22px]">
-                <span className={`grid h-[50px] w-[50px] flex-none place-items-center rounded-[14px] border font-display text-[13px] font-bold ${tint}`}>
+                <span className={`grid h-[50px] w-[50px] flex-none place-items-center rounded-[14px] border font-display text-[12px] font-bold ${tint}`}>
                   {abbr}
                 </span>
                 <div>
@@ -289,13 +316,10 @@ export default function Home() {
               </Reveal>
             ))}
           </ul>
-
-          <Reveal as="p" className="mt-6 text-center text-[15px] text-slate">
-            More exams are being added regularly.
-          </Reveal>
         </div>
       </section>
 
+      <LiveExamsBand />
       <Pricing />
 
       {/* FAQ */}
@@ -329,41 +353,45 @@ export default function Home() {
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden pb-16 pt-11 lg:pb-24 lg:pt-[72px]">
+    <section className="relative overflow-hidden pb-14 pt-11 lg:pb-20 lg:pt-[68px]">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-hero-glow" />
+      <div aria-hidden="true" className="hero-grid pointer-events-none absolute inset-0" />
 
       <div className="wrap relative grid items-center gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:gap-10">
         <div>
-          <p className="inline-flex max-w-full items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-1.5 text-[13px] font-semibold text-ink-soft shadow-soft">
-            <span className="h-2 w-2 flex-none rounded-full bg-brand-gradient" />
-            SSC · Railway · UP Police · UPSSSC PET · TET · Banking · Agniveer
-          </p>
+          <a
+            href={site.playStoreUrl || "#download"}
+            target={site.playStoreUrl ? "_blank" : undefined}
+            rel="noopener"
+            className="inline-flex max-w-full items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-1.5 text-[13px] font-semibold text-ink-soft shadow-soft transition hover:border-brand/40 hover:text-brand"
+          >
+            <span className="h-2 w-2 flex-none rounded-full bg-success" />
+            Now available on Google Play
+            <span aria-hidden="true">→</span>
+          </a>
 
-          <h1 className="mt-5 text-[clamp(34px,5.6vw,60px)] font-extrabold leading-[1.08] tracking-[-0.035em]">
-            Practice like the real exam. <span className="text-gradient">Rank like a topper.</span>
+          <h1 className="mt-5 text-[clamp(34px,5.4vw,58px)] font-extrabold leading-[1.08] tracking-[-0.035em]">
+            Prepare for government exams <span className="text-gradient">on the real pattern.</span>
           </h1>
 
           <p lang="hi" className="mt-4 text-[clamp(17px,2.1vw,21px)] font-semibold text-brand-dark">
-            सरकारी परीक्षा की तैयारी — बिल्कुल असली परीक्षा जैसी।
+            सरकारी परीक्षा की तैयारी — परीक्षा के असली पैटर्न पर, हिंदी और English में।
           </p>
 
           <p className="mt-3 max-w-[560px] text-[clamp(16px,1.7vw,18px)] text-slate">
-            Mock tests built on the actual exam pattern, genuine previous-year papers, chapter-wise practice and live exams that give you an
-            all-India rank. In Hindi and English.
+            Mock tests built on each exam's official pattern, chapter-wise practice with a solution for every question, previous year papers
+            and a free Daily GK Quiz — for SSC, Railway, UP Police, UPSSSC PET, teaching exams, Banking and Agniveer.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <a href="#download" className="btn btn-primary btn-lg max-sm:flex-[1_1_100%]">
-              <PhoneIcon />
-              Get the app
-            </a>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <PlayButton className="max-sm:flex-[1_1_100%]" />
             <a href="#pricing" className="btn btn-secondary btn-lg max-sm:flex-[1_1_100%]">
               See plans
             </a>
           </div>
 
           <ul className="mt-6 flex flex-wrap gap-x-[22px] gap-y-2.5 text-sm font-medium text-ink-soft">
-            {["Free to start", "No card needed", "First mock of every series free"].map((point) => (
+            {["Free to start", "No card needed", "Plans from ₹59 · no auto-renewal"].map((point) => (
               <li key={point} className="flex items-center gap-[7px]">
                 <CheckIcon className="check-icon" />
                 {point}
@@ -373,6 +401,29 @@ function Hero() {
         </div>
 
         <PhoneMockup />
+      </div>
+    </section>
+  );
+}
+
+function Stats() {
+  return (
+    <section aria-label="Rankveer in numbers" className="relative">
+      <div className="wrap">
+        <Reveal className="overflow-hidden rounded-xl bg-live-band text-white shadow-lift">
+          <dl className="grid grid-cols-2 lg:grid-cols-4">
+            {STATS.map(({ value, label }, i) => (
+              <div
+                key={label}
+                className={`px-5 py-6 text-center sm:px-7 sm:py-7 ${i % 2 ? "border-l border-white/10" : ""} ${i > 1 ? "border-t border-white/10 lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}
+              >
+                <dt className="order-2 mt-1 text-[13px] font-medium text-white/70 sm:text-sm">{label}</dt>
+                <dd className="font-display text-[clamp(26px,3.4vw,38px)] font-extrabold leading-none tracking-[-0.02em]">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </Reveal>
+        <p className="mt-2.5 text-center text-[12.5px] text-slate">Figures as of {site.statsAsOf}.</p>
       </div>
     </section>
   );
@@ -390,98 +441,104 @@ function PhoneMockup() {
   ];
 
   return (
-    <div aria-hidden="true" className="relative flex justify-center py-[50px]">
-      <div className="relative w-[290px] -rotate-[2.5deg] rounded-[46px] bg-ink p-[11px] shadow-phone lg:w-[316px]">
-        <div className="absolute left-1/2 top-[11px] z-10 h-[22px] w-[98px] -translate-x-1/2 rounded-b-[14px] bg-ink" />
+    <figure className="relative">
+      <div aria-hidden="true" className="relative flex justify-center py-[50px]">
+        <div className="relative w-[290px] -rotate-[2.5deg] rounded-[46px] bg-ink p-[11px] shadow-phone lg:w-[316px]">
+          <div className="absolute left-1/2 top-[11px] z-10 h-[22px] w-[98px] -translate-x-1/2 rounded-b-[14px] bg-ink" />
 
-        <div className="overflow-hidden rounded-[36px] bg-bg px-[15px] pb-[18px] pt-[38px]">
-          <div data-ps-top className="flex items-start justify-between gap-2">
-            <div>
-              <p className="text-[11px] font-semibold text-slate">SSC CGL · Mock 12</p>
-              <p className="mt-0.5 font-display text-[14.5px] font-bold leading-tight text-ink">Quantitative Aptitude</p>
+          <div className="overflow-hidden rounded-[36px] bg-bg px-[15px] pb-[18px] pt-[38px]">
+            <div data-ps-top className="flex items-start justify-between gap-2">
+              <div>
+                <p className="text-[11px] font-semibold text-slate">SSC CGL · Mock test</p>
+                <p className="mt-0.5 font-display text-[14.5px] font-bold leading-tight text-ink">Quantitative Aptitude</p>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full bg-danger-light px-2 py-1 text-xs font-bold tabular-nums text-danger">
+                <ClockIcon className="!h-[13px] !w-[13px] [stroke-width:2.6]" />
+                42:18
+              </span>
             </div>
-            <span className="inline-flex items-center gap-1 rounded-full bg-danger-light px-2 py-1 text-xs font-bold tabular-nums text-danger">
-              <ClockIcon className="!h-[13px] !w-[13px] [stroke-width:2.6]" />
-              42:18
-            </span>
-          </div>
 
-          <div className="mb-3 mt-3.5 h-[5px] overflow-hidden rounded-full bg-[#E3E6EF]">
-            <span className="block h-full w-[24%] rounded-full bg-brand-gradient" />
-          </div>
+            <div className="mb-3 mt-3.5 h-[5px] overflow-hidden rounded-full bg-[#E3E6EF]">
+              <span className="block h-full w-[24%] rounded-full bg-brand-gradient" />
+            </div>
 
-          <div className="flex items-center justify-between text-[11px] font-semibold text-slate">
-            <span>Question 24 of 100</span>
-            <span className="inline-flex overflow-hidden rounded-xs border border-line bg-surface">
-              <b className="bg-brand px-2 py-0.5 text-white">EN</b>
-              <i lang="hi" className="px-2 py-0.5 not-italic">
-                हिं
-              </i>
-            </span>
-          </div>
+            <div className="flex items-center justify-between text-[11px] font-semibold text-slate">
+              <span>Question 24 of 100</span>
+              <span className="inline-flex overflow-hidden rounded-xs border border-line bg-surface">
+                <b className="bg-brand px-2 py-0.5 text-white">EN</b>
+                <i lang="hi" className="px-2 py-0.5 not-italic">
+                  हिं
+                </i>
+              </span>
+            </div>
 
-          <div className="mt-2.5 rounded-md border border-line bg-surface p-[13px] text-[13px] font-semibold leading-normal text-ink">
-            If 20% of a number is 45, what is 35% of the same number?
-          </div>
+            <div className="mt-2.5 rounded-md border border-line bg-surface p-[13px] text-[13px] font-semibold leading-normal text-ink">
+              If 20% of a number is 45, what is 35% of the same number?
+            </div>
 
-          <ul className="mt-2.5 grid gap-2 text-[13px] font-semibold">
-            {options.map(([letter, value, selected]) => (
-              <li
-                key={letter}
-                className={`flex items-center gap-2.5 rounded-sm border-[1.5px] px-2.5 py-2 ${
-                  selected ? "border-brand bg-brand-tint text-brand-dark" : "border-line bg-surface text-ink-soft"
-                }`}
-              >
-                <span
-                  className={`grid h-6 w-6 place-items-center rounded-xs text-[11px] font-bold ${
-                    selected ? "bg-brand text-white" : "bg-slate-light text-slate"
+            <ul className="mt-2.5 grid gap-2 text-[13px] font-semibold">
+              {options.map(([letter, value, selected]) => (
+                <li
+                  key={letter}
+                  className={`flex items-center gap-2.5 rounded-sm border-[1.5px] px-2.5 py-2 ${
+                    selected ? "border-brand bg-brand-tint text-brand-dark" : "border-line bg-surface text-ink-soft"
                   }`}
                 >
-                  {letter}
-                </span>
-                {value}
-              </li>
-            ))}
-          </ul>
+                  <span
+                    className={`grid h-6 w-6 place-items-center rounded-xs text-[11px] font-bold ${
+                      selected ? "bg-brand text-white" : "bg-slate-light text-slate"
+                    }`}
+                  >
+                    {letter}
+                  </span>
+                  {value}
+                </li>
+              ))}
+            </ul>
 
-          <div data-ps-actions className="mt-3.5 grid grid-cols-2 gap-2 text-xs font-bold">
-            <span className="grid place-items-center rounded-sm border border-line bg-surface px-1.5 py-2.5 text-ink-soft">Mark for review</span>
-            <span className="grid place-items-center rounded-sm bg-brand-gradient px-1.5 py-2.5 text-white">Save &amp; next</span>
+            <div data-ps-actions className="mt-3.5 grid grid-cols-2 gap-2 text-xs font-bold">
+              <span className="grid place-items-center rounded-sm border border-line bg-surface px-1.5 py-2.5 text-ink-soft">Mark for review</span>
+              <span className="grid place-items-center rounded-sm bg-brand-gradient px-1.5 py-2.5 text-white">Save &amp; next</span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          data-float-live
+          className="absolute left-0 top-0.5 z-20 flex items-center gap-2.5 rounded-md border border-line bg-white/95 px-3 py-2.5 shadow-lift backdrop-blur min-[601px]:left-[calc(50%_-_272px)] min-[601px]:px-3.5 min-[601px]:py-3"
+        >
+          <span className="grid h-9 w-9 place-items-center rounded-[11px] bg-brand-tint text-brand">
+            <LanguageIcon />
+          </span>
+          <div>
+            <p className="text-[11px] font-semibold text-slate">Language</p>
+            <p className="font-display text-base font-bold leading-tight">
+              <span lang="hi">हिंदी</span> · English
+            </p>
+          </div>
+        </div>
+
+        <div
+          data-float-rank
+          className="absolute bottom-0.5 right-0 z-20 flex items-center gap-2.5 rounded-md border border-line bg-white/95 px-3 py-2.5 shadow-lift backdrop-blur min-[601px]:right-[calc(50%_-_272px)] min-[601px]:px-3.5 min-[601px]:py-3"
+        >
+          <span className="grid h-9 w-9 place-items-center rounded-[11px] bg-success-light text-success">
+            <CheckIcon className="[stroke-width:2.6]" />
+          </span>
+          <div>
+            <p className="text-[11px] font-semibold text-slate">After every test</p>
+            <p className="font-display text-base font-bold leading-tight">Step-by-step solutions</p>
           </div>
         </div>
       </div>
-
-      <div
-        data-float-live
-        className="absolute left-0 top-0.5 z-20 flex items-center gap-2.5 rounded-md border border-line bg-white/95 px-3 py-2.5 shadow-lift backdrop-blur min-[601px]:left-[calc(50%_-_272px)] min-[601px]:px-3.5 min-[601px]:py-3"
-      >
-        <span className="live-dot" />
-        <div>
-          <p className="text-[11px] font-semibold text-slate">Live exam</p>
-          <p className="font-display text-base font-bold leading-tight tabular-nums">Starts in 12:40</p>
-        </div>
-      </div>
-
-      <div
-        data-float-rank
-        className="absolute bottom-0.5 right-0 z-20 flex items-center gap-2.5 rounded-md border border-line bg-white/95 px-3 py-2.5 shadow-lift backdrop-blur min-[601px]:right-[calc(50%_-_272px)] min-[601px]:px-3.5 min-[601px]:py-3"
-      >
-        <span className="grid h-9 w-9 place-items-center rounded-[11px] bg-warn-light text-warn">
-          <TrophyIcon />
-        </span>
-        <div>
-          <p className="text-[11px] font-semibold text-slate">All-India rank</p>
-          <p className="font-display text-base font-bold leading-tight tabular-nums">#128</p>
-        </div>
-        <span className="rounded-full bg-success-light px-2 py-1 text-[11px] font-bold text-success max-[600px]:hidden">82% accuracy</span>
-      </div>
-    </div>
+      <figcaption className="text-center text-[12px] text-slate-soft">Illustration of the test screen</figcaption>
+    </figure>
   );
 }
 
 function LiveExamsBand() {
   return (
-    <section id="live-exams" className="relative overflow-hidden bg-live-band py-[84px] text-white lg:py-[108px]">
+    <section id="live-exams" className="relative overflow-hidden bg-live-band py-[84px] text-white lg:py-[104px]">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-live-glow" />
 
       <div className="wrap relative grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
@@ -489,8 +546,8 @@ function LiveExamsBand() {
           <p className="kicker text-[#C3B1FA]">Live exams</p>
           <h2 className="mt-2.5 text-[clamp(30px,3.8vw,46px)] font-extrabold tracking-[-0.03em] text-white">The exam hall, on your phone.</h2>
           <p className="mt-4 max-w-[560px] text-[17px] text-white/80">
-            Mock tests show what you know. Live exams show where you stand — against everyone preparing for the same exam, on the same
-            paper, at the same moment.
+            Mock tests show what you know. A live exam shows where you stand — everyone preparing for the same exam takes the same paper at
+            the same moment, and gets an all-India rank when it ends.
           </p>
 
           <ul className="mt-7 grid gap-3.5 text-base text-white/90">
@@ -507,14 +564,15 @@ function LiveExamsBand() {
 
         <Reveal
           aria-hidden="true"
-          className="w-full max-w-[440px] justify-self-center rounded-xl border border-white/15 bg-white/[0.06] p-7 shadow-[0_40px_70px_-35px_rgb(0_0_0/0.6)] backdrop-blur-md"
+          className="relative w-full max-w-[440px] justify-self-center rounded-xl border border-white/15 bg-white/[0.06] p-7 shadow-[0_40px_70px_-35px_rgb(0_0_0/0.6)] backdrop-blur-md"
         >
+          <span className="absolute right-4 top-4 rounded-full border border-white/20 px-2 py-0.5 text-[11px] font-semibold text-white/60">Example</span>
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="inline-flex items-center gap-[7px] rounded-full bg-red-500/20 px-[11px] py-[5px] text-xs font-extrabold tracking-[0.08em] text-red-300">
               <span className="live-dot" />
               LIVE
             </span>
-            <span className="text-sm font-semibold text-white/80">SSC CGL · All-India Mock</span>
+            <span className="text-sm font-semibold text-white/80">All-India mock</span>
           </div>
 
           <p className="mt-6 text-[12.5px] font-bold uppercase tracking-[0.09em] text-white/60">Starts in</p>
@@ -524,7 +582,7 @@ function LiveExamsBand() {
             {[
               ["Questions", "100"],
               ["Duration", "60 minutes"],
-              ["Negative marking", "0.50 per wrong"],
+              ["Negative marking", "As in the exam"],
             ].map(([label, value]) => (
               <div key={label} className="flex justify-between gap-3 border-b border-dashed border-white/15 pb-2.5">
                 <span>{label}</span>
@@ -535,7 +593,7 @@ function LiveExamsBand() {
 
           <span className="mt-[22px] flex items-center justify-center gap-2 rounded-[14px] bg-white p-[13px] text-[15px] font-bold text-brand-dark">
             <BellIcon className="!h-[18px] !w-[18px]" />
-            Reminder set
+            Remind me
           </span>
         </Reveal>
       </div>
@@ -548,13 +606,13 @@ function Pricing() {
     <section id="pricing" className="section section-alt">
       <div className="wrap">
         <Reveal className="section-head">
-          <p className="kicker">Simple pricing</p>
+          <p className="kicker">Plans</p>
           <h2 className="section-title">Start free. Upgrade when you're ready.</h2>
-          <p className="section-lead">One-time payment for the period you choose. No auto-renewal and no hidden charges.</p>
+          <p className="section-lead">One payment for the period you choose. No auto-renewal and nothing charged later.</p>
         </Reveal>
 
         <div className="grid items-stretch gap-[18px] sm:grid-cols-2 lg:grid-cols-3 min-[1280px]:grid-cols-5 min-[1280px]:gap-4">
-          {PLANS.map(({ name, price, mrp, off, days, sub, cta, features, featured }, i) => (
+          {PLANS.map(({ name, price, days, sub, features, featured, lowest }, i) => (
             <Reveal
               as="article"
               key={name}
@@ -567,22 +625,19 @@ function Pricing() {
             >
               {featured && (
                 <span className="absolute -top-[13px] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-gradient px-3.5 py-1.5 text-xs font-bold text-white shadow-brand">
-                  Best value
+                  Recommended
                 </span>
               )}
               <div className="flex items-center justify-between gap-2">
                 <h3 className="whitespace-nowrap text-[17px] font-bold text-ink-soft min-[1280px]:text-base">{name}</h3>
-                {off && <span className="whitespace-nowrap rounded-full bg-success-light px-2.5 py-1 text-xs font-bold text-success min-[1280px]:px-2 min-[1280px]:text-[11px]">{off}</span>}
-              </div>
-              <p className="mt-3.5 flex items-baseline gap-2.5">
-                <span className="font-display text-[44px] font-extrabold leading-none tracking-[-0.03em] min-[1280px]:text-[38px]">₹{price}</span>
-                {mrp && (
-                  <s className="text-lg font-semibold text-slate-soft">
-                    <span className="sr-only">was </span>₹{mrp}
-                  </s>
+                {lowest && (
+                  <span className="whitespace-nowrap rounded-full bg-success-light px-2.5 py-1 text-xs font-bold text-success min-[1280px]:px-2 min-[1280px]:text-[11px]">
+                    Lowest per day
+                  </span>
                 )}
-              </p>
-              <p className="mt-2 text-sm text-slate">{days ? `Only ${perDay(price, days)}` : sub}</p>
+              </div>
+              <p className="mt-3.5 font-display text-[44px] font-extrabold leading-none tracking-[-0.03em] min-[1280px]:text-[38px]">₹{price}</p>
+              <p className="mt-2 text-sm text-slate">{days ? `${days} days · ${perDay(price, days)}` : sub}</p>
               <ul className="mb-[26px] mt-[22px] grid flex-1 content-start gap-[11px] border-t border-line pt-[22px] text-[14.5px] leading-snug text-ink-soft">
                 {features.map((feature) => (
                   <li key={feature} className="flex gap-2.5">
@@ -592,17 +647,21 @@ function Pricing() {
                 ))}
               </ul>
               <a href="#download" className={`btn w-full ${featured ? "btn-primary" : "btn-secondary"}`}>
-                {cta}
+                {price ? `Get ${name.toLowerCase()}` : "Start free"}
               </a>
             </Reveal>
           ))}
         </div>
 
-        <Reveal as="p" className="mx-auto mt-[34px] max-w-[660px] text-center text-[14.5px] text-slate">
-          Plans are bought inside the app. Payments are processed securely by Razorpay — UPI, cards and net banking. Renew before your plan
-          ends and the new period is added on top, so you never lose remaining days. Invite friends with your referral code and earn ₹5
-          credit for each one who joins — credits can pay for up to half of a 3, 6 or 12-month plan. The 1 Month plan takes no credits
-          or coupons.
+        <Reveal as="div" className="mx-auto mt-[34px] grid max-w-[760px] gap-2 text-center text-[14.5px] text-slate">
+          <p>
+            Prices are in Indian Rupees. Plans are bought inside the app, and the final amount is shown before you pay. Payments are processed
+            by Razorpay — UPI, cards and net banking. Buying a new plan before the current one ends adds the new period after your remaining days.
+          </p>
+          <p>
+            Refer &amp; Earn (limited-time offer): earn ₹5 credit for each friend who signs up with your code. Credits can pay for up to half
+            of a 3, 6 or 12-month plan; the 1 Month plan takes no credits or coupons. See the <Link to="/terms/" className="font-semibold text-brand">terms</Link>.
+          </p>
         </Reveal>
       </div>
     </section>
@@ -626,42 +685,22 @@ function Download() {
               loading="lazy"
               className="mx-auto h-[76px] w-[76px] rounded-[22px] shadow-[0_16px_34px_-12px_rgb(0_0_0/0.4)]"
             />
-            <h2 className="mt-[22px] text-[clamp(28px,3.8vw,42px)] font-extrabold tracking-[-0.03em] text-white">Your rank starts with one test.</h2>
+            <h2 className="mt-[22px] text-[clamp(28px,3.8vw,42px)] font-extrabold tracking-[-0.03em] text-white">Start with one free mock test.</h2>
             <p className="mx-auto mt-3 max-w-[520px] text-[17px] text-white/85">
-              Download Rankveer, choose your exam and take your first mock test free.
+              Install Rankveer from Google Play, choose your exam and take the first mock of its series free.
             </p>
 
-            {site.playStoreUrl ? (
-              <a href={site.playStoreUrl} rel="noopener" className="btn btn-light btn-lg mt-7">
-                <PhoneIcon />
-                Get it on Google Play
-              </a>
-            ) : site.apkUrl ? (
-              <>
-                <a href={site.apkUrl} download className="btn btn-light btn-lg mt-7">
-                  <PhoneIcon />
-                  Download Android app
-                </a>
-                <p className="mt-3.5 text-sm text-white/70">
-                  Version {site.apkVersion} · {site.apkSizeMb} MB · Android 7 or newer
-                </p>
-                <ol className="mx-auto mt-6 max-w-[460px] list-decimal space-y-1.5 pl-5 text-left text-[15px] text-white/90">
-                  <li>Tap the button and let the file download.</li>
-                  <li>Open the downloaded file. If your phone asks, allow your browser to “install unknown apps”.</li>
-                  <li>Tap Install, then open Rankveer.</li>
-                </ol>
-                <p className="mx-auto mt-5 max-w-[520px] text-sm text-white/75">
-                  Download Rankveer only from rankveer.com. It is coming to Google Play soon, and you won’t need to reinstall it then.
-                </p>
-              </>
-            ) : (
-              <>
-                <span aria-disabled="true" className="btn btn-light btn-lg btn-soon mt-7">
-                  <PhoneIcon />
-                  Android app — coming soon
-                </span>
-                <p className="mt-3.5 text-sm text-white/70">Launching on Google Play very soon.</p>
-              </>
+            <PlayButton tone="light" className="mt-7" />
+            <p className="mt-3.5 text-sm text-white/70">Free download · Android 7 or newer</p>
+
+            {site.playStoreUrl && site.apkUrl && (
+              <p className="mx-auto mt-5 max-w-[520px] text-[13px] text-white/65">
+                Can't use Google Play?{" "}
+                <a href={site.apkUrl} download className="font-semibold text-white underline underline-offset-[3px] hover:text-white">
+                  Download the app file
+                </a>{" "}
+                (version {site.apkVersion}, {site.apkSizeMb} MB). Download it only from rankveer.com.
+              </p>
             )}
           </div>
         </Reveal>

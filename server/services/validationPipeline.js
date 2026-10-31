@@ -299,9 +299,14 @@ function sameFactInPaper(a, b) {
   return overlap(factWords(a.text), factWords(b.text)) >= 0.4;
 }
 
-// Greek, Cyrillic, Arabic, the Indic scripts other than Devanagari, CJK.
-// Hindi and English are both fine; these never belong in a question here.
-const FOREIGN_SCRIPT = /[Ͱ-ϿЀ-ӿ؀-ۿঀ-෿一-鿿]/;
+// Cyrillic, Arabic, the Indic scripts other than Devanagari, CJK. Hindi and
+// English are both fine; these never belong in a question here.
+//
+// Greek is judged apart: a single Greek letter is maths and physics notation
+// (θ, α, β, π, λ, Ω, μ) and every trigonometry, algebra and electricity
+// question needs it. Only Greek words - three or more Greek letters in a
+// row - are leaked text.
+const FOREIGN_SCRIPT = /[Ѐ-ӿ؀-ۿঀ-෿一-鿿]|[Ͱ-Ͽ]{3,}/;
 // A Latin letter glued to a Devanagari letter, inside one word ('स्कanner',
 // 'pitraaदेशः'). The danda is left out: "HCF × LCM।" is a sentence ending.
 const LATIN_INSIDE_HINDI_WORD = /[ऀ-ॣ०-ॿ][A-Za-z]|[A-Za-z][ऀ-ॣ०-ॿ]/;

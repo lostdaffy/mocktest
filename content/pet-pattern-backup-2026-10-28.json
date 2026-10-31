@@ -1,0 +1,511 @@
+{
+  "_id": "6ab59942238fe774de4e411d",
+  "examType": "UPSSSC_PET",
+  "displayName": "UPSSSC PET",
+  "examGroup": "UP",
+  "postName": "Preliminary Eligibility Test",
+  "durationMinutes": 120,
+  "negativeMarking": 0.25,
+  "marksPerQuestion": 1,
+  "examLevel": "Preliminary eligibility test for Uttar Pradesh Group B and C posts. Heavy on Indian and UP general awareness, elementary arithmetic, graph and table interpretation, and General Hindi including unseen passages. Broad but not deep.",
+  "sections": [
+    {
+      "difficultyMix": {
+        "easy": 45,
+        "medium": 45,
+        "hard": 10
+      },
+      "negativeMarking": null,
+      "marksPerQuestion": null,
+      "durationMinutes": null,
+      "subject": "GK",
+      "sources": [
+        "Current Affairs",
+        "Science"
+      ],
+      "questionCount": 50,
+      "syllabus": [
+        {
+          "_id": "6ae17c540cf8016045201c80",
+          "topic": "Ancient India",
+          "subTopics": [
+            "Indus Valley sites and features",
+            "Vedic period society and texts",
+            "Buddhism and Jainism",
+            "Mauryan administration and Ashoka",
+            "Gupta period achievements"
+          ]
+        },
+        {
+          "_id": "6ae17c540cf8016045201c81",
+          "topic": "Medieval India",
+          "subTopics": [
+            "Delhi Sultanate dynasties",
+            "Mughal emperors and their policies",
+            "Vijayanagara and Bahmani",
+            "Bhakti and Sufi movements",
+            "Maratha rise"
+          ]
+        },
+        {
+          "_id": "6ae17c540cf8016045201c82",
+          "topic": "Modern India",
+          "subTopics": [
+            "British land revenue systems",
+            "1857 revolt causes and leaders",
+            "socio-religious reform movements",
+            "Governor Generals and their acts"
+          ]
+        },
+        {
+          "_id": "6ae17c540cf8016045201c83",
+          "topic": "Freedom Movement",
+          "subTopics": [
+            "Indian National Congress sessions",
+            "Gandhi's movements and their years",
+            "revolutionary activities",
+            "Partition and independence",
+            "acts of 1909, 1919 and 1935"
+          ]
+        },
+        {
+          "topic": "Constitution",
+          "subTopics": [
+            "Indian Constitution"
+          ],
+          "_id": "6ab59942238fe774de4e4123"
+        },
+        {
+          "topic": "Parliament & Judiciary",
+          "subTopics": [
+            "Parliament",
+            "Judiciary"
+          ],
+          "_id": "6ab59942238fe774de4e4124"
+        },
+        {
+          "_id": "6ae17c540cf8016045201c86",
+          "topic": "Physical Geography",
+          "subTopics": [
+            "atmosphere layers and winds",
+            "rocks and landforms",
+            "earthquakes and volcanoes",
+            "solar system basics",
+            "latitude longitude and time zones"
+          ]
+        },
+        {
+          "_id": "6ae17c540cf8016045201c87",
+          "topic": "Indian Geography",
+          "subTopics": [
+            "Himalayan and peninsular rivers",
+            "soil types and distribution",
+            "national parks and sanctuaries",
+            "minerals and their states",
+            "monsoon and climate regions"
+          ]
+        },
+        {
+          "_id": "6ae17c540cf8016045201c88",
+          "topic": "Indian Economy",
+          "subTopics": [
+            "RBI and monetary policy",
+            "inflation types and measurement",
+            "budget and its components",
+            "GDP and national income",
+            "government schemes and their aims"
+          ]
+        },
+        {
+          "topic": "Books, Awards & Sports",
+          "subTopics": [
+            "Books and Authors",
+            "Awards",
+            "Sports"
+          ],
+          "_id": "6ab59942238fe774de4e4128"
+        },
+        {
+          "topic": "Physics",
+          "subTopics": [
+            "Physics",
+            "Motion and Force",
+            "Light and Sound"
+          ],
+          "_id": "6ab59942238fe774de4e4129"
+        },
+        {
+          "topic": "Chemistry",
+          "subTopics": [
+            "Chemistry",
+            "Elements and Compounds",
+            "Acids and Bases"
+          ],
+          "_id": "6ab59942238fe774de4e412a"
+        },
+        {
+          "topic": "Biology",
+          "subTopics": [
+            "Biology",
+            "Human Body",
+            "Plants and Animals"
+          ],
+          "_id": "6ab59942238fe774de4e412b"
+        },
+        {
+          "topic": "National Affairs",
+          "subTopics": [
+            "National Current Affairs"
+          ],
+          "_id": "6ab59942238fe774de4e412c"
+        },
+        {
+          "topic": "International Affairs",
+          "subTopics": [
+            "International Current Affairs"
+          ],
+          "_id": "6ab59942238fe774de4e412d"
+        },
+        {
+          "topic": "Sports News",
+          "subTopics": [
+            "Sports Current Affairs"
+          ],
+          "_id": "6ab59942238fe774de4e412e"
+        },
+        {
+          "topic": "Awards & Honours",
+          "subTopics": [
+            "Awards and Honours"
+          ],
+          "_id": "6ab59942238fe774de4e412f"
+        }
+      ],
+      "_id": "6ab59942238fe774de4e411e"
+    },
+    {
+      "difficultyMix": {
+        "easy": 45,
+        "medium": 45,
+        "hard": 10
+      },
+      "negativeMarking": null,
+      "marksPerQuestion": null,
+      "durationMinutes": null,
+      "subject": "Maths",
+      "sources": [],
+      "questionCount": 25,
+      "syllabus": [
+        {
+          "_id": "6ae17c540cf8016045201c92",
+          "topic": "Number System",
+          "subTopics": [
+            "LCM and HCF word problems",
+            "remainder and divisibility",
+            "unit digit of large powers",
+            "number of factors",
+            "surds and indices"
+          ]
+        },
+        {
+          "_id": "6ae17c540cf8016045201c93",
+          "topic": "Simplification",
+          "subTopics": [
+            "BODMAS simplification",
+            "approximation",
+            "fraction and decimal operations",
+            "surds and indices",
+            "simplifying algebraic expressions"
+          ]
+        },
+        {
+          "topic": "HCF & LCM",
+          "subTopics": [
+            "HCF and LCM"
+          ],
+          "_id": "6ab59942238fe774de4e4133"
+        },
+        {
+          "_id": "6ae17c540cf8016045201c95",
+          "topic": "Average",
+          "subTopics": [
+            "average of consecutive numbers",
+            "change when one value is replaced",
+            "combined average of two groups",
+            "average speed as a weighted average"
+          ]
+        },
+        {
+          "_id": "6ae17c540cf8016045201c96",
+          "topic": "Percentage",
+          "subTopics": [
+            "successive increase and decrease",
+            "population growth and depreciation",
+            "income-expenditure-savings",
+            "percentage to fraction conversion for speed"
+          ]
+        },
+        {
+          "topic": "Profit & Loss",
+          "subTopics": [
+            "Profit and Loss"
+          ],
+          "_id": "6ab59942238fe774de4e4136"
+        },
+        {
+          "topic": "Ratio & Proportion",
+          "subTopics": [
+            "Ratio and Proportion"
+          ],
+          "_id": "6ab59942238fe774de4e4137"
+        },
+        {
+          "topic": "Time & Work",
+          "subTopics": [
+            "Time and Work"
+          ],
+          "_id": "6ab59942238fe774de4e4138"
+        },
+        {
+          "_id": "6ae17c540cf8016045201c9a",
+          "topic": "Time, Speed & Distance",
+          "subTopics": [
+            "relative speed same and opposite direction",
+            "trains crossing a pole platform and each other",
+            "boats and streams",
+            "average speed for equal distances"
+          ]
+        },
+        {
+          "topic": "Simple & Compound Interest",
+          "subTopics": [
+            "Simple Interest",
+            "Compound Interest"
+          ],
+          "_id": "6ab59942238fe774de4e413a"
+        },
+        {
+          "topic": "Mixture & Alligation",
+          "subTopics": [
+            "Mixture and Alligation"
+          ],
+          "_id": "6ab59942238fe774de4e413b"
+        },
+        {
+          "topic": "Data Interpretation",
+          "subTopics": [
+            "Tabulation",
+            "Bar Graph",
+            "Line Graph",
+            "Pie Chart"
+          ],
+          "_id": "6ab59942238fe774de4e413c"
+        }
+      ],
+      "_id": "6ab59942238fe774de4e4130"
+    },
+    {
+      "difficultyMix": {
+        "easy": 45,
+        "medium": 45,
+        "hard": 10
+      },
+      "negativeMarking": null,
+      "marksPerQuestion": null,
+      "durationMinutes": null,
+      "subject": "General Hindi",
+      "sources": [],
+      "questionCount": 15,
+      "syllabus": [
+        {
+          "topic": "व्याकरण",
+          "subTopics": [
+            "Hindi Grammar"
+          ],
+          "_id": "6ab59942238fe774de4e413e"
+        },
+        {
+          "topic": "संधि",
+          "subTopics": [
+            "Sandhi"
+          ],
+          "_id": "6ab59942238fe774de4e413f"
+        },
+        {
+          "topic": "समास",
+          "subTopics": [
+            "Samas"
+          ],
+          "_id": "6ab59942238fe774de4e4140"
+        },
+        {
+          "topic": "मुहावरे और लोकोक्तियाँ",
+          "subTopics": [
+            "Muhavare",
+            "Lokoktiyan"
+          ],
+          "_id": "6ab59942238fe774de4e4141"
+        }
+      ],
+      "_id": "6ab59942238fe774de4e413d"
+    },
+    {
+      "difficultyMix": {
+        "easy": 50,
+        "medium": 40,
+        "hard": 10
+      },
+      "negativeMarking": null,
+      "marksPerQuestion": null,
+      "durationMinutes": null,
+      "subject": "English",
+      "sources": [],
+      "questionCount": 5,
+      "syllabus": [
+        {
+          "_id": "6ae17c540cf8016045201ca4",
+          "topic": "Error Spotting",
+          "subTopics": [
+            "subject-verb agreement",
+            "tense consistency",
+            "preposition with a fixed verb",
+            "article usage",
+            "pronoun and its antecedent"
+          ]
+        },
+        {
+          "_id": "6ae17c540cf8016045201ca5",
+          "topic": "Fill in the Blanks",
+          "subTopics": [
+            "single blank vocabulary",
+            "double blank with a connector",
+            "grammar based blank",
+            "phrasal verb in a blank"
+          ]
+        },
+        {
+          "topic": "Synonyms & Antonyms",
+          "subTopics": [
+            "Synonyms",
+            "Antonyms"
+          ],
+          "_id": "6ab59942238fe774de4e4145"
+        },
+        {
+          "topic": "Idioms & Phrases",
+          "subTopics": [
+            "Idioms and Phrases"
+          ],
+          "_id": "6ab59942238fe774de4e4146"
+        },
+        {
+          "_id": "6ae17c540cf8016045201ca8",
+          "topic": "Reading Comprehension",
+          "subTopics": [
+            "main idea of the passage",
+            "inference from the passage",
+            "vocabulary from the passage",
+            "tone of the author"
+          ]
+        }
+      ],
+      "_id": "6ab59942238fe774de4e4142"
+    },
+    {
+      "difficultyMix": {
+        "easy": 50,
+        "medium": 40,
+        "hard": 10
+      },
+      "negativeMarking": null,
+      "marksPerQuestion": null,
+      "durationMinutes": null,
+      "subject": "Reasoning",
+      "sources": [],
+      "questionCount": 5,
+      "syllabus": [
+        {
+          "_id": "6ae17c540cf8016045201caa",
+          "topic": "Analogy",
+          "subTopics": [
+            "word pair analogy",
+            "number pair analogy",
+            "letter cluster analogy",
+            "general knowledge based analogy"
+          ]
+        },
+        {
+          "_id": "6ae17c540cf8016045201cab",
+          "topic": "Classification",
+          "subTopics": [
+            "odd one out among words",
+            "odd one out among numbers",
+            "odd letter cluster",
+            "odd pair out"
+          ]
+        },
+        {
+          "topic": "Number & Letter Series",
+          "subTopics": [
+            "Number Series",
+            "Letter Series"
+          ],
+          "_id": "6ab59942238fe774de4e414b"
+        },
+        {
+          "_id": "6ae17c540cf8016045201cad",
+          "topic": "Coding-Decoding",
+          "subTopics": [
+            "letter shifting forward and backward",
+            "word coded from another word",
+            "number coding of a word",
+            "conditional coding"
+          ]
+        },
+        {
+          "_id": "6ae17c540cf8016045201cae",
+          "topic": "Blood Relation",
+          "subTopics": [
+            "direct relation puzzle",
+            "coded blood relation using symbols",
+            "family tree with three generations"
+          ]
+        },
+        {
+          "_id": "6ae17c540cf8016045201caf",
+          "topic": "Direction Sense",
+          "subTopics": [
+            "final direction after turns",
+            "shortest distance from start",
+            "shadow and sun direction"
+          ]
+        },
+        {
+          "_id": "6ae17c540cf8016045201cb0",
+          "topic": "Syllogism",
+          "subTopics": [
+            "two statement two conclusion",
+            "three statements",
+            "possibility conclusions",
+            "either-or complementary pairs"
+          ]
+        },
+        {
+          "_id": "6ae17c540cf8016045201cb1",
+          "topic": "Seating Arrangement",
+          "subTopics": [
+            "linear arrangement facing one direction",
+            "linear arrangement facing both directions",
+            "circular arrangement facing centre and outside",
+            "square arrangement"
+          ]
+        }
+      ],
+      "_id": "6ab59942238fe774de4e4148"
+    }
+  ],
+  "isActive": true,
+  "createdAt": "2026-09-24T21:42:26.381Z",
+  "updatedAt": "2026-09-24T21:42:26.381Z",
+  "__v": 0
+}

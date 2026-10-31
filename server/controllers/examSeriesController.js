@@ -1,5 +1,5 @@
 const Test = require("../models/Test");
-const { sectionRulesFrom } = require("../utils/marking");
+const { sectionRulesFrom, sectionCovers } = require("../utils/marking");
 const Question = require("../models/Question");
 const ExamPattern = require("../models/ExamPattern");
 const Subject = require("../models/Subject");
@@ -1220,7 +1220,9 @@ async function getMockSectionStatus(req, res) {
   if (!pattern) return res.json({ sections: [], totalHave: test.questions.length });
 
   const sections = pattern.sections.map((s) => {
-    const have = test.questions.filter((q) => q.subject === s.subject).length;
+    // A section counts its sources too: Agniveer Technical's "General
+    // Knowledge & Reasoning" holds its Reasoning questions under GK.
+    const have = test.questions.filter((q) => sectionCovers(s, q.subject)).length;
     return {
       subject: s.subject,
       required: s.questionCount,
