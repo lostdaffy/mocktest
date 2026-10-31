@@ -126,87 +126,55 @@ app.use((req, res, next) => {
 
 
 // isme localhost ko hta kar commit karna hai dobara se and render pe bhi karna hai 
-// const DEFAULT_ORIGINS = ["https://rankveer.com", "https://www.rankveer.com","http://localhost:5173"];
-
-// const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
-//   .split(",")
-//   .map((o) => o.trim())
-//   .filter(Boolean);
-
-// const allowedOrigins = configuredOrigins.length ? configuredOrigins : DEFAULT_ORIGINS;
-
-// if (!configuredOrigins.length) {
-//   console.warn(
-//     `⚠️  ALLOWED_ORIGINS is not set - falling back to ${DEFAULT_ORIGINS.join(", ")}. ` +
-//       "Set it in the environment if the admin panel is served from anywhere else."
-//   );
-// }
-
-// app.use(
-//   cors({
-//     origin(origin, callback) {
-     
-//       if (!origin) return callback(null, true);
-//       if (allowedOrigins.includes(origin)) return callback(null, true);
-
-//       if (process.env.NODE_ENV !== "production" && /^http:\/\/localhost(:\d+)?$/.test(origin)) {
-//         return callback(null, true);
-//       }
-
-//       return callback(new Error(`Blocked by CORS: ${origin} is not an allowed origin`));
-//     },
-//     credentials: true,
-//   })
-// );
-
-// app.use(
-//   express.json({
-//     limit: "25mb",
-//     verify: (req, res, buf) => {
-//       req.rawBody = buf;
-//     },
-//   })
-// );
-
-// yahn tak update karna hai
-
-const DEFAULT_ORIGINS = [
-  "https://rankveer.com",
-  "https://www.rankveer.com",
-  "http://localhost:5173",
-];
+const DEFAULT_ORIGINS = ["https://rankveer.com", "https://www.rankveer.com","http://localhost:5173"];
 
 const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
-  .map((o) => o.trim().replace(/\/$/, ""))
+  .map((o) => o.trim())
   .filter(Boolean);
+
+// const allowedOrigins = configuredOrigins.length ? configuredOrigins : DEFAULT_ORIGINS;
+
 
 const allowedOrigins = [
   ...new Set([...DEFAULT_ORIGINS, ...configuredOrigins]),
 ];
 
-console.log("========== CORS DEBUG ==========");
-console.log("ALLOWED_ORIGINS ENV:", process.env.ALLOWED_ORIGINS);
-console.log("FINAL ALLOWED ORIGINS:", allowedOrigins);
-console.log("================================");
+if (!configuredOrigins.length) {
+  console.warn(
+    `⚠️  ALLOWED_ORIGINS is not set - falling back to ${DEFAULT_ORIGINS.join(", ")}. ` +
+      "Set it in the environment if the admin panel is served from anywhere else."
+  );
+}
+
+
 
 app.use(
   cors({
     origin(origin, callback) {
-      console.log("REQUEST ORIGIN:", origin);
+     
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
 
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (process.env.NODE_ENV !== "production" && /^http:\/\/localhost(:\d+)?$/.test(origin)) {
         return callback(null, true);
       }
 
-      console.error("CORS REJECTED:", origin);
-      return callback(null, false);
+      return callback(new Error(`Blocked by CORS: ${origin} is not an allowed origin`));
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+app.use(
+  express.json({
+    limit: "25mb",
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
+
 
 // No "$operator" or "__proto__" key from a request ever reaches a query or an
 // object - see middleware/sanitize.js. (The Razorpay webhook checks its
