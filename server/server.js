@@ -122,6 +122,10 @@ app.use((req, res, next) => {
 // the right call while the domains didn't exist yet - but the domains are
 // live now, and a deployment that forgets one environment variable should
 // not quietly reopen the API to the whole web.
+
+
+
+// isme localhost ko hta kar commit karna hai dobara se and render pe bhi karna hai 
 const DEFAULT_ORIGINS = ["https://rankveer.com", "https://www.rankveer.com","http://localhost:5173"];
 
 const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
@@ -129,7 +133,14 @@ const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
   .map((o) => o.trim())
   .filter(Boolean);
 
-const allowedOrigins = configuredOrigins.length ? configuredOrigins : DEFAULT_ORIGINS;
+  // isko badlna hai jab domain chal jayega
+// const allowedOrigins = configuredOrigins.length ? configuredOrigins : DEFAULT_ORIGINS;
+const allowedOrigins = [
+  ...new Set([
+    ...DEFAULT_ORIGINS,
+    ...configuredOrigins
+  ])
+];
 
 if (!configuredOrigins.length) {
   console.warn(
