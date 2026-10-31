@@ -126,62 +126,85 @@ app.use((req, res, next) => {
 
 
 // isme localhost ko hta kar commit karna hai dobara se and render pe bhi karna hai 
-const DEFAULT_ORIGINS = ["https://rankveer.com", "https://www.rankveer.com","http://localhost:5173"];
+// const DEFAULT_ORIGINS = ["https://rankveer.com", "https://www.rankveer.com","http://localhost:5173"];
+
+// const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
+//   .split(",")
+//   .map((o) => o.trim())
+//   .filter(Boolean);
+
+// const allowedOrigins = configuredOrigins.length ? configuredOrigins : DEFAULT_ORIGINS;
+
+// if (!configuredOrigins.length) {
+//   console.warn(
+//     `⚠️  ALLOWED_ORIGINS is not set - falling back to ${DEFAULT_ORIGINS.join(", ")}. ` +
+//       "Set it in the environment if the admin panel is served from anywhere else."
+//   );
+// }
+
+// app.use(
+//   cors({
+//     origin(origin, callback) {
+     
+//       if (!origin) return callback(null, true);
+//       if (allowedOrigins.includes(origin)) return callback(null, true);
+
+//       if (process.env.NODE_ENV !== "production" && /^http:\/\/localhost(:\d+)?$/.test(origin)) {
+//         return callback(null, true);
+//       }
+
+//       return callback(new Error(`Blocked by CORS: ${origin} is not an allowed origin`));
+//     },
+//     credentials: true,
+//   })
+// );
+
+// app.use(
+//   express.json({
+//     limit: "25mb",
+//     verify: (req, res, buf) => {
+//       req.rawBody = buf;
+//     },
+//   })
+// );
+
+// yahn tak update karna hai
+
+const DEFAULT_ORIGINS = [
+  "https://rankveer.com",
+  "https://www.rankveer.com",
+  "http://localhost:5173",
+];
 
 const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
-  .map((o) => o.trim())
+  .map((o) => o.trim().replace(/\/$/, ""))
   .filter(Boolean);
 
-  // isko badlna hai jab domain chal jayega
-// const allowedOrigins = configuredOrigins.length ? configuredOrigins : DEFAULT_ORIGINS;
 const allowedOrigins = [
-  ...new Set([
-    ...DEFAULT_ORIGINS,
-    ...configuredOrigins
-  ])
+  ...new Set([...DEFAULT_ORIGINS, ...configuredOrigins]),
 ];
 
-if (!configuredOrigins.length) {
-  console.warn(
-    `⚠️  ALLOWED_ORIGINS is not set - falling back to ${DEFAULT_ORIGINS.join(", ")}. ` +
-      "Set it in the environment if the admin panel is served from anywhere else."
-  );
-}
+console.log("========== CORS DEBUG ==========");
+console.log("ALLOWED_ORIGINS ENV:", process.env.ALLOWED_ORIGINS);
+console.log("FINAL ALLOWED ORIGINS:", allowedOrigins);
+console.log("================================");
 
 app.use(
   cors({
     origin(origin, callback) {
-      // No Origin header at all: native mobile apps, server-to-server calls
-      // and the Razorpay webhook. CORS is a browser policy - it protects a
-      // user from OTHER websites spending their credentials, and was never
-      // what stops a direct curl request. Authorisation is the JWT and the
-      // adminOnly middleware on each route.
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
+      console.log("REQUEST ORIGIN:", origin);
 
-      // Local development, never in production.
-      if (process.env.NODE_ENV !== "production" && /^http:\/\/localhost(:\d+)?$/.test(origin)) {
+      if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      return callback(new Error(`Blocked by CORS: ${origin} is not an allowed origin`));
+      console.error("CORS REJECTED:", origin);
+      return callback(null, false);
     },
     credentials: true,
-  })
-);
-// Raised from 2mb to fit base64-encoded PYQ PDF uploads (a ~15mb source PDF
-// becomes ~20mb once base64-encoded). Keep individual PDF uploads under
-// ~15mb for reliability - split a very long paper by section if needed.
-// verify() captures the raw bytes alongside the normal parse - the
-// Razorpay webhook needs the exact raw body to check its signature, which
-// isn't recoverable once JSON.parse has already run.
-app.use(
-  express.json({
-    limit: "25mb",
-    verify: (req, res, buf) => {
-      req.rawBody = buf;
-    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
