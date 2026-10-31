@@ -122,7 +122,7 @@ app.use((req, res, next) => {
 // the right call while the domains didn't exist yet - but the domains are
 // live now, and a deployment that forgets one environment variable should
 // not quietly reopen the API to the whole web.
-const DEFAULT_ORIGINS = ["https://rankveer.com", "https://www.rankveer.com"];
+const DEFAULT_ORIGINS = ["https://rankveer.com", "https://www.rankveer.com","http://localhost:5173"];
 
 const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
