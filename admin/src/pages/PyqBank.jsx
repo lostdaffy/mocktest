@@ -34,6 +34,8 @@ export default function PyqBank() {
   const [reviewing, setReviewing] = useState(null); // testId being reviewed
   const [writingInto, setWritingInto] = useState(null); // paper being typed in by hand
   const [starting, setStarting] = useState(false);
+  const [tab, setTab] = useState("draft");
+  const [showUpload, setShowUpload] = useState(false);
 
   // Sections of the chosen exam, so a typed-in question is filed under a
   // section the paper really has.
@@ -62,12 +64,15 @@ export default function PyqBank() {
     if (!examStage && res.data.patterns?.length) setExamStage(res.data.patterns[0].examType);
   }
 
-  async function loadPapers() {
+  // pickTab: on opening an exam, show its drafts if it has any, else what is live.
+  async function loadPapers({ pickTab = false } = {}) {
     if (!examStage) return;
     setLoading(true);
     try {
       const res = await api.get(`/pyq/${examStage}`);
-      setPapers(res.data.papers || []);
+      const list = res.data.papers || [];
+      setPapers(list);
+      if (pickTab) setTab(list.some((x) => x.publishStatus === "draft") ? "draft" : "published");
     } finally {
       setLoading(false);
     }
@@ -79,7 +84,7 @@ export default function PyqBank() {
   }, []);
 
   useEffect(() => {
-    loadPapers();
+    loadPapers({ pickTab: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examStage]);
 
@@ -152,171 +157,205 @@ export default function PyqBank() {
   const drafts = papers.filter((p) => p.publishStatus === "draft");
   const published = papers.filter((p) => p.publishStatus === "published");
   const archived = papers.filter((p) => p.publishStatus === "archived");
+  const lists = { draft: drafts, published, archived };
+  const shown = lists[tab] || [];
+  const examName = patterns.find((p) => p.examType === examStage)?.displayName || examStage;
+  const liveQuestions = published.reduce((n, p) => n + (p.questions?.length || 0), 0);
+  const field = "block text-xs font-medium text-slate mb-1";
 
   return (
     <div>
       <PageHeader
         eyebrow="Content"
         title="PYQ Bank"
-        subtitle="Upload a real previous-year paper as a PDF - English, Hindi or both, typed or scanned. It is read page by page in the queue, the other language is translated, and every answer is checked against an independent solve. You only look at what is flagged (or fix it in the CSV), then publish. Nothing reaches students before you publish."
+        subtitle="Real previous-year papers. Upload a PDF (English, Hindi or both, typed or scanned) - it is read page by page, translated and every answer checked against an independent solve. You review what is flagged, then publish. Nothing reaches students before you publish."
+        actions={
+          <>
+            <select value={examStage} onChange={(e) => setExamStage(e.target.value)} className="rv-input !py-1.5 text-sm min-w-[210px]" aria-label="Exam">
+              {patterns.map((p) => (
+                <option key={p._id} value={p.examType}>
+                  {p.displayName}
+                </option>
+              ))}
+            </select>
+            <button onClick={() => setShowUpload((v) => !v)} className="rv-btn-primary !text-[13px] !py-1.5">
+              <RiUploadCloud2Line size={16} /> {showUpload ? "Close" : "Add a paper"}
+            </button>
+          </>
+        }
       />
 
-      <div className="rv-card p-6 mb-8">
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-ink-soft mb-1.5">Exam</label>
-          <select
-            value={examStage}
-            onChange={(e) => setExamStage(e.target.value)}
-            className="rv-input min-w-[220px]"
-          >
-            {patterns.map((p) => (
-              <option key={p._id} value={p.examType}>
-                {p.displayName}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
+        <Tile label={`${examName} papers live`} value={loading ? null : published.length} tone="bg-success" />
+        <Tile label="Questions live" value={loading ? null : liveQuestions} tone="bg-brand" />
+        <Tile label="Drafts to review" value={loading ? null : drafts.length} tone={drafts.length ? "bg-warn" : "bg-slate-soft"} />
+        <Tile label="Archived" value={loading ? null : archived.length} tone="bg-slate-soft" />
+      </div>
 
-        <form onSubmit={handleUpload} className="flex flex-wrap items-end gap-4">
-          <div>
-            <label className="block text-sm font-medium text-ink-soft mb-1.5">
-              Paper name <span className="text-slate-soft">(blank = from the PDF)</span>
-            </label>
-            <input
-              type="text"
-              value={paperName}
-              onChange={(e) => setPaperName(e.target.value)}
-              placeholder="Auto from PDF"
-              className="rv-input w-56"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink-soft mb-1.5">
-              Exam date <span className="text-slate-soft">(blank = from the PDF)</span>
-            </label>
-            <input
-              type="date"
-              value={examDate}
-              onChange={(e) => onDateChange(e.target.value)}
-              className="rv-input w-40"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink-soft mb-1.5">Year</label>
-            <input
-              type="number"
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              placeholder="Auto"
-              className="rv-input w-24"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink-soft mb-1.5">
-              Shift <span className="text-slate-soft">(blank = from the PDF)</span>
-            </label>
-            <input
-              type="text"
-              value={shift}
-              onChange={(e) => setShift(e.target.value)}
-              placeholder="Auto from PDF"
-              className="rv-input w-32"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink-soft mb-1.5">Language</label>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="rv-input w-36"
-            >
-              <option value="auto">Auto-detect</option>
-              <option value="bilingual">Bilingual (EN + HI)</option>
-              <option value="english">English only</option>
-              <option value="hindi">Hindi only</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink-soft mb-1.5">PDF</label>
-            <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-border-strong hover:border-brand cursor-pointer text-sm text-slate">
-              <RiUploadCloud2Line size={16} />
-              {file ? file.name : "Choose PDF"}
+      {showUpload && (
+        <div className="rv-card p-5 mb-5">
+          <p className="font-semibold text-ink mb-3">Add a {examName} paper</p>
+          <form onSubmit={handleUpload} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6 items-end">
+            <div className="lg:col-span-2">
+              <label className={field}>Paper name (blank = from the PDF)</label>
+              <input type="text" value={paperName} onChange={(e) => setPaperName(e.target.value)} placeholder="Auto from PDF" className="rv-input" />
+            </div>
+            <div>
+              <label className={field}>Exam date</label>
+              <input type="date" value={examDate} onChange={(e) => onDateChange(e.target.value)} className="rv-input" />
+            </div>
+            <div>
+              <label className={field}>Year</label>
+              <input type="number" value={year} onChange={(e) => setYear(e.target.value)} placeholder="Auto" className="rv-input" />
+            </div>
+            <div>
+              <label className={field}>Shift</label>
+              <input type="text" value={shift} onChange={(e) => setShift(e.target.value)} placeholder="Auto" className="rv-input" />
+            </div>
+            <div>
+              <label className={field}>Language</label>
+              <select value={language} onChange={(e) => setLanguage(e.target.value)} className="rv-input">
+                <option value="auto">Auto-detect</option>
+                <option value="bilingual">Bilingual (EN + HI)</option>
+                <option value="english">English only</option>
+                <option value="hindi">Hindi only</option>
+              </select>
+            </div>
+            <label className="sm:col-span-2 lg:col-span-4 flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-dashed border-border-strong hover:border-brand cursor-pointer text-sm text-slate">
+              <RiUploadCloud2Line size={18} className="text-brand" />
+              <span className="truncate">{file ? file.name : "Choose the paper's PDF"}</span>
               <input type="file" accept="application/pdf" className="hidden" onChange={(e) => setFile(e.target.files[0])} />
             </label>
-          </div>
-          <button
-            type="submit"
-            disabled={uploading}
-            className="rv-btn-primary"
-          >
-            {uploading ? "Uploading..." : "Upload PDF"}
-          </button>
-          <button
-            type="button"
-            onClick={startByHand}
-            disabled={starting || uploading}
-            className="rv-btn-secondary disabled:opacity-60"
-            title="No PDF, or one the extractor can't read? Start the paper empty and type or paste its questions in."
-          >
-            {starting ? "Starting..." : "Type it in instead"}
-          </button>
-        </form>
+            <div className="sm:col-span-2 flex gap-2 lg:justify-end">
+              <button type="submit" disabled={uploading} className="rv-btn-primary">
+                {uploading ? "Uploading..." : "Upload PDF"}
+              </button>
+              <button
+                type="button"
+                onClick={startByHand}
+                disabled={starting || uploading}
+                className="rv-btn-secondary disabled:opacity-60"
+                title="No PDF, or one the extractor can't read? Start the paper empty and type or paste its questions in."
+              >
+                {starting ? "Starting..." : "Type it in instead"}
+              </button>
+            </div>
+          </form>
 
-        {uploading && (
-          <div className="mt-4 bg-warn-light border border-warn-border text-warn text-sm rounded-lg px-4 py-3 flex items-center gap-3">
-            <span className="inline-block w-4 h-4 border-2 border-warn-border border-t-warn rounded-full animate-spin" />
-            Uploading the PDF. Reading happens in the queue after this - you can close the page once it says uploaded.
-          </div>
-        )}
+          {uploading && (
+            <div className="mt-4 bg-warn-light border border-warn-border text-warn text-sm rounded-lg px-4 py-3 flex items-center gap-3">
+              <span className="inline-block w-4 h-4 border-2 border-warn-border border-t-warn rounded-full animate-spin" />
+              Uploading the PDF. Reading happens in the queue after this - you can close the page once it says uploaded.
+            </div>
+          )}
+        </div>
+      )}
 
-        {uploadMsg && (
-          <div
-            className={`mt-4 text-sm rounded-lg px-4 py-3 border ${
-              uploadMsg.type === "success"
-                ? "bg-success-light border-success-border text-success"
-                : "bg-danger-light border-danger-border text-danger"
+      {uploadMsg && (
+        <div
+          className={`mb-5 text-sm rounded-lg px-4 py-3 border ${
+            uploadMsg.type === "success" ? "bg-success-light border-success-border text-success" : "bg-danger-light border-danger-border text-danger"
+          }`}
+        >
+          {uploadMsg.text}
+        </div>
+      )}
+
+      <PyqImportList examStage={examStage} reloadKey={importsKey} onPublished={() => loadPapers()} />
+
+      {/* Tabs */}
+      <div className="flex flex-wrap items-center gap-1 border-b border-border mb-4">
+        {[
+          ["draft", "Drafts", drafts.length, "bg-warn-light text-warn"],
+          ["published", "Published", published.length, "bg-success-light text-success"],
+          ["archived", "Archived", archived.length, "bg-slate-light text-slate"],
+        ].map(([key, label, n, tone]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`px-4 py-2.5 -mb-px text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+              tab === key ? "border-brand text-brand" : "border-transparent text-slate hover:text-ink"
             }`}
           >
-            {uploadMsg.text}
+            {label}
+            <span className={`text-[11px] px-1.5 py-0.5 rounded-full tabular-nums ${tone}`}>{n}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="rv-card !p-0 overflow-hidden">
+        {loading ? (
+          <p className="text-slate-soft text-center py-10">Loading...</p>
+        ) : shown.length === 0 ? (
+          <p className="text-slate-soft text-center py-10">
+            {tab === "draft" ? `No draft ${examName} papers.` : tab === "published" ? `No ${examName} paper published yet.` : "Nothing archived."}
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
+                  <th className="px-4 py-3">Paper</th>
+                  <th className="px-4 py-3 whitespace-nowrap">Year · Shift</th>
+                  <th className="px-4 py-3 text-right">Questions</th>
+                  <th className="px-4 py-3">Language</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-soft">
+                {shown.map((p) => (
+                  <tr key={p._id} className="align-middle hover:bg-slate-light/40 transition-colors">
+                    <td className="px-4 py-3 min-w-[240px]">
+                      <button onClick={() => setReviewing(p._id)} className="flex items-center gap-2.5 text-left">
+                        <span className="w-8 h-8 rounded-md bg-brand/10 text-brand grid place-items-center shrink-0">
+                          <RiFileTextLine size={16} />
+                        </span>
+                        <span className="font-semibold text-ink hover:text-brand">{p.title}</span>
+                      </button>
+                    </td>
+                    <td className="px-4 py-3 text-slate whitespace-nowrap">
+                      {p.pyqYear || "—"}
+                      {p.pyqShift ? ` · ${p.pyqShift}` : ""}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums font-semibold text-ink">{p.questions?.length || 0}</td>
+                    <td className="px-4 py-3">
+                      {p.pyqLanguage ? (
+                        <span className="text-[11px] font-semibold bg-slate-light text-slate px-2 py-0.5 rounded-full">
+                          {p.pyqLanguage === "bilingual" ? "EN + HI" : p.pyqLanguage === "hindi" ? "Hindi" : "English"}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-soft">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-1.5">
+                        <button onClick={() => setReviewing(p._id)} className="px-2.5 py-1 rounded-md bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-semibold inline-flex items-center gap-1">
+                          <RiEyeLine size={13} /> Review
+                        </button>
+                        {tab === "draft" && (
+                          <button onClick={() => setWritingInto(p)} className="px-2.5 py-1 rounded-md bg-brand/5 hover:bg-brand/10 text-brand text-xs font-semibold whitespace-nowrap">
+                            + Write / upload
+                          </button>
+                        )}
+                        {tab === "published" && (
+                          <button onClick={() => archivePaper(p._id)} className="px-2.5 py-1 rounded-md bg-warn-light hover:opacity-80 text-warn text-xs font-semibold">
+                            Hide
+                          </button>
+                        )}
+                        {tab === "draft" && (
+                          <button onClick={() => deletePaper(p._id)} className="px-2.5 py-1 rounded-md bg-danger-light hover:opacity-80 text-danger text-xs font-semibold">
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
-
-      <PyqImportList examStage={examStage} reloadKey={importsKey} onPublished={loadPapers} />
-
-      {loading ? (
-        <p className="text-slate-soft">Loading...</p>
-      ) : (
-        <>
-          <PaperSection title={`📝 Draft / Needs Review (${drafts.length})`}>
-            {drafts.map((p) => (
-              <PaperRow
-                key={p._id}
-                paper={p}
-                onReview={() => setReviewing(p._id)}
-                onWrite={() => setWritingInto(p)}
-                onDelete={() => deletePaper(p._id)}
-              />
-            ))}
-            {drafts.length === 0 && <Empty text="No draft papers." />}
-          </PaperSection>
-
-          <PaperSection title={`✅ Published (${published.length})`}>
-            {published.map((p) => (
-              <PaperRow key={p._id} paper={p} onReview={() => setReviewing(p._id)} onArchive={() => archivePaper(p._id)} />
-            ))}
-            {published.length === 0 && <Empty text="No papers published yet." />}
-          </PaperSection>
-
-          {archived.length > 0 && (
-            <PaperSection title={`🗄 Archived (${archived.length})`}>
-              {archived.map((p) => (
-                <PaperRow key={p._id} paper={p} onReview={() => setReviewing(p._id)} />
-              ))}
-            </PaperSection>
-          )}
-        </>
-      )}
 
       {writingInto && (
         <ManualQuestions
@@ -341,64 +380,13 @@ export default function PyqBank() {
   );
 }
 
-function PaperSection({ title, children }) {
+function Tile({ label, value, tone }) {
   return (
-    <div className="mb-8">
-      <h2 className="text-sm font-semibold text-slate mb-3">{title}</h2>
-      <div className="space-y-3">{children}</div>
-    </div>
-  );
-}
-
-function Empty({ text }) {
-  return <p className="text-slate-soft text-sm bg-surface border border-border-soft rounded-xl p-5">{text}</p>;
-}
-
-function PaperRow({ paper, onReview, onWrite, onArchive, onDelete }) {
-  return (
-    <div className="rv-card p-4 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center shrink-0">
-          <RiFileTextLine size={18} />
-        </div>
-        <div>
-          <p className="font-semibold text-ink">{paper.title}</p>
-          <p className="text-xs text-slate flex items-center gap-1.5 mt-0.5">
-            {paper.questions?.length || 0} questions
-            {paper.subject ? ` · ${paper.subject}` : ""}
-            {paper.pyqLanguage && (
-              <span className="text-[10px] font-semibold bg-slate-light text-slate px-1.5 py-0.5 rounded">
-                {paper.pyqLanguage === "bilingual" ? "EN + HI" : paper.pyqLanguage === "hindi" ? "HI" : "EN"}
-              </span>
-            )}
-          </p>
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <button
-          onClick={onReview}
-          className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong flex items-center gap-1.5"
-        >
-          <RiEyeLine size={14} /> Review
-        </button>
-        {onWrite && (
-          <button
-            onClick={onWrite}
-            className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20"
-          >
-            + Write / upload
-          </button>
-        )}
-        {onArchive && (
-          <button onClick={onArchive} className="px-3 py-1.5 rounded-lg bg-warn-light text-warn text-sm font-medium hover:bg-warn-light">
-            Hide
-          </button>
-        )}
-        {onDelete && (
-          <button onClick={onDelete} className="px-3 py-1.5 rounded-lg bg-danger-light text-danger text-sm font-medium hover:bg-danger-light">
-            Delete
-          </button>
-        )}
+    <div className="rv-card p-4 flex items-center gap-3">
+      <span className={`w-1.5 self-stretch rounded-full ${tone}`} />
+      <div className="min-w-0">
+        {value == null ? <div className="h-6 w-10 rounded bg-slate-light animate-pulse" /> : <p className="font-display text-xl font-extrabold text-ink tabular-nums">{value}</p>}
+        <p className="text-xs text-slate truncate">{label}</p>
       </div>
     </div>
   );
