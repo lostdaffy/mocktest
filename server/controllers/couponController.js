@@ -35,11 +35,11 @@ async function resolveCoupon(code, basePrice) {
 async function validateCoupon(req, res) {
   try {
     const { code, plan } = req.query;
-    const PLAN_PRICES = require("./paymentController").PLAN_PRICES;
-    const basePrice = PLAN_PRICES[plan];
-    if (!basePrice) return res.status(400).json({ valid: false, message: "Invalid plan" });
-    if (require("./paymentController").NO_COUPON_PLANS.has(plan)) {
-      return res.json({ valid: false, message: "Coupons do not apply to the 1 Month plan" });
+    const planDoc = await require("../services/plans").getPlanByKey(plan);
+    if (!planDoc || !planDoc.active || planDoc.archivedAt) return res.status(400).json({ valid: false, message: "Invalid plan" });
+    const basePrice = planDoc.price;
+    if (!planDoc.couponsAllowed) {
+      return res.json({ valid: false, message: "Coupons do not apply to this plan" });
     }
 
     const { finalAmount } = await resolveCoupon(code, basePrice);

@@ -21,6 +21,7 @@ import ImagesPending from "./pages/ImagesPending";
 import Vacancies from "./pages/Vacancies";
 import PyqBank from "./pages/PyqBank";
 import Coupons from "./pages/Coupons";
+import Plans from "./pages/Plans";
 import Broadcasts from "./pages/Broadcasts";
 import Payments from "./pages/Payments";
 import Sessions from "./pages/Sessions";
@@ -160,6 +161,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <PyqBank />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/plans"
+              element={
+                <ProtectedRoute>
+                  <Plans />
                 </ProtectedRoute>
               }
             />

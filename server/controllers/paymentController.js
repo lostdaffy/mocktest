@@ -4,23 +4,12 @@ const Subscription = require("../models/Subscription");
 const User = require("../models/User");
 const { resolveCoupon } = require("./couponController");
 
-// Plan keys are historical - "half_yearly"/"yearly" describe the duration,
-// not the price, so they stay stable even when pricing changes. Adding a
-// new key here is all it takes to offer another plan; every duration and
-// price lookup in the app reads from these two maps.
-const PLAN_PRICES = {
-  monthly: 59,
-  quarterly: 149,
-  half_yearly: 249,
-  yearly: 449,
-};
-
-const PLAN_DURATION_MONTHS = {
-  monthly: 1,
-  quarterly: 3,
-  half_yearly: 6,
-  yearly: 12,
-};
+// Plans (price, length, discount rules) live in the Plan collection and are
+// managed from the admin panel (services/plans.js). Nothing about a plan is
+// ever taken from the request except its key: the price charged is always
+// read here, on the server. The four original keys stay valid, so older app
+// versions keep working.
+const { getActivePlans, getPlanByKey, publicPlan } = require("../services/plans");
 
 // Referral reward lives in config/referral.js now - it's awarded at signup
 // (controllers/authController.js), not here at purchase time. Imported only
@@ -28,21 +17,10 @@ const PLAN_DURATION_MONTHS = {
 const { REFERRAL_SIGNUP_REWARD, REFERRAL_OFFER_ACTIVE } = require("../config/referral");
 
 // Cap how much of a purchase can be paid with referral credits, so a plan
-// is never fully free (protects revenue and discourages fraud rings). Set
-// per plan: the ₹59 month is the entry price and takes no credit and no
-// coupon - every rupee of it comes from the bank. App 1.2.3+ reads these
-// from /payments/referral-info, so they can change without an app update;
-// older apps assume 50%, so keep the longer plans at 50 until most
-// students are on 1.2.3.
+// is never fully free (protects revenue and discourages fraud rings). Each
+// plan carries its own share (Plan.creditPercent); this is the fallback.
 const MAX_CREDIT_DISCOUNT_PERCENT = 50;
-const PLAN_CREDIT_PERCENT = {
-  monthly: 0,
-  quarterly: 50,
-  half_yearly: 50,
-  yearly: 50,
-};
-const NO_COUPON_PLANS = new Set(["monthly"]);
-const creditPercentFor = (plan) => PLAN_CREDIT_PERCENT[plan] ?? MAX_CREDIT_DISCOUNT_PERCENT;
+const creditPercentFor = (plan) => plan?.creditPercent ?? MAX_CREDIT_DISCOUNT_PERCENT;
 
 // How long an unpaid order holds one of a coupon's remaining uses.
 const COUPON_HOLD_MINUTES = 15;
@@ -78,8 +56,11 @@ async function createOrder(req, res) {
     if (!paymentsEnabled()) return res.status(503).json(PAYMENTS_OFF);
 
     const { plan, useCredits, couponCode } = req.body;
-    const basePrice = PLAN_PRICES[plan];
-    if (!basePrice) return res.status(400).json({ message: "Invalid plan" });
+    const planDoc = await getPlanByKey(plan);
+    if (!planDoc || !planDoc.active || planDoc.archivedAt) {
+      return res.status(400).json({ message: "This plan is not available any more. Please pick another." });
+    }
+    const basePrice = planDoc.price;
 
     const user = await User.findById(req.user._id);
 
@@ -87,8 +68,8 @@ async function createOrder(req, res) {
     let finalAmount = basePrice;
     let appliedCoupon = null;
 
-    if (couponCode && NO_COUPON_PLANS.has(plan)) {
-      return res.status(400).json({ message: "Coupons do not apply to the 1 Month plan" });
+    if (couponCode && !planDoc.couponsAllowed) {
+      return res.status(400).json({ message: "Coupons do not apply to this plan" });
     }
 
     if (couponCode) {
@@ -135,7 +116,7 @@ async function createOrder(req, res) {
         }
       }
     } else if (useCredits && user.referralCredits > 0) {
-      const maxDiscount = Math.floor((basePrice * creditPercentFor(plan)) / 100);
+      const maxDiscount = Math.floor((basePrice * creditPercentFor(planDoc)) / 100);
       discount = Math.min(user.referralCredits, maxDiscount);
       finalAmount = basePrice - discount;
     }
@@ -155,11 +136,12 @@ async function createOrder(req, res) {
     const currentExpiry = user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt) : null;
     const startDate = currentExpiry && currentExpiry > now ? currentExpiry : now;
     const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + PLAN_DURATION_MONTHS[plan]);
+    endDate.setMonth(endDate.getMonth() + planDoc.months);
 
     const subscription = await Subscription.create({
       user: req.user._id,
-      plan,
+      plan: planDoc.key,
+      months: planDoc.months,
       amount: finalAmount,
       creditsUsed: discount,
       couponCode: appliedCoupon?.code,
@@ -210,7 +192,10 @@ async function activateSubscription({ razorpayOrderId, razorpayPaymentId, razorp
   const previousExpiry = buyer.subscriptionExpiresAt ? new Date(buyer.subscriptionExpiresAt) : null;
   const termStart = previousExpiry && previousExpiry > now ? previousExpiry : now;
   const termEnd = new Date(termStart);
-  termEnd.setMonth(termEnd.getMonth() + PLAN_DURATION_MONTHS[subscription.plan]);
+  // The length was stamped on the order when it was created, so a later
+  // edit of the plan never changes what an already-open order buys.
+  const months = subscription.months || (await getPlanByKey(subscription.plan))?.months || 1;
+  termEnd.setMonth(termEnd.getMonth() + months);
 
   subscription.razorpayPaymentId = razorpayPaymentId;
   if (razorpaySignature) subscription.razorpaySignature = razorpaySignature;
@@ -353,13 +338,19 @@ async function getReferralInfo(req, res) {
     maxDiscountPercent: MAX_CREDIT_DISCOUNT_PERCENT,
     // What each plan allows, for the app's plan and payment screens.
     credits: user.referralCredits,
-    plans: Object.fromEntries(Object.keys(PLAN_PRICES).map((p) => [p, {
-      price: PLAN_PRICES[p],
+    plans: Object.fromEntries((await getActivePlans()).map((p) => [p.key, {
+      price: p.price,
       creditPercent: creditPercentFor(p),
-      coupons: !NO_COUPON_PLANS.has(p),
+      coupons: !!p.couponsAllowed,
     }])),
     shareMessage: `Practise on Rankveer! Use my referral code "${user.referralCode}" when you sign up. Unlimited mock tests, PYQs and live exams for SSC, UP Police, Railway, Banking and CTET.`,
   });
 }
 
-module.exports = { createOrder, verifyPayment, razorpayWebhook, getReferralInfo, PLAN_PRICES, NO_COUPON_PLANS, paymentsEnabled };
+// GET /api/payments/plans - what the Subscription screen lists
+async function listPlans(req, res) {
+  res.set("Cache-Control", "no-store");
+  res.json({ plans: (await getActivePlans()).map(publicPlan) });
+}
+
+module.exports = { createOrder, verifyPayment, razorpayWebhook, getReferralInfo, listPlans, paymentsEnabled };

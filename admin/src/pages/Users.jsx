@@ -75,6 +75,22 @@ export default function Users() {
   const [subTarget, setSubTarget] = useState(null);
   const [subAction, setSubAction] = useState("grant");
   const [subPlan, setSubPlan] = useState("half_yearly");
+  // The plans on offer, as set on the Plans page (falls back to the four classic ones).
+  const [planOptions, setPlanOptions] = useState([
+    { key: "monthly", name: "1 Month" },
+    { key: "quarterly", name: "3 Months" },
+    { key: "half_yearly", name: "6 Months" },
+    { key: "yearly", name: "12 Months" },
+  ]);
+  useEffect(() => {
+    api
+      .get("/admin/plans")
+      .then((r) => {
+        const live = r.data.plans.filter((p) => !p.archivedAt);
+        if (live.length) setPlanOptions(live);
+      })
+      .catch(() => {});
+  }, []);
   const [subReason, setSubReason] = useState("");
   const [subSaving, setSubSaving] = useState(false);
 
@@ -940,10 +956,11 @@ export default function Users() {
                   onChange={(e) => setSubPlan(e.target.value)}
                   className="w-full rv-input text-sm"
                 >
-                  <option value="monthly">1 Month</option>
-                  <option value="quarterly">3 Months</option>
-                  <option value="half_yearly">6 Months</option>
-                  <option value="yearly">12 Months</option>
+                  {planOptions.map((p) => (
+                    <option key={p.key} value={p.key}>
+                      {p.name}
+                    </option>
+                  ))}
                 </select>
               )}
 

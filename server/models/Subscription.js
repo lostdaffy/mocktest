@@ -3,7 +3,12 @@ const mongoose = require("mongoose");
 const subscriptionSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    plan: { type: String, enum: ["monthly", "quarterly", "half_yearly", "yearly"], required: true },
+    // The key of a Plan (monthly, quarterly, ... or one the admin created) or
+    // "manual" for a hand-given plan. Not an enum any more: plans are data.
+    plan: { type: String, required: true, trim: true, maxlength: 40 },
+    // Length in months, stamped when the order is created so editing the plan
+    // later can't change what an open order buys.
+    months: { type: Number },
     amount: { type: Number, required: true }, // final amount paid after any credit discount
     creditsUsed: { type: Number, default: 0 }, // referral credits applied as discount
     // The coupon this order was created with. It MUST be declared here:

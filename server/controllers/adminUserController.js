@@ -6,7 +6,6 @@ const Report = require("../models/Report");
 const Session = require("../models/Session");
 const ExamPattern = require("../models/ExamPattern");
 const { deleteAccountData } = require("../services/accountDeletion");
-const PLAN_DURATION_MONTHS = { monthly: 1, quarterly: 3, half_yearly: 6, yearly: 12 };
 
 // Builds the Mongo filter shared by list/stats/export, so the three stay
 // in sync - a filter combination always means the same thing everywhere.
@@ -178,7 +177,7 @@ async function manageSubscription(req, res) {
     }
 
     if (action === "grant" || action === "extend") {
-      const durationMonths = months ? parseInt(months, 10) : PLAN_DURATION_MONTHS[plan] || 1;
+      const durationMonths = months ? parseInt(months, 10) : (plan && (await require("../services/plans").getPlanByKey(plan))?.months) || 1;
       if (!durationMonths || durationMonths <= 0) {
         return res.status(400).json({ message: "Choose a valid plan or number of months" });
       }

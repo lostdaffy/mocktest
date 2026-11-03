@@ -21,6 +21,7 @@ const ROUTE_TITLES = [
   ["/exam-patterns", "Exam Patterns"],
   ["/subjects", "Subjects"],
   ["/live-exams", "Live Exams"],
+  ["/plans", "Plans"],
   ["/coupons", "Coupons"],
   ["/notifications", "Notifications"],
   ["/payments", "Payments"],

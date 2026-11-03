@@ -72,7 +72,9 @@ const BENEFITS = [
 // perDay is derived rather than hardcoded so it can never drift out of
 // sync with the price sitting right above it.
 // A plan with no mrp/off shows just its price (no struck-out MRP, no badge).
-const PLANS = [
+// Shown until the server's list arrives (and if it never does). The live list
+// is edited from the admin panel (Plans) and read from /payments/plans.
+const DEFAULT_PLANS = [
   {
     id: "monthly",
     label: "1 Month",
@@ -104,10 +106,13 @@ const PLANS = [
     days: 365,
     off: "75% OFF",
   },
-].map((plan) => ({
-  ...plan,
-  perDay: `₹${(plan.price / plan.days).toFixed(2)}/day`,
-}));
+];
+
+const withPerDay = (list) =>
+  list.map((plan) => ({
+    ...plan,
+    perDay: `₹${(plan.price / plan.days).toFixed(2)}/day`,
+  }));
 
 /* =========================================================
    SCREEN
@@ -126,6 +131,8 @@ export default function SubscriptionScreen({
   const [credits, setCredits] =
     useState(0);
 
+  const [plans, setPlans] = useState(() => withPerDay(DEFAULT_PLANS));
+
   // Per plan: { creditPercent, coupons } from the server.
   const [planRules, setPlanRules] =
     useState({});
@@ -134,8 +141,8 @@ export default function SubscriptionScreen({
   // pre-selected without hardcoding an id that could go stale.
   const [selected, setSelected] =
     useState(
-      PLANS.find((p) => p.best)?.id ||
-        PLANS[0].id
+      DEFAULT_PLANS.find((p) => p.best)?.id ||
+        DEFAULT_PLANS[0].id
     );
 
   const [loadingCredits, setLoadingCredits] =
@@ -183,6 +190,30 @@ export default function SubscriptionScreen({
       }
     }, []);
 
+  const loadPlans = useCallback(async () => {
+    try {
+      const res = await api.get("/payments/plans", { timeout: 10000 });
+      const list = res.data?.plans;
+      if (Array.isArray(list) && list.length) {
+        setPlans(withPerDay(list));
+        setSelected((cur) =>
+          list.some((p) => p.id === cur)
+            ? cur
+            : list.find((p) => p.best)?.id || list[0].id
+        );
+        // creditPercent / coupons now come with each plan
+        setPlanRules((prev) => ({
+          ...prev,
+          ...Object.fromEntries(
+            list.map((p) => [p.id, { creditPercent: p.creditPercent, coupons: p.coupons }])
+          ),
+        }));
+      }
+    } catch (err) {
+      // Older server, or offline: the built-in list stays.
+    }
+  }, []);
+
   const loadPaymentStatus =
     useCallback(async () => {
       try {
@@ -203,8 +234,9 @@ export default function SubscriptionScreen({
   useFocusEffect(
     useCallback(() => {
       loadCredits();
+      loadPlans();
       loadPaymentStatus();
-    }, [loadCredits, loadPaymentStatus])
+    }, [loadCredits, loadPlans, loadPaymentStatus])
   );
 
   /* =======================================================
@@ -220,10 +252,10 @@ export default function SubscriptionScreen({
     : null;
 
   const plan =
-    PLANS.find(
+    plans.find(
       (item) =>
         item.id === selected
-    ) || PLANS[1];
+    ) || plans[0];
 
   // The 1 Month plan takes no credit and no coupon; the server says so
   // too, this is only the default until it answers.
@@ -486,7 +518,7 @@ export default function SubscriptionScreen({
         />
 
         <View style={styles.plansWrap}>
-          {PLANS.map((item) => {
+          {plans.map((item) => {
             const active =
               selected === item.id;
 
