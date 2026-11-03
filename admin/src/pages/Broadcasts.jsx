@@ -115,8 +115,25 @@ export default function Broadcasts() {
       <PageHeader
         eyebrow="Students"
         title="Notifications"
-        subtitle="Send a message to all students, to one exam's students, or to paid or free students — new mocks, form dates, results."
+        subtitle="Send a message to all students, one exam's students, or paid or free students — new mocks, form dates, results. Nothing is sent until you press Send and confirm."
       />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
+        {[
+          ["Messages sent", history.length, "bg-brand"],
+          ["Phones reached", history.reduce((n, h) => n + (h.delivered || 0), 0), "bg-success"],
+          ["Sending now", history.filter((h) => h.status === "sending").length, "bg-info"],
+          ["Failed", history.filter((h) => h.status === "failed").length, history.some((h) => h.status === "failed") ? "bg-danger" : "bg-slate-soft"],
+        ].map(([label, value, tone]) => (
+          <Card key={label} className="!p-4 flex items-center gap-3">
+            <span className={`w-1.5 self-stretch rounded-full ${tone}`} />
+            <div>
+              <p className="font-display text-xl font-extrabold text-ink tabular-nums">{loading ? "—" : value}</p>
+              <p className="text-xs text-slate">{label}</p>
+            </div>
+          </Card>
+        ))}
+      </div>
 
       <form onSubmit={send}>
         <Card className="mb-8">
@@ -212,30 +229,59 @@ export default function Broadcasts() {
       ) : history.length === 0 ? (
         <EmptyState icon={RiNotification3Line} title="No message sent yet" text="Your messages and how many phones they reached will show here." />
       ) : (
-        <div className="space-y-3">
-          {history.map((h) => (
-            <Card key={h._id} className="!p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="font-semibold text-ink break-words">{h.title}</p>
-                  <p className="text-sm text-slate mt-0.5 break-words">{h.body}</p>
-                  <p className="text-xs text-slate-soft mt-2">
-                    {new Date(h.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
-                    {" · "}
-                    {AUDIENCE_LABEL(h.audience, examName)}
-                    {" · "}
-                    {h.students} student(s), {h.delivered}/{h.phones} phone(s) reached
-                    {h.screen ? ` · opens ${SCREENS.find(([v]) => v === h.screen)?.[1] || h.screen}` : ""}
-                  </p>
-                  {h.problems?.length > 0 && <p className="text-xs text-danger mt-1">{h.problems.join("; ")}</p>}
-                </div>
-                <Badge tone={h.status === "done" ? "success" : h.status === "failed" ? "danger" : "info"} dot>
-                  {h.status === "done" ? "Sent" : h.status === "failed" ? "Failed" : "Sending"}
-                </Badge>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <Card className="!p-0 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
+                  <th className="px-4 py-3 whitespace-nowrap">Sent</th>
+                  <th className="px-4 py-3">Message</th>
+                  <th className="px-4 py-3">To</th>
+                  <th className="px-4 py-3 min-w-[150px]">Reached</th>
+                  <th className="px-4 py-3">Opens</th>
+                  <th className="px-4 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-soft">
+                {history.map((h) => {
+                  const pct = h.phones ? Math.round((h.delivered / h.phones) * 100) : 0;
+                  return (
+                    <tr key={h._id} className="align-top hover:bg-slate-light/40">
+                      <td className="px-4 py-3 whitespace-nowrap text-slate tabular-nums text-xs">
+                        {new Date(h.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
+                      </td>
+                      <td className="px-4 py-3 min-w-[260px]">
+                        <p className="font-semibold text-ink break-words">{h.title}</p>
+                        <p className="text-xs text-slate mt-0.5 break-words line-clamp-2">{h.body}</p>
+                        {h.problems?.length > 0 && <p className="text-xs text-danger mt-1">{h.problems.join("; ")}</p>}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-slate whitespace-nowrap">
+                        {AUDIENCE_LABEL(h.audience, examName)}
+                        <p className="text-slate-soft">{h.students} student(s)</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 rounded-full bg-slate-light overflow-hidden min-w-[60px]">
+                            <div className="h-full rounded-full bg-success" style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="text-xs tabular-nums text-slate whitespace-nowrap">
+                            {h.delivered}/{h.phones}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-slate whitespace-nowrap">{h.screen ? SCREENS.find(([v]) => v === h.screen)?.[1] || h.screen : "—"}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <Badge tone={h.status === "done" ? "success" : h.status === "failed" ? "danger" : "info"} dot>
+                          {h.status === "done" ? "Sent" : h.status === "failed" ? "Failed" : "Sending"}
+                        </Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       )}
     </div>
   );
