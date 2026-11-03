@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
-import { PageHeader, Badge, Button, Modal, Field, Input, Select, Textarea, EmptyState, LoadingState } from "../components/ui";
+import { PageHeader, Button, Modal, Field, Input, Select, Textarea, EmptyState, LoadingState } from "../components/ui";
 import { useToast } from "../components/Toast";
 import { useGenerationActivity, useGenerationFinished, useJobs } from "../context/GenerationActivity";
 import { RiMegaphoneLine } from "@remixicon/react";
@@ -52,13 +52,21 @@ export default function Vacancies() {
   const [editing, setEditing] = useState(null); // form state, with _id when editing
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState(null);
+  const [tab, setTab] = useState("upcoming");
 
   async function load() {
     const res = await api.get("/vacancies");
     setData(res.data);
+    return res.data;
   }
   useEffect(() => {
-    load().catch(() => toast.error("Couldn't load vacancies"));
+    load()
+      .then((d) => {
+        // Open on a tab that has something in it.
+        const has = (st) => (d?.vacancies || []).some((v) => v.status === st);
+        if (!has("upcoming")) setTab(has("previous") ? "previous" : has("hidden") ? "hidden" : "upcoming");
+      })
+      .catch(() => toast.error("Couldn't load vacancies"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -166,7 +174,11 @@ export default function Vacancies() {
     }
   }
 
-  const groups = ["upcoming", "previous", "hidden"].map((s) => [s, (data?.vacancies || []).filter((v) => v.status === s)]);
+  const all = data?.vacancies || [];
+  const counts = { upcoming: 0, previous: 0, hidden: 0 };
+  for (const v of all) counts[v.status] = (counts[v.status] || 0) + 1;
+  const totalMocks = all.reduce((n, v) => n + (v.mocks?.published || 0) + (v.mocks?.draft || 0), 0);
+  const shown = all.filter((v) => v.status === tab);
   const examName = (t) => patterns.find((p) => p.examType === t)?.displayName || t;
 
   return (
@@ -192,84 +204,156 @@ export default function Vacancies() {
           action={<Button onClick={openNew}>+ Add vacancy</Button>}
         />
       ) : (
-        groups.map(([status, list]) =>
-          list.length ? (
-            <section key={status} className="mb-8">
-              <h2 className="font-display text-lg font-bold text-ink mb-3">
-                {status === "upcoming" ? "Upcoming exam mock series" : status === "previous" ? "Previous exam mock series" : "Hidden"}
-              </h2>
-              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {list.map((v) => (
-                  <div key={v._id} className="rv-card p-5 flex flex-col">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="font-semibold text-ink">{v.name}</p>
-                        <p className="text-xs text-slate mt-0.5">
-                          {examName(v.examType)} · {v.year}
-                        </p>
-                      </div>
-                      <Badge tone={STATUS[v.status].tone}>{STATUS[v.status].label}</Badge>
-                    </div>
-                    <p className="text-sm text-ink-soft mt-2">{v.seriesName}</p>
-                    {v.status === "upcoming" && v.shownAs === "previous" && (
-                      <p className="text-xs text-warn bg-warn-light rounded-md px-2.5 py-1.5 mt-2">
-                        Exam date has passed - students now see this series under &quot;Exam held&quot;, below the newer one.
-                      </p>
-                    )}
-                    <p className="text-xs text-slate-soft mt-1">
-                      {v.syllabus?.length ? `Own syllabus for ${v.syllabus.map((s) => s.subject).join(", ")}` : "Follows the exam pattern's syllabus"}
-                    </p>
-                    <p className="text-xs mt-2">
-                      <span className="text-success font-medium">{v.mocks.published} published</span>
-                      {v.mocks.draft > 0 && <span className="text-warn font-medium"> · {v.mocks.draft} draft</span>}
-                      {(() => {
-                        const jobs = vacancyJobs.filter((j) => String(j.vacancy) === String(v._id));
-                        if (!jobs.length) return null;
-                        const now = jobs.some((j) => j.position === 0);
-                        const next = Math.min(...jobs.map((j) => j.position));
-                        return (
-                          <span className="text-brand font-medium">
-                            {" "}
-                            · {now ? `building now${jobs.length > 1 ? ` (+${jobs.length - 1} waiting)` : ""}` : `${jobs.length} waiting (#${next} in line)`}
-                          </span>
-                        );
-                      })()}
-                    </p>
-                    <div className="mt-auto pt-4 flex flex-wrap gap-2">
-                      <Button size="sm" loading={busy === v._id} onClick={() => queueMock(v)}>
-                        + Queue a mock
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => adopt(v)}>
-                        Bring in older mocks
-                      </Button>
-                      <Link to={`/exam-series/${v.examType}`} className="rv-btn-secondary !py-1.5 !px-3 text-xs">
-                        Review mocks
-                      </Link>
-                      <Button size="sm" variant="ghost" onClick={() => openEdit(v)}>
-                        Edit
-                      </Button>
-                      {v.status !== "upcoming" && (
-                        <Button size="sm" variant="ghost" onClick={() => setStatus(v, "upcoming")}>
-                          Make upcoming
-                        </Button>
-                      )}
-                      {v.status === "upcoming" && (
-                        <Button size="sm" variant="ghost" onClick={() => setStatus(v, "previous")}>
-                          Move to previous
-                        </Button>
-                      )}
-                      {v.mocks.published + v.mocks.draft === 0 && (
-                        <Button size="sm" variant="ghost" onClick={() => remove(v)}>
-                          Delete
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
+            {[
+              ["Upcoming in the app", counts.upcoming, "bg-success"],
+              ["Previous in the app", counts.previous, "bg-brand"],
+              ["Hidden", counts.hidden, "bg-slate-soft"],
+              ["Mocks in these series", totalMocks, "bg-info"],
+            ].map(([label, value, tone]) => (
+              <div key={label} className="rv-card p-4 flex items-center gap-3">
+                <span className={`w-1.5 self-stretch rounded-full ${tone}`} />
+                <div className="min-w-0">
+                  <p className="font-display text-xl font-extrabold text-ink tabular-nums">{value}</p>
+                  <p className="text-xs text-slate truncate">{label}</p>
+                </div>
               </div>
-            </section>
-          ) : null
-        )
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1 border-b border-border mb-4">
+            {[
+              ["upcoming", "Upcoming"],
+              ["previous", "Previous"],
+              ["hidden", "Hidden"],
+            ].map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className={`px-4 py-2.5 -mb-px text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+                  tab === key ? "border-brand text-brand" : "border-transparent text-slate hover:text-ink"
+                }`}
+              >
+                {label}
+                <span className="text-[11px] px-1.5 py-0.5 rounded-full tabular-nums bg-slate-light text-slate">{counts[key]}</span>
+              </button>
+            ))}
+            <span className="ml-auto text-xs text-slate-soft pb-2">
+              {tab === "upcoming"
+                ? 'Shown first in the app as "Upcoming exam mock series"'
+                : tab === "previous"
+                  ? 'Shown in the app under "Previous exam mock series"'
+                  : "Not shown in the app"}
+            </span>
+          </div>
+
+          <div className="rv-card !p-0 overflow-hidden">
+            {!shown.length ? (
+              <p className="text-slate-soft text-center py-10">No {STATUS[tab].label.toLowerCase()} vacancy.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
+                      <th className="px-4 py-3">Vacancy</th>
+                      <th className="px-4 py-3">Exam</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Exam date</th>
+                      <th className="px-4 py-3">Syllabus</th>
+                      <th className="px-4 py-3">Mocks</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-soft">
+                    {shown.map((v) => {
+                      const jobs = vacancyJobs.filter((j) => String(j.vacancy) === String(v._id));
+                      const now = jobs.some((j) => j.position === 0);
+                      const next = jobs.length ? Math.min(...jobs.map((j) => j.position)) : 0;
+                      const small = "px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap transition-colors";
+                      return (
+                        <tr key={v._id} className="align-top hover:bg-slate-light/40 transition-colors">
+                          <td className="px-4 py-3 min-w-[220px]">
+                            <button onClick={() => openEdit(v)} className="font-semibold text-ink hover:text-brand text-left">
+                              {v.name}
+                            </button>
+                            <p className="text-xs text-slate-soft">{v.seriesName}</p>
+                            {v.status === "upcoming" && v.shownAs === "previous" && (
+                              <p className="text-[11px] text-warn font-semibold mt-1">Exam date passed - students see it under "Exam held"</p>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-ink-soft">
+                            {examName(v.examType)}
+                            <p className="text-xs text-slate-soft">{v.year}</p>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-slate tabular-nums">
+                            {v.examDate ? new Date(v.examDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                          </td>
+                          <td className="px-4 py-3 text-xs min-w-[150px]">
+                            {v.syllabus?.length ? (
+                              <span className="text-ink-soft">Own: {v.syllabus.map((s) => s.subject).join(", ")}</span>
+                            ) : (
+                              <span className="text-slate-soft">Exam pattern's</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full tabular-nums ${v.mocks.published ? "bg-success-light text-success" : "bg-slate-light text-slate-soft"}`}>
+                              {v.mocks.published} live
+                            </span>
+                            {v.mocks.draft > 0 && (
+                              <span className="ml-1 text-[11px] font-bold px-2 py-0.5 rounded-full tabular-nums bg-warn-light text-warn">{v.mocks.draft} draft</span>
+                            )}
+                            {jobs.length > 0 && (
+                              <p className="text-[11px] text-brand font-semibold mt-1 flex items-center gap-1">
+                                {now && <span className="inline-block w-2.5 h-2.5 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />}
+                                {now ? `Building now${jobs.length > 1 ? ` (+${jobs.length - 1})` : ""}` : `${jobs.length} waiting (#${next})`}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex justify-end gap-1.5 flex-wrap max-w-[300px] ml-auto">
+                              <button onClick={() => queueMock(v)} disabled={busy === v._id} className={`${small} bg-brand text-white hover:bg-brand-dark disabled:opacity-60`}>
+                                {busy === v._id ? "Queueing..." : "+ Queue mock"}
+                              </button>
+                              <Link to={`/exam-series/${v.examType}`} className={`${small} bg-slate-light text-ink-soft hover:bg-border-strong`}>
+                                Review mocks
+                              </Link>
+                              <button onClick={() => openEdit(v)} className={`${small} bg-slate-light text-ink-soft hover:bg-border-strong`}>
+                                Edit
+                              </button>
+                              {v.status !== "upcoming" && (
+                                <button onClick={() => setStatus(v, "upcoming")} className={`${small} bg-success-light text-success hover:opacity-80`}>
+                                  Make upcoming
+                                </button>
+                              )}
+                              {v.status === "upcoming" && (
+                                <button onClick={() => setStatus(v, "previous")} className={`${small} bg-brand/5 text-brand hover:bg-brand/10`}>
+                                  Move to previous
+                                </button>
+                              )}
+                              {v.status !== "hidden" && (
+                                <button onClick={() => setStatus(v, "hidden")} className={`${small} bg-slate-light text-slate hover:bg-border-strong`}>
+                                  Hide
+                                </button>
+                              )}
+                              <button onClick={() => adopt(v)} className={`${small} bg-slate-light text-slate hover:bg-border-strong`} title="Move mocks built before vacancies existed into this series">
+                                Bring in older mocks
+                              </button>
+                              {v.mocks.published + v.mocks.draft === 0 && (
+                                <button onClick={() => remove(v)} className={`${small} bg-danger-light text-danger hover:opacity-80`}>
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       <Modal
