@@ -13,6 +13,7 @@ import {
 import api from "../api/axios";
 import { PageHeader, StatCard, Card, Badge, Select, Input, Button, EmptyState } from "../components/ui";
 import { useToast } from "../components/Toast";
+import { DailyBars, RankBars } from "../components/Charts";
 
 // Every order a student started, what it came to, and the totals. Refunds
 // are done in the Razorpay dashboard; this is where to see who paid.
@@ -28,6 +29,7 @@ const when = (d) => new Date(d).toLocaleString("en-IN", { day: "numeric", month:
 export default function Payments() {
   const toast = useToast();
   const [summary, setSummary] = useState(null);
+  const [daily, setDaily] = useState(null);
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -63,6 +65,7 @@ export default function Payments() {
 
   useEffect(() => {
     api.get("/admin/payments/summary").then((res) => setSummary(res.data)).catch(() => {});
+    api.get("/admin/analytics", { params: { days: 30 } }).then((res) => setDaily(res.data.daily)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -124,33 +127,50 @@ export default function Payments() {
         />
       </div>
 
-      {summary && (summary.byPlan.length > 0 || summary.coupons.length > 0) && (
-        <div className="flex flex-wrap gap-2 mb-6 text-xs">
-          {summary.byPlan.map((p) => (
-            <Badge key={p.plan} tone="neutral">
-              {PLAN[p.plan] || p.plan}: {p.count} · {rupees(p.amount)}
-            </Badge>
-          ))}
-          {summary.coupons.map((c) => (
-            <Badge key={c.code} tone="brand">
-              {c.code}: used {c.count}×
-            </Badge>
-          ))}
-          {summary.grants > 0 && <Badge tone="info">Free grants: {summary.grants}</Badge>}
-        </div>
-      )}
+      <div className="grid gap-4 lg:grid-cols-3 mb-5">
+        <Card className="lg:col-span-2 !p-5">
+          <h3 className="font-semibold text-ink">Revenue per day</h3>
+          <p className="text-xs text-slate-soft mb-3">Last 30 days, real payments only (free grants are not money)</p>
+          {daily ? <DailyBars data={daily} valueKey="revenue" format={rupees} label="Revenue per day" emptyText="No payments in the last 30 days" /> : <div className="h-[180px] rounded-md bg-slate-light/60 animate-pulse" />}
+        </Card>
+        <Card className="!p-5">
+          <h3 className="font-semibold text-ink">Plans sold</h3>
+          <p className="text-xs text-slate-soft mb-3">All time, by amount</p>
+          {summary ? (
+            <RankBars rows={summary.byPlan.map((x) => ({ label: PLAN[x.plan] || x.plan, value: x.amount, sub: `${x.count} sold` }))} format={rupees} emptyText="No plan sold yet" />
+          ) : (
+            <div className="h-[120px] rounded-md bg-slate-light/60 animate-pulse" />
+          )}
+          {summary && (summary.coupons.length > 0 || summary.grants > 0) && (
+            <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-border-soft text-xs">
+              {summary.coupons.map((c) => (
+                <Badge key={c.code} tone="brand">
+                  {c.code}: used {c.count}×
+                </Badge>
+              ))}
+              {summary.grants > 0 && <Badge tone="info">Free grants: {summary.grants}</Badge>}
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1 border-b border-border mb-4">
+        {[["", "All orders"], ["paid", "Paid"], ["grant", "Free grants"], ["pending", "Not completed"]].map(([key, label]) => (
+          <button
+            key={key || "all"}
+            onClick={() => setKind(key)}
+            className={`px-4 py-2.5 -mb-px text-sm font-semibold border-b-2 transition-colors ${kind === key ? "border-brand text-brand" : "border-transparent text-slate hover:text-ink"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       <div className="flex flex-wrap items-center gap-2.5 mb-4">
         <div className="relative flex-1 min-w-[220px]">
           <RiSearchLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-soft" />
           <Input value={q} onChange={(e) => onSearch(e.target.value)} placeholder="Phone, name, coupon, or Razorpay order/payment id" className="!pl-10" />
         </div>
-        <Select value={kind} onChange={(e) => setKind(e.target.value)} className="!w-auto min-w-[150px] text-sm">
-          <option value="">All orders</option>
-          <option value="paid">Paid</option>
-          <option value="grant">Free grants</option>
-          <option value="pending">Not completed</option>
-        </Select>
         <Select value={plan} onChange={(e) => setPlan(e.target.value)} className="!w-auto min-w-[130px] text-sm">
           <option value="">All plans</option>
           {Object.entries(PLAN).map(([v, l]) => (
