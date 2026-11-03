@@ -25,6 +25,7 @@ module.exports = function makeMock({ name, want, hindiSubjects = [] }) {
     const orderMatters = (q) =>
       /Syllogism|Venn|Statement|Assumption|Conclusion|Course of Action/i.test(q.topic) ||
       q.options.every((o) => /^[-−₹]?[\d,.]+/.test(o.trim())) ||
+      q.options.every((o) => /^[A-D]$/.test(o.trim())) || // "which part has the error": A, B, C, D name the parts
       q.options.some((o) => /^(Only|Both|Neither|All of|None of|केवल|न तो|दोनों|उपरोक्त|इनमें से कोई)/.test(o.trim()));
     const tally = () => { const c = { A: 0, B: 0, C: 0, D: 0 }; Q.forEach((q) => c[q.correct]++); return c; };
     for (let pass = 0; pass < 400; pass++) {
@@ -57,7 +58,8 @@ module.exports = function makeMock({ name, want, hindiSubjects = [] }) {
       if (hindi && !/[ऀ-ॿ]/.test(q.question)) errs.push(`Q${n}: Hindi question has no Hindi`);
       // A numeric answer must be named in its own solution.
       const ans = q.options[L(q.correct)];
-      if (/\d/.test(ans) && !norm(q.solution).includes(norm(ans).replace(/[^\d.]/g, "")) ) errs.push(`Q${n}: solution does not show the marked number ${ans}`);
+      // A plain numeric answer ("₹1,200", "45 km", "20%") must be named in its own solution.
+      if (/^[₹−-]?[\d,.]+\s*(%|°|[A-Za-z²³]{0,6})?$/.test(ans.trim()) && !norm(q.solution).includes(norm(ans).replace(/[^\d.]/g, ""))) errs.push(`Q${n}: solution does not show the marked number ${ans}`);
     });
     for (const [s, n] of Object.entries(want)) if (count[s] !== n) errs.push(`${s}: ${count[s] || 0} questions, want ${n}`);
     for (const s of Object.keys(count)) if (!(s in want)) errs.push(`unexpected section ${s}`);
