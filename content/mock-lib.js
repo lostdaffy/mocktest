@@ -58,6 +58,8 @@ module.exports = function makeMock({ name, want, hindiSubjects = [] }) {
       if (hindi && !/[ऀ-ॿ]/.test(q.question)) errs.push(`Q${n}: Hindi question has no Hindi`);
       // A numeric answer must be named in its own solution.
       const ans = q.options[L(q.correct)];
+      // The server rewrites "3 * 4" between digits into "3 × 4"; a made-up operator must use another symbol (@, #, $).
+      if (/ds**s*d/.test(q.question + q.solution)) errs.push(`Q${n}: "*" between numbers is turned into × by the server - use @ or # for a made-up operator`);
       // A plain numeric answer ("₹1,200", "45 km", "20%") must be named in its own solution.
       if (/^[₹−-]?[\d,.]+\s*(%|°|[A-Za-z²³]{0,6})?$/.test(ans.trim()) && !norm(q.solution).includes(norm(ans).replace(/[^\d.]/g, ""))) errs.push(`Q${n}: solution does not show the marked number ${ans}`);
     });
