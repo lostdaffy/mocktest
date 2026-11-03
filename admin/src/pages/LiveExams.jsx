@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   RiRadioButtonLine,
-  RiCalendarEventLine,
   RiAddLine,
   RiPencilLine,
   RiDeleteBinLine,
@@ -49,6 +48,7 @@ export default function LiveExams() {
 
   // Create-new-live-exam form
   const [showCreate, setShowCreate] = useState(false);
+  const [tab, setTab] = useState("draft");
   const [examType, setExamType] = useState("");
   const [title, setTitle] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
@@ -297,33 +297,31 @@ export default function LiveExams() {
   const scheduled = exams.filter((e) => e.publishStatus === "published" && e.liveState !== "ended");
   const ended = exams.filter((e) => e.publishStatus === "published" && e.liveState === "ended");
   const cancelled = exams.filter((e) => e.publishStatus === "archived");
+  const lists = { draft: drafts, scheduled, ended, cancelled };
+  const shown = lists[tab] || [];
+  const examName = (t) => patterns.find((p) => p.examType === t)?.displayName || t;
+  const when = (d) => new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
+  const small = "px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap transition-colors";
 
   return (
     <div>
       <PageHeader
         eyebrow="Exams"
         title="Live Exams"
+        subtitle="Every live exam has its own questions, made for it alone - no mock is reused. Create a draft, fill and review its questions, then schedule it."
         actions={
           <button onClick={() => setShowCreate((v) => !v)} className="rv-btn-primary">
-            <RiAddLine size={16} /> New Live Exam
+            <RiAddLine size={16} /> {showCreate ? "Close" : "New live exam"}
           </button>
         }
       />
-      <p className="text-slate -mt-4 mb-6">
-        Every live exam has its own set of questions, generated for it alone — no test from the Mock Series is
-        reused here. Create a draft, add or edit its questions, then schedule it.
-      </p>
 
       {showCreate && (
-        <form onSubmit={handleCreate} className="rv-card p-6 mb-8 space-y-4">
-          <div className="flex flex-wrap items-end gap-4">
+        <form onSubmit={handleCreate} className="rv-card p-5 mb-5">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_auto_1.4fr_auto] items-end">
             <div>
-              <label className="block text-sm font-medium text-ink-soft mb-1.5">Exam</label>
-              <select
-                value={examType}
-                onChange={(e) => setExamType(e.target.value)}
-                className="rv-input min-w-[220px]"
-              >
+              <label className="block text-xs font-medium text-slate mb-1">Exam</label>
+              <select value={examType} onChange={(e) => setExamType(e.target.value)} className="rv-input">
                 {patterns.map((p) => (
                   <option key={p._id} value={p.examType}>
                     {p.displayName}
@@ -332,291 +330,260 @@ export default function LiveExams() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-ink-soft mb-1.5">Date & Time</label>
-              <input
-                type="datetime-local"
-                required
-                value={scheduledAt}
-                onChange={(e) => setScheduledAt(e.target.value)}
-                className="rv-input"
-              />
+              <label className="block text-xs font-medium text-slate mb-1">Date & time (IST)</label>
+              <input type="datetime-local" required value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} className="rv-input" />
             </div>
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-ink-soft mb-1.5">Title (optional)</label>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Left blank, a title is generated"
-                className="rv-input w-full"
-              />
+            <div>
+              <label className="block text-xs font-medium text-slate mb-1">Title (optional)</label>
+              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Left blank, a title is made for it" className="rv-input w-full" />
             </div>
-            <button
-              type="submit"
-              disabled={creating}
-              className="rv-btn-primary"
-            >
-              {creating ? "Creating..." : "Create Draft"}
+            <button type="submit" disabled={creating} className="rv-btn-primary">
+              {creating ? "Creating..." : "Create draft"}
             </button>
           </div>
         </form>
       )}
 
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
+        {[
+          ["Being built", drafts.length, "bg-warn"],
+          ["Scheduled or live now", scheduled.length, scheduled.some((e) => e.liveState === "ongoing") ? "bg-danger" : "bg-brand"],
+          ["Ended", ended.length, "bg-success"],
+          ["Cancelled", cancelled.length, "bg-slate-soft"],
+        ].map(([label, value, tone]) => (
+          <div key={label} className="rv-card p-4 flex items-center gap-3">
+            <span className={`w-1.5 self-stretch rounded-full ${tone}`} />
+            <div className="min-w-0">
+              {loading ? <div className="h-6 w-8 rounded bg-slate-light animate-pulse" /> : <p className="font-display text-xl font-extrabold text-ink tabular-nums">{value}</p>}
+              <p className="text-xs text-slate truncate">{label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {addBusy && (
-        <div className="mb-6 bg-warn-light border border-warn-border text-warn text-sm rounded-lg px-4 py-3 flex items-center gap-3">
+        <div className="mb-5 bg-warn-light border border-warn-border text-warn text-sm rounded-lg px-4 py-3 flex items-center gap-3">
           <span className="inline-block w-4 h-4 border-2 border-warn-border border-t-warn rounded-full animate-spin"></span>
           Generating questions... this can take 30-60 seconds. Please don't close this page.
         </div>
       )}
-      {genMessage && (
-        <div className="mb-6 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3">{genMessage}</div>
-      )}
+      {genMessage && <div className="mb-5 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3">{genMessage}</div>}
 
-      {loading ? (
-        <p className="text-slate-soft">Loading...</p>
-      ) : (
-        <>
-          <Section title={`📝 Building (${drafts.length})`} hint="Add questions, then schedule once ready">
-            {drafts.map((exam) => (
-              <div key={exam._id} className="mb-3">
-                <div className="rv-card p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-ink">{exam.title}</p>
-                      <p className={`text-xs mt-0.5 ${exam.questionCount >= paperSize(exam.examType) ? "text-success" : "text-warn"}`}>
-                        {exam.questionCount} / {paperSize(exam.examType)} questions · {new Date(exam.scheduledAt).toLocaleString("en-IN")}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => openAddQuestions(exam)}
-                        className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20"
-                      >
-                        + AI questions
-                      </button>
-                      <button
-                        onClick={() => openManual(exam)}
-                        className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20"
-                        title="Type questions in, or upload a spreadsheet"
-                      >
-                        + Write / upload
-                      </button>
-                      <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
-                        Review
-                      </button>
-                      <button onClick={() => startReschedule(exam)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => publishExam(exam._id)}
-                        className="px-3 py-1.5 rounded-lg bg-success-light text-success text-sm font-medium hover:bg-success-light"
-                      >
-                        Schedule
-                      </button>
-                      <button onClick={() => deleteExam(exam._id)} className="px-3 py-1.5 rounded-lg bg-danger-light text-danger text-sm font-medium hover:bg-danger-light">
-                        Delete
-                      </button>
-                    </div>
-                  </div>
+      <div className="flex flex-wrap items-center gap-1 border-b border-border mb-4">
+        {[
+          ["draft", "Building", drafts.length],
+          ["scheduled", "Scheduled", scheduled.length],
+          ["ended", "Ended", ended.length],
+          ["cancelled", "Cancelled", cancelled.length],
+        ].map(([key, label, n]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`px-4 py-2.5 -mb-px text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+              tab === key ? "border-brand text-brand" : "border-transparent text-slate hover:text-ink"
+            }`}
+          >
+            {label}
+            <span className="text-[11px] px-1.5 py-0.5 rounded-full tabular-nums bg-slate-light text-slate">{n}</span>
+          </button>
+        ))}
+        <span className="ml-auto text-xs text-slate-soft pb-2">
+          {tab === "draft"
+            ? "Not visible to students"
+            : tab === "scheduled"
+              ? "Visible to students - waiting to start or live now"
+              : tab === "ended"
+                ? "Results released to students"
+                : "Hidden from students"}
+        </span>
+      </div>
 
-                  {reschedulingId === exam._id && (
-                    <RescheduleForm
-                      form={rescheduleForm}
-                      setForm={setRescheduleForm}
-                      onCancel={() => setReschedulingId(null)}
-                      onSave={() => saveReschedule(exam._id)}
-                      busy={rescheduleBusy}
-                    />
-                  )}
-                </div>
-
-                {addingTo === exam._id && (
-                  <div className="bg-slate-light border border-border rounded-xl p-4 mt-2">
-                    <p className="text-xs text-slate mb-3">
-                      Questions generated fresh for this live exam only — real exam pattern (PYQ style) follow karte
-                      hue.
-                    </p>
-                    <div className="flex gap-2 items-end flex-wrap">
-                      <div>
-                        <label className="block text-xs text-slate mb-1">Section</label>
-                        {sections.length > 0 ? (
-                          <select
-                            value={addForm.subject}
-                            onChange={(e) => setAddForm({ ...addForm, subject: e.target.value })}
-                            className="rv-input !py-1.5 text-sm w-44"
-                          >
-                            {sections.map((s) => (
-                              <option key={s.subject} value={s.subject}>
-                                {s.subject} ({s.questionCount} in exam)
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            value={addForm.subject}
-                            onChange={(e) => setAddForm({ ...addForm, subject: e.target.value })}
-                            placeholder="Maths"
-                            className="rv-input !py-1.5 text-sm w-44"
-                          />
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-xs text-slate mb-1">Count (max 12)</label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="12"
-                          value={addForm.count}
-                          onChange={(e) => setAddForm({ ...addForm, count: Number(e.target.value) })}
-                          className="rv-input !py-1.5 text-sm w-20"
-                        />
-                      </div>
-                      <button
-                        onClick={() => addQuestions(exam._id)}
-                        disabled={addBusy}
-                        className="px-4 py-1.5 rounded-lg bg-brand text-white text-sm font-medium disabled:opacity-70 flex items-center gap-2"
-                      >
-                        {addBusy ? (
-                          <>
-                            <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-                            Generating...
-                          </>
-                        ) : (
-                          "Generate & Add"
-                        )}
-                      </button>
-                    </div>
-                    {sectionStatus?.sections?.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-border">
-                        <p className="text-xs font-medium text-slate mb-2">
-                          Section progress ({sectionStatus.totalHave}/{sectionStatus.totalRequired} total):
-                        </p>
-                        <div className="space-y-1.5">
-                          {sectionStatus.sections.map((s) => (
-                            <div key={s.subject} className="flex items-center gap-2">
-                              <span className="text-xs text-slate w-28">{s.subject}</span>
-                              <div className="flex-1 h-2 bg-slate-light rounded-full overflow-hidden">
-                                <div
-                                  className={`h-2 rounded-full ${s.isFull ? "bg-success" : "bg-brand"}`}
-                                  style={{ width: `${Math.min(100, (s.have / s.required) * 100)}%` }}
-                                ></div>
-                              </div>
-                              <span className={`text-xs w-12 text-right ${s.isFull ? "text-success font-medium" : "text-slate"}`}>
-                                {s.have}/{s.required} {s.isFull && "✓"}
-                              </span>
+      <div className="rv-card !p-0 overflow-hidden">
+        {loading ? (
+          <p className="text-slate-soft text-center py-10">Loading...</p>
+        ) : shown.length === 0 ? (
+          <p className="text-slate-soft text-center py-10">
+            {tab === "draft" ? 'No live exam being built. Press "New live exam" to start one.' : tab === "scheduled" ? "No live exam scheduled." : "Nothing here."}
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
+                  <th className="px-4 py-3">Live exam</th>
+                  <th className="px-4 py-3 whitespace-nowrap">Starts (IST)</th>
+                  <th className="px-4 py-3 min-w-[150px]">Questions</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-soft">
+                {shown.map((exam) => {
+                  const size = paperSize(exam.examType);
+                  const have = exam.questionCount || 0;
+                  const full = have >= size;
+                  const live = exam.liveState === "ongoing";
+                  return (
+                    <Fragment key={exam._id}>
+                      <tr className="align-middle hover:bg-slate-light/40 transition-colors">
+                        <td className="px-4 py-3 min-w-[220px]">
+                          <button onClick={() => openReview(exam._id)} className="font-semibold text-ink hover:text-brand text-left">
+                            {exam.title}
+                          </button>
+                          <p className="text-xs text-slate-soft">{examName(exam.examType)}</p>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-slate tabular-nums">{when(exam.scheduledAt)}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1.5 rounded-full bg-slate-light overflow-hidden min-w-[60px]">
+                              <div className={`h-full rounded-full ${full ? "bg-success" : "bg-warn"}`} style={{ width: `${Math.min(100, (have / size) * 100)}%` }} />
                             </div>
-                          ))}
-                        </div>
-                        {sectionStatus.isComplete && (
-                          <p className="text-xs text-success font-medium mt-2">
-                            ✓ Ready to schedule — hit "Schedule" above.
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-            {drafts.length === 0 && <Empty text='No live exam being built. Click "New Live Exam" to start.' />}
-          </Section>
+                            <span className={`text-xs tabular-nums whitespace-nowrap ${full ? "text-success font-semibold" : "text-warn"}`}>
+                              {have}/{size}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {tab === "scheduled" ? (
+                            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${live ? "bg-success-light text-success" : "bg-danger-light text-danger"}`}>
+                              <RiRadioButtonLine size={11} /> {live ? "Live now" : "Upcoming"}
+                            </span>
+                          ) : (
+                            <span
+                              className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                                tab === "draft" ? "bg-warn-light text-warn" : tab === "ended" ? "bg-success-light text-success" : "bg-slate-light text-slate"
+                              }`}
+                            >
+                              {tab === "draft" ? "Draft" : tab === "ended" ? "Ended" : "Cancelled"}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex justify-end gap-1.5 flex-wrap max-w-[330px] ml-auto">
+                            {tab === "draft" && (
+                              <>
+                                <button onClick={() => openAddQuestions(exam)} className={`${small} bg-brand/5 text-brand hover:bg-brand/10`}>
+                                  + AI questions
+                                </button>
+                                <button onClick={() => openManual(exam)} className={`${small} bg-brand/5 text-brand hover:bg-brand/10`} title="Type questions in, or upload a spreadsheet">
+                                  + Write / upload
+                                </button>
+                              </>
+                            )}
+                            {tab === "ended" && (
+                              <button onClick={() => openResults(exam)} className={`${small} bg-brand/5 text-brand hover:bg-brand/10 inline-flex items-center gap-1`}>
+                                <RiTrophyLine size={13} /> Results
+                              </button>
+                            )}
+                            <button onClick={() => openReview(exam._id)} className={`${small} bg-slate-light text-ink-soft hover:bg-border-strong`}>
+                              Review
+                            </button>
+                            {(tab === "draft" || (tab === "scheduled" && !live)) && (
+                              <button onClick={() => startReschedule(exam)} className={`${small} bg-slate-light text-ink-soft hover:bg-border-strong`}>
+                                {tab === "draft" ? "Edit" : "Reschedule"}
+                              </button>
+                            )}
+                            {tab === "draft" && (
+                              <button onClick={() => publishExam(exam._id)} className={`${small} bg-success text-white hover:opacity-90`}>
+                                Schedule
+                              </button>
+                            )}
+                            {tab === "scheduled" && !live && (
+                              <button onClick={() => cancelExam(exam._id)} className={`${small} bg-danger-light text-danger hover:opacity-80`}>
+                                Cancel
+                              </button>
+                            )}
+                            {(tab === "draft" || tab === "cancelled") && (
+                              <button onClick={() => deleteExam(exam._id)} className={`${small} bg-danger-light text-danger hover:opacity-80`}>
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
 
-          <Section title={`🔴 Scheduled (${scheduled.length})`} hint="Visible to students, waiting to start or currently live">
-            {scheduled.map((exam) => (
-              <div key={exam._id} className="mb-2">
-                <div className="rv-card p-5 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${exam.liveState === "ongoing" ? "bg-success-light text-success" : "bg-danger-light text-danger"}`}>
-                      <RiCalendarEventLine size={18} />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-ink">{exam.title}</p>
-                      <p className="text-sm text-slate">
-                        {new Date(exam.scheduledAt).toLocaleString("en-IN")} · {exam.questionCount} questions
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5 ${
-                        exam.liveState === "ongoing" ? "bg-success-light text-success" : "bg-danger-light text-danger"
-                      }`}
-                    >
-                      <RiRadioButtonLine size={12} /> {exam.liveState === "ongoing" ? "Live now" : "Upcoming"}
-                    </span>
-                    <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
-                      Review
-                    </button>
-                    {exam.liveState === "upcoming" && (
-                      <>
-                        <button onClick={() => startReschedule(exam)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
-                          Reschedule
-                        </button>
-                        <button onClick={() => cancelExam(exam._id)} className="px-3 py-1.5 rounded-lg bg-danger-light text-danger text-sm font-medium hover:bg-danger-light">
-                          Cancel
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-                {reschedulingId === exam._id && (
-                  <div className="rv-card p-4 mt-1">
-                    <RescheduleForm
-                      form={rescheduleForm}
-                      setForm={setRescheduleForm}
-                      onCancel={() => setReschedulingId(null)}
-                      onSave={() => saveReschedule(exam._id)}
-                      busy={rescheduleBusy}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
-            {scheduled.length === 0 && <Empty text="No live exams scheduled yet." />}
-          </Section>
+                      {reschedulingId === exam._id && (
+                        <tr>
+                          <td colSpan={5} className="px-4 pb-4 pt-0">
+                            <RescheduleForm
+                              form={rescheduleForm}
+                              setForm={setRescheduleForm}
+                              onCancel={() => setReschedulingId(null)}
+                              onSave={() => saveReschedule(exam._id)}
+                              busy={rescheduleBusy}
+                            />
+                          </td>
+                        </tr>
+                      )}
 
-          {ended.length > 0 && (
-            <Section title={`✅ Ended (${ended.length})`} hint="Results released to students">
-              {ended.map((exam) => (
-                <div key={exam._id} className="rv-card p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-ink">{exam.title}</p>
-                    <p className="text-xs text-slate-soft">{new Date(exam.scheduledAt).toLocaleString("en-IN")}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => openResults(exam)} className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20 flex items-center gap-1.5">
-                      <RiTrophyLine size={14} /> Results
-                    </button>
-                    <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
-                      Review
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </Section>
-          )}
-
-          {cancelled.length > 0 && (
-            <Section title={`🗑️ Cancelled (${cancelled.length})`} hint="Hidden from students">
-              {cancelled.map((exam) => (
-                <div key={exam._id} className="rv-card p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-ink">{exam.title}</p>
-                    <p className="text-xs text-slate-soft">{new Date(exam.scheduledAt).toLocaleString("en-IN")}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => openReview(exam._id)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
-                      Review
-                    </button>
-                    <button onClick={() => deleteExam(exam._id)} className="px-3 py-1.5 rounded-lg bg-danger-light text-danger text-sm font-medium hover:bg-danger-light">
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </Section>
-          )}
-        </>
-      )}
+                      {tab === "draft" && addingTo === exam._id && (
+                        <tr>
+                          <td colSpan={5} className="px-4 pb-4 pt-0">
+                            <div className="bg-slate-light/60 border border-border rounded-lg p-4">
+                              <p className="text-xs text-slate mb-3">Questions are made for this live exam only, to the exam's pattern. Pick a section:</p>
+                              <div className="flex gap-2 items-end flex-wrap">
+                                <div>
+                                  <label className="block text-xs text-slate mb-1">Section</label>
+                                  {sections.length > 0 ? (
+                                    <select value={addForm.subject} onChange={(e) => setAddForm({ ...addForm, subject: e.target.value })} className="rv-input !py-1.5 text-sm w-48">
+                                      {sections.map((s) => (
+                                        <option key={s.subject} value={s.subject}>
+                                          {s.subject} ({s.questionCount} in exam)
+                                        </option>
+                                      ))}
+                                    </select>
+                                  ) : (
+                                    <input value={addForm.subject} onChange={(e) => setAddForm({ ...addForm, subject: e.target.value })} placeholder="Maths" className="rv-input !py-1.5 text-sm w-48" />
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="block text-xs text-slate mb-1">Count (max 12)</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="12"
+                                    value={addForm.count}
+                                    onChange={(e) => setAddForm({ ...addForm, count: Number(e.target.value) })}
+                                    className="rv-input !py-1.5 text-sm w-20"
+                                  />
+                                </div>
+                                <button onClick={() => addQuestions(exam._id)} disabled={addBusy} className="rv-btn-primary !py-1.5 !text-sm disabled:opacity-70">
+                                  {addBusy ? "Generating..." : "Generate & add"}
+                                </button>
+                              </div>
+                              {sectionStatus?.sections?.length > 0 && (
+                                <div className="mt-4 pt-3 border-t border-border">
+                                  <p className="text-xs font-medium text-slate mb-2">
+                                    Section progress ({sectionStatus.totalHave}/{sectionStatus.totalRequired}):
+                                  </p>
+                                  <div className="grid gap-1.5 sm:grid-cols-2">
+                                    {sectionStatus.sections.map((s) => (
+                                      <div key={s.subject} className="flex items-center gap-2">
+                                        <span className="text-xs text-slate w-28 truncate">{s.subject}</span>
+                                        <div className="flex-1 h-2 bg-surface rounded-full overflow-hidden">
+                                          <div className={`h-2 rounded-full ${s.isFull ? "bg-success" : "bg-brand"}`} style={{ width: `${Math.min(100, (s.have / s.required) * 100)}%` }} />
+                                        </div>
+                                        <span className={`text-xs w-14 text-right tabular-nums ${s.isFull ? "text-success font-medium" : "text-slate"}`}>
+                                          {s.have}/{s.required} {s.isFull && "✓"}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  {sectionStatus.isComplete && <p className="text-xs text-success font-medium mt-2">✓ Ready to schedule — press "Schedule" in its row.</p>}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {reviewLoading && <p className="text-slate-soft mt-4">Loading review...</p>}
 
@@ -684,22 +651,6 @@ function RescheduleForm({ form, setForm, onCancel, onSave, busy }) {
       </button>
     </div>
   );
-}
-
-function Section({ title, hint, children }) {
-  return (
-    <div className="mb-8">
-      <div className="flex items-baseline gap-3 mb-3">
-        <h2 className="font-display text-lg font-bold text-ink">{title}</h2>
-        <span className="text-xs text-slate-soft">{hint}</span>
-      </div>
-      <div className="space-y-2">{children}</div>
-    </div>
-  );
-}
-
-function Empty({ text }) {
-  return <p className="text-sm text-slate-soft bg-slate-light rounded-lg px-4 py-3">{text}</p>;
 }
 
 function ReviewModal({ exam, onClose, onRemoveQuestion, onUpdateQuestion, editable }) {
