@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../api/axios";
-import { PageHeader } from "../components/ui";
+import { PageHeader, Card } from "../components/ui";
 import { useToast } from "../components/Toast";
 import QuestionEditor from "../components/QuestionEditor";
 import ManualQuestions from "../components/ManualQuestions";
@@ -24,6 +24,8 @@ export default function ExamMocks() {
   const [addBusy, setAddBusy] = useState(false); // true while a batch is generating
   const [sectionStatus, setSectionStatus] = useState(null); // per-section progress for the open mock
   const [manualFor, setManualFor] = useState(null); // mock a person is writing questions into
+  const [tab, setTab] = useState("draft");
+  const [displayName, setDisplayName] = useState("");
 
   // A full paper is whatever this exam's pattern says - 80 for SSC GD, 150
   // for CTET and UP Police - not a flat 100. The card said "80 / 100, needs
@@ -45,6 +47,7 @@ export default function ExamMocks() {
       try {
         const res = await api.get(`/exam-series/${examStage}/sections`);
         setSections(res.data.sections || []);
+        setDisplayName(res.data.displayName || "");
         if (res.data.sections?.length) {
           setAddForm((f) => ({ ...f, subject: res.data.sections[0].subject }));
         }
@@ -191,36 +194,39 @@ export default function ExamMocks() {
   const drafts = mocks.filter((m) => m.publishStatus === "draft");
   const published = mocks.filter((m) => m.publishStatus === "published");
   const archived = mocks.filter((m) => m.publishStatus === "archived");
+  const lists = { draft: drafts, published, archived };
+  const shown = lists[tab] || [];
 
   return (
     <div>
       <PageHeader
         backTo="/exam-series"
         backLabel="All Exams"
-        eyebrow="Content"
-        title={`${examStage} Mock Series`}
+        eyebrow="Mock series"
+        title={displayName || examStage}
+        subtitle={
+          sections.length
+            ? `${sections.map((s) => `${s.subject} ${s.questionCount}`).join(" · ")} — ${fullSize} questions a paper`
+            : undefined
+        }
         actions={
           <button onClick={createEmpty} disabled={generating} className="rv-btn-primary">
-            {generating ? "Creating..." : "+ New Mock"}
+            {generating ? "Creating..." : "+ New mock"}
           </button>
         }
       />
-      <p className="text-slate -mt-4 mb-6">
-        Create a new mock, then use <b>"Add Questions"</b> to build it up in small batches (12 at a time). Publish
-        once it reaches 100 questions. Content is scoped strictly to this exam — quality guaranteed.
-      </p>
 
       {addBusy && (
-        <div className="mb-6 bg-warn-light border border-warn-border text-warn text-sm rounded-lg px-4 py-3 flex items-center gap-3">
+        <div className="mb-5 bg-warn-light border border-warn-border text-warn text-sm rounded-lg px-4 py-3 flex items-center gap-3">
           <span className="inline-block w-4 h-4 border-2 border-warn-border border-t-warn rounded-full animate-spin"></span>
-          Generating questions... this can take 30-60 seconds due to rate limits. Please don't close this page.
+          Generating questions... this can take 30-60 seconds. Please don't close this page.
         </div>
       )}
 
       {mockJobs.length > 0 && (
-        <div className="mb-6 rounded-lg border border-info-border bg-info-light px-4 py-3">
+        <div className="mb-5 rounded-lg border border-info-border bg-info-light px-4 py-3">
           <p className="text-sm font-semibold text-info mb-2">
-            On the Generation queue ({mockJobs.length}) - each appears below as a draft when it is done.
+            On the Generation queue ({mockJobs.length}) - each appears under Drafts when it is done.
           </p>
           {queuePaused && (
             <p className="text-xs text-warn mb-2">
@@ -249,161 +255,143 @@ export default function ExamMocks() {
         </div>
       )}
 
-      {genMessage && (
-        <div className="mb-6 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3">{genMessage}</div>
-      )}
+      {genMessage && <div className="mb-5 bg-info-light border border-info-border text-info text-sm rounded-lg px-4 py-3">{genMessage}</div>}
 
-      {loading ? (
-        <p className="text-slate-soft">Loading...</p>
-      ) : (
-        <>
-          <Section title={`📝 Drafts (${drafts.length})`} hint="Review and publish once it reaches 100 questions">
-            {drafts.map((m) => (
-              <div key={m._id} className="mb-3">
-                <div className="rv-card p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-ink">{m.title}</p>
-                    <p className={`text-xs mt-0.5 ${(m.questions?.length || 0) >= 100 ? "text-success" : "text-warn"}`}>
-                      {m.questions?.length || 0} / {fullSize} questions
-                      {(m.questions?.length || 0) < fullSize && " — needs more before it can be published"}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        const opening = addingTo !== m._id;
-                        setAddingTo(opening ? m._id : null);
-                        if (opening) loadSectionStatus(m._id);
-                      }}
-                      className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20"
-                    >
-                      + AI questions
-                    </button>
-                    <button
-                      onClick={() => setManualFor(m)}
-                      className="px-3 py-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20"
-                      title="Type questions in, or upload a spreadsheet - for a human-made mock"
-                    >
-                      + Write / upload
-                    </button>
-                    <button onClick={() => openReview(m._id)} className="px-3 py-1.5 rounded-lg bg-slate-light text-ink-soft text-sm font-medium hover:bg-border-strong">
-                      Review
-                    </button>
-                    <button onClick={() => deleteMock(m._id)} className="px-3 py-1.5 rounded-lg bg-danger-light text-danger text-sm font-medium hover:bg-danger-light">
-                      Delete
-                    </button>
-                  </div>
-                </div>
-
-                {addingTo === m._id && (
-                  <div className="bg-slate-light border border-border rounded-xl p-4 mt-2">
-                    <p className="text-xs text-slate mb-3">
-                      Questions are generated to match the real exam pattern (PYQ style) — the same mix as the actual
-                      paper. Pick a section for this exam:
-                    </p>
-                    <div className="flex gap-2 items-end flex-wrap">
-                      <div>
-                        <label className="block text-xs text-slate mb-1">Section</label>
-                        {sections.length > 0 ? (
-                          <select
-                            value={addForm.subject}
-                            onChange={(e) => setAddForm({ ...addForm, subject: e.target.value })}
-                            className="rv-input !py-1.5 text-sm w-44"
-                          >
-                            {sections.map((s) => (
-                              <option key={s.subject} value={s.subject}>
-                                {s.subject} ({s.questionCount} in exam)
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            value={addForm.subject}
-                            onChange={(e) => setAddForm({ ...addForm, subject: e.target.value })}
-                            placeholder="Maths"
-                            className="rv-input !py-1.5 text-sm w-44"
-                          />
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-xs text-slate mb-1">Count (max 12)</label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="12"
-                          value={addForm.count}
-                          onChange={(e) => setAddForm({ ...addForm, count: Number(e.target.value) })}
-                          className="rv-input !py-1.5 text-sm w-20"
-                        />
-                      </div>
-                      <button
-                        onClick={() => addQuestions(m._id)}
-                        disabled={addBusy}
-                        className="px-4 py-1.5 rounded-lg bg-brand text-white text-sm font-medium disabled:opacity-70 flex items-center gap-2"
-                      >
-                        {addBusy ? (
-                          <>
-                            <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-                            Generating...
-                          </>
-                        ) : (
-                          "Generate & Add"
-                        )}
-                      </button>
-                    </div>
-                    {sectionStatus?.sections?.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-border">
-                        <p className="text-xs font-medium text-slate mb-2">
-                          Section progress ({sectionStatus.totalHave}/{sectionStatus.totalRequired} total):
-                        </p>
-                        <div className="space-y-1.5">
-                          {sectionStatus.sections.map((s) => (
-                            <div key={s.subject} className="flex items-center gap-2">
-                              <span className="text-xs text-slate w-28">{s.subject}</span>
-                              <div className="flex-1 h-2 bg-slate-light rounded-full overflow-hidden">
-                                <div
-                                  className={`h-2 rounded-full ${s.isFull ? "bg-success" : "bg-brand"}`}
-                                  style={{ width: `${Math.min(100, (s.have / s.required) * 100)}%` }}
-                                ></div>
-                              </div>
-                              <span className={`text-xs w-12 text-right ${s.isFull ? "text-success font-medium" : "text-slate"}`}>
-                                {s.have}/{s.required} {s.isFull && "✓"}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                        <p className="text-xs text-slate-soft mt-2">
-                          Fill each section to match its real weight in the exam. A full (✓) section stops accepting
-                          more questions.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-            {drafts.length === 0 && <Empty text="No drafts yet. Create a new mock to get started." />}
-          </Section>
-
-          <Section
-            title={`✅ Published — Mock Tests tab (${published.length})`}
-            hint="Visible to students in the regular Mock Tests tab"
+      {/* Tabs */}
+      <div className="flex flex-wrap items-center gap-1 border-b border-border mb-4">
+        {[
+          ["draft", "Drafts", drafts.length, "bg-warn-light text-warn"],
+          ["published", "Published", published.length, "bg-success-light text-success"],
+          ["archived", "Archived", archived.length, "bg-slate-light text-slate"],
+        ].map(([key, label, n, tone]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`px-4 py-2.5 -mb-px text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+              tab === key ? "border-brand text-brand" : "border-transparent text-slate hover:text-ink"
+            }`}
           >
-            {published.map((m) => (
-              <MockRow key={m._id} mock={m} onReview={() => openReview(m._id)} onArchive={() => archive(m._id)} published />
-            ))}
-            {published.length === 0 && <Empty text="No mocks published yet." />}
-          </Section>
+            {label}
+            <span className={`text-[11px] px-1.5 py-0.5 rounded-full tabular-nums ${tone}`}>{n}</span>
+          </button>
+        ))}
+        <span className="ml-auto text-xs text-slate-soft pb-2">
+          {tab === "draft" ? "Not visible to students" : tab === "published" ? "In the students' Mock Tests tab" : "Hidden from students"}
+        </span>
+      </div>
 
-          {archived.length > 0 && (
-            <Section title={`🗑️ Archived (${archived.length})`} hint="Hidden from students">
-              {archived.map((m) => (
-                <MockRow key={m._id} mock={m} onReview={() => openReview(m._id)} onDelete={() => deleteMock(m._id)} />
-              ))}
-            </Section>
-          )}
-        </>
-      )}
+      <Card className="!p-0 overflow-hidden">
+        {loading ? (
+          <p className="text-slate-soft text-center py-10">Loading...</p>
+        ) : shown.length === 0 ? (
+          <p className="text-slate-soft text-center py-10">
+            {tab === "draft" ? "No drafts. Press “+ New mock” to start one." : tab === "published" ? "No mocks published yet." : "Nothing archived."}
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
+                  <th className="px-4 py-3 w-12">#</th>
+                  <th className="px-4 py-3">Mock</th>
+                  <th className="px-4 py-3 min-w-[170px]">Questions</th>
+                  <th className="px-4 py-3">Access</th>
+                  <th className="px-4 py-3 whitespace-nowrap">{tab === "published" ? "Published" : "Created"}</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-soft">
+                {shown.map((m) => {
+                  const have = m.questions?.length || 0;
+                  const full = have >= fullSize;
+                  return (
+                    <Fragment key={m._id}>
+                      <tr className="align-middle hover:bg-slate-light/40 transition-colors">
+                        <td className="px-4 py-3 text-slate-soft tabular-nums">{m.seriesNumber ?? "—"}</td>
+                        <td className="px-4 py-3 min-w-[220px]">
+                          <button onClick={() => openReview(m._id)} className="font-semibold text-ink hover:text-brand text-left">
+                            {m.title}
+                          </button>
+                          <p className="text-xs text-slate-soft">{m.durationMinutes} min</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1.5 rounded-full bg-slate-light overflow-hidden min-w-[70px]">
+                              <div className={`h-full rounded-full ${full ? "bg-success" : "bg-warn"}`} style={{ width: `${Math.min(100, (have / fullSize) * 100)}%` }} />
+                            </div>
+                            <span className={`text-xs tabular-nums whitespace-nowrap ${full ? "text-success font-semibold" : "text-warn"}`}>
+                              {have}/{fullSize}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          {m.publishStatus === "published" ? (
+                            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${m.isFree ? "bg-success-light text-success" : "bg-brand/10 text-brand"}`}>
+                              {m.isFree ? "Free" : "Premium"}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-soft">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-slate whitespace-nowrap tabular-nums text-xs">
+                          {new Date((tab === "published" && m.publishedAt) || m.createdAt).toLocaleDateString("en-IN")}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex justify-end gap-1.5 flex-wrap">
+                            {tab === "draft" && (
+                              <>
+                                <Act
+                                  tone="brand"
+                                  onClick={() => {
+                                    const opening = addingTo !== m._id;
+                                    setAddingTo(opening ? m._id : null);
+                                    if (opening) loadSectionStatus(m._id);
+                                  }}
+                                >
+                                  + AI questions
+                                </Act>
+                                <Act tone="brand" onClick={() => setManualFor(m)} title="Type questions in, or upload a spreadsheet">
+                                  + Write / upload
+                                </Act>
+                              </>
+                            )}
+                            <Act onClick={() => openReview(m._id)}>Review</Act>
+                            {tab === "published" && (
+                              <Act tone="warn" onClick={() => archive(m._id)}>
+                                Hide
+                              </Act>
+                            )}
+                            {tab !== "published" && (
+                              <Act tone="danger" onClick={() => deleteMock(m._id)}>
+                                Delete
+                              </Act>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+
+                      {tab === "draft" && addingTo === m._id && (
+                        <tr>
+                          <td colSpan={6} className="px-4 pb-4 pt-0">
+                            <AddPanel
+                              sections={sections}
+                              addForm={addForm}
+                              setAddForm={setAddForm}
+                              addBusy={addBusy}
+                              onAdd={() => addQuestions(m._id)}
+                              sectionStatus={sectionStatus}
+                            />
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
 
       {reviewLoading && <p className="text-slate-soft mt-4">Loading review...</p>}
 
@@ -444,46 +432,73 @@ export default function ExamMocks() {
   );
 }
 
-function Section({ title, hint, children }) {
+function Act({ tone, children, ...rest }) {
+  const cls = {
+    brand: "bg-brand/5 hover:bg-brand/10 text-brand",
+    warn: "bg-warn-light hover:opacity-80 text-warn",
+    danger: "bg-danger-light hover:opacity-80 text-danger",
+  }[tone] || "bg-slate-light hover:bg-border-strong text-ink-soft";
   return (
-    <div className="mb-8">
-      <div className="flex items-baseline gap-3 mb-3">
-        <h2 className="font-display text-lg font-bold text-ink">{title}</h2>
-        <span className="text-xs text-slate-soft">{hint}</span>
-      </div>
-      <div className="space-y-2">{children}</div>
-    </div>
+    <button {...rest} className={`px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap transition-colors ${cls}`}>
+      {children}
+    </button>
   );
 }
 
-function Empty({ text }) {
-  return <p className="text-sm text-slate-soft bg-slate-light rounded-lg px-4 py-3">{text}</p>;
-}
-
-function MockRow({ mock, onReview, onPublish, onArchive, onDelete, published }) {
+function AddPanel({ sections, addForm, setAddForm, addBusy, onAdd, sectionStatus }) {
   return (
-    <div className="bg-surface border border-border-soft rounded-xl shadow-soft p-4 flex items-center justify-between">
-      <div>
-        <p className="font-semibold text-ink">{mock.title}</p>
-        <p className="text-xs text-slate-soft">
-          {mock.durationMinutes} min · {mock.isFree ? "Free" : "Premium"}
-        </p>
-      </div>
-      <div className="flex gap-2">
-        <button onClick={onReview} className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-sm font-medium">
-          Review
+    <div className="bg-slate-light/60 border border-border rounded-lg p-4">
+      <p className="text-xs text-slate mb-3">Questions are written to this exam's pattern. Pick a section:</p>
+      <div className="flex gap-2 items-end flex-wrap">
+        <div>
+          <label className="block text-xs text-slate mb-1">Section</label>
+          {sections.length > 0 ? (
+            <select value={addForm.subject} onChange={(e) => setAddForm({ ...addForm, subject: e.target.value })} className="rv-input !py-1.5 text-sm w-48">
+              {sections.map((s) => (
+                <option key={s.subject} value={s.subject}>
+                  {s.subject} ({s.questionCount} in exam)
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input value={addForm.subject} onChange={(e) => setAddForm({ ...addForm, subject: e.target.value })} placeholder="Maths" className="rv-input !py-1.5 text-sm w-48" />
+          )}
+        </div>
+        <div>
+          <label className="block text-xs text-slate mb-1">Count (max 12)</label>
+          <input
+            type="number"
+            min="1"
+            max="12"
+            value={addForm.count}
+            onChange={(e) => setAddForm({ ...addForm, count: Number(e.target.value) })}
+            className="rv-input !py-1.5 text-sm w-20"
+          />
+        </div>
+        <button onClick={onAdd} disabled={addBusy} className="rv-btn-primary !py-1.5 !text-sm disabled:opacity-70">
+          {addBusy ? "Generating..." : "Generate & add"}
         </button>
-        {onArchive && (
-          <button onClick={onArchive} className="px-3 py-1.5 rounded-lg bg-warn-light hover:bg-warn-light text-warn text-sm font-medium">
-            Hide
-          </button>
-        )}
-        {onDelete && (
-          <button onClick={onDelete} className="px-3 py-1.5 rounded-lg bg-danger-light hover:bg-danger-light text-danger text-sm font-medium">
-            Delete
-          </button>
-        )}
       </div>
+      {sectionStatus?.sections?.length > 0 && (
+        <div className="mt-4 pt-3 border-t border-border">
+          <p className="text-xs font-medium text-slate mb-2">
+            Section progress ({sectionStatus.totalHave}/{sectionStatus.totalRequired}):
+          </p>
+          <div className="grid gap-1.5 sm:grid-cols-2">
+            {sectionStatus.sections.map((s) => (
+              <div key={s.subject} className="flex items-center gap-2">
+                <span className="text-xs text-slate w-28 truncate">{s.subject}</span>
+                <div className="flex-1 h-2 bg-surface rounded-full overflow-hidden">
+                  <div className={`h-2 rounded-full ${s.isFull ? "bg-success" : "bg-brand"}`} style={{ width: `${Math.min(100, (s.have / s.required) * 100)}%` }} />
+                </div>
+                <span className={`text-xs w-14 text-right tabular-nums ${s.isFull ? "text-success font-medium" : "text-slate"}`}>
+                  {s.have}/{s.required} {s.isFull && "✓"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
