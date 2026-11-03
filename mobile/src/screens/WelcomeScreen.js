@@ -1,48 +1,59 @@
 import { useEffect, useRef } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, Image, ScrollView, useWindowDimensions } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, Image, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { colors, spacing, radius, shadow } from "../theme/theme";
 import { AffiliationNote } from "../components/OfficialSources";
 
-// The first screen a signed-out student sees: one clear choice - make an
-// account, or log in. The hero is drawn in code (no screenshots to go stale):
-// a mock-test card, a language chip, a solution chip and a quiz chip floating
-// over a deep-navy field, with a white sheet carrying the two buttons.
+// The first screen a signed-out student sees. Almost no words: the logo in the
+// middle of two slowly turning rings of icons, one headline, two buttons.
 
-const LOGO = require("../../assets/brand-logo.png");
+const MARK = require("../../assets/icon.png");
 
-const NAVY = "#0B1437";
-const NAVY_SOFT = "#16235A";
+const NAVY = "#0A1230";
 const VIOLET = "#7C3AED";
+const BRAND = "#4F46E5";
 
-const EXAMS = ["SSC", "Railway", "UP Police", "UPSSSC PET", "CTET · UPTET", "Banking", "Agniveer"];
+// Icons on the rings: [icon, colour, angle in degrees]
+const INNER = [
+  ["book", "#A78BFA", 0],
+  ["trophy", "#FBBF24", 120],
+  ["flame", "#FB923C", 240],
+];
+const OUTER = [
+  ["stats-chart", "#34D399", 40],
+  ["time", "#F87171", 130],
+  ["language", "#60A5FA", 220],
+  ["ribbon", "#F472B6", 310],
+];
 
-// One element drifting up and down, forever, out of step with the others.
-function useFloat(distance, duration, delay = 0) {
-  const v = useRef(new Animated.Value(0)).current;
+// One ring turning forever. The icons on it turn the opposite way at the same
+// speed, so they always stay upright.
+function Ring({ radius, items, seconds, reverse, box }) {
+  const spin = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(v, { toValue: 1, duration, delay, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        Animated.timing(v, { toValue: 0, duration, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-      ])
-    );
+    const loop = Animated.loop(Animated.timing(spin, { toValue: 1, duration: seconds * 1000, easing: Easing.linear, useNativeDriver: true }));
     loop.start();
     return () => loop.stop();
-  }, [v, duration, delay]);
-  return { transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -distance] }) }] };
-}
+  }, [spin, seconds]);
+  const dir = reverse ? -1 : 1;
+  const rot = spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", `${360 * dir}deg`] });
+  const unrot = spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", `${-360 * dir}deg`] });
+  const size = radius * 2;
 
-function Chip({ style, icon, tint, bg, children }) {
   return (
-    <Animated.View style={[styles.chip, { backgroundColor: bg }, style]}>
-      <View style={[styles.chipIcon, { backgroundColor: tint + "22" }]}>
-        <Ionicons name={icon} size={14} color={tint} />
-      </View>
-      <Text style={styles.chipText}>{children}</Text>
+    <Animated.View style={[styles.ring, { width: size, height: size, borderRadius: radius, left: (box - size) / 2, top: (box - size) / 2, transform: [{ rotate: rot }] }]}>
+      {items.map(([icon, color, deg]) => {
+        const a = (deg * Math.PI) / 180;
+        const x = radius + radius * Math.sin(a) - 22;
+        const y = radius - radius * Math.cos(a) - 22;
+        return (
+          <Animated.View key={icon} style={[styles.bubble, { left: x, top: y, transform: [{ rotate: unrot }] }]}>
+            <Ionicons name={icon} size={21} color={color} />
+          </Animated.View>
+        );
+      })}
     </Animated.View>
   );
 }
@@ -50,220 +61,137 @@ function Chip({ style, icon, tint, bg, children }) {
 export default function WelcomeScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
-  const stage = Math.min(width - 40, 360);
-  const heroHeight = Math.max(310, Math.min(370, height * 0.42));
+  const stage = Math.min(width, 420);
+  const outer = Math.min(stage * 0.43, height * 0.2);
+  const inner = outer * 0.62;
+  const box = outer * 2 + 44;
 
-  const floatCard = useFloat(7, 2600);
-  const floatLang = useFloat(9, 2100, 300);
-  const floatSol = useFloat(8, 2400, 600);
-  const floatQuiz = useFloat(10, 2800, 150);
+  const pulse = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 2200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 2200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulse]);
 
   const enter = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.timing(enter, { toValue: 1, duration: 650, delay: 150, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+    Animated.timing(enter, { toValue: 1, duration: 700, delay: 100, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
   }, [enter]);
-  const rise = { opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] };
+  const rise = { opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [26, 0] }) }] };
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
-        {/* ---------------------------------------------------- HERO */}
-        <View style={[styles.hero, { height: heroHeight + insets.top, paddingTop: insets.top + 14 }]}>
-          <View style={[styles.ring, { width: 360, height: 360, borderRadius: 180, top: -150, right: -130, borderWidth: 46 }]} />
-          <View style={[styles.ring, { width: 260, height: 260, borderRadius: 130, bottom: -90, left: -110, borderWidth: 34 }]} />
-          <View style={styles.glow} />
+      {/* soft light behind everything */}
+      <View style={[styles.glow, { width: width * 1.3, height: width * 1.3, borderRadius: width * 0.65, top: -width * 0.25 }]} />
+      <View style={[styles.glow2, { width: width * 0.8, height: width * 0.8, borderRadius: width * 0.4, bottom: -width * 0.2, left: -width * 0.3 }]} />
 
-          <View style={styles.logoPill}>
-            <Image source={LOGO} style={styles.logo} resizeMode="contain" />
-          </View>
-
-          <View style={{ width: stage, height: heroHeight - 84, alignSelf: "center", marginTop: 14 }}>
-            {/* the mock-test card */}
-            <Animated.View style={[styles.qCard, { width: stage * 0.78 }, floatCard]}>
-              <View style={styles.qTop}>
-                <Text style={styles.qExam}>SSC CGL · Mock test</Text>
-                <View style={styles.timer}>
-                  <Ionicons name="time-outline" size={11} color="#DC3545" />
-                  <Text style={styles.timerText}>42:18</Text>
-                </View>
-              </View>
-              <View style={styles.bar}>
-                <View style={styles.barFill} />
-              </View>
-              <Text style={styles.qText}>If 20% of a number is 45, what is 35% of the same number?</Text>
-              {[
-                ["A", "70", false],
-                ["B", "78.75", true],
-              ].map(([k, v, on]) => (
-                <View key={k} style={[styles.opt, on && styles.optOn]}>
-                  <View style={[styles.optKey, on && styles.optKeyOn]}>
-                    <Text style={[styles.optKeyText, on && { color: "#fff" }]}>{k}</Text>
-                  </View>
-                  <Text style={[styles.optText, on && { color: colors.brandDark }]}>{v}</Text>
-                  {on && <Ionicons name="checkmark-circle" size={16} color={colors.brand} style={{ marginLeft: "auto" }} />}
-                </View>
-              ))}
-            </Animated.View>
-
-            <Chip style={[{ right: 0, top: 6 }, floatLang]} icon="language" tint={colors.brand} bg="#FFFFFF">
-              हिंदी · English
-            </Chip>
-            <Chip style={[{ right: 4, top: heroHeight * 0.4 }, floatSol]} icon="checkmark-done" tint="#16A34A" bg="#FFFFFF">
-              Full solutions
-            </Chip>
-            <Chip style={[{ left: 0, bottom: 16 }, floatQuiz]} icon="flame" tint="#EA580C" bg="#FFFFFF">
-              Daily GK quiz
-            </Chip>
-          </View>
+      {/* the logo and its rings */}
+      <View style={[styles.stage, { paddingTop: insets.top + 20 }]}>
+        <View style={{ width: box, height: box, alignItems: "center", justifyContent: "center" }}>
+          <View style={[styles.guide, { width: outer * 2, height: outer * 2, borderRadius: outer }]} />
+          <View style={[styles.guide, { width: inner * 2, height: inner * 2, borderRadius: inner }]} />
+          <Ring radius={outer} items={OUTER} seconds={46} reverse box={box} />
+          <Ring radius={inner} items={INNER} seconds={30} box={box} />
+          <Animated.View
+            style={[
+              styles.mark,
+              { transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.05] }) }] },
+            ]}
+          >
+            <Image source={MARK} style={styles.markImg} resizeMode="cover" />
+          </Animated.View>
         </View>
+      </View>
 
-        {/* ---------------------------------------------------- SHEET */}
-        <Animated.View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 8 }, rise]}>
-          <Text style={styles.eyebrow}>FREE TO START · NO CARD NEEDED</Text>
-          <Text style={styles.title}>
-            Prepare on the <Text style={{ color: colors.brand }}>real exam pattern.</Text>
-          </Text>
-          <Text style={styles.sub}>सरकारी परीक्षा की तैयारी — मॉक टेस्ट, प्रैक्टिस और डेली क्विज़, हिंदी और English में।</Text>
+      {/* the words and the two buttons */}
+      <Animated.View style={[styles.bottom, { paddingBottom: Math.max(insets.bottom, 18) + 6 }, rise]}>
+        <Text style={styles.title}>
+          Rank your{"\n"}
+          <Text style={{ color: "#A78BFA" }}>way up.</Text>
+        </Text>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={styles.examRow}>
-            {EXAMS.map((e) => (
-              <View key={e} style={styles.examPill}>
-                <Text style={styles.examText}>{e}</Text>
-              </View>
-            ))}
-          </ScrollView>
+        <TouchableOpacity activeOpacity={0.9} style={styles.primary} onPress={() => navigation.navigate("Signup")}>
+          <Text style={styles.primaryText}>Get started</Text>
+          <View style={styles.arrow}>
+            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+          </View>
+        </TouchableOpacity>
 
-          <TouchableOpacity activeOpacity={0.88} style={styles.primary} onPress={() => navigation.navigate("Signup")}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.primaryTitle}>Create free account</Text>
-              <Text style={styles.primaryHint}>New here? Start in under a minute</Text>
-            </View>
-            <View style={styles.arrow}>
-              <Ionicons name="arrow-forward" size={20} color={colors.brand} />
-            </View>
-          </TouchableOpacity>
+        <TouchableOpacity activeOpacity={0.8} style={styles.secondary} onPress={() => navigation.navigate("Login")}>
+          <Text style={styles.secondaryText}>I have an account</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity activeOpacity={0.85} style={styles.secondary} onPress={() => navigation.navigate("Login")}>
-            <Ionicons name="log-in-outline" size={20} color={colors.ink} />
-            <Text style={styles.secondaryText}>I already have an account</Text>
-            <Text style={styles.secondaryLink}>Log in</Text>
-          </TouchableOpacity>
-
-          <AffiliationNote style={{ marginTop: spacing.lg }} />
-        </Animated.View>
-      </ScrollView>
+        <AffiliationNote style={{ marginTop: 18 }} color="rgba(255,255,255,0.38)" />
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: NAVY },
+  root: { flex: 1, backgroundColor: NAVY, overflow: "hidden" },
+  glow: { position: "absolute", alignSelf: "center", backgroundColor: BRAND, opacity: 0.2 },
+  glow2: { position: "absolute", backgroundColor: VIOLET, opacity: 0.16 },
 
-  hero: { backgroundColor: NAVY, overflow: "hidden" },
-  ring: { position: "absolute", borderColor: "rgba(255,255,255,0.06)" },
-  glow: {
+  stage: { flex: 1, alignItems: "center", justifyContent: "center" },
+  guide: { position: "absolute", borderWidth: 1, borderColor: "rgba(255,255,255,0.09)" },
+  ring: { position: "absolute" },
+  center: { position: "absolute", alignItems: "center", justifyContent: "center" },
+  bubble: {
     position: "absolute",
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    backgroundColor: VIOLET,
-    opacity: 0.28,
-    right: -60,
-    top: 90,
-  },
-
-  logoPill: {
-    alignSelf: "flex-start",
-    marginLeft: 20,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  logo: { width: 112, height: 28 },
-
-  qCard: {
-    position: "absolute",
-    left: 4,
-    top: 22,
-    backgroundColor: "#FFFFFF",
+    width: 44,
+    height: 44,
     borderRadius: 22,
-    padding: 14,
-    transform: [{ rotate: "-3deg" }],
-    ...shadow.lg,
-  },
-  qTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  qExam: { fontSize: 10.5, fontWeight: "700", color: colors.slate },
-  timer: { flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: "#FEF0F2", paddingHorizontal: 7, paddingVertical: 3, borderRadius: 99 },
-  timerText: { fontSize: 10.5, fontWeight: "800", color: "#DC3545" },
-  bar: { height: 4, borderRadius: 4, backgroundColor: "#E3E6EF", marginVertical: 9, overflow: "hidden" },
-  barFill: { width: "26%", height: 4, borderRadius: 4, backgroundColor: colors.brand },
-  qText: { fontSize: 13, fontWeight: "700", color: colors.ink, lineHeight: 18, marginBottom: 9 },
-  opt: { flexDirection: "row", alignItems: "center", gap: 9, borderWidth: 1.5, borderColor: colors.border, borderRadius: 11, paddingHorizontal: 9, paddingVertical: 6, marginTop: 6 },
-  optOn: { borderColor: colors.brand, backgroundColor: "#F5F3FF" },
-  optKey: { width: 20, height: 20, borderRadius: 6, backgroundColor: "#F1F3F8", alignItems: "center", justifyContent: "center" },
-  optKeyOn: { backgroundColor: colors.brand },
-  optKeyText: { fontSize: 10.5, fontWeight: "800", color: colors.slate },
-  optText: { fontSize: 12.5, fontWeight: "700", color: colors.inkSoft },
-
-  chip: {
-    position: "absolute",
-    flexDirection: "row",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
     alignItems: "center",
-    gap: 8,
-    paddingLeft: 7,
-    paddingRight: 13,
-    paddingVertical: 7,
-    borderRadius: 99,
-    ...shadow.md,
+    justifyContent: "center",
   },
-  chipIcon: { width: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center" },
-  chipText: { fontSize: 12.5, fontWeight: "800", color: colors.ink },
-
-  sheet: {
-    flexGrow: 1,
+  mark: {
+    width: 104,
+    height: 104,
+    borderRadius: 30,
     backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 34,
-    borderTopRightRadius: 34,
-    marginTop: -30,
-    paddingHorizontal: 22,
-    paddingTop: 26,
+    overflow: "hidden",
+    shadowColor: VIOLET,
+    shadowOpacity: 0.75,
+    shadowRadius: 34,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 16,
   },
-  eyebrow: { fontSize: 11, fontWeight: "800", letterSpacing: 1.2, color: colors.brand },
-  title: { fontSize: 29, lineHeight: 35, fontWeight: "800", letterSpacing: -0.6, color: colors.ink, marginTop: 8 },
-  sub: { fontSize: 14, lineHeight: 21, color: colors.slate, marginTop: 8 },
+  markImg: { width: "100%", height: "100%" },
 
-  examRow: { gap: 8, paddingVertical: 16, paddingRight: 10, alignItems: "center" },
-  examPill: { backgroundColor: "#F5F3FF", borderRadius: 99, paddingHorizontal: 12, paddingVertical: 6 },
-  examText: { fontSize: 12, fontWeight: "700", color: colors.brandDark },
+  bottom: { paddingHorizontal: 24 },
+  title: { fontSize: 44, lineHeight: 50, fontWeight: "800", letterSpacing: -1.4, color: "#FFFFFF", marginBottom: 26 },
 
   primary: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.brand,
-    borderRadius: 20,
-    paddingVertical: 15,
-    paddingLeft: 22,
-    paddingRight: 14,
-    ...shadow.md,
+    justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingLeft: 28,
+    paddingRight: 8,
   },
-  primaryTitle: { fontSize: 17, fontWeight: "800", color: "#FFFFFF" },
-  primaryHint: { fontSize: 12, color: "rgba(255,255,255,0.78)", marginTop: 2 },
-  arrow: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" },
+  primaryText: { fontSize: 18, fontWeight: "800", color: NAVY },
+  arrow: { width: 48, height: 48, borderRadius: 24, backgroundColor: BRAND, alignItems: "center", justifyContent: "center" },
 
   secondary: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
     marginTop: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 999,
+    paddingVertical: 16,
     borderWidth: 1.5,
-    borderColor: colors.borderStrong,
-    borderRadius: 20,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    borderColor: "rgba(255,255,255,0.28)",
   },
-  secondaryText: { flex: 1, fontSize: 15, fontWeight: "700", color: colors.ink },
-  secondaryLink: { fontSize: 15, fontWeight: "800", color: colors.brand },
+  secondaryText: { fontSize: 16, fontWeight: "700", color: "#FFFFFF" },
 });
