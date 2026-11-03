@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import api from "../api/axios";
-import { PageHeader, Badge, Button, EmptyState, LoadingState } from "../components/ui";
+import { PageHeader, Badge, Button, EmptyState, LoadingState, Card } from "../components/ui";
 import { useToast } from "../components/Toast";
 import { imageUrl } from "../components/QuestionVisual";
-import { RiImageLine } from "@remixicon/react";
+import { RiImageLine, RiImageAddLine, RiCheckboxCircleLine, RiLockLine, RiMagicLine } from "@remixicon/react";
 
 // Figure questions waiting for their picture.
 //
@@ -219,6 +219,8 @@ export default function ImagesPending() {
   const [status, setStatus] = useState("pending");
   const [data, setData] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [open, setOpen] = useState(null); // the question shown in full
+  const [busy, setBusy] = useState(null); // a row's quick action, or "auto"
 
   const load = useCallback(
     async (skip = 0) => {
@@ -230,6 +232,7 @@ export default function ImagesPending() {
 
   useEffect(() => {
     setData(null);
+    setOpen(null);
     load().catch(() => toast.error("Couldn't load the figure questions"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
@@ -245,6 +248,44 @@ export default function ImagesPending() {
         questions: moved ? d.questions.filter((q) => q._id !== updated._id) : d.questions.map((q) => (q._id === updated._id ? updated : q)),
       };
     });
+    setOpen((o) => (o && o._id === updated._id ? (status === "pending" && updated.imageId ? null : updated) : o));
+  }
+
+  // The code-drawn reference is always exactly right, so it can go up in one
+  // click - the same upload the full view does with "Use the reference drawing".
+  async function attachReference(q) {
+    setBusy(q._id);
+    try {
+      const img = await loadImage(svgSrc(q.svg));
+      const pic = await toUpload(img, { lossless: true });
+      const res = await api.post(`/question-images/question/${q._id}`, pic);
+      toast.success("Reference drawing uploaded");
+      changed(res.data.question);
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || "Upload failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function autoAttach() {
+    const ok = await toast.confirm({
+      title: "Attach reference drawings to every checked figure?",
+      message:
+        "Every waiting question whose answer the computer has checked gets its code-drawn picture. Questions checked by eye stay here for a person.",
+      confirmLabel: "Attach them",
+    });
+    if (!ok) return;
+    setBusy("auto");
+    try {
+      const res = await api.post("/question-images/auto-attach");
+      toast.success(res.data?.message || "Done");
+      await load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "That didn't work");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function more() {
@@ -257,29 +298,53 @@ export default function ImagesPending() {
   }
 
   const total = status === "pending" ? data?.pendingCount : data?.uploadedCount;
+  const blocking = (data?.questions || []).filter((q) => !q.imageId && q.tests?.length).length;
 
   return (
     <div>
       <PageHeader
         eyebrow="Content"
         title="Images pending"
-        subtitle="Figure-reasoning questions need a picture. Copy each prompt into an image AI, check the result box by box against the reference drawing, then upload it. A test with a missing picture cannot be published."
+        subtitle="Figure-reasoning questions need a picture. Use the code-drawn reference (always correct), or make one with an image AI and check it box by box. A test with a missing picture cannot be published."
+        actions={
+          status === "pending" && data?.pendingCount > 0 ? (
+            <Button size="sm" loading={busy === "auto"} onClick={autoAttach}>
+              <RiMagicLine size={15} /> Attach reference drawings
+            </Button>
+          ) : null
+        }
       />
 
-      <div className="flex gap-2 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-5">
+        <Tile
+          icon={RiImageAddLine}
+          tone={data?.pendingCount ? "bg-warn-light text-warn" : "bg-success-light text-success"}
+          label="Waiting for a picture"
+          value={data?.pendingCount}
+        />
+        <Tile icon={RiCheckboxCircleLine} tone="bg-success-light text-success" label="Pictures uploaded" value={data?.uploadedCount} />
+        <Tile
+          icon={RiLockLine}
+          tone={blocking ? "bg-danger-light text-danger" : "bg-slate-light text-slate"}
+          label="Holding a test back (shown below)"
+          value={data ? (status === "pending" ? blocking : 0) : undefined}
+        />
+      </div>
+
+      <div className="flex items-center gap-1 border-b border-border mb-4">
         {[
-          ["pending", "Waiting for a picture", data?.pendingCount],
-          ["uploaded", "Uploaded", data?.uploadedCount],
-        ].map(([key, label, n]) => (
+          ["pending", "Waiting", data?.pendingCount, "bg-warn-light text-warn"],
+          ["uploaded", "Uploaded", data?.uploadedCount, "bg-success-light text-success"],
+        ].map(([key, label, n, tone]) => (
           <button
             key={key}
             onClick={() => setStatus(key)}
-            className={`px-4 py-2 rounded-full text-sm border ${
-              status === key ? "bg-brand text-white border-brand" : "bg-surface text-ink-soft border-border-soft hover:border-brand"
+            className={`px-4 py-2.5 -mb-px text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+              status === key ? "border-brand text-brand" : "border-transparent text-slate hover:text-ink"
             }`}
           >
             {label}
-            {typeof n === "number" && <span className="ml-1.5 opacity-80">{n}</span>}
+            {typeof n === "number" && <span className={`text-[11px] px-1.5 py-0.5 rounded-full tabular-nums ${tone}`}>{n}</span>}
           </button>
         ))}
       </div>
@@ -297,19 +362,116 @@ export default function ImagesPending() {
           }
         />
       ) : (
-        <div className="space-y-5">
-          {data.questions.map((q) => (
-            <FigureCard key={q._id} q={q} onChanged={changed} />
-          ))}
+        <Card className="!p-0 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
+                  <th className="px-4 py-3 w-24">Figure</th>
+                  <th className="px-4 py-3">Question</th>
+                  <th className="px-4 py-3">Answer</th>
+                  <th className="px-4 py-3">Tests</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-soft">
+                {data.questions.map((q) => {
+                  const thumb = q.imageId ? imageUrl(q.imageId) : q.svg ? svgSrc(q.svg) : null;
+                  const live = (q.tests || []).filter((t) => t.publishStatus === "published").length;
+                  return (
+                    <tr key={q._id} className="align-top hover:bg-slate-light/40 transition-colors">
+                      <td className="px-4 py-3">
+                        {thumb ? (
+                          <img src={thumb} alt="" className="w-20 h-14 object-contain rounded border border-border-soft bg-white" />
+                        ) : (
+                          <div className="w-20 h-14 rounded border border-dashed border-border-soft" />
+                        )}
+                      </td>
+                      <td className="px-4 py-3 min-w-[260px]">
+                        <button onClick={() => setOpen(q)} className="text-left font-medium text-ink hover:text-brand line-clamp-2">
+                          {q.text}
+                        </button>
+                        <p className="text-xs text-slate-soft mt-0.5">
+                          {q.subject} · {q.chapter || q.topic}
+                        </p>
+                        {q.specProblem && <p className="text-xs text-danger mt-0.5">Broken description - delete this question</p>}
+                      </td>
+                      <td className="px-4 py-3 min-w-[130px]">
+                        <p className="text-ink font-medium">{q.options?.[q.correctIndex]}</p>
+                        {q.answerCheck === "checked" ? (
+                          <span className="text-[11px] text-success font-semibold">Checked by computer</span>
+                        ) : (
+                          <span className="text-[11px] text-warn font-semibold">Check by eye</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {q.tests?.length ? (
+                          <Badge tone={live ? "success" : "warn"}>
+                            {q.tests.length} test{q.tests.length > 1 ? "s" : ""}
+                            {live ? ` · ${live} live` : " · draft"}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-slate-soft">Not in a test</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-1.5">
+                          {!q.imageId && q.svg && !q.specProblem && q.answerCheck === "checked" && (
+                            <Button size="sm" variant="secondary" loading={busy === q._id} onClick={() => attachReference(q)}>
+                              Use reference
+                            </Button>
+                          )}
+                          <Button size="sm" variant="ghost" onClick={() => setOpen(q)}>
+                            Open
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
           {data.questions.length < (total || 0) && (
-            <div className="text-center">
-              <Button variant="secondary" loading={loadingMore} onClick={more}>
+            <div className="text-center py-3 border-t border-border-soft">
+              <Button variant="secondary" size="sm" loading={loadingMore} onClick={more}>
                 Show more ({total - data.questions.length} left)
               </Button>
             </div>
           )}
+        </Card>
+      )}
+
+      {open && (
+        <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setOpen(null)}>
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-end mb-2">
+              <button onClick={() => setOpen(null)} className="text-white/80 hover:text-white text-sm font-semibold">
+                Close ✕
+              </button>
+            </div>
+            <FigureCard q={open} onChanged={changed} />
+          </div>
         </div>
       )}
     </div>
+  );
+}
+
+function Tile({ icon: Icon, tone, label, value }) {
+  return (
+    <Card className="!p-4 flex items-center gap-3">
+      <span className={`w-10 h-10 rounded-sm grid place-items-center shrink-0 ${tone}`}>
+        <Icon size={19} />
+      </span>
+      <div className="min-w-0">
+        {value == null ? (
+          <div className="h-6 w-10 rounded bg-slate-light animate-pulse" />
+        ) : (
+          <p className="font-display text-xl font-extrabold text-ink tabular-nums">{value}</p>
+        )}
+        <p className="text-xs text-slate truncate">{label}</p>
+      </div>
+    </Card>
   );
 }
