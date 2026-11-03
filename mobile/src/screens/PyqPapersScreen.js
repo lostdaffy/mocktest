@@ -38,7 +38,7 @@ import {
   isSubscribed,
 } from "../utils/subscription";
 
-import { gradients, spacing, radius, shadow, useTheme, cardFor } from "../theme/theme";
+import { gradients, spacing, radius, shadow, useTheme, cardFor, softBg } from "../theme/theme";
 
 import {
   useSafeAreaInsets,
@@ -1160,7 +1160,7 @@ const makeStyles =
       height: 48,
       borderRadius: 24,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       alignItems:
         "center",
       justifyContent:
@@ -1204,7 +1204,7 @@ const makeStyles =
       height: 41,
       borderRadius: 14,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       borderWidth: 1,
       borderColor:
         colors.border,
@@ -1443,7 +1443,7 @@ const makeStyles =
       paddingVertical: 11,
       paddingHorizontal: 8,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       borderRadius: 18,
       borderWidth: 1,
       borderColor:
@@ -1552,7 +1552,7 @@ const makeStyles =
       height: 44,
       borderRadius: 14,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       borderWidth: 1,
       borderColor:
         colors.border,
@@ -1593,7 +1593,7 @@ const makeStyles =
       padding: 11,
       borderRadius: 19,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       borderWidth: 1,
       borderColor:
         colors.border,
@@ -1605,7 +1605,7 @@ const makeStyles =
 
     paperCardLocked: {
       backgroundColor:
-        "#FCFCFE",
+        softBg(colors, "#FCFCFE"),
     },
 
     /* =====================================================
@@ -1824,7 +1824,7 @@ const makeStyles =
       height: 26,
       borderRadius: 13,
       backgroundColor:
-        "#FFF8DF",
+        softBg(colors, "#FFF8DF"),
       borderWidth: 2,
       borderColor:
         colors.bg,

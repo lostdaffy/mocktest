@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import api from "../api/client";
 
-import { gradients, spacing, radius, shadow, useTheme } from "../theme/theme";
+import { gradients, spacing, radius, shadow, useTheme, softBg } from "../theme/theme";
 
 /* =========================================================
    SUBJECT META
@@ -828,7 +828,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 10,
@@ -857,7 +857,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
@@ -1109,7 +1109,7 @@ const makeStyles = (colors) => StyleSheet.create({
     minWidth: 44,
     height: 42,
     borderRadius: 13,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
@@ -1141,7 +1141,7 @@ const makeStyles = (colors) => StyleSheet.create({
     marginBottom: 10,
     padding: 13,
     borderRadius: 19,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     ...shadow.soft,
@@ -1298,7 +1298,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 41,
     height: 41,
     borderRadius: 13,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
@@ -1328,7 +1328,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 31,
     height: 31,
     borderRadius: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 8,
@@ -1365,7 +1365,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 25,
     height: 25,
     borderRadius: 13,
-    backgroundColor: "#FFF8DF",
+    backgroundColor: softBg(colors, "#FFF8DF"),
     borderWidth: 2,
     borderColor: colors.bg,
     alignItems: "center",

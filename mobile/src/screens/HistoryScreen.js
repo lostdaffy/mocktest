@@ -27,7 +27,7 @@ import {
 
 import api from "../api/client";
 
-import { spacing, radius, type, shadow, useTheme, cardFor } from "../theme/theme";
+import { spacing, radius, type, shadow, useTheme, cardFor, softBg } from "../theme/theme";
 
 /* =========================================================
    HISTORY SCREEN
@@ -1687,7 +1687,7 @@ const makeStyles =
       height: 28,
       borderRadius: 14,
       backgroundColor:
-        "#FFF8DF",
+        softBg(colors, "#FFF8DF"),
       borderWidth: 2,
       borderColor:
         colors.surface,

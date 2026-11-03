@@ -30,7 +30,7 @@ import {
   isSubscribed,
 } from "../utils/subscription";
 
-import { spacing, radius, shadow, useTheme } from "../theme/theme";
+import { spacing, radius, shadow, useTheme, softBg } from "../theme/theme";
 
 import {
   useSafeAreaInsets,
@@ -2407,7 +2407,7 @@ const makeStyles =
       marginHorizontal: 18,
       marginBottom: 23,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       borderRadius: 20,
       borderWidth: 1,
       borderColor:
@@ -2496,7 +2496,7 @@ const makeStyles =
       marginBottom: 10,
       padding: 13,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       borderRadius: 20,
       borderWidth: 1,
       borderColor:
@@ -2646,7 +2646,7 @@ const makeStyles =
       padding: 12,
       borderRadius: 20,
       backgroundColor:
-        "#FFF7F8",
+        softBg(colors, "#FFF7F8"),
       borderWidth: 1,
       borderColor:
         "#FFD9DE",
@@ -2659,7 +2659,7 @@ const makeStyles =
       height: 44,
       borderRadius: 14,
       backgroundColor:
-        "#FFE7EA",
+        softBg(colors, "#FFE7EA"),
       alignItems: "center",
       justifyContent:
         "center",

@@ -24,7 +24,7 @@ import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { isSubscribed } from "../utils/subscription";
 
-import { spacing, radius, type, shadow, useTheme } from "../theme/theme";
+import { spacing, radius, type, shadow, useTheme, softBg } from "../theme/theme";
 
 /* =========================================================
    EXAM META
@@ -1885,7 +1885,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: "#FFF4EF",
+    backgroundColor: softBg(colors, "#FFF4EF"),
     borderWidth: 2,
     borderColor: colors.surface,
     left: -2,
@@ -1900,7 +1900,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 27,
     height: 27,
     borderRadius: 14,
-    backgroundColor: "#FFF8DF",
+    backgroundColor: softBg(colors, "#FFF8DF"),
     borderWidth: 2,
     borderColor: colors.surface,
     right: -3,
@@ -1987,7 +1987,7 @@ const makeStyles = (colors) => StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#FFF4F0",
+    backgroundColor: softBg(colors, "#FFF4F0"),
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: radius.full,
@@ -2254,7 +2254,7 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 3,
     borderRadius: radius.full,
-    backgroundColor: "#FFF1EC",
+    backgroundColor: softBg(colors, "#FFF1EC"),
   },
 
   resumeText: {
@@ -2292,7 +2292,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: "#FFF8DF",
+    backgroundColor: softBg(colors, "#FFF8DF"),
     alignItems: "center",
     justifyContent: "center",
   },

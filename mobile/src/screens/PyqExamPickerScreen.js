@@ -33,7 +33,7 @@ import {
 
 import api from "../api/client";
 
-import { gradients, spacing, radius, shadow, useTheme } from "../theme/theme";
+import { gradients, spacing, radius, shadow, useTheme, softBg } from "../theme/theme";
 
 /* =========================================================
    EXAM META
@@ -860,7 +860,7 @@ const makeStyles =
       height: 48,
       borderRadius: 24,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       alignItems:
         "center",
       justifyContent:
@@ -904,7 +904,7 @@ const makeStyles =
       height: 41,
       borderRadius: 14,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       borderWidth: 1,
       borderColor:
         colors.border,
@@ -1195,7 +1195,7 @@ const makeStyles =
       height: 44,
       borderRadius: 14,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       borderWidth: 1,
       borderColor:
         colors.border,
@@ -1235,7 +1235,7 @@ const makeStyles =
       paddingVertical: 10,
       paddingHorizontal: 11,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       borderRadius: 19,
       borderWidth: 1,
       borderColor:
@@ -1396,7 +1396,7 @@ const makeStyles =
       right: -3,
       top: -3,
       backgroundColor:
-        "#FFF8DF",
+        softBg(colors, "#FFF8DF"),
       borderWidth: 2,
       borderColor:
         colors.bg,

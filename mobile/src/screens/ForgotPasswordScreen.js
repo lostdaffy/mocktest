@@ -20,7 +20,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import api from "../api/client";
 
-import { gradients, spacing, radius, type, shadow, useTheme } from "../theme/theme";
+import { gradients, spacing, radius, type, shadow, useTheme, softBg } from "../theme/theme";
+import BackToWelcome from "../components/BackToWelcome";
+import AuthHeader, { AUTH_OVERLAP } from "../components/AuthHeader";
 
 /* =========================================================
    RANKVEER LOGO
@@ -237,81 +239,6 @@ export default function ForgotPasswordScreen({
       <View style={styles.screen}>
 
         {/* =================================================
-            BACKGROUND DECORATIONS
-            IMPORTANT: pointerEvents NONE
-        ================================================= */}
-
-        <View
-          pointerEvents="none"
-          style={[
-            styles.bgCircle,
-            styles.bgCircleTopRight,
-          ]}
-        />
-
-        <View
-          pointerEvents="none"
-          style={[
-            styles.bgCircleInner,
-            styles.bgCircleTopRightInner,
-          ]}
-        />
-
-        <View
-          pointerEvents="none"
-          style={[
-            styles.bgCircle,
-            styles.bgCircleBottomLeft,
-          ]}
-        />
-
-        <View
-          pointerEvents="none"
-          style={[
-            styles.bgCircleInner,
-            styles.bgCircleBottomLeftInner,
-          ]}
-        />
-
-        {/* LEFT DOTS */}
-
-        <View
-          pointerEvents="none"
-          style={[
-            styles.dots,
-            styles.dotsLeft,
-          ]}
-        >
-          {Array.from({
-            length: 35,
-          }).map((_, index) => (
-            <View
-              key={`left-${index}`}
-              style={styles.dot}
-            />
-          ))}
-        </View>
-
-        {/* RIGHT DOTS */}
-
-        <View
-          pointerEvents="none"
-          style={[
-            styles.dots,
-            styles.dotsRight,
-          ]}
-        >
-          {Array.from({
-            length: 30,
-          }).map((_, index) => (
-            <View
-              key={`right-${index}`}
-              style={styles.dot}
-            />
-          ))}
-        </View>
-
-        {/* =================================================
             CONTENT
         ================================================= */}
 
@@ -320,11 +247,7 @@ export default function ForgotPasswordScreen({
           contentContainerStyle={[
             styles.container,
             {
-              paddingTop:
-                Math.max(
-                  insets.top,
-                  12
-                ) + spacing.md,
+              paddingTop: 0,
 
               paddingBottom:
                 Math.max(
@@ -339,113 +262,12 @@ export default function ForgotPasswordScreen({
           bounces={false}
         >
 
-          {/* =================================================
-              BACK TO LOGIN
-          ================================================= */}
+          <AuthHeader
+            title={step === 1 ? "Reset password" : "New password"}
+            subtitle={step === 1 ? "We'll get you back into your account" : `Reset code sent to ${sentTo}`}
+          />
 
-          <TouchableOpacity
-            style={styles.topBack}
-            activeOpacity={0.75}
-            onPress={() =>
-              navigation.navigate(
-                "Login"
-              )
-            }
-          >
-            <View
-              style={
-                styles.topBackIcon
-              }
-            >
-              <Ionicons
-                name="chevron-back"
-                size={17}
-                color={colors.ink}
-              />
-            </View>
-
-            <Text
-              style={
-                styles.topBackText
-              }
-            >
-              Sign in
-            </Text>
-          </TouchableOpacity>
-
-          {/* =================================================
-              BRAND
-          ================================================= */}
-
-          <View
-            style={styles.brandWrap}
-          >
-            <Image
-              source={
-                RANKVEER_LOGO
-              }
-              style={
-                styles.logoImage
-              }
-              resizeMode="contain"
-            />
-
-            <Text
-              style={
-                styles.brandTag
-              }
-            >
-              Practice smarter. Score higher.
-            </Text>
-          </View>
-
-          {/* =================================================
-              CARD
-          ================================================= */}
-
-          <View
-            style={styles.card}
-          >
-
-            {/* =================================================
-                HEADING
-            ================================================= */}
-
-            <View
-              style={
-                styles.headingRow
-              }
-            >
-              <Text
-                style={
-                  styles.title
-                }
-              >
-                {step === 1
-                  ? "Reset password"
-                  : "Create new password"}
-              </Text>
-
-              <Text
-                style={
-                  styles.headingEmoji
-                }
-              >
-                {step === 1
-                  ? "🔐"
-                  : "✨"}
-              </Text>
-            </View>
-
-            <Text
-              style={
-                styles.subtitle
-              }
-            >
-              {step === 1
-                ? "We'll help you get back into your account"
-                : `Reset code sent to ${sentTo}`}
-            </Text>
+          <View style={styles.card}>
 
             {/* =================================================
                 STEP 1
@@ -926,6 +748,7 @@ export default function ForgotPasswordScreen({
           </View>
 
         </ScrollView>
+        <BackToWelcome navigation={navigation} />
       </View>
     </KeyboardAvoidingView>
   );
@@ -1072,12 +895,12 @@ const makeStyles = (colors) => StyleSheet.create({
 
   keyboard: {
     flex: 1,
-    backgroundColor: "#F8F7FF",
+    backgroundColor: colors.bg,
   },
 
   screen: {
     flex: 1,
-    backgroundColor: "#F8F7FF",
+    backgroundColor: colors.bg,
     overflow: "hidden",
   },
 
@@ -1089,7 +912,7 @@ const makeStyles = (colors) => StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: spacing.lg,
-    justifyContent: "center",
+    justifyContent: "flex-start",
   },
 
   /* =======================================================
@@ -1232,8 +1055,9 @@ const makeStyles = (colors) => StyleSheet.create({
   card: {
     width: "100%",
 
-    backgroundColor:
-      "rgba(255,255,255,0.98)",
+    marginTop: -AUTH_OVERLAP,
+
+    backgroundColor: colors.surface,
 
     borderRadius: 27,
 
@@ -1241,8 +1065,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
     borderWidth: 1,
 
-    borderColor:
-      "rgba(255,255,255,0.95)",
+    borderColor: colors.border,
 
     shadowColor: "#1C2650",
 
@@ -1275,7 +1098,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
     ...type.h1,
 
-    color: "#172B4D",
+    color: colors.ink,
 
     fontSize: 24,
 
@@ -1320,7 +1143,7 @@ const makeStyles = (colors) => StyleSheet.create({
     height: 39,
     borderRadius: 12,
 
-    backgroundColor: "#F5F1FF",
+    backgroundColor: softBg(colors, "#F5F1FF"),
 
     alignItems: "center",
     justifyContent: "center",
@@ -1329,7 +1152,7 @@ const makeStyles = (colors) => StyleSheet.create({
   },
 
   successIntroIcon: {
-    backgroundColor: "#EEF9F3",
+    backgroundColor: softBg(colors, "#EEF9F3"),
   },
 
   cardIntroCopy: {
@@ -1341,7 +1164,7 @@ const makeStyles = (colors) => StyleSheet.create({
     fontSize: 13,
     lineHeight: 17,
     fontWeight: "800",
-    color: "#172D51",
+    color: colors.ink,
   },
 
   cardIntroText: {
@@ -1359,7 +1182,7 @@ const makeStyles = (colors) => StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "800",
-    color: "#172D51",
+    color: colors.ink,
     marginBottom: 8,
   },
 
@@ -1372,7 +1195,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
     alignItems: "center",
 
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface,
 
     borderRadius: 16,
 
@@ -1384,7 +1207,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
     borderWidth: 1.5,
 
-    borderColor: "#E0DCF5",
+    borderColor: colors.border,
 
     /*
      * Important:
@@ -1398,7 +1221,7 @@ const makeStyles = (colors) => StyleSheet.create({
   inputWrapFocused: {
     borderColor: "#7050E7",
 
-    backgroundColor: "#FCFBFF",
+    backgroundColor: softBg(colors, "#FCFBFF"),
 
     zIndex: 30,
 
@@ -1422,7 +1245,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
     borderRadius: 11,
 
-    backgroundColor: "#F5F1FF",
+    backgroundColor: softBg(colors, "#F5F1FF"),
 
     alignItems: "center",
     justifyContent: "center",
@@ -1439,7 +1262,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
     fontSize: 15,
 
-    color: "#172D51",
+    color: colors.ink,
 
     fontWeight: "500",
 
@@ -1455,7 +1278,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
     fontWeight: "700",
 
-    color: "#172D51",
+    color: colors.ink,
 
     marginRight: 9,
   },
@@ -1498,7 +1321,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
     alignItems: "center",
 
-    backgroundColor: "#F6F3FF",
+    backgroundColor: softBg(colors, "#F6F3FF"),
 
     padding: 11,
 
@@ -1508,7 +1331,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
     borderWidth: 1,
 
-    borderColor: "#E4DDF8",
+    borderColor: colors.border,
   },
 
   infoIcon: {
@@ -1517,7 +1340,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
     borderRadius: 10,
 
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface,
 
     alignItems: "center",
     justifyContent: "center",

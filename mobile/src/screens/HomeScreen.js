@@ -28,7 +28,7 @@ import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { isSubscribed } from "../utils/subscription";
 
-import { spacing, radius, type, useTheme, cardFor } from "../theme/theme";
+import { spacing, radius, type, useTheme, cardFor, softBg } from "../theme/theme";
 import TodayPlanCard from "../components/TodayPlanCard";
 import FirstRunGuide from "../components/FirstRunGuide";
 import BrandMark from "../components/BrandMark";
@@ -1368,7 +1368,7 @@ const makeStyles =
       paddingHorizontal: 7,
       paddingVertical: 3,
       borderRadius: 999,
-      backgroundColor: "#FEF3C7",
+      backgroundColor: softBg(colors, "#FEF3C7"),
       borderWidth: 1,
       borderColor: "#FCD34D",
     },
@@ -1743,7 +1743,7 @@ const makeStyles =
       gap: 7,
 
       backgroundColor:
-        colors.ink2,
+        "#172554",
 
       paddingHorizontal: 16,
 
@@ -1841,7 +1841,7 @@ const makeStyles =
     carouselBanner: {
       borderRadius: 20,
       overflow: "hidden",
-      backgroundColor: "#F2F3FF",
+      backgroundColor: softBg(colors, "#F2F3FF"),
     },
 
     carouselBannerImage: {
@@ -2483,7 +2483,7 @@ const makeStyles =
       borderRadius: 20,
 
       backgroundColor:
-        "#FFF8E6",
+        softBg(colors, "#FFF8E6"),
 
       borderWidth: 1,
 

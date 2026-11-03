@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ActivityInd
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
-import { useTheme } from "../theme/theme";
+import { useTheme, softBg } from "../theme/theme";
 
 // Question of the Day on Home - ten seconds, every day.
 //
@@ -222,7 +222,7 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   loading: { minHeight: 90, alignItems: "center", justifyContent: "center" },
   head: { flexDirection: "row", alignItems: "center", gap: 8 },
-  bulb: { width: 26, height: 26, borderRadius: 9, backgroundColor: "#FEF3C7", alignItems: "center", justifyContent: "center" },
+  bulb: { width: 26, height: 26, borderRadius: 9, backgroundColor: softBg(colors, "#FEF3C7"), alignItems: "center", justifyContent: "center" },
   eyebrow: { flex: 1, fontSize: 10.5, fontWeight: "800", letterSpacing: 0.7, color: colors.brand },
   subject: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, backgroundColor: colors.brandTint },
   subjectText: { fontSize: 10.5, fontWeight: "800", color: colors.brand },

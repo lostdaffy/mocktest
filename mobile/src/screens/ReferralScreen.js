@@ -1013,7 +1013,7 @@ const makeStyles =
       height: 48,
       borderRadius: 24,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       alignItems:
         "center",
       justifyContent:
@@ -1126,7 +1126,7 @@ const makeStyles =
       height: 41,
       borderRadius: 14,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       borderWidth: 1,
       borderColor:
         colors.border,
@@ -1384,7 +1384,7 @@ const makeStyles =
       borderColor:
         colors.border,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
     },
 
     statIcon: {
@@ -1421,7 +1421,7 @@ const makeStyles =
 
     codeCard: {
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       borderRadius: 20,
       padding: 15,
       marginBottom: 21,
@@ -1562,7 +1562,7 @@ const makeStyles =
       paddingHorizontal: 9,
       borderRadius: 11,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       borderWidth: 1,
       borderColor:
         colors.border,
@@ -1593,7 +1593,7 @@ const makeStyles =
       borderColor:
         colors.border,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
     },
 
     step: {

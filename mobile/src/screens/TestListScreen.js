@@ -33,8 +33,7 @@ import {
   spacing,
   radius,
   type,
-  shadow,
-} from "../theme/theme";
+  shadow, softBg } from "../theme/theme";
 
 /* =========================================================
    DATE HELPERS
@@ -2016,7 +2015,7 @@ function getStyles(colors, cardStyle) {
       marginBottom: 13,
       minHeight: 58,
       paddingHorizontal: 8,
-      backgroundColor: "#FFFFFF",
+      backgroundColor: colors.surface,
       borderRadius: 16,
       borderWidth: 1,
       borderColor: colors.border,
@@ -2219,7 +2218,7 @@ function getStyles(colors, cardStyle) {
       width: 34,
       height: 34,
       borderRadius: 11,
-      backgroundColor: "#FFFFFF",
+      backgroundColor: colors.surface,
       alignItems: "center",
       justifyContent: "center",
       marginRight: 9,
@@ -2469,7 +2468,7 @@ function getStyles(colors, cardStyle) {
 
     examCardLive: {
       borderColor: colors.dangerBorder,
-      backgroundColor: "#FFFCFC",
+      backgroundColor: softBg(colors, "#FFFCFC"),
     },
 
     examCardEnded: {
@@ -2678,7 +2677,7 @@ function getStyles(colors, cardStyle) {
       width: 24,
       height: 24,
       borderRadius: 12,
-      backgroundColor: "#FFF8DF",
+      backgroundColor: softBg(colors, "#FFF8DF"),
       borderWidth: 2,
       borderColor: colors.bg,
       alignItems: "center",

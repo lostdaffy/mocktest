@@ -962,7 +962,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: "center",
@@ -1123,7 +1123,7 @@ const makeStyles = (colors) => StyleSheet.create({
     height: 37,
     borderRadius: 12,
     backgroundColor:
-      "#FFFFFF",
+      colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
@@ -1138,13 +1138,13 @@ const makeStyles = (colors) => StyleSheet.create({
     fontSize: 12.5,
     lineHeight: 17,
     fontWeight: "900",
-    color: "#065F46",
+    color: colors.success,
   },
 
   creditSub: {
     fontSize: 10,
     lineHeight: 14,
-    color: "#047857",
+    color: colors.success,
     marginTop: 1,
   },
 
@@ -1391,7 +1391,7 @@ const makeStyles = (colors) => StyleSheet.create({
     height: 39,
     borderRadius: 12,
     backgroundColor:
-      "#FFFFFF",
+      colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
@@ -1421,7 +1421,7 @@ const makeStyles = (colors) => StyleSheet.create({
     height: 30,
     borderRadius: 15,
     backgroundColor:
-      "#FFFFFF",
+      colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 7,

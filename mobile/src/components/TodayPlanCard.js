@@ -147,12 +147,12 @@ const makeStyles = (colors) => StyleSheet.create({
   streakText: { fontSize: 11.5, fontWeight: "800", color: "#FFFFFF" },
 
   mainRow: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 10 },
-  icon: { width: 44, height: 44, borderRadius: 14, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" },
+  icon: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
   body: { flex: 1, minWidth: 0 },
   title: { fontSize: 17, fontWeight: "800", color: "#FFFFFF" },
   sub: { fontSize: 12, fontWeight: "600", color: "rgba(255,255,255,0.85)", marginTop: 2 },
 
-  button: { minWidth: 72, height: 36, paddingHorizontal: 16, borderRadius: 12, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" },
+  button: { minWidth: 72, height: 36, paddingHorizontal: 16, borderRadius: 12, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
   buttonText: { fontSize: 14, fontWeight: "800", color: colors.brand },
   buttonGhost: {
     height: 36,

@@ -2834,7 +2834,7 @@ const makeStyles =
       height: 20,
       borderRadius: 10,
       backgroundColor:
-        "#FFFFFF",
+        colors.surface,
       alignItems: "center",
       justifyContent:
         "center",
@@ -2879,7 +2879,7 @@ const makeStyles =
       height: 34,
       borderRadius: 11,
       backgroundColor:
-        colors.ink,
+        colors.brandDark,
       alignItems: "center",
       justifyContent:
         "center",

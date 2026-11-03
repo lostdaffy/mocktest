@@ -544,6 +544,21 @@ export function useIsDark() {
   return useColorScheme() === "dark";
 }
 
+/* A pastel tint written for the light theme (a pale yellow chip, a pale blue
+   badge...). In the dark theme it becomes a deep version of the same hue
+   instead of a glowing pastel block. */
+export function softBg(palette, hex) {
+  if (palette !== darkTheme) return hex;
+  let h = hex.replace("#", "");
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  const n = parseInt(h, 16);
+  const p = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  const mean = (p[0] + p[1] + p[2]) / 3;
+  const b = [30, 38, 59];
+  const out = p.map((v, i) => Math.max(0, Math.min(255, Math.round(b[i] + (v - mean) * 1.4))));
+  return "#" + out.map((v) => v.toString(16).padStart(2, "0")).join("");
+}
+
 /* Card style that matches a palette returned by getColors/useTheme. */
 export function cardFor(palette) {
   return getCard(palette === darkTheme);
