@@ -467,43 +467,73 @@ export default function ExamPatterns() {
         <p className="text-slate-soft">Loading...</p>
       ) : (
         <>
-          {active.length === 0 && (
-            <p className="text-slate-soft mb-6">No exam patterns yet — add one above.</p>
-          )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {active.map((p) => (
-              <PatternCard
-                key={p._id}
-                p={p}
-                editing={editingId === p._id}
-                onEdit={() => startEdit(p)}
-                onArchive={() => archivePattern(p)}
-                onDelete={() => deletePattern(p)}
-              />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
+            {[
+              ["Active exams", active.length, "bg-brand"],
+              ["Archived", archived.length, "bg-slate-soft"],
+              ["Tests built on these patterns", patterns.reduce((n, p) => n + (p.testCount || 0), 0), "bg-success"],
+              ["Exams with a section missing its syllabus", active.filter((p) => (p.sections || []).some((s) => !(s.syllabus?.length > 0))).length, "bg-warn"],
+            ].map(([label, value, tone]) => (
+              <div key={label} className="rv-card p-4 flex items-center gap-3">
+                <span className={`w-1.5 self-stretch rounded-full ${value || tone !== "bg-warn" ? tone : "bg-slate-soft"}`} />
+                <div className="min-w-0">
+                  <p className="font-display text-xl font-extrabold text-ink tabular-nums">{value}</p>
+                  <p className="text-xs text-slate truncate">{label}</p>
+                </div>
+              </div>
             ))}
           </div>
 
-          {archived.length > 0 && (
-            <div className="mt-10">
+          <div className="flex flex-wrap items-center gap-1 border-b border-border mb-4">
+            {[
+              [false, "Active", active.length],
+              [true, "Archived", archived.length],
+            ].map(([key, label, n]) => (
               <button
-                onClick={() => setShowArchived((s) => !s)}
-                className="text-sm font-medium text-slate hover:text-ink"
+                key={label}
+                onClick={() => setShowArchived(key)}
+                className={`px-4 py-2.5 -mb-px text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+                  showArchived === key ? "border-brand text-brand" : "border-transparent text-slate hover:text-ink"
+                }`}
               >
-                {showArchived ? "▾" : "▸"} Archived ({archived.length})
+                {label}
+                <span className="text-[11px] px-1.5 py-0.5 rounded-full tabular-nums bg-slate-light text-slate">{n}</span>
               </button>
-              {showArchived && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-4">
-                  {archived.map((p) => (
-                    <PatternCard
-                      key={p._id}
-                      p={p}
-                      archived
-                      onRestore={() => restorePattern(p)}
-                      onDelete={() => deletePattern(p)}
-                    />
-                  ))}
-                </div>
-              )}
+            ))}
+            <span className="ml-auto text-xs text-slate-soft pb-2">{showArchived ? "Not offered to students" : "Offered in the app's exam list"}</span>
+          </div>
+
+          {(showArchived ? archived : active).length === 0 ? (
+            <p className="text-slate-soft text-center py-10 rv-card">{showArchived ? "Nothing archived." : "No exam patterns yet — add one above."}</p>
+          ) : (
+            <div className="rv-card !p-0 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
+                      <th className="px-4 py-3">Exam</th>
+                      <th className="px-4 py-3">Paper</th>
+                      <th className="px-4 py-3">Sections</th>
+                      <th className="px-4 py-3 text-right">Tests</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-soft">
+                    {(showArchived ? archived : active).map((p) => (
+                      <PatternRow
+                        key={p._id}
+                        p={p}
+                        editing={editingId === p._id}
+                        archived={showArchived}
+                        onEdit={() => startEdit(p)}
+                        onArchive={() => archivePattern(p)}
+                        onRestore={() => restorePattern(p)}
+                        onDelete={() => deletePattern(p)}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </>
@@ -512,98 +542,81 @@ export default function ExamPatterns() {
   );
 }
 
-function PatternCard({ p, editing, archived, onEdit, onArchive, onRestore, onDelete }) {
+function PatternRow({ p, editing, archived, onEdit, onArchive, onRestore, onDelete }) {
   const questions = (p.sections || []).reduce((sum, s) => sum + (s.questionCount || 0), 0);
 
   // "−1/wrong" would be a lie about SSC MTS, where half the paper deducts
   // nothing at all. Only quote one rate when one rate is true.
-  const sectionRates = new Set(
-    (p.sections || []).map((s) => (s.negativeMarking == null ? p.negativeMarking ?? 0 : s.negativeMarking))
-  );
+  const sectionRates = new Set((p.sections || []).map((s) => (s.negativeMarking == null ? p.negativeMarking ?? 0 : s.negativeMarking)));
   const markedAlike = sectionRates.size <= 1;
+  const missing = (p.sections || []).filter((s) => !(s.syllabus?.length > 0)).length;
+  const small = "px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap transition-colors";
+
   return (
-    <div className={`rv-card p-6 ${editing ? "border-brand" : ""} ${archived ? "opacity-70" : ""}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-semibold text-ink truncate">{p.displayName}</p>
-          <p className="text-xs text-slate-soft mb-3">
-            {(p.examGroup || p.postName) && (
-              <span className="text-slate">
-                {[p.examGroup, p.postName].filter(Boolean).join(" › ")} ·{" "}
-              </span>
-            )}
-            {p.examType}
-            {archived && <span className="ml-2 text-warn font-medium">Archived</span>}
-          </p>
-        </div>
-        {typeof p.testCount === "number" && (
-          <span className="shrink-0 text-xs bg-slate-light text-slate px-2 py-0.5 rounded-full">
-            {p.testCount} test{p.testCount === 1 ? "" : "s"}
-          </span>
-        )}
-      </div>
-
-      <p className="text-sm text-slate">
-        {p.durationMinutes} min · {questions} questions · {(p.sections || []).length} sections
-        {!markedAlike
-          ? ` · −${[...sectionRates].sort((a, b) => a - b).join(" / −")} per wrong, by section`
-          : p.negativeMarking
-          ? ` · −${p.negativeMarking}/wrong`
-          : " · no negative marking"}
-      </p>
-
-      <div className="flex flex-wrap gap-1.5 mt-3">
-        {(p.sections || []).map((s, i) => (
-          <span key={i} className="text-xs bg-brand/10 text-brand-dark px-2 py-0.5 rounded-full">
-            {[s.subject, ...(s.sources || [])].join(" + ")} ({s.questionCount})
-            {(s.syllabus?.length || 0) > 0 && (
-              <span className="text-slate">
-                {" "}
-                · {s.syllabus.length} topics
-                {s.syllabus.reduce((n, t) => n + (t.subTopics?.length || 0), 0) > 0 &&
-                  ", " + s.syllabus.reduce((n, t) => n + (t.subTopics?.length || 0), 0) + " sub-topics"}
-              </span>
-            )}
-          </span>
-        ))}
-      </div>
-
-      {/* Without a syllabus the generator is guessing what this exam asks */}
-      {(p.sections || []).some((s) => !(s.syllabus?.length > 0)) && (
-        <p className="text-xs text-warn mt-2">⚠ Syllabus missing in some sections — questions will be less accurate.</p>
-      )}
-
-      <div className="flex gap-2 mt-4 pt-4 border-t border-border-soft">
-        {archived ? (
-          <button
-            onClick={onRestore}
-            className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium"
-          >
-            Restore
-          </button>
-        ) : (
-          <>
-            <button
-              onClick={onEdit}
-              className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium"
-            >
-              ✎ Edit
-            </button>
-            <button
-              onClick={onArchive}
-              className="px-3 py-1.5 rounded-lg bg-slate-light hover:bg-border-strong text-ink-soft text-xs font-medium"
-            >
-              Archive
-            </button>
-          </>
-        )}
-        <button
-          onClick={onDelete}
-          className="px-3 py-1.5 rounded-lg bg-danger-light hover:opacity-80 text-danger text-xs font-medium ml-auto"
-        >
-          Delete
+    <tr className={`align-top transition-colors ${editing ? "bg-brand/[0.05]" : "hover:bg-slate-light/40"}`}>
+      <td className="px-4 py-3 min-w-[200px]">
+        <button onClick={archived ? undefined : onEdit} className="font-semibold text-ink hover:text-brand text-left">
+          {p.displayName}
         </button>
-      </div>
-    </div>
+        <p className="text-xs text-slate-soft">
+          {(p.examGroup || p.postName) && <span className="text-slate">{[p.examGroup, p.postName].filter(Boolean).join(" › ")} · </span>}
+          <span className="font-mono">{p.examType}</span>
+        </p>
+      </td>
+      <td className="px-4 py-3 whitespace-nowrap text-slate">
+        <p className="text-ink-soft font-medium tabular-nums">
+          {questions} Q · {p.durationMinutes} min
+        </p>
+        <p className="text-xs">
+          {!markedAlike
+            ? `−${[...sectionRates].sort((a, b) => a - b).join(" / −")} by section`
+            : p.negativeMarking
+              ? `−${p.negativeMarking} per wrong`
+              : "No negative marking"}
+          {p.marksPerQuestion && p.marksPerQuestion !== 1 ? ` · ${p.marksPerQuestion} marks each` : ""}
+        </p>
+      </td>
+      <td className="px-4 py-3 min-w-[260px]">
+        <div className="flex flex-wrap gap-1">
+          {(p.sections || []).map((s, i) => {
+            const subs = (s.syllabus || []).reduce((n, t) => n + (t.subTopics?.length || 0), 0);
+            const none = !(s.syllabus?.length > 0);
+            return (
+              <span
+                key={i}
+                title={none ? "No syllabus - questions will be less accurate" : `${s.syllabus.length} topics${subs ? `, ${subs} sub-topics` : ""}`}
+                className={`text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap ${none ? "bg-warn-light text-warn" : "bg-brand/10 text-brand-dark"}`}
+              >
+                {[s.subject, ...(s.sources || [])].join(" + ")} {s.questionCount}
+                {!none && <span className="opacity-70"> · {s.syllabus.length}t</span>}
+              </span>
+            );
+          })}
+        </div>
+        {missing > 0 && <p className="text-[11px] text-warn mt-1">{missing} section(s) without a syllabus</p>}
+      </td>
+      <td className="px-4 py-3 text-right tabular-nums text-slate">{typeof p.testCount === "number" ? p.testCount : "—"}</td>
+      <td className="px-4 py-3">
+        <div className="flex justify-end gap-1.5">
+          {archived ? (
+            <button onClick={onRestore} className={`${small} bg-success-light text-success hover:opacity-80`}>
+              Restore
+            </button>
+          ) : (
+            <>
+              <button onClick={onEdit} className={`${small} bg-brand/5 text-brand hover:bg-brand/10`}>
+                Edit
+              </button>
+              <button onClick={onArchive} className={`${small} bg-slate-light text-ink-soft hover:bg-border-strong`}>
+                Archive
+              </button>
+            </>
+          )}
+          <button onClick={onDelete} className={`${small} bg-danger-light text-danger hover:opacity-80`}>
+            Delete
+          </button>
+        </div>
+      </td>
+    </tr>
   );
 }
