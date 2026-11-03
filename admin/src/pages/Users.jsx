@@ -23,12 +23,33 @@ const PLAN_LABELS = {
   yearly: "12mo",
 };
 const EXAM_LABELS = {
-  SSC_CGL: "SSC",
+  SSC_CGL: "SSC CGL",
+  SSC_CHSL: "SSC CHSL",
+  SSC_MTS: "SSC MTS",
+  SSC_GD: "SSC GD",
+  SSC: "SSC",
+  RAILWAY: "RRB NTPC",
+  RRB_NTPC: "RRB NTPC",
+  RRB_GROUP_D: "RRB Group D",
   UP_POLICE: "UP Police",
-  RAILWAY: "Railway",
-  BANKING: "Banking",
+  UPSSSC_PET: "UPSSSC PET",
+  BANKING: "IBPS PO",
   CTET: "CTET",
+  UPTET: "UPTET",
+  SUPER_TET: "Super TET",
+  AGNIVEER_GD: "Agniveer GD",
+  AGNIVEER_TECHNICAL: "Agniveer Technical",
 };
+// "5 min ago", "3 days ago" - when the student last did anything.
+function lastSeen(d) {
+  if (!d) return null;
+  const mins = Math.round((Date.now() - new Date(d).getTime()) / 60000);
+  if (mins < 60) return mins <= 1 ? "just now" : `${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs} h ago`;
+  const days = Math.round(hrs / 24);
+  return days === 1 ? "yesterday" : `${days} days ago`;
+}
 
 export default function Users() {
   const toast = useToast();
@@ -45,6 +66,7 @@ export default function Users() {
   const [exporting, setExporting] = useState(false);
 
   const [stats, setStats] = useState(null);
+  const [examOptions, setExamOptions] = useState([]);
 
   const [resetTarget, setResetTarget] = useState(null);
   const [newPassword, setNewPassword] = useState("");
@@ -184,6 +206,7 @@ export default function Users() {
     try {
       const res = await api.get("/admin/users", { params: currentParams(targetPage, term) });
       setUsers(res.data.users || []);
+      if (res.data.examOptions?.length) setExamOptions(res.data.examOptions);
       setTotal(res.data.total ?? 0);
       setPages(res.data.pages ?? 1);
       setPage(res.data.page ?? targetPage);
@@ -306,20 +329,20 @@ export default function Users() {
 
       {/* Stats cards */}
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-          <StatCard icon={RiUserLine} label="Total" value={stats.total} tint="text-slate" bg="bg-slate-light" />
-          <StatCard icon={RiStarLine} label="Premium" value={stats.premium} tint="text-success" bg="bg-success-light" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
+          <StatCard icon={RiUserLine} label="Total students" value={stats.total} tint="text-brand" bg="bg-brand/10" onClick={() => setSubscription("")} />
+          <StatCard icon={RiStarLine} label="Premium now" value={stats.premium} tint="text-success" bg="bg-success-light" onClick={() => setSubscription("premium")} />
           <StatCard
             icon={RiAlarmWarningLine}
-            label="Expiring (7d)"
+            label="Plan ends in 7 days"
             value={stats.expiringSoon}
             tint="text-warn"
             bg="bg-warn-light"
             onClick={() => setSubscription("expiring")}
           />
-          <StatCard icon={RiTimeLine} label="New this week" value={stats.newThisWeek} tint="text-brand" bg="bg-brand/5" />
+          <StatCard icon={RiTimeLine} label="Joined this week" value={stats.newThisWeek} tint="text-info" bg="bg-info-light" onClick={() => setSortBy("newest")} />
           {/* Students whose phone can get a notification - reminders reach only these */}
-          <StatCard icon={RiNotification3Line} label="Notifications on" value={stats.notificationsOn ?? 0} tint="text-info" bg="bg-info-light" />
+          <StatCard icon={RiNotification3Line} label="Notifications on" value={stats.notificationsOn ?? 0} tint="text-slate" bg="bg-slate-light" />
         </div>
       )}
 
@@ -354,9 +377,9 @@ export default function Users() {
           className="rv-input text-sm !w-auto min-w-[150px]"
         >
           <option value="">All exams</option>
-          {Object.entries(EXAM_LABELS).map(([code, label]) => (
+          {(examOptions.length ? examOptions : Object.keys(EXAM_LABELS)).map((code) => (
             <option key={code} value={code}>
-              {label}
+              {EXAM_LABELS[code] || code}
             </option>
           ))}
         </select>
@@ -402,6 +425,7 @@ export default function Users() {
                   <th className="px-4 py-3">Plan</th>
                   <th className="px-4 py-3">Exams</th>
                   <th className="px-4 py-3 whitespace-nowrap">Joined</th>
+                  <th className="px-4 py-3 whitespace-nowrap">Last active</th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -415,7 +439,16 @@ export default function Users() {
                   return (
                     <tr key={u._id} className="align-top hover:bg-slate-light/40 transition-colors">
                       <td className="px-4 py-3 text-slate-soft tabular-nums">{(page - 1) * PAGE_SIZE + i + 1}</td>
-                      <td className="px-4 py-3 min-w-[170px]">
+                      <td className="px-4 py-3 min-w-[190px]">
+                        <div className="flex items-start gap-2.5">
+                        <span
+                          className={`w-8 h-8 rounded-full grid place-items-center shrink-0 text-[11px] font-bold ${
+                            u.subscriptionStatus === "active" ? "bg-success-light text-success" : "bg-brand/10 text-brand"
+                          }`}
+                        >
+                          {(u.name || "?").trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
+                        </span>
+                        <div className="min-w-0">
                         <button onClick={() => openDetail(u._id)} className="font-semibold text-ink hover:text-brand text-left">
                           {u.name}
                         </button>
@@ -428,6 +461,8 @@ export default function Users() {
                           )}
                           {u.streakCount > 0 && <span className="text-[10px] text-slate">🔥 {u.streakCount}d</span>}
                           {u.referralCount > 0 && <span className="text-[10px] text-slate">· {u.referralCount} referrals</span>}
+                        </div>
+                        </div>
                         </div>
                       </td>
                       <td className="px-4 py-3 min-w-[160px]">
@@ -460,6 +495,15 @@ export default function Users() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-slate whitespace-nowrap tabular-nums">{new Date(u.createdAt).toLocaleDateString("en-IN")}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-xs">
+                        {u.lastActiveDate ? (
+                          <span className={Date.now() - new Date(u.lastActiveDate) < 3 * 864e5 ? "text-success font-semibold" : "text-slate"}>
+                            {lastSeen(u.lastActiveDate)}
+                          </span>
+                        ) : (
+                          <span className="text-slate-soft">Never</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-1.5">
                           <button

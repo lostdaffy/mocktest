@@ -55,7 +55,7 @@ function buildSort(sortBy) {
 }
 
 const LIST_FIELDS =
-  "name phone email subscriptionStatus subscriptionExpiresAt subscriptionPlan authProvider examGoals streakCount referralCount referralCredits createdAt role blockedAt";
+  "name phone email subscriptionStatus subscriptionExpiresAt subscriptionPlan authProvider examGoals streakCount referralCount referralCredits createdAt role blockedAt lastActiveDate";
 
 // GET /api/admin/users?phone=&name=&email=&subscription=&examGoal=&authProvider=&expiringDays=&sortBy=&page=&limit=
 async function searchUsers(req, res) {
