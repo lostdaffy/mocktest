@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { RiComputerLine, RiSmartphoneLine, RiLogoutBoxRLine, RiShieldCheckLine } from "@remixicon/react";
 import api from "../api/axios";
-import { PageHeader } from "../components/ui";
+import { PageHeader, Card } from "../components/ui";
 import { useToast } from "../components/Toast";
 
 function when(value) {
@@ -89,6 +89,8 @@ export default function Sessions() {
   }
 
   const others = sessions.filter((s) => !s.current);
+  const apps = sessions.filter((s) => /app|Android|iPhone/i.test(s.device)).length;
+  const ips = new Set(sessions.map((s) => s.ip).filter(Boolean)).size;
 
   return (
     <div>
@@ -105,53 +107,86 @@ export default function Sessions() {
         }
       />
 
-      {loading ? (
-        <p className="text-slate-soft">Loading...</p>
-      ) : sessions.length === 0 ? (
-        <p className="text-slate-soft">No active sessions found.</p>
-      ) : (
-        <div className="space-y-3">
-          {sessions.map((s) => {
-            const isApp = /app|Android|iPhone/i.test(s.device);
-            const Icon = isApp ? RiSmartphoneLine : RiComputerLine;
-            return (
-              <div key={s._id} className={`rv-card p-5 flex items-center justify-between gap-4 ${s.current ? "border-brand" : ""}`}>
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-slate-light flex items-center justify-center shrink-0">
-                    <Icon size={18} className="text-slate" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-ink flex items-center gap-2">
-                      {s.device}
-                      {s.current && (
-                        <span className="text-[10px] font-semibold bg-success-light text-success px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                          <RiShieldCheckLine size={11} /> This device
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-xs text-slate-soft">
-                      IP {s.ip || "unknown"} · signed in {when(s.startedAt)} · last active {when(s.lastSeenAt)}
-                    </p>
-                  </div>
-                </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
+        {[
+          ["Signed-in devices", sessions.length, "bg-brand"],
+          ["Other than this one", others.length, others.length ? "bg-warn" : "bg-success"],
+          ["On the phone app", apps, "bg-info"],
+          ["Different IP addresses", ips, "bg-slate-soft"],
+        ].map(([label, v, tone]) => (
+          <Card key={label} className="!p-4 flex items-center gap-3">
+            <span className={`w-1.5 self-stretch rounded-full ${tone}`} />
+            <div>
+              <p className="font-display text-xl font-extrabold text-ink tabular-nums">{loading ? "—" : v}</p>
+              <p className="text-xs text-slate">{label}</p>
+            </div>
+          </Card>
+        ))}
+      </div>
 
-                <button
-                  onClick={() => endSession(s)}
-                  disabled={!!busy}
-                  className="shrink-0 px-3 py-1.5 rounded-lg bg-danger-light hover:opacity-80 text-danger text-xs font-medium inline-flex items-center gap-1.5 disabled:opacity-50"
-                >
-                  <RiLogoutBoxRLine size={14} />
-                  {busy === s._id ? "..." : s.current ? "Log out" : "Log out device"}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <Card className="!p-0 overflow-hidden">
+        {loading ? (
+          <p className="text-slate-soft text-center py-10">Loading...</p>
+        ) : sessions.length === 0 ? (
+          <p className="text-slate-soft text-center py-10">No active sessions found.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
+                  <th className="px-4 py-3">Device</th>
+                  <th className="px-4 py-3">IP address</th>
+                  <th className="px-4 py-3 whitespace-nowrap">Signed in</th>
+                  <th className="px-4 py-3 whitespace-nowrap">Last active</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-soft">
+                {sessions.map((s) => {
+                  const isApp = /app|Android|iPhone/i.test(s.device);
+                  const Icon = isApp ? RiSmartphoneLine : RiComputerLine;
+                  return (
+                    <tr key={s._id} className={`align-middle transition-colors ${s.current ? "bg-brand/[0.04]" : "hover:bg-slate-light/40"}`}>
+                      <td className="px-4 py-3 min-w-[220px]">
+                        <div className="flex items-center gap-3">
+                          <span className="w-9 h-9 rounded-lg bg-slate-light grid place-items-center shrink-0 text-slate">
+                            <Icon size={17} />
+                          </span>
+                          <div>
+                            <p className="font-medium text-ink">{s.device}</p>
+                            {s.current && (
+                              <span className="text-[10px] font-semibold bg-success-light text-success px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <RiShieldCheckLine size={11} /> This device
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-slate">{s.ip || "unknown"}</td>
+                      <td className="px-4 py-3 text-slate whitespace-nowrap text-xs">{when(s.startedAt)}</td>
+                      <td className="px-4 py-3 text-slate whitespace-nowrap text-xs">{when(s.lastSeenAt)}</td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => endSession(s)}
+                          disabled={!!busy}
+                          className="px-3 py-1.5 rounded-md bg-danger-light hover:opacity-80 text-danger text-xs font-semibold inline-flex items-center gap-1.5 disabled:opacity-50"
+                        >
+                          <RiLogoutBoxRLine size={14} />
+                          {busy === s._id ? "..." : s.current ? "Log out" : "Log out device"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
 
-      <p className="text-xs text-slate-soft mt-6">
-        A session ends the moment that device next contacts the server — nothing stays usable after you log it out.
-        Sessions also end by themselves when the password is reset.
+      <p className="text-xs text-slate-soft mt-5">
+        A session ends the moment that device next contacts the server — nothing stays usable after you log it out. Sessions also end by themselves when
+        the password is reset.
       </p>
     </div>
   );
