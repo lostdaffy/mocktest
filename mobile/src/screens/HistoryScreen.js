@@ -1,6 +1,6 @@
 import {
   useCallback,
-  useState,
+  useState, useMemo,
 } from "react";
 
 import {
@@ -27,14 +27,7 @@ import {
 
 import api from "../api/client";
 
-import {
-  colors,
-  spacing,
-  radius,
-  type,
-  card,
-  shadow,
-} from "../theme/theme";
+import { spacing, radius, type, shadow, useTheme, cardFor } from "../theme/theme";
 
 /* =========================================================
    HISTORY SCREEN
@@ -53,7 +46,7 @@ const FILTERS = [
   { key: "quiz", label: "Quiz", types: "revision" },
 ];
 
-const TYPE_META = {
+const typeMetaFor = (colors) => ({
   live: { label: "Live", icon: "radio-button-on", color: colors.danger, bg: colors.dangerLight },
   full_mock: { label: "Mock", icon: "document-text-outline", color: colors.brand, bg: colors.brandTint },
   pyq: { label: "PYQ", icon: "time-outline", color: colors.warn, bg: colors.warnLight },
@@ -62,11 +55,12 @@ const TYPE_META = {
   sectional: { label: "Practice", icon: "school-outline", color: colors.info, bg: colors.infoLight },
   revision: { label: "Revision", icon: "refresh-outline", color: colors.success, bg: colors.successLight },
   daily_quiz: { label: "Daily Quiz", icon: "flash-outline", color: colors.warn, bg: colors.warnLight },
-};
+});
 
-function getTypeMeta(t, examType) {
-  if (t === "revision" && examType === "DAILY_GK") return TYPE_META.daily_quiz;
-  return TYPE_META[t] || TYPE_META.practice;
+function getTypeMeta(colors, t, examType) {
+  const meta = typeMetaFor(colors);
+  if (t === "revision" && examType === "DAILY_GK") return meta.daily_quiz;
+  return meta[t] || meta.practice;
 }
 
 function formatDuration(totalSeconds) {
@@ -81,6 +75,9 @@ function formatDuration(totalSeconds) {
 export default function HistoryScreen({
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets =
     useSafeAreaInsets();
 
@@ -456,6 +453,9 @@ function SummaryItem({
   tint,
   trend,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const trendMeta =
     trend === "up"
       ? { icon: "trending-up", color: colors.success }
@@ -525,6 +525,9 @@ function HistoryCard({
   index,
   onPress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const pct =
     item.totalMarks > 0
       ? Math.round(
@@ -540,9 +543,9 @@ function HistoryCard({
   );
 
   const result =
-    getResultState(safePct);
+    getResultState(colors, safePct);
 
-  const typeMeta = getTypeMeta(item.testType, item.examType);
+  const typeMeta = getTypeMeta(colors, item.testType, item.examType);
 
   const date =
     item.date
@@ -851,6 +854,9 @@ function AnswerStat({
   label,
   color,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={
@@ -889,9 +895,7 @@ function AnswerStat({
    RESULT STATE
 ========================================================= */
 
-function getResultState(
-  pct
-) {
+function getResultState(colors, pct) {
   if (pct >= 75) {
     return {
       label: "Excellent",
@@ -938,6 +942,9 @@ function getResultState(
 function EmptyState({
   onPress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={styles.empty}
@@ -1039,8 +1046,8 @@ function EmptyState({
    STYLES
 ========================================================= */
 
-const styles =
-  StyleSheet.create({
+const makeStyles =
+  (colors) => StyleSheet.create({
     /* =====================================================
        GENERAL
     ===================================================== */

@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, ActivityIndicator } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
-import { colors } from "../theme/theme";
+import { useTheme } from "../theme/theme";
 
 // Question of the Day on Home - ten seconds, every day.
 //
@@ -17,6 +17,9 @@ const LETTERS = ["A", "B", "C", "D"];
 const CONFETTI = ["#4F46E5", "#16A34A", "#F59E0B", "#EC4899", "#06B6D4", "#7C3AED"];
 
 function Confetti({ run }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const pieces = useRef(
     Array.from({ length: 16 }, (_, i) => ({
       v: new Animated.Value(0),
@@ -63,6 +66,9 @@ function Confetti({ run }) {
 }
 
 export default function QuestionOfDayCard({ user }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const [data, setData] = useState(undefined); // undefined = loading
   const [sending, setSending] = useState(null);
   const [celebrate, setCelebrate] = useState(false);
@@ -206,7 +212,7 @@ export default function QuestionOfDayCard({ user }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: 20,

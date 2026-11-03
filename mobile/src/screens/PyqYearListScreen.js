@@ -28,14 +28,7 @@ import {
 
 import api from "../api/client";
 
-import {
-  colors,
-  gradients,
-  spacing,
-  radius,
-  shadow,
-  card,
-} from "../theme/theme";
+import { gradients, spacing, radius, shadow, useTheme, cardFor } from "../theme/theme";
 
 import {
   useSafeAreaInsets,
@@ -49,6 +42,9 @@ export default function PyqYearListScreen({
   route,
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets =
     useSafeAreaInsets();
 
@@ -585,6 +581,9 @@ function StatItem({
   value,
   label,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={
@@ -639,6 +638,9 @@ function YearCard({
   index,
   onPress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const count =
     Number(
       item?.count || 0
@@ -772,6 +774,9 @@ function YearCard({
 function EmptyState({
   onRefresh,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={
@@ -857,8 +862,8 @@ function EmptyState({
    STYLES
 ========================================================= */
 
-const styles =
-  StyleSheet.create({
+const makeStyles =
+  (colors) => StyleSheet.create({
     /* =====================================================
        GENERAL
     ===================================================== */
@@ -1324,7 +1329,7 @@ const styles =
     ===================================================== */
 
     yearCard: {
-      ...card,
+      ...cardFor(colors),
       flex: 1,
       minHeight: 151,
       padding: 12,

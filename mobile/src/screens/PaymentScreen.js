@@ -1,7 +1,7 @@
 import {
   useEffect,
   useState,
-  useRef,
+  useRef, useMemo,
 } from "react";
 
 import {
@@ -24,14 +24,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
-import {
-  colors,
-  spacing,
-  radius,
-  type,
-  shadow,
-  gradients,
-} from "../theme/theme";
+import { spacing, radius, type, shadow, gradients, useTheme } from "../theme/theme";
 
 import { LinearGradient } from "../components/SolidFill";
 
@@ -127,6 +120,9 @@ export default function PaymentScreen({
   route,
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
 
   const {
@@ -1474,8 +1470,8 @@ export default function PaymentScreen({
    STYLES
 ========================================================= */
 
-const styles =
-  StyleSheet.create({
+const makeStyles =
+  (colors) => StyleSheet.create({
     /* =====================================================
        GLOBAL
     ===================================================== */

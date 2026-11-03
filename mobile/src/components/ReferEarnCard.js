@@ -1,10 +1,10 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Share } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
 import AppAlert from "./AppAlert";
-import { colors } from "../theme/theme";
+import { useTheme } from "../theme/theme";
 
 // Refer & Earn, last on Home, for every student - one compact row: what a
 // friend's sign-up earns, the student's code, and Invite (the phone's share
@@ -12,6 +12,9 @@ import { colors } from "../theme/theme";
 // share message come from the server, so they never drift from what is paid.
 
 export default function ReferEarnCard({ navigation }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const [info, setInfo] = useState(null);
 
   useFocusEffect(
@@ -65,7 +68,7 @@ export default function ReferEarnCard({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",

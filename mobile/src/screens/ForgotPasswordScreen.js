@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 import {
   View,
@@ -20,14 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import api from "../api/client";
 
-import {
-  colors,
-  gradients,
-  spacing,
-  radius,
-  type,
-  shadow,
-} from "../theme/theme";
+import { gradients, spacing, radius, type, shadow, useTheme } from "../theme/theme";
 
 /* =========================================================
    RANKVEER LOGO
@@ -44,6 +37,9 @@ const RANKVEER_LOGO = require(
 export default function ForgotPasswordScreen({
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
 
   const [step, setStep] = useState(1);
@@ -940,6 +936,9 @@ export default function ForgotPasswordScreen({
 ========================================================= */
 
 function InfoBox() {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={styles.infoBox}
@@ -969,6 +968,9 @@ function InfoBox() {
 ========================================================= */
 
 function ErrorBox({ error }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   if (!error) return null;
 
   return (
@@ -1004,6 +1006,9 @@ function PrimaryButton({
   icon,
   onPress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -1059,7 +1064,7 @@ function PrimaryButton({
    STYLES
 ========================================================= */
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
 
   /* =======================================================
      ROOT

@@ -22,14 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AppAlert from "../components/AppAlert";
 import api from "../api/client";
 
-import {
-  colors,
-  gradients,
-  spacing,
-  radius,
-  shadow,
-  card,
-} from "../theme/theme";
+import { gradients, spacing, radius, shadow, useTheme, cardFor } from "../theme/theme";
 
 /* =========================================================
    SUBJECT META
@@ -75,6 +68,9 @@ const SUBJECT_META = [
 export default function SelectSubjectsScreen({
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
 
   const [all, setAll] = useState([]);
@@ -745,6 +741,9 @@ function SubjectCard({
   chapterCount,
   onPress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <TouchableOpacity
       style={[
@@ -900,6 +899,9 @@ function SubjectCard({
 ========================================================= */
 
 function EmptyState() {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={styles.empty}
@@ -934,7 +936,7 @@ function EmptyState() {
    STYLES
 ========================================================= */
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   /* =====================================================
      GENERAL
   ===================================================== */

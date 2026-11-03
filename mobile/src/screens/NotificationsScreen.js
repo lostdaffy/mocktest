@@ -1,10 +1,10 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../api/client";
-import { colors, spacing } from "../theme/theme";
+import { spacing, useTheme } from "../theme/theme";
 import { getSeenAt, markSeen } from "../utils/notificationSeen";
 
 // Notifications: what is new for this student - today's quiz or the rank
@@ -14,13 +14,13 @@ import { getSeenAt, markSeen } from "../utils/notificationSeen";
 // bell. It used to list upcoming live exams only, so it was nearly always
 // empty.
 
-const LOOK = {
+const lookFor = (colors) => ({
   quiz: { icon: "flash", fg: colors.brand, bg: colors.brandLight },
   quiz_rank: { icon: "trophy", fg: "#B45309", bg: "#FEF3C7" },
   streak: { icon: "flame", fg: "#EA580C", bg: "#FFF1E8" },
   live: { icon: "radio", fg: "#E11D48", bg: "#FFF1F2" },
   mock: { icon: "document-text", fg: colors.brand, bg: colors.brandLight },
-};
+});
 
 function ago(at) {
   const ms = Date.now() - new Date(at).getTime();
@@ -35,6 +35,9 @@ function ago(at) {
 }
 
 export default function NotificationsScreen({ navigation }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState(null);
   const [seenAt, setSeenAt] = useState(null);
@@ -105,7 +108,8 @@ export default function NotificationsScreen({ navigation }) {
             </View>
           }
           renderItem={({ item }) => {
-            const look = LOOK[item.kind] || LOOK.mock;
+            const looks = lookFor(colors);
+            const look = looks[item.kind] || looks.mock;
             const isNew = !seenAt || new Date(item.at) > seenAt;
             return (
               <TouchableOpacity style={[styles.card, isNew && styles.cardNew]} activeOpacity={0.85} onPress={() => open(item)}>
@@ -136,7 +140,7 @@ export default function NotificationsScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: {
     flexDirection: "row",

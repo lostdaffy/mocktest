@@ -24,13 +24,7 @@ import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { isSubscribed } from "../utils/subscription";
 
-import {
-  colors,
-  spacing,
-  radius,
-  type,
-  shadow,
-} from "../theme/theme";
+import { spacing, radius, type, shadow, useTheme } from "../theme/theme";
 
 /* =========================================================
    EXAM META
@@ -102,6 +96,9 @@ export default function ExamSeriesScreen({
   route,
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
 
   // vacancyId: opened for one recruitment notice (a notification, say) -
@@ -571,14 +568,18 @@ function shortDate(d) {
   return Number.isNaN(x.getTime()) ? "" : `${x.getDate()} ${MONTHS[x.getMonth()]} ${x.getFullYear()}`;
 }
 
-const GROUP_LOOK = {
+const groupLook = (colors) => ({
   upcoming: { label: "UPCOMING EXAM", icon: "calendar-outline", fg: colors.brand, bg: colors.brandLight },
   previous: { label: "EXAM HELD", icon: "checkmark-done-outline", fg: colors.slate, bg: colors.slateLight },
   other: { label: "MORE MOCKS", icon: "albums-outline", fg: colors.inkSoft, bg: colors.slateLight },
-};
+});
 
 function GroupHeader({ group }) {
-  const look = GROUP_LOOK[group.kind] || GROUP_LOOK.other;
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
+  const looks = groupLook(colors);
+  const look = looks[group.kind] || looks.other;
   const total = group.tests.length;
   const done = group.tests.filter((t) => t.attemptStatus === "completed").length;
   let when = "";
@@ -617,6 +618,9 @@ function GroupHeader({ group }) {
 }
 
 function ComingSoonRow() {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View style={styles.soonRow}>
       <Ionicons name="hourglass-outline" size={16} color={colors.brand} />
@@ -637,6 +641,9 @@ function SeriesHero({
   completed,
   progress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={[
@@ -860,6 +867,9 @@ function testsProgressMin(total) {
 function PaperLine({
   checked = false,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={styles.paperLineRow}
@@ -899,6 +909,9 @@ function HeroStat({
   value,
   label,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={styles.heroStat}
@@ -926,6 +939,9 @@ function SectionHeader({
   title,
   subtitle,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={styles.sectionHeader}
@@ -956,6 +972,9 @@ function FeaturedTestCard({
   starting,
   onPress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const locked =
     !test.isFree &&
     !subscribed;
@@ -1137,6 +1156,9 @@ function MockTestRow({
   starting,
   onPress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const locked =
     !item.isFree &&
     !subscribed;
@@ -1355,6 +1377,9 @@ function StatusTag({
   locked,
   isFree,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={[
@@ -1406,6 +1431,9 @@ function Meta({
   icon,
   text,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={styles.metaItem}
@@ -1431,6 +1459,9 @@ function Meta({
 ========================================================= */
 
 function EmptyState() {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={styles.empty}
@@ -1476,7 +1507,7 @@ function EmptyState() {
    STYLES
 ========================================================= */
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   /* =======================================================
      SERIES GROUPS
   ======================================================= */

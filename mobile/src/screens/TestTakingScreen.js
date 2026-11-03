@@ -26,12 +26,7 @@ import AppAlert from "../components/AppAlert";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
-import {
-  colors,
-  spacing,
-  radius,
-  shadow,
-} from "../theme/theme";
+import { spacing, radius, shadow, useTheme } from "../theme/theme";
 import QuestionVisual from "../components/QuestionVisual";
 
 // Retries a submit that failed for a reason that passes: no response at
@@ -84,6 +79,9 @@ export default function TestTakingScreen({
   route,
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
 
   const { testId } = route.params || {};
@@ -2478,6 +2476,9 @@ function LegendItem({
   label,
   outline = false,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={styles.legendItem}
@@ -2514,6 +2515,9 @@ function InstructionRow({
   text,
   color,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={
@@ -2551,8 +2555,8 @@ function InstructionRow({
    STYLES
 ========================================================= */
 
-const styles =
-  StyleSheet.create({
+const makeStyles =
+  (colors) => StyleSheet.create({
     /* =====================================================
        GENERAL
     ===================================================== */

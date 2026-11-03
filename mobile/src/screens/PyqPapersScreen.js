@@ -38,14 +38,7 @@ import {
   isSubscribed,
 } from "../utils/subscription";
 
-import {
-  colors,
-  gradients,
-  spacing,
-  radius,
-  shadow,
-  card,
-} from "../theme/theme";
+import { gradients, spacing, radius, shadow, useTheme, cardFor } from "../theme/theme";
 
 import {
   useSafeAreaInsets,
@@ -59,6 +52,9 @@ export default function PyqPapersScreen({
   route,
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets =
     useSafeAreaInsets();
 
@@ -652,6 +648,9 @@ function StatItem({
   value,
   label,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={
@@ -708,6 +707,9 @@ function PaperCard({
   starting,
   onPress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const isPremium =
     !item.isFree;
 
@@ -1039,6 +1041,9 @@ function PaperCard({
 function EmptyState({
   onRefresh,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={
@@ -1124,8 +1129,8 @@ function EmptyState({
    STYLES
 ========================================================= */
 
-const styles =
-  StyleSheet.create({
+const makeStyles =
+  (colors) => StyleSheet.create({
     /* =====================================================
        GENERAL
     ===================================================== */
@@ -1581,7 +1586,7 @@ const styles =
     ===================================================== */
 
     paperCard: {
-      ...card,
+      ...cardFor(colors),
       minHeight: 98,
       marginHorizontal: 18,
       marginBottom: 10,

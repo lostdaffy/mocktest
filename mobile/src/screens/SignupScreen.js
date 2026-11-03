@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 import {
   View,
@@ -23,14 +23,7 @@ import BackToWelcome from "../components/BackToWelcome";
 import AuthHeader, { AUTH_OVERLAP } from "../components/AuthHeader";
 import { useExamCatalog } from "../utils/examCatalog";
 
-import {
-  colors,
-  gradients,
-  spacing,
-  radius,
-  type,
-  shadow,
-} from "../theme/theme";
+import { gradients, spacing, radius, type, shadow, useTheme } from "../theme/theme";
 
 /* =========================================================
    RANKVEER LOGO
@@ -47,6 +40,9 @@ const RANKVEER_LOGO = require(
 export default function SignupScreen({
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
 
   const {
@@ -920,6 +916,9 @@ export default function SignupScreen({
 ========================================================= */
 
 function ErrorBox({ error }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   if (!error) return null;
 
   return (
@@ -957,6 +956,9 @@ function PrimaryButton({
   icon,
   onPress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -1016,7 +1018,7 @@ function PrimaryButton({
    STYLES
 ========================================================= */
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   /* =======================================================
      GENERAL
   ======================================================= */

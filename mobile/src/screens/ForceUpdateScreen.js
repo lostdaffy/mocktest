@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   View,
   Text,
@@ -11,13 +12,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "../components/SolidFill";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import {
-  colors,
-  gradients,
-  spacing,
-  radius,
-  shadow,
-} from "../theme/theme";
+import { gradients, spacing, radius, shadow, useTheme } from "../theme/theme";
+import BrandMark from "../components/BrandMark";
 
 const RANKVEER_LOGO = require("../../assets/brand-logo.png");
 
@@ -35,6 +31,9 @@ export default function ForceUpdateScreen({
   installedVersion,
   minVersion,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
 
   function openStore() {
@@ -51,11 +50,7 @@ export default function ForceUpdateScreen({
         },
       ]}
     >
-      <Image
-        source={RANKVEER_LOGO}
-        style={styles.logo}
-        resizeMode="contain"
-      />
+      <BrandMark size={52} />
 
       <View style={styles.card}>
         <View style={styles.iconCircle}>
@@ -116,7 +111,7 @@ export default function ForceUpdateScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,

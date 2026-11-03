@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, radius, spacing } from "../theme/theme";
+import { radius, spacing, useTheme } from "../theme/theme";
 
 // Three short cards the first time a student opens Home: what the app has,
 // and that the plan on Home tells them what to do each day. Shown once per
@@ -32,6 +32,9 @@ const STEPS = [
 ];
 
 export default function FirstRunGuide({ onStart }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
 
@@ -93,7 +96,7 @@ export default function FirstRunGuide({ onStart }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: "rgba(16,25,54,0.55)", justifyContent: "flex-end" },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: spacing.lg, paddingBottom: spacing.xl, alignItems: "center" },
   skip: { alignSelf: "flex-end" },

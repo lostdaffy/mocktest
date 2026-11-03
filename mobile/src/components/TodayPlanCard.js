@@ -1,9 +1,9 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
-import { colors } from "../theme/theme";
+import { useTheme } from "../theme/theme";
 
 // Today's task on Home: the Daily GK Quiz.
 //
@@ -23,6 +23,9 @@ function todayLabel() {
 }
 
 export default function TodayPlanCard({ navigation, onStartQuiz, startingQuiz }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const [plan, setPlan] = useState(null);
   const [failed, setFailed] = useState(false);
 
@@ -104,7 +107,7 @@ export default function TodayPlanCard({ navigation, onStartQuiz, startingQuiz })
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   card: {
     backgroundColor: colors.brand,
     borderRadius: 22,

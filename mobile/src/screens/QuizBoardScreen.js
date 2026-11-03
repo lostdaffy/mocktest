@@ -1,10 +1,10 @@
-import { useCallback, useLayoutEffect, useState } from "react";
+import { useCallback, useLayoutEffect, useState, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../api/client";
-import { colors, spacing, radius } from "../theme/theme";
+import { spacing, radius, useTheme } from "../theme/theme";
 
 // Today's Daily GK Quiz ranking. Everyone answers the same 20 questions, so
 // the day has a real order: the top ten, and where this student stands.
@@ -20,6 +20,9 @@ function time(seconds) {
 }
 
 export default function QuizBoardScreen({ navigation }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
   const [board, setBoard] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -157,7 +160,7 @@ export default function QuizBoardScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
   back: { width: 40, height: 40, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
   title: { fontSize: 18, fontWeight: "800", color: colors.ink },

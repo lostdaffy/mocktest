@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 import {
   View,
@@ -21,14 +21,7 @@ import { useAuth } from "../context/AuthContext";
 import BackToWelcome from "../components/BackToWelcome";
 import AuthHeader, { AUTH_OVERLAP } from "../components/AuthHeader";
 
-import {
-  colors,
-  gradients,
-  spacing,
-  radius,
-  type,
-  shadow,
-} from "../theme/theme";
+import { gradients, spacing, radius, type, shadow, useTheme } from "../theme/theme";
 
 /* =========================================================
    RANKVEER LOGO
@@ -45,6 +38,9 @@ const RANKVEER_LOGO = require(
 export default function LoginScreen({
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
 
   const { login } = useAuth();
@@ -438,7 +434,7 @@ export default function LoginScreen({
    STYLES
 ========================================================= */
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   /* =======================================================
      GENERAL
   ======================================================= */

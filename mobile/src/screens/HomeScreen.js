@@ -2,7 +2,7 @@ import {
   useCallback,
   useEffect,
   useRef,
-  useState,
+  useState, useMemo,
 } from "react";
 
 import {
@@ -28,15 +28,10 @@ import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { isSubscribed } from "../utils/subscription";
 
-import {
-  colors,
-  spacing,
-  radius,
-  type,
-  card,
-} from "../theme/theme";
+import { spacing, radius, type, useTheme, cardFor } from "../theme/theme";
 import TodayPlanCard from "../components/TodayPlanCard";
 import FirstRunGuide from "../components/FirstRunGuide";
+import BrandMark from "../components/BrandMark";
 import ReferEarnCard from "../components/ReferEarnCard";
 import ContinueCard from "../components/ContinueCard";
 import QuestionOfDayCard from "../components/QuestionOfDayCard";
@@ -143,6 +138,9 @@ const BANNER_RATIO = 2.72;
 export default function HomeScreen({
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const { user, refreshUser } = useAuth();
   const insets = useSafeAreaInsets();
 
@@ -427,11 +425,7 @@ export default function HomeScreen({
         <View
           style={styles.brandArea}
         >
-          <Image
-            source={RANKVEER_LOGO}
-            style={styles.brandLogo}
-            resizeMode="contain"
-          />
+          <BrandMark size={38} />
         </View>
 
         {/* ACTIONS */}
@@ -741,6 +735,9 @@ export default function HomeScreen({
 function PremiumCard({
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <TouchableOpacity
       style={
@@ -907,6 +904,9 @@ function PremiumCard({
 function PremiumFeature({
   text,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={
@@ -947,6 +947,9 @@ function QuickAction({
   label,
   onPress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <TouchableOpacity
       style={styles.action}
@@ -987,6 +990,9 @@ function QuickAction({
 function HomeCarousel({
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const carouselRef =
     useRef(null);
 
@@ -1137,6 +1143,9 @@ function HomeCarouselSlide({
   item,
   slideWidth,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   if (item.image) {
     return (
       <View
@@ -1336,8 +1345,8 @@ function HomeCarouselSlide({
    STYLES
 ========================================================= */
 
-const styles =
-  StyleSheet.create({
+const makeStyles =
+  (colors) => StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor:
@@ -2157,7 +2166,7 @@ const styles =
     ===================================================== */
 
     learnCard: {
-      ...card,
+      ...cardFor(colors),
 
       flexDirection:
         "row",
@@ -2298,7 +2307,7 @@ const styles =
     ===================================================== */
 
     recCard: {
-      ...card,
+      ...cardFor(colors),
 
       flexDirection:
         "row",

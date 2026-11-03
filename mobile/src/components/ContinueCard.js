@@ -1,10 +1,10 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
 import AppAlert from "./AppAlert";
-import { colors } from "../theme/theme";
+import { useTheme } from "../theme/theme";
 import { isSubscribed } from "../utils/subscription";
 
 // "Continue learning" on Home - one tap back into studying.
@@ -32,6 +32,9 @@ function shortTitle(title, chapter) {
 }
 
 export default function ContinueCard({ navigation, user }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const [data, setData] = useState(undefined); // undefined = loading
   const [starting, setStarting] = useState(null);
 
@@ -190,7 +193,7 @@ export default function ContinueCard({ navigation, user }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: 18,

@@ -1,7 +1,7 @@
 import {
   useCallback,
   useLayoutEffect,
-  useState,
+  useState, useMemo,
 } from "react";
 
 import {
@@ -30,15 +30,7 @@ import {
 
 import api from "../api/client";
 
-import {
-  colors,
-  gradients,
-  spacing,
-  radius,
-  type,
-  shadow,
-  card,
-} from "../theme/theme";
+import { gradients, spacing, radius, type, shadow, useTheme, cardFor } from "../theme/theme";
 
 import {
   useSafeAreaInsets,
@@ -51,6 +43,9 @@ import {
 export default function ReferralScreen({
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets =
     useSafeAreaInsets();
 
@@ -898,6 +893,9 @@ function Step({
   title,
   desc,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={
@@ -984,8 +982,8 @@ function Step({
    STYLES
 ========================================================= */
 
-const styles =
-  StyleSheet.create({
+const makeStyles =
+  (colors) => StyleSheet.create({
     /* =====================================================
        GENERAL
     ===================================================== */
@@ -1373,7 +1371,7 @@ const styles =
     },
 
     statCard: {
-      ...card,
+      ...cardFor(colors),
       flex: 1,
       minHeight: 100,
       paddingVertical: 13,
@@ -1587,7 +1585,7 @@ const styles =
     ===================================================== */
 
     stepsCard: {
-      ...card,
+      ...cardFor(colors),
       padding: 14,
       marginBottom: 15,
       borderRadius: 19,

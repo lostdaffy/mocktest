@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, TouchableWithoutFeedback } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "./SolidFill";
-import { colors, gradients, spacing, radius, type, shadow } from "../theme/theme";
+import { gradients, spacing, radius, type, shadow, useTheme } from "../theme/theme";
 
 // Drop-in replacement for React Native's Alert.alert - same call signature
 // (title, message, buttons, options) - so existing call sites only need
@@ -42,6 +42,9 @@ const AppAlert = {
 export default AppAlert;
 
 export function AppAlertHost() {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const [visible, setVisible] = useState(false);
   const [content, setContent] = useState(null);
   const scale = useRef(new Animated.Value(0.9)).current;
@@ -124,7 +127,7 @@ export function AppAlertHost() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: "rgba(15,23,41,0.55)",

@@ -1,7 +1,7 @@
 import {
   useCallback,
   useLayoutEffect,
-  useState,
+  useState, useMemo,
 } from "react";
 
 import {
@@ -33,13 +33,7 @@ import {
 
 import api from "../api/client";
 
-import {
-  colors,
-  gradients,
-  spacing,
-  radius,
-  shadow,
-} from "../theme/theme";
+import { gradients, spacing, radius, shadow, useTheme } from "../theme/theme";
 
 /* =========================================================
    EXAM META
@@ -106,6 +100,9 @@ const DEFAULT_META = {
 export default function PyqExamPickerScreen({
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   // On a main tab there is nowhere to go back to; the arrow shows only
   // when this screen was opened on top of another one.
   const isTabRoot = navigation.getState?.()?.type === "tab";
@@ -567,6 +564,9 @@ function ExamCard({
   index,
   onPress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const meta =
     EXAM_META[
       item.examType
@@ -741,6 +741,9 @@ function ExamCard({
 function EmptyState({
   onRefresh,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={
@@ -826,8 +829,8 @@ function EmptyState({
    STYLES
 ========================================================= */
 
-const styles =
-  StyleSheet.create({
+const makeStyles =
+  (colors) => StyleSheet.create({
     /* =====================================================
        GENERAL
     ===================================================== */

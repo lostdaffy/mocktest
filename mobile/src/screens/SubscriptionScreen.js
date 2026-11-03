@@ -1,6 +1,6 @@
 import {
   useCallback,
-  useState,
+  useState, useMemo,
 } from "react";
 
 import {
@@ -36,15 +36,7 @@ import {
   isSubscribed,
 } from "../utils/subscription";
 
-import {
-  colors,
-  gradients,
-  spacing,
-  radius,
-  type,
-  shadow,
-  card,
-} from "../theme/theme";
+import { gradients, spacing, radius, type, shadow, useTheme, cardFor } from "../theme/theme";
 
 /* =========================================================
    DATA
@@ -124,6 +116,9 @@ const PLANS = [
 export default function SubscriptionScreen({
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
 
   const { user } = useAuth();
@@ -893,6 +888,9 @@ function SectionHeading({
   title,
   subtitle,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View style={styles.sectionHeading}>
       <Text style={styles.sectionTitle}>
@@ -914,6 +912,9 @@ function TrustItem({
   icon,
   text,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View style={styles.trustItem}>
       <Ionicons
@@ -936,7 +937,7 @@ function TrustItem({
    STYLES
 ========================================================= */
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
@@ -1176,7 +1177,7 @@ const styles = StyleSheet.create({
   ===================================================== */
 
   benefitsCard: {
-    ...card,
+    ...cardFor(colors),
     paddingHorizontal: 14,
     marginBottom: 18,
   },
@@ -1223,7 +1224,7 @@ const styles = StyleSheet.create({
 
   planCard: {
     minHeight: 92,
-    ...card,
+    ...cardFor(colors),
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 13,

@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, Image, StyleSheet, ScrollView, useWindowDimensions, ActivityIndicator } from "react-native";
 import Svg, { Rect, Line, Polyline, Circle, Path, Text as SvgText, G } from "react-native-svg";
 import { API_URL } from "../api/client";
-import { colors, radius, spacing } from "../theme/theme";
+import { radius, spacing, useTheme } from "../theme/theme";
 
 // The picture part of a chart or figure question.
 //
@@ -28,6 +28,9 @@ function niceTicks(max) {
 }
 
 function Legend({ series }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   if (!series || series.length < 2) return null;
   return (
     <View style={styles.legend}>
@@ -45,6 +48,8 @@ function Legend({ series }) {
 }
 
 function BarLine({ chart, width }) {
+  const colors = useTheme();
+
   const cats = chart.categories || [];
   const series = chart.series || [];
   const W = Math.max(width, cats.length * 64 + 56);
@@ -114,6 +119,9 @@ function BarLine({ chart, width }) {
 }
 
 function Pie({ chart }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const s = chart.series?.[0];
   if (!s) return null;
   const total = s.values.reduce((a, b) => a + b, 0) || 1;
@@ -157,6 +165,9 @@ function Pie({ chart }) {
 }
 
 function DataTable({ chart }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <ScrollView horizontal>
       <View>
@@ -184,6 +195,9 @@ function DataTable({ chart }) {
 }
 
 export function ChartView({ chart, hindi = false }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const { width } = useWindowDimensions();
   if (!chart) return null;
   const title = (hindi && chart.titleHi) || chart.title;
@@ -212,6 +226,9 @@ export function ChartView({ chart, hindi = false }) {
 }
 
 function FigureImage({ imageId }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const { width } = useWindowDimensions();
   const [ratio, setRatio] = useState(null);
   const [failed, setFailed] = useState(false);
@@ -251,7 +268,7 @@ export default function QuestionVisual({ question, hindi = false }) {
   return null;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   box: {
     backgroundColor: colors.surface,
     borderWidth: 1,

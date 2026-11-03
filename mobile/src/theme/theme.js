@@ -5,7 +5,8 @@
 // Compatibility Safe
 // =========================================================
 
-import { Dimensions } from "react-native";
+import { useMemo } from "react";
+import { Dimensions, useColorScheme } from "react-native";
 
 /* =========================================================
    BRAND IDENTITY
@@ -529,6 +530,23 @@ export function getColors(isDark = false) {
   return isDark
     ? darkTheme
     : lightTheme;
+}
+
+/* The colours for the phone's current light/dark setting. Every screen calls
+   this inside the component (never the static `colors`, which is light only),
+   so the whole app follows the system the moment it changes. */
+export function useTheme() {
+  const dark = useColorScheme() === "dark";
+  return useMemo(() => getColors(dark), [dark]);
+}
+
+export function useIsDark() {
+  return useColorScheme() === "dark";
+}
+
+/* Card style that matches a palette returned by getColors/useTheme. */
+export function cardFor(palette) {
+  return getCard(palette === darkTheme);
 }
 
 /* =========================================================

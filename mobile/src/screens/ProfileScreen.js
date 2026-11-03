@@ -1,6 +1,6 @@
 import {
   useLayoutEffect,
-  useState,
+  useState, useMemo,
 } from "react";
 
 import {
@@ -30,12 +30,7 @@ import {
   isSubscribed,
 } from "../utils/subscription";
 
-import {
-  colors,
-  spacing,
-  radius,
-  shadow,
-} from "../theme/theme";
+import { spacing, radius, shadow, useTheme } from "../theme/theme";
 
 import {
   useSafeAreaInsets,
@@ -48,6 +43,9 @@ import {
 export default function ProfileScreen({
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
 
   const {
@@ -1724,6 +1722,9 @@ function SectionHeader({
   title,
   subtitle,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={
@@ -1754,6 +1755,9 @@ function SectionHeader({
 ========================================================= */
 
 function Divider() {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={
@@ -1776,6 +1780,9 @@ function ProfileRow({
   active,
   onPress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <TouchableOpacity
       style={
@@ -1867,6 +1874,9 @@ function LanguageButton({
   disabled,
   onPress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <TouchableOpacity
       style={[
@@ -1903,8 +1913,8 @@ function LanguageButton({
    STYLES
 ========================================================= */
 
-const styles =
-  StyleSheet.create({
+const makeStyles =
+  (colors) => StyleSheet.create({
     /* =====================================================
        BASE
     ===================================================== */

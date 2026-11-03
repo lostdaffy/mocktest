@@ -1,7 +1,7 @@
 import {
   useEffect,
   useRef,
-  useState,
+  useState, useMemo,
 } from "react";
 
 import {
@@ -19,14 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import api from "../api/client";
 
-import {
-  colors,
-  gradients,
-  spacing,
-  radius,
-  shadow,
-  card,
-} from "../theme/theme";
+import { gradients, spacing, radius, shadow, useTheme, cardFor } from "../theme/theme";
 import QuestionVisual from "../components/QuestionVisual";
 
 /* =========================================================
@@ -237,6 +230,9 @@ export default function ResultScreen({
   route,
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const insets =
     useSafeAreaInsets();
 
@@ -1095,6 +1091,9 @@ function ScoreMeta({
   label,
   color,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={styles.metaItem}
@@ -1144,6 +1143,9 @@ function AnalysisStat({
   value,
   label,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View
       style={styles.analysisStat}
@@ -1199,6 +1201,9 @@ function ReviewList({
   answers,
   attempt,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const items = answers
     .map((a, i) => ({
       answer: a,
@@ -1312,6 +1317,9 @@ function WrongAnswerCard({
   language,
   status = "wrong",
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const tone =
     status === "correct"
       ? colors.success
@@ -1619,8 +1627,8 @@ function WrongAnswerCard({
    STYLES
 ========================================================= */
 
-const styles =
-  StyleSheet.create({
+const makeStyles =
+  (colors) => StyleSheet.create({
     /* =====================================================
        GENERAL
     ===================================================== */
@@ -1727,7 +1735,7 @@ const styles =
     ===================================================== */
 
     testCard: {
-      ...card,
+      ...cardFor(colors),
       flexDirection: "row",
       alignItems: "center",
       padding: 13,
@@ -1992,7 +2000,7 @@ const styles =
     ===================================================== */
 
     rankCard: {
-      ...card,
+      ...cardFor(colors),
       minHeight: 72,
       flexDirection: "row",
       alignItems: "center",
@@ -2055,7 +2063,7 @@ const styles =
     ===================================================== */
 
     analysisCard: {
-      ...card,
+      ...cardFor(colors),
       padding: 15,
       marginBottom: 12,
     },
@@ -2141,7 +2149,7 @@ const styles =
     ===================================================== */
 
     insightCard: {
-      ...card,
+      ...cardFor(colors),
       flexDirection: "row",
       alignItems: "flex-start",
       padding: 14,
@@ -2413,7 +2421,7 @@ const styles =
     },
 
     filterEmpty: {
-      ...card,
+      ...cardFor(colors),
       padding: 16,
       marginBottom: 12,
       alignItems: "center",
@@ -2430,7 +2438,7 @@ const styles =
     ===================================================== */
 
     wrongCard: {
-      ...card,
+      ...cardFor(colors),
       padding: 14,
       marginBottom: 11,
       borderLeftWidth: 3,

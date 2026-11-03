@@ -21,13 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import api from "../api/client";
 
-import {
-  colors,
-  gradients,
-  spacing,
-  radius,
-  shadow,
-} from "../theme/theme";
+import { gradients, spacing, radius, shadow, useTheme } from "../theme/theme";
 
 /* =========================================================
    SUBJECT META
@@ -73,6 +67,9 @@ const SUBJECT_META = [
 export default function SubjectsScreen({
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   // On a main tab there is nowhere to go back to; the arrow shows only
   // when this screen was opened on top of another one.
   const isTabRoot = navigation.getState?.()?.type === "tab";
@@ -422,6 +419,9 @@ function ProgressHero({
   remaining,
   completedSubjects,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View style={styles.heroWrap}>
       <LinearGradient
@@ -513,6 +513,9 @@ function HeroStat({
   value,
   label,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View style={styles.heroStat}>
       <Text style={styles.heroStatValue}>
@@ -535,6 +538,9 @@ function SubjectCard({
   index,
   onPress,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const total =
     Number(subject.totalChapters || 0);
 
@@ -732,6 +738,9 @@ function SubjectCard({
 function EmptyState({
   navigation,
 }) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View style={styles.empty}>
       <View style={styles.emptyIconWrap}>
@@ -802,7 +811,7 @@ function EmptyState({
    STYLES
 ========================================================= */
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,

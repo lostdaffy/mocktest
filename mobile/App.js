@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { View, useWindowDimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,7 +15,7 @@ import { configureNotificationHandler } from "./src/utils/notifications";
 configureNotificationHandler();
 
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
-import { colors, TAB_BAR_HEIGHT } from "./src/theme/theme";
+import { useTheme, useIsDark, TAB_BAR_HEIGHT } from "./src/theme/theme";
 import { AppAlertHost } from "./src/components/AppAlert";
 import SplashScreen from "./src/screens/SplashScreen";
 
@@ -56,8 +56,9 @@ function TabIcon({ name, focused, color }) {
 }
 
 function AuthStack() {
+  const colors = useTheme();
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
       {/* First thing a signed-out student sees: create an account, or log in. */}
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
@@ -77,6 +78,7 @@ function LiveTab({ navigation }) {
 // Profile is NOT here: it's the avatar in the top-left of Home (modern app pattern).
 function MainTabs() {
   const insets = useSafeAreaInsets();
+  const colors = useTheme();
 
   return (
     <Tab.Navigator
@@ -88,7 +90,7 @@ function MainTabs() {
           height: TAB_BAR_HEIGHT + insets.bottom,
           paddingBottom: insets.bottom + 8,
           paddingTop: 6,
-          backgroundColor: "#fff",
+          backgroundColor: colors.surface,
           borderTopWidth: 1,
           borderTopColor: colors.border,
           elevation: 8,
@@ -148,8 +150,9 @@ function MainTabs() {
 }
 
 function AppStack() {
+  const colors = useTheme();
   return (
-    <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: colors.brand }, headerTintColor: "#fff", headerShown: false, }}>
+    <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: colors.brand }, headerTintColor: "#fff", headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
       <Stack.Screen name="Home" component={MainTabs} options={{ headerShown: false }} />
       <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: "Profile" }} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: "Notifications" }} />
@@ -184,6 +187,20 @@ const MIN_SPLASH_MS = 2200;
 
 function RootNavigator() {
   const { user, loading } = useAuth();
+  const colors = useTheme();
+  const isDark = useIsDark();
+  // Keeps the navigator's own background (behind screens, during transitions) in step with the app.
+  const navTheme = {
+    ...(isDark ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(isDark ? DarkTheme : DefaultTheme).colors,
+      primary: colors.brand,
+      background: colors.bg,
+      card: colors.surface,
+      text: colors.ink,
+      border: colors.border,
+    },
+  };
   const [requiredUpdate, setRequiredUpdate] = useState(null);
   const [splashFloorPassed, setSplashFloorPassed] = useState(false);
 
@@ -215,7 +232,7 @@ function RootNavigator() {
     return <SplashScreen />;
   }
 
-  return <NavigationContainer>{user ? <AppStack /> : <AuthStack />}</NavigationContainer>;
+  return <NavigationContainer theme={navTheme}>{user ? <AppStack /> : <AuthStack />}</NavigationContainer>;
 }
 
 // Every screen here is designed for a phone-width column. On a tablet the
@@ -227,6 +244,7 @@ const PHONE_MAX_WIDTH = 560;
 
 function ResponsiveShell({ children }) {
   const { width } = useWindowDimensions();
+  const colors = useTheme();
   if (width <= PHONE_MAX_WIDTH + 48) return children;
 
   return (
@@ -240,7 +258,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <StatusBar style="dark" />
+        <StatusBar style="auto" />
         <ResponsiveShell>
           <RootNavigator />
         </ResponsiveShell>
