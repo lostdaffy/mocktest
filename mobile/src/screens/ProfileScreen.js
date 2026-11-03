@@ -1292,7 +1292,7 @@ export default function ProfileScreen({
             />
           </TouchableOpacity>
 
-          {/* Not a government app, and where the official word is - Play policy */}
+          {/* Where the official word is - a closed row, opened on tap (Play policy) */}
           <OfficialSources style={{ marginTop: spacing.lg }} />
 
           {/* =================================================

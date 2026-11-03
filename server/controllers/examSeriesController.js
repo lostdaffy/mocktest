@@ -1168,14 +1168,30 @@ async function createEmptyMock(req, res) {
     const pattern = await ExamPattern.findOne({ examType: examStage, isActive: true });
     if (!pattern) return res.status(404).json({ message: `No pattern found for ${examStage}` });
 
-    const lastMock = await Test.findOne({ examStage, type: "full_mock" }).sort({ seriesNumber: -1 });
+    // A new mock belongs to the exam's recruitment series (a Vacancy) when
+    // there is one: same series name, numbered within it. Without this a
+    // mock made here sat outside its series - "CTET Paper 1 - Mock #2" under
+    // "More mocks" beside "CTET 2026 Mock Series - Mock #1" - and numbering
+    // restarted outside the series. The admin may name the vacancy; otherwise
+    // the exam's own upcoming one is used (a hidden vacancy is never picked).
+    let vacancy = null;
+    if (req.body?.vacancyId) {
+      vacancy = await Vacancy.findById(req.body.vacancyId).lean();
+      if (!vacancy || vacancy.examType !== examStage) return res.status(400).json({ message: "That vacancy does not belong to this exam." });
+    } else {
+      const open = await Vacancy.find({ examType: examStage, status: { $in: ["upcoming", "previous"] } }).sort({ status: 1, displayOrder: 1 }).lean();
+      vacancy = open.find((v) => v.status === "upcoming") || open[0] || null;
+    }
+
+    const lastMock = await Test.findOne(vacancy ? { type: "full_mock", vacancy: vacancy._id } : { examStage, type: "full_mock", vacancy: null }).sort({ seriesNumber: -1 });
     const nextNumber = (lastMock?.seriesNumber || 0) + 1;
 
     const test = await Test.create({
-      title: `${pattern.displayName} - Mock #${nextNumber}`,
+      title: `${vacancy ? vacancy.seriesName : pattern.displayName} - Mock #${nextNumber}`,
       type: "full_mock",
       examType: examStage,
       examStage,
+      ...(vacancy ? { vacancy: vacancy._id } : {}),
       seriesNumber: nextNumber,
       questions: [],
       durationMinutes: pattern.durationMinutes,
@@ -1186,7 +1202,7 @@ async function createEmptyMock(req, res) {
       createdBy: "admin",
     });
 
-    res.status(201).json({ message: `Empty Mock #${nextNumber} created. Add questions to it next.`, test });
+    res.status(201).json({ message: `Empty Mock #${nextNumber} created${vacancy ? ` in ${vacancy.seriesName}` : ""}. Add questions to it next.`, test });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

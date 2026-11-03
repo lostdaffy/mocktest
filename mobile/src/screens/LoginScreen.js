@@ -18,6 +18,7 @@ import { LinearGradient } from "../components/SolidFill";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "../context/AuthContext";
+import BackToWelcome from "../components/BackToWelcome";
 
 import {
   colors,
@@ -472,6 +473,7 @@ export default function LoginScreen({
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <BackToWelcome navigation={navigation} />
     </KeyboardAvoidingView>
   );
 }
