@@ -385,92 +385,109 @@ export default function Users() {
         )}
       </div>
 
-      {/* List */}
-      <div className="space-y-3 min-h-[200px]">
+      {/* List - one row per student, so a page of 25 fits on one screen */}
+      <div className="rv-card overflow-hidden min-h-[200px]">
         {loading ? (
           <p className="text-slate-soft text-center py-10">Loading...</p>
         ) : users.length === 0 ? (
           <p className="text-slate-soft text-center py-10">No users found.</p>
         ) : (
-          users.map((u) => {
-            const isExpiring =
-              u.subscriptionStatus === "active" &&
-              u.subscriptionExpiresAt &&
-              new Date(u.subscriptionExpiresAt) - new Date() < 7 * 24 * 60 * 60 * 1000;
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
+                  <th className="px-4 py-3 w-10">#</th>
+                  <th className="px-4 py-3">Student</th>
+                  <th className="px-4 py-3">Contact</th>
+                  <th className="px-4 py-3">Plan</th>
+                  <th className="px-4 py-3">Exams</th>
+                  <th className="px-4 py-3 whitespace-nowrap">Joined</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-soft">
+                {users.map((u, i) => {
+                  const isExpiring =
+                    u.subscriptionStatus === "active" &&
+                    u.subscriptionExpiresAt &&
+                    new Date(u.subscriptionExpiresAt) - new Date() < 7 * 24 * 60 * 60 * 1000;
 
-            return (
-              <div key={u._id} className="rv-card p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-ink">{u.name}</p>
-                      {u.authProvider === "google" && (
-                        <span className="text-[10px] font-semibold bg-slate-light text-slate px-2 py-0.5 rounded-full">
-                          Google
-                        </span>
-                      )}
-                      {isExpiring && (
-                        <span className="text-[10px] font-semibold bg-warn-light text-warn px-2 py-0.5 rounded-full">
-                          Expiring soon
-                        </span>
-                      )}
-                      {u.blockedAt && (
-                        <span className="text-[10px] font-semibold bg-danger-light text-danger px-2 py-0.5 rounded-full">
-                          Blocked
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-slate">
-                      {u.phone || "—"} {u.email && `· ${u.email}`}
-                    </p>
-                    <p className="text-xs text-slate-soft mt-1">
-                      {u.subscriptionStatus === "active" ? (
-                        <span className="text-success font-medium">
-                          ⭐ Premium ({PLAN_LABELS[u.subscriptionPlan] || "?"}) ·
-                          expires {u.subscriptionExpiresAt ? new Date(u.subscriptionExpiresAt).toLocaleDateString("en-IN") : "—"}
-                        </span>
-                      ) : (
-                        "Free"
-                      )}
-                      {" · "}Joined {new Date(u.createdAt).toLocaleDateString("en-IN")}
-                      {u.streakCount > 0 && ` · 🔥 ${u.streakCount} day streak`}
-                      {u.referralCount > 0 && ` · ${u.referralCount} referrals`}
-                    </p>
-                    {u.examGoals?.length > 0 && (
-                      <div className="flex gap-1.5 mt-2 flex-wrap">
-                        {u.examGoals.map((g) => (
-                          <span key={g} className="text-[10px] font-medium bg-brand/5 text-brand px-2 py-0.5 rounded-full">
-                            {EXAM_LABELS[g] || g}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-2 shrink-0">
-                    <button
-                      onClick={() => openDetail(u._id)}
-                      className="px-3.5 py-1.5 rounded-lg bg-ink-soft/5 hover:bg-ink-soft/10 text-ink-soft text-xs font-medium transition-colors whitespace-nowrap"
-                    >
-                      Details
-                    </button>
-                    <button
-                      onClick={() => openSubModal(u)}
-                      className="px-3.5 py-1.5 rounded-lg bg-brand/5 hover:bg-brand/10 text-brand text-xs font-medium transition-colors whitespace-nowrap"
-                    >
-                      Manage Plan
-                    </button>
-                    <button
-                      onClick={() => setResetTarget(u)}
-                      className="px-3.5 py-1.5 rounded-lg bg-warn-light hover:bg-warn-light text-warn text-xs font-medium transition-colors whitespace-nowrap"
-                    >
-                      Reset Password
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })
+                  return (
+                    <tr key={u._id} className="align-top hover:bg-slate-light/40 transition-colors">
+                      <td className="px-4 py-3 text-slate-soft tabular-nums">{(page - 1) * PAGE_SIZE + i + 1}</td>
+                      <td className="px-4 py-3 min-w-[170px]">
+                        <button onClick={() => openDetail(u._id)} className="font-semibold text-ink hover:text-brand text-left">
+                          {u.name}
+                        </button>
+                        <div className="flex gap-1 mt-1 flex-wrap">
+                          {u.authProvider === "google" && (
+                            <span className="text-[10px] font-semibold bg-slate-light text-slate px-1.5 py-0.5 rounded-full">Google</span>
+                          )}
+                          {u.blockedAt && (
+                            <span className="text-[10px] font-semibold bg-danger-light text-danger px-1.5 py-0.5 rounded-full">Blocked</span>
+                          )}
+                          {u.streakCount > 0 && <span className="text-[10px] text-slate">🔥 {u.streakCount}d</span>}
+                          {u.referralCount > 0 && <span className="text-[10px] text-slate">· {u.referralCount} referrals</span>}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 min-w-[160px]">
+                        <p className="text-ink-soft tabular-nums">{u.phone || "—"}</p>
+                        {u.email && <p className="text-xs text-slate-soft break-all">{u.email}</p>}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {u.subscriptionStatus === "active" ? (
+                          <>
+                            <span className="text-[11px] font-semibold bg-success-light text-success px-2 py-0.5 rounded-full">
+                              {PLAN_LABELS[u.subscriptionPlan] || "Premium"}
+                            </span>
+                            <p className={`text-xs mt-1 ${isExpiring ? "text-warn font-semibold" : "text-slate-soft"}`}>
+                              {isExpiring ? "Expires " : "Till "}
+                              {u.subscriptionExpiresAt ? new Date(u.subscriptionExpiresAt).toLocaleDateString("en-IN") : "—"}
+                            </p>
+                          </>
+                        ) : (
+                          <span className="text-[11px] font-semibold bg-slate-light text-slate px-2 py-0.5 rounded-full">Free</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 min-w-[140px]">
+                        <div className="flex gap-1 flex-wrap">
+                          {(u.examGoals || []).map((g) => (
+                            <span key={g} className="text-[10px] font-medium bg-brand/5 text-brand px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                              {EXAM_LABELS[g] || g}
+                            </span>
+                          ))}
+                          {!u.examGoals?.length && <span className="text-xs text-slate-soft">—</span>}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-slate whitespace-nowrap tabular-nums">{new Date(u.createdAt).toLocaleDateString("en-IN")}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-1.5">
+                          <button
+                            onClick={() => openDetail(u._id)}
+                            className="px-2.5 py-1 rounded-md bg-ink-soft/5 hover:bg-ink-soft/10 text-ink-soft text-xs font-medium whitespace-nowrap"
+                          >
+                            Details
+                          </button>
+                          <button
+                            onClick={() => openSubModal(u)}
+                            className="px-2.5 py-1 rounded-md bg-brand/5 hover:bg-brand/10 text-brand text-xs font-medium whitespace-nowrap"
+                          >
+                            Plan
+                          </button>
+                          <button
+                            onClick={() => setResetTarget(u)}
+                            className="px-2.5 py-1 rounded-md bg-warn-light hover:opacity-80 text-warn text-xs font-medium whitespace-nowrap"
+                          >
+                            Password
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

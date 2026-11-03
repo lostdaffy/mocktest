@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { site } from "./SiteInfo";
+import PlayButton from "./PlayButton";
 
 // Section links point at the homepage (/#features). They're plain <a> tags,
 // not router <Link>s: on the homepage the browser scrolls natively, and from
 // any other page it loads the prerendered homepage and jumps to the section.
 const SECTION_LINKS = [
   { href: "/#features", label: "Features" },
-  { href: "/#live-exams", label: "Live exams" },
+  { href: "/#exams", label: "Exams" },
   { href: "/#pricing", label: "Pricing" },
   { href: "/#faq", label: "FAQ" },
 ];
@@ -87,9 +88,7 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-2.5">
-            <a href="/#download" className="btn btn-primary btn-sm max-[400px]:hidden">
-              Get the app
-            </a>
+            <PlayButton size="sm" className="max-[400px]:hidden" />
 
             <button
               ref={toggleRef}

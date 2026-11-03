@@ -24,15 +24,18 @@ export default function Footer() {
           </Link>
           <p className="mt-4 max-w-[340px] text-[14.5px] text-slate">
             Mock tests, previous year papers, chapter-wise practice and live exams for SSC, Railway, UP Police, UPSSSC PET, teaching exams,
-            Banking and Agniveer — in Hindi and English.
+            Banking and Agniveer — in Hindi and English. Available on Google Play.
           </p>
         </div>
 
         <FooterColumn title="Product">
           <li><a href="/#features" className={linkClass}>Features</a></li>
-          <li><a href="/#live-exams" className={linkClass}>Live exams</a></li>
+          <li><a href="/#exams" className={linkClass}>Exams</a></li>
           <li><a href="/#pricing" className={linkClass}>Pricing</a></li>
           <li><a href="/#faq" className={linkClass}>FAQ</a></li>
+          {site.playStoreUrl && (
+            <li><a href={site.playStoreUrl} target="_blank" rel="noopener" className={linkClass}>Get it on Google Play</a></li>
+          )}
         </FooterColumn>
 
         <FooterColumn title="Support">

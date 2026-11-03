@@ -299,3 +299,13 @@
     @apply rounded-[6px] border border-dashed border-[#F5D9A6] bg-[#FFF7E8] px-1.5 py-px text-[0.92em] font-semibold text-[#92400E] no-underline;
   }
 }
+
+/* Faint dotted grid behind the hero, fading out towards the edges. */
+@layer components {
+  .hero-grid {
+    background-image: radial-gradient(rgb(79 60 201 / 0.13) 1px, transparent 1px);
+    background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 35%, #000 30%, transparent 75%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 35%, #000 30%, transparent 75%);
+  }
+}

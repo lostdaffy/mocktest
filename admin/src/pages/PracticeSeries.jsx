@@ -5,6 +5,7 @@ import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
 import QuestionVisual from "../components/QuestionVisual";
 import PracticeCsvUpload from "../components/PracticeCsvUpload";
+import PracticeManualAdd from "../components/PracticeManualAdd";
 import ChapterHealth from "../components/ChapterHealth";
 import { useGenerationActivity, useGenerationFinished, useJobs } from "../context/GenerationActivity";
 
@@ -274,6 +275,7 @@ export default function PracticeSeries() {
           subtitle="Pick a subject to see its chapters, then build Easy/Medium/Hard/Advanced tests for each one."
         />
 
+        <PracticeManualAdd subjects={subjects} fullSize={FULL_TEST} />
         <PracticeCsvUpload />
 
         {message && (

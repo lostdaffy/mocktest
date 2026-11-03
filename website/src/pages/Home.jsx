@@ -36,7 +36,7 @@ const STATS = [
   { value: site.stats?.exams, label: "exams covered" },
   { value: site.stats?.questions, label: "practice questions" },
   { value: site.stats?.practiceTests, label: "chapter practice tests" },
-  { value: "2", label: "languages — हिंदी & English" },
+  { value: "2", label: "languages: Hindi & English" },
 ];
 
 const HIGHLIGHTS = [
@@ -415,7 +415,7 @@ function Stats() {
             {STATS.map(({ value, label }, i) => (
               <div
                 key={label}
-                className={`px-5 py-6 text-center sm:px-7 sm:py-7 ${i % 2 ? "border-l border-white/10" : ""} ${i > 1 ? "border-t border-white/10 lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}
+                className={`flex flex-col items-center px-5 py-6 text-center sm:px-7 sm:py-7 ${i % 2 ? "border-l border-white/10" : ""} ${i > 1 ? "border-t border-white/10 lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}
               >
                 <dt className="order-2 mt-1 text-[13px] font-medium text-white/70 sm:text-sm">{label}</dt>
                 <dd className="font-display text-[clamp(26px,3.4vw,38px)] font-extrabold leading-none tracking-[-0.02em]">{value}</dd>
@@ -527,7 +527,7 @@ function PhoneMockup() {
           </span>
           <div>
             <p className="text-[11px] font-semibold text-slate">After every test</p>
-            <p className="font-display text-base font-bold leading-tight">Step-by-step solutions</p>
+            <p className="font-display text-base font-bold leading-tight">Full solutions</p>
           </div>
         </div>
       </div>

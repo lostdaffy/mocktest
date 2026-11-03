@@ -220,6 +220,11 @@ const generalLimiter = rateLimit({
     const userId = tokenUserId(req);
     return userId ? `user:${userId}` : `ip:${req.ip}`;
   },
+  // The wake-up pings (cron-job.org: keep-awake every 10 min, reminders at
+  // 0/7/20h) come from a few shared IPs and were answered 429 day after
+  // day, so the 7 AM and 8 PM reminders never went out. Both paths only
+  // read or run work that happens at most once a day.
+  skip: (req) => req.path === "/health" || req.path === "/jobs/tick",
   standardHeaders: true,
   legacyHeaders: false,
 });

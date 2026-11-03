@@ -30,7 +30,8 @@ export default function Terms() {
             <div className="callout">
               <p>
                 <strong>{site.brandName} is independent.</strong> We are not affiliated with, endorsed by or connected to SSC, the Railway
-                Recruitment Boards, UPPRPB, IBPS, CBSE or any other exam-conducting or government body. Using the Service does not guarantee
+                Recruitment Boards, UPPRPB, UPSSSC, UPESSB, IBPS, CBSE, the Indian Army or any other exam-conducting or government body. Our tests
+                follow each exam's published pattern and syllabus, but they are practice papers, not official ones. Using the Service does not guarantee
                 selection, marks or any result in any exam.
               </p>
             </div>

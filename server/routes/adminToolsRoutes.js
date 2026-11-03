@@ -7,9 +7,10 @@ const asyncRoute = require("../utils/asyncRoute");
 const Broadcast = require("../models/Broadcast");
 const { preview, startBroadcast } = require("../services/broadcast");
 const { listPayments, paymentSummary, exportPayments } = require("../controllers/adminPaymentController");
+const { analytics } = require("../controllers/adminAnalyticsController");
 
 // Only these paths: the router is mounted at /api/admin beside other admin routers.
-router.use(["/broadcasts", "/payments"], protect, adminOnly);
+router.use(["/broadcasts", "/payments", "/analytics"], protect, adminOnly);
 
 // ---- broadcasts
 // POST /api/admin/broadcasts/preview { audience } -> how many it reaches, and the exams to pick from
@@ -39,5 +40,9 @@ router.post(
 router.get("/payments/summary", asyncRoute(paymentSummary));
 router.get("/payments/export", asyncRoute(exportPayments));
 router.get("/payments", asyncRoute(listPayments));
+
+// ---- analytics (dashboard charts)
+// GET /api/admin/analytics?days=30
+router.get("/analytics", asyncRoute(analytics));
 
 module.exports = router;

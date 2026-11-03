@@ -187,47 +187,65 @@ export default function Payments() {
       ) : items.length === 0 ? (
         <EmptyState icon={RiMoneyRupeeCircleLine} title={filtered ? "No order matches" : "No orders yet"} text={filtered ? "Try other filters." : "Orders show here as soon as a student opens a payment."} />
       ) : (
-        <div className="space-y-2.5">
-          {items.map((s) => (
-            <Card key={s._id} className="!p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-ink">{s.user?.name || "Deleted account"}</p>
-                    <Badge tone={KIND[s.kind].tone}>{KIND[s.kind].label}</Badge>
-                    {s.couponCode && <Badge tone="brand">{s.couponCode}</Badge>}
-                  </div>
-                  <p className="text-sm text-slate">
-                    {s.user?.phone || "—"}
-                    {s.user?.email ? ` · ${s.user.email}` : ""}
-                  </p>
-                  <p className="text-xs text-slate-soft mt-1">
-                    {when(s.createdAt)} · {PLAN[s.plan] || s.plan}
-                    {s.kind !== "pending" && s.endDate ? ` · valid till ${new Date(s.endDate).toLocaleDateString("en-IN")}` : ""}
-                    {s.creditsUsed ? ` · ₹${s.creditsUsed} referral credit used` : ""}
-                  </p>
-                  {(s.razorpayPaymentId || s.razorpayOrderId) && (
-                    <p className="text-[11px] text-slate-soft mt-1 font-mono break-all">
+        // One row per order, so a page of them fits on one screen.
+        <Card className="!p-0 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
+                  <th className="px-4 py-3 whitespace-nowrap">Date</th>
+                  <th className="px-4 py-3">Student</th>
+                  <th className="px-4 py-3">Plan</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Amount</th>
+                  <th className="px-4 py-3">Razorpay</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-soft">
+                {items.map((s) => (
+                  <tr key={s._id} className="align-top hover:bg-slate-light/40 transition-colors">
+                    <td className="px-4 py-3 text-slate whitespace-nowrap tabular-nums">{when(s.createdAt)}</td>
+                    <td className="px-4 py-3 min-w-[170px]">
+                      <p className="font-semibold text-ink">{s.user?.name || "Deleted account"}</p>
+                      <p className="text-xs text-slate tabular-nums">{s.user?.phone || "—"}</p>
+                      {s.user?.email && <p className="text-xs text-slate-soft break-all">{s.user.email}</p>}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <p className="text-ink-soft">{PLAN[s.plan] || s.plan}</p>
+                      {s.kind !== "pending" && s.endDate && (
+                        <p className="text-xs text-slate-soft">till {new Date(s.endDate).toLocaleDateString("en-IN")}</p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        <Badge tone={KIND[s.kind].tone}>{KIND[s.kind].label}</Badge>
+                        {s.couponCode && <Badge tone="brand">{s.couponCode}</Badge>}
+                      </div>
+                      {s.creditsUsed ? <p className="text-xs text-slate-soft mt-1">₹{s.creditsUsed} credit used</p> : null}
+                    </td>
+                    <td className={`px-4 py-3 text-right font-display font-bold whitespace-nowrap tabular-nums ${s.kind === "paid" ? "text-ink" : "text-slate-soft"}`}>
+                      {rupees(s.amount)}
+                    </td>
+                    <td className="px-4 py-3 text-[11px] text-slate-soft font-mono">
                       {s.razorpayPaymentId ? (
                         <a
                           href={`https://dashboard.razorpay.com/app/payments/${s.razorpayPaymentId}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 hover:text-brand"
+                          className="inline-flex items-center gap-1 hover:text-brand whitespace-nowrap"
                         >
                           {s.razorpayPaymentId} <RiExternalLinkLine size={11} />
                         </a>
                       ) : (
-                        s.razorpayOrderId
+                        <span className="break-all">{s.razorpayOrderId || "—"}</span>
                       )}
-                    </p>
-                  )}
-                </div>
-                <p className={`font-display text-lg font-bold ${s.kind === "paid" ? "text-ink" : "text-slate-soft"}`}>{rupees(s.amount)}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       )}
 
       {pages > 1 && (
