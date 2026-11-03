@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import { RiSearchLine, RiArrowDownSLine } from "@remixicon/react";
 import api from "../api/axios";
 import { PageHeader } from "../components/ui";
 import { useToast } from "../components/Toast";
@@ -263,13 +264,173 @@ export default function Subjects() {
       {loading ? (
         <p className="text-slate-soft">Loading...</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {subjects.map((s) => (
-            <SubjectCard key={s._id} subject={s} onEdit={() => setEditing(s)} />
-          ))}
-        </div>
+        <SubjectTable
+          subjects={subjects}
+          exams={exams}
+          problems={health?.problems?.length || 0}
+          onEdit={(s) => {
+            setEditing(s);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        />
       )}
     </div>
+  );
+}
+
+function SubjectTable({ subjects, exams, problems, onEdit }) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(null);
+  const examName = (t) => exams.find((e) => e.examType === t)?.displayName || t;
+
+  const rows = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    if (!t) return subjects;
+    return subjects.filter(
+      (s) =>
+        s.name.toLowerCase().includes(t) ||
+        (s.nameHi || "").includes(q.trim()) ||
+        (s.chapters || []).some((c) => c.name.toLowerCase().includes(t) || (c.topics || []).some((x) => x.toLowerCase().includes(t)))
+    );
+  }, [subjects, q]);
+
+  const chapters = subjects.reduce((n, s) => n + (s.chapters?.length || 0), 0);
+  const topics = subjects.reduce((n, s) => n + (s.chapters || []).reduce((m, c) => m + (c.topics?.length || 0), 0), 0);
+
+  return (
+    <>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
+        {[
+          ["Subjects", subjects.length, "bg-brand"],
+          ["Chapters", chapters, "bg-info"],
+          ["Topics", topics, "bg-success"],
+          ["Catalog problems", problems, problems ? "bg-danger" : "bg-slate-soft"],
+        ].map(([label, value, tone]) => (
+          <div key={label} className="rv-card p-4 flex items-center gap-3">
+            <span className={`w-1.5 self-stretch rounded-full ${tone}`} />
+            <div className="min-w-0">
+              <p className="font-display text-xl font-extrabold text-ink tabular-nums">{value}</p>
+              <p className="text-xs text-slate truncate">{label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="relative max-w-sm mb-4">
+        <RiSearchLine size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-soft" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search subjects, chapters or topics..." className="rv-input !pl-10" />
+      </div>
+
+      <div className="rv-card !p-0 overflow-hidden">
+        {rows.length === 0 ? (
+          <p className="text-slate-soft text-center py-10">Nothing matches “{q}”.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
+                  <th className="px-4 py-3">Subject</th>
+                  <th className="px-4 py-3">Also known as</th>
+                  <th className="px-4 py-3 text-right">Chapters</th>
+                  <th className="px-4 py-3 text-right">Topics</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-soft">
+                {rows.map((s) => {
+                  const isOpen = open === s._id || (q.trim() && rows.length <= 3);
+                  const nTopics = (s.chapters || []).reduce((m, c) => m + (c.topics?.length || 0), 0);
+                  return (
+                    <Fragment key={s._id}>
+                      <tr className={`cursor-pointer transition-colors ${isOpen ? "bg-brand/[0.04]" : "hover:bg-slate-light/40"}`} onClick={() => setOpen(open === s._id ? null : s._id)}>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center gap-2.5">
+                            <span className="text-xl">{s.icon || "📘"}</span>
+                            <span>
+                              <span className="block font-semibold text-ink">{s.name}</span>
+                              {s.nameHi && <span className="block text-xs text-slate-soft">{s.nameHi}</span>}
+                            </span>
+                            <RiArrowDownSLine size={16} className={`text-slate-soft transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-slate max-w-[240px]">{s.aliases?.length ? s.aliases.join(", ") : <span className="text-slate-soft">—</span>}</td>
+                        <td className="px-4 py-3 text-right tabular-nums font-semibold text-ink">{s.chapters?.length || 0}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-slate">{nTopics}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEdit(s);
+                            }}
+                            className="px-2.5 py-1 rounded-md bg-brand/5 hover:bg-brand/10 text-brand text-xs font-semibold"
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                      {isOpen && (
+                        <tr>
+                          <td colSpan={5} className="px-4 pb-4 pt-1 bg-brand/[0.02]">
+                            <div className="rounded-lg border border-border-soft overflow-hidden bg-surface">
+                              <table className="w-full text-[13px]">
+                                <thead>
+                                  <tr className="text-left text-[10.5px] font-semibold uppercase tracking-wide text-slate bg-slate-light/50">
+                                    <th className="px-3 py-2 w-10">#</th>
+                                    <th className="px-3 py-2">Chapter</th>
+                                    <th className="px-3 py-2">Group</th>
+                                    <th className="px-3 py-2">Topics</th>
+                                    <th className="px-3 py-2">Type</th>
+                                    <th className="px-3 py-2">Shown in</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border-soft">
+                                  {(s.chapters || []).map((c, i) => (
+                                    <tr key={c._id || c.name} className="align-top">
+                                      <td className="px-3 py-2 text-slate-soft tabular-nums">{i + 1}</td>
+                                      <td className="px-3 py-2 min-w-[150px]">
+                                        <p className="font-medium text-ink">{c.name}</p>
+                                        {c.nameHi && <p className="text-[11px] text-slate-soft">{c.nameHi}</p>}
+                                      </td>
+                                      <td className="px-3 py-2 text-slate whitespace-nowrap">{c.category || <span className="text-slate-soft">—</span>}</td>
+                                      <td className="px-3 py-2 min-w-[220px] text-slate">
+                                        {(c.topics || []).length ? (c.topics || []).join(", ") : <span className="text-warn">No topics</span>}
+                                      </td>
+                                      <td className="px-3 py-2 whitespace-nowrap">
+                                        {c.visual === "chart" ? (
+                                          <span className="text-[11px] px-1.5 py-0.5 rounded bg-info-light text-info font-semibold">Chart</span>
+                                        ) : c.visual === "figure" ? (
+                                          <span className="text-[11px] px-1.5 py-0.5 rounded bg-warn-light text-warn font-semibold">Figure</span>
+                                        ) : (
+                                          <span className="text-[11px] text-slate-soft">Text</span>
+                                        )}
+                                      </td>
+                                      <td className="px-3 py-2 text-[11px] text-slate min-w-[160px]" title={(c.exams || []).map(examName).join(", ")}>
+                                        {(c.exams || []).length ? `${c.exams.length} exam${c.exams.length > 1 ? "s" : ""}` : <span className="text-slate-soft">Every exam</span>}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                  {!(s.chapters || []).length && (
+                                    <tr>
+                                      <td colSpan={6} className="px-3 py-4 text-center text-slate-soft">
+                                        No chapters yet.
+                                      </td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
@@ -333,58 +494,6 @@ function CatalogHealth({ health }) {
               {p.chapter ? ` / ${p.chapter}` : ""} — {p.detail}
             </p>
             <p className="text-xs text-slate-soft ml-1 mt-0.5">{p.fix}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SubjectCard({ subject, onEdit }) {
-  // Grouped the way a student sees them, so the admin screen and the app
-  // don't quietly drift apart.
-  const groups = useMemo(() => {
-    const byCategory = new Map();
-    for (const ch of subject.chapters || []) {
-      const key = ch.category || "";
-      if (!byCategory.has(key)) byCategory.set(key, []);
-      byCategory.get(key).push(ch);
-    }
-    return [...byCategory.entries()];
-  }, [subject]);
-
-  return (
-    <div className="rv-card p-6">
-      <div className="flex items-center justify-between mb-1">
-        <p className="font-semibold text-ink text-lg">
-          {subject.icon} {subject.name}
-        </p>
-        <button onClick={onEdit} className="text-sm text-brand hover:underline">
-          Edit
-        </button>
-      </div>
-      <p className="text-xs text-slate-soft mb-3">
-        {subject.chapters?.length || 0} chapters
-        {subject.aliases?.length ? ` · also known as ${subject.aliases.join(", ")}` : ""}
-      </p>
-
-      <div className="space-y-2.5">
-        {groups.map(([category, chapters]) => (
-          <div key={category || "ungrouped"}>
-            <p className="text-[11px] uppercase tracking-wide text-slate-soft mb-1">
-              {category || "No group"}
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {chapters.map((ch, i) => (
-                <span
-                  key={i}
-                  className="text-xs bg-brand/10 text-brand-dark px-2 py-0.5 rounded-full"
-                  title={(ch.exams || []).length ? `Shown in: ${ch.exams.join(", ")}` : "Shown in every exam"}
-                >
-                  {ch.name}
-                </span>
-              ))}
-            </div>
           </div>
         ))}
       </div>
