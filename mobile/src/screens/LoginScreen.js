@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "../context/AuthContext";
 import BackToWelcome from "../components/BackToWelcome";
+import AuthHeader, { AUTH_OVERLAP } from "../components/AuthHeader";
 
 import {
   colors,
@@ -133,11 +134,7 @@ export default function LoginScreen({
         contentContainerStyle={[
           styles.container,
           {
-            paddingTop:
-              Math.max(
-                insets.top,
-                16
-              ) + spacing.md,
+            paddingTop: 0,
 
             paddingBottom:
               Math.max(
@@ -157,50 +154,9 @@ export default function LoginScreen({
         }
         bounces={false}
       >
-        {/* =================================================
-            BRAND
-        ================================================= */}
+        <AuthHeader title="Welcome back" subtitle="Sign in to continue" />
 
-        <View
-          style={styles.brandWrap}
-          pointerEvents="box-none"
-        >
-          <View
-            style={styles.logoBox}
-            pointerEvents="none"
-          >
-            <Image
-              source={RANKVEER_LOGO}
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
-          </View>
-
-          <Text
-            style={styles.brandTag}
-          >
-            Practice smarter. Score higher.
-          </Text>
-        </View>
-
-        {/* =================================================
-            LOGIN CARD
-        ================================================= */}
-
-        <View
-          style={styles.card}
-        >
-          <Text
-            style={styles.title}
-          >
-            Welcome back
-          </Text>
-
-          <Text
-            style={styles.subtitle}
-          >
-            Sign in to continue your preparation
-          </Text>
+        <View style={styles.card}>
 
           {/* =================================================
               PHONE
@@ -504,7 +460,7 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: spacing.lg,
 
-    justifyContent: "center",
+    justifyContent: "flex-start",
 
     zIndex: 10,
   },
@@ -563,6 +519,7 @@ const styles = StyleSheet.create({
   ======================================================= */
 
   card: {
+    marginTop: -AUTH_OVERLAP,
     backgroundColor: colors.surface,
 
     borderRadius: radius.xxl,

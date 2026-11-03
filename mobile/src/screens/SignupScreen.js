@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "../context/AuthContext";
 import BackToWelcome from "../components/BackToWelcome";
+import AuthHeader, { AUTH_OVERLAP } from "../components/AuthHeader";
 import { useExamCatalog } from "../utils/examCatalog";
 
 import {
@@ -292,11 +293,7 @@ export default function SignupScreen({
         contentContainerStyle={[
           styles.container,
           {
-            paddingTop:
-              Math.max(
-                insets.top,
-                16
-              ) + spacing.md,
+            paddingTop: 0,
 
             paddingBottom:
               Math.max(
@@ -309,63 +306,10 @@ export default function SignupScreen({
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-        {/* =================================================
-            BRAND
-        ================================================= */}
-
-        <View
-          style={styles.brandWrap}
-        >
-          <View
-            style={styles.logoBox}
-          >
-            <Image
-              source={
-                RANKVEER_LOGO
-              }
-              style={
-                styles.logoImage
-              }
-              resizeMode="contain"
-            />
-          </View>
-
-          <Text
-            style={styles.brandTag}
-          >
-            Practice smarter. Score higher.
-          </Text>
-        </View>
-
-        {/* =================================================
-            TITLE
-        ================================================= */}
-
-        <View
-          style={styles.headingWrap}
-        >
-          <Text
-            style={styles.title}
-          >
-            {step === 1
-              ? "Create your account"
-              : "Verify your number"}
-          </Text>
-
-          <Text
-            style={
-              styles.subtitle
-            }
-          >
-            {step === 1
-              ? "Free to start — no card needed"
-              : `Code sent to +91 ${phone}`}
-          </Text>
-        </View>
-
-        {/* =================================================
-            CARD
-        ================================================= */}
+        <AuthHeader
+          title={step === 1 ? "Create your account" : "Verify your number"}
+          subtitle={step === 1 ? "Free to start, no card needed" : `Code sent to +91 ${phone}`}
+        />
 
         <View
           style={styles.card}
@@ -1098,7 +1042,7 @@ const styles = StyleSheet.create({
       spacing.lg,
 
     justifyContent:
-      "center",
+      "flex-start",
   },
 
   /* =======================================================
@@ -1204,6 +1148,7 @@ const styles = StyleSheet.create({
   ======================================================= */
 
   card: {
+    marginTop: -AUTH_OVERLAP,
     backgroundColor:
       colors.surface,
 
