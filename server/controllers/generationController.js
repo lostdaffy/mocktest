@@ -4,6 +4,25 @@ const { findGaps, coverage } = require("../services/generationGaps");
 const { GEMINI_MODELS, currentModel } = require("../services/geminiService");
 const { nextAllowanceReset } = require("../utils/aiAllowance");
 
+// coverage() and findGaps() walk the whole catalog. On the free instance one
+// call took ~28 s, and the Generation page asked for both every 2.5 s, so
+// calls piled up and slowed every other request. They change only when a job
+// finishes, so one answer is shared for a minute - and calls that arrive while
+// one is being worked out wait for that one instead of starting their own.
+const memo = new Map();
+function cached(key, ttlMs, fn) {
+  const hit = memo.get(key);
+  if (hit && (hit.pending || Date.now() - hit.at < ttlMs)) return hit.promise;
+  const entry = { at: Date.now(), pending: true };
+  entry.promise = fn().then(
+    (v) => ((entry.pending = false), (entry.at = Date.now()), v),
+    (e) => (memo.delete(key), Promise.reject(e))
+  );
+  memo.set(key, entry);
+  return entry.promise;
+}
+const clearCached = () => memo.clear();
+
 // GET /api/generation/status (admin)
 //
 // Everything the panel needs in one call: how much is done, what is running,
@@ -14,7 +33,7 @@ async function queueStatus(req, res) {
     GenerationJob.findOne({ status: "running" }).select("label kind startedAt attempts").lean(),
     GenerationJob.find({ status: "failed" }).sort({ finishedAt: -1 }).limit(20).select("label lastError attempts finishedAt").lean(),
     QueueState.get(),
-    coverage(),
+    cached("coverage", 60000, () => coverage()),
   ]);
 
   const by = { queued: 0, running: 0, done: 0, failed: 0, cancelled: 0 };
@@ -111,7 +130,7 @@ async function listGaps(req, res) {
     .filter(Boolean);
   const mocksPerExam = Math.min(Math.max(Number(req.query.mocksPerExam) || 1, 0), 5);
 
-  const gaps = await findGaps({ excludeSubjects, mocksPerExam });
+  const gaps = await cached(`gaps|${excludeSubjects.join(",")}|${mocksPerExam}`, 60000, () => findGaps({ excludeSubjects, mocksPerExam }));
   res.json({
     practice: gaps.practice,
     mocks: gaps.mocks,
@@ -125,6 +144,7 @@ async function listGaps(req, res) {
 // Queues everything that is missing. The admin should not have to name 113
 // chapter-and-level pairs; the system already knows which exist.
 async function enqueue(req, res) {
+  clearCached(); // what is built or waiting is about to change
   const { practice = true, mocks = false, exclude = [], mocksPerExam = 1, limit, exams } = req.body || {};
   // exams: only these exams' mocks (e.g. ["SUPER_TET"]); all exams when absent.
   const onlyExams = Array.isArray(exams) && exams.length ? new Set(exams.map(String)) : null;
@@ -206,6 +226,7 @@ async function unpause() {
 // stays live while it fills; the new questions pass the same gate as any
 // other and are checked against what its chapter already asks.
 async function enqueueShort(req, res) {
+  clearCached(); // what is built or waiting is about to change
   // { testId } tops up that one test; without it, every short one.
   const all = (await findGaps()).short;
   const short = req.body?.testId ? all.filter((t) => String(t.testId) === String(req.body.testId)) : all;
@@ -260,6 +281,7 @@ async function enqueueShort(req, res) {
 // One practice test, built in the queue rather than while the admin waits:
 // twenty questions in two batches is longer than a page should hang for.
 async function enqueuePractice(req, res) {
+  clearCached(); // what is built or waiting is about to change
   const { subject, chapter, difficulty } = req.body || {};
   const subtopic = String(req.body?.subtopic || "").trim() || undefined;
   if (!subject || !chapter || !["easy", "medium", "hard", "advanced"].includes(difficulty)) {
@@ -299,6 +321,7 @@ async function enqueuePractice(req, res) {
 // Fills a practice series to `target` tests (10) on the server, one step a
 // job, publishing each test once it is full and sound (services/practiceSeries.js).
 async function enqueueSeries(req, res) {
+  clearCached(); // what is built or waiting is about to change
   const { subject, chapter } = req.body || {};
   const subtopic = String(req.body?.subtopic || "").trim() || undefined;
   const target = Math.min(20, Math.max(1, Number(req.body?.target) || 10));
@@ -343,6 +366,7 @@ async function resume(req, res) {
 
 // POST /api/generation/retry-failed (admin)
 async function retryFailed(req, res) {
+  clearCached(); // what is built or waiting is about to change
   const r = await GenerationJob.updateMany(
     { status: "failed" },
     { $set: { status: "queued", attempts: 0, lastError: "", startedAt: null, finishedAt: null } }
@@ -353,12 +377,14 @@ async function retryFailed(req, res) {
 
 // DELETE /api/generation/history (admin) -> clears finished rows, keeps work
 async function clearHistory(req, res) {
+  clearCached(); // what is built or waiting is about to change
   const r = await GenerationJob.deleteMany({ status: { $in: ["done", "cancelled"] } });
   res.json({ message: `${r.deletedCount} finished job(s) cleared.`, cleared: r.deletedCount });
 }
 
 // DELETE /api/generation/queue (admin) -> drops what has not started yet
 async function cancelQueued(req, res) {
+  clearCached(); // what is built or waiting is about to change
   // ?only=practice-top-ups: just the top-ups of practice tests (they are being
   // filled from a spreadsheet instead); everything else stays.
   let filter = { status: "queued" };
