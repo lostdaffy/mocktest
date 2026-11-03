@@ -294,33 +294,70 @@ export default function PracticeSeries() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {subjects.map((subj) => {
-              const totalPublished = subj.chapters.reduce((sum, c) => sum + (c.publishedTests || 0), 0);
-              const totalDrafts = subj.chapters.reduce((sum, c) => sum + (c.draftTests || 0), 0);
+          <>
+            {(() => {
+              const all = subjects.flatMap((s) => s.chapters);
+              const pub = all.reduce((n, c) => n + (c.publishedTests || 0), 0);
+              const dr = all.reduce((n, c) => n + (c.draftTests || 0), 0);
+              const empty = all.filter((c) => !(c.publishedTests || 0)).length;
               return (
-                <button
-                  key={subj._id}
-                  onClick={() => goSubject(subj.name)}
-                  className="rv-card p-6 text-left hover:border-brand hover:shadow-card transition-all group"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-3xl">{subj.icon || "📘"}</span>
-                    <div>
-                      <p className="font-semibold text-ink text-lg group-hover:text-brand transition-colors">
-                        {subj.name}
-                      </p>
-                      <p className="text-xs text-slate-soft">{subj.chapters.length} chapters</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3 text-xs">
-                    <span className="text-success font-medium">{totalPublished} published</span>
-                    {totalDrafts > 0 && <span className="text-warn font-medium">{totalDrafts} draft</span>}
-                  </div>
-                </button>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
+                  <MiniTile label="Subjects" value={subjects.length} tone="bg-brand" />
+                  <MiniTile label="Chapters" value={all.length} tone="bg-info" />
+                  <MiniTile label="Tests live" value={pub} tone="bg-success" hint={dr ? `${dr} draft` : undefined} />
+                  <MiniTile label="Chapters with no test" value={empty} tone={empty ? "bg-warn" : "bg-slate-soft"} />
+                </div>
               );
-            })}
-          </div>
+            })()}
+            <div className="rv-card !p-0 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
+                      <th className="px-4 py-3">Subject</th>
+                      <th className="px-4 py-3 text-right">Chapters</th>
+                      <th className="px-4 py-3 min-w-[180px]">Chapters with tests</th>
+                      <th className="px-4 py-3 text-right">Live</th>
+                      <th className="px-4 py-3 text-right">Drafts</th>
+                      <th className="px-4 py-3" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-soft">
+                    {subjects.map((subj) => {
+                      const totalPublished = subj.chapters.reduce((sum, c) => sum + (c.publishedTests || 0), 0);
+                      const totalDrafts = subj.chapters.reduce((sum, c) => sum + (c.draftTests || 0), 0);
+                      const covered = subj.chapters.filter((c) => (c.publishedTests || 0) > 0).length;
+                      const pct = subj.chapters.length ? (covered / subj.chapters.length) * 100 : 0;
+                      return (
+                        <tr key={subj._id} onClick={() => goSubject(subj.name)} className="cursor-pointer hover:bg-slate-light/40 transition-colors">
+                          <td className="px-4 py-3">
+                            <span className="inline-flex items-center gap-2.5 font-semibold text-ink">
+                              <span className="text-xl">{subj.icon || "📘"}</span>
+                              {subj.name}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right tabular-nums text-slate">{subj.chapters.length}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 h-1.5 rounded-full bg-slate-light overflow-hidden">
+                                <div className={`h-full rounded-full ${pct === 100 ? "bg-success" : "bg-brand"}`} style={{ width: `${pct}%` }} />
+                              </div>
+                              <span className="text-xs tabular-nums text-slate whitespace-nowrap">
+                                {covered}/{subj.chapters.length}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right tabular-nums font-semibold text-success">{totalPublished}</td>
+                          <td className={`px-4 py-3 text-right tabular-nums ${totalDrafts ? "text-warn font-semibold" : "text-slate-soft"}`}>{totalDrafts}</td>
+                          <td className="px-4 py-3 text-right text-brand text-xs font-semibold whitespace-nowrap">Open →</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
         )}
       </div>
     );
@@ -356,69 +393,69 @@ export default function PracticeSeries() {
         {visibleChapters.length === 0 ? (
           <p className="text-sm text-slate-soft">No chapter matches “{chapterSearch}”.</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {visibleChapters.map((ch) => {
-              const number = selectedSubject.chapters.indexOf(ch) + 1;
-              const queued = subjectJobs.filter((j) => j.chapter === ch.name);
-              return (
-                <button
-                  key={ch.name}
-                  onClick={() => goChapter(ch.name)}
-                  className="rv-card min-h-[168px] p-4 flex flex-col text-left hover:border-brand hover:shadow-card transition-all group"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="w-8 h-8 rounded-lg bg-brand-light text-brand text-xs font-bold flex items-center justify-center">
-                      {String(number).padStart(2, "0")}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      {queued.length > 0 && (
-                        <span
-                          className="text-[11px] font-medium text-info bg-info-light px-1.5 py-0.5 rounded inline-flex items-center gap-1"
-                          title={queued.some((j) => j.position === 0) ? "Being built now" : "Waiting on the Generation queue"}
-                        >
-                          {queued.some((j) => j.position === 0) && (
-                            <span className="inline-block w-2.5 h-2.5 border-2 border-info-border border-t-info rounded-full animate-spin" />
-                          )}
-                          {queued.length} queued
-                        </span>
-                      )}
-                      {ch.draftTests > 0 && (
-                        <span className="text-[11px] font-medium text-warn bg-warn-light px-1.5 py-0.5 rounded">
-                          {ch.draftTests} draft
-                        </span>
-                      )}
-                    </span>
-                  </div>
-
-                  <p className="mt-3 font-semibold text-ink leading-snug line-clamp-3 group-hover:text-brand transition-colors">
-                    {ch.name}
-                  </p>
-                  <p className="text-xs text-slate-soft mt-1">
-                    {ch.publishedTests || 0} published
-                    {(ch.topics?.length || 0) > 0 && ` · ${ch.topics.length} topics`}
-                  </p>
-
-                  {/* One cell per level, so a gap (no Hard test yet) shows at a glance */}
-                  <div className="mt-auto grid grid-cols-4 gap-1">
-                    {LEVELS.map((level) => {
-                      const c = ch.levels?.[level] || { published: 0, draft: 0 };
-                      const total = c.published + c.draft;
-                      return (
-                        <span
-                          key={level}
-                          title={`${level}: ${c.published} published, ${c.draft} draft`}
-                          className={`text-[10px] font-semibold text-center rounded py-1 capitalize ${
-                            total ? LEVEL_BADGES[level] : "bg-slate-light text-slate-soft"
-                          }`}
-                        >
-                          {level.slice(0, 1)} {total}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </button>
-              );
-            })}
+          <div className="rv-card !p-0 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
+                    <th className="px-4 py-3 w-12">#</th>
+                    <th className="px-4 py-3">Chapter</th>
+                    <th className="px-4 py-3">Tests by level (live + draft)</th>
+                    <th className="px-4 py-3 text-right">Live</th>
+                    <th className="px-4 py-3 text-right">Drafts</th>
+                    <th className="px-4 py-3" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-soft">
+                  {visibleChapters.map((ch) => {
+                    const number = selectedSubject.chapters.indexOf(ch) + 1;
+                    const queued = subjectJobs.filter((j) => j.chapter === ch.name);
+                    return (
+                      <tr key={ch.name} onClick={() => goChapter(ch.name)} className="cursor-pointer hover:bg-slate-light/40 transition-colors align-middle">
+                        <td className="px-4 py-3 text-slate-soft tabular-nums">{String(number).padStart(2, "0")}</td>
+                        <td className="px-4 py-3 min-w-[200px]">
+                          <p className="font-semibold text-ink">{ch.name}</p>
+                          <p className="text-xs text-slate-soft">
+                            {(ch.topics?.length || 0) > 0 ? `${ch.topics.length} topics` : "No topics"}
+                            {queued.length > 0 && (
+                              <span className="ml-2 text-info font-semibold inline-flex items-center gap-1">
+                                {queued.some((j) => j.position === 0) && (
+                                  <span className="inline-block w-2.5 h-2.5 border-2 border-info-border border-t-info rounded-full animate-spin" />
+                                )}
+                                {queued.length} queued
+                              </span>
+                            )}
+                          </p>
+                        </td>
+                        <td className="px-4 py-3">
+                          {/* One cell per level, so a gap (no Hard test yet) shows at a glance */}
+                          <div className="flex gap-1">
+                            {LEVELS.map((level) => {
+                              const c = ch.levels?.[level] || { published: 0, draft: 0 };
+                              const total = c.published + c.draft;
+                              return (
+                                <span
+                                  key={level}
+                                  title={`${level}: ${c.published} published, ${c.draft} draft`}
+                                  className={`text-[11px] font-semibold text-center rounded px-2 py-0.5 min-w-[46px] capitalize tabular-nums ${
+                                    total ? LEVEL_BADGES[level] : "bg-slate-light text-slate-soft"
+                                  }`}
+                                >
+                                  {level.slice(0, 1)} {total}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-right tabular-nums font-semibold text-success">{ch.publishedTests || 0}</td>
+                        <td className={`px-4 py-3 text-right tabular-nums ${ch.draftTests ? "text-warn font-semibold" : "text-slate-soft"}`}>{ch.draftTests || 0}</td>
+                        <td className="px-4 py-3 text-right text-brand text-xs font-semibold whitespace-nowrap">Open →</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
@@ -613,92 +650,113 @@ export default function PracticeSeries() {
       ) : levelTests.length === 0 ? (
         <p className="text-sm text-slate-soft">No {openLevel} test yet.</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {levelTests.map((t, i) => {
-            const short = typeof t.questionCount === "number" && t.questionCount < FULL_TEST;
-            const topUp = topUpJobs.get(String(t._id));
-            const btn = "px-2.5 py-2 rounded-lg text-xs font-semibold text-center";
-            return (
-              <div key={t._id} className="rv-card min-h-[190px] p-4 flex flex-col">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-brand-light text-brand text-xs font-bold flex items-center justify-center">
-                    #{testNumber(t) || i + 1}
-                  </span>
-                  <span
-                    className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${
-                      t.publishStatus === "published"
-                        ? t.isFree
-                          ? "bg-success-light text-success"
-                          : "bg-brand-light text-brand"
-                        : "bg-warn-light text-warn"
-                    }`}
-                  >
-                    {t.publishStatus === "published" ? (t.isFree ? "FREE" : "Premium") : "Draft"}
-                  </span>
-                </div>
-
-                <p className="mt-3 font-semibold text-ink text-sm leading-snug line-clamp-2">{t.title}</p>
-                <p className={`text-xs mt-1 ${short ? "text-warn" : "text-slate-soft"}`}>
-                  {typeof t.questionCount === "number" ? `${t.questionCount} / ${FULL_TEST} questions` : ""}
-                </p>
-                {topUp && (
-                  <p className="mt-1 text-[11px] font-semibold text-info flex items-center gap-1.5">
-                    {topUp.position === 0 && (
-                      <span className="inline-block w-3 h-3 border-2 border-info-border border-t-info rounded-full animate-spin" />
-                    )}
-                    {topUp.position === 0 ? "Topping up now…" : `Waiting to top up (#${topUp.position}${queuePaused ? ", paused" : ""})`}
-                  </p>
-                )}
-
-                <div className="mt-auto grid grid-cols-2 gap-1.5">
-                  <button onClick={() => openReview(t._id)} className={`${btn} bg-slate-light hover:bg-border-strong text-ink-soft`}>
-                    👁 Review
-                  </button>
-                  <button onClick={() => deleteTest(t._id)} className={`${btn} bg-danger-light hover:opacity-80 text-danger`}>
-                    Delete
-                  </button>
-                  {t.publishStatus === "draft" &&
-                    (short ? (
-                      <button
-                        onClick={() => openReview(t._id)}
-                        className={`${btn} col-span-2 bg-warn-light text-warn`}
-                        title={`A test goes out with all ${FULL_TEST} questions. Open it and add the missing ones.`}
-                      >
-                        Add {FULL_TEST - t.questionCount} to publish
-                      </button>
-                    ) : (
-                      <>
-                        <button onClick={() => publishTest(t._id, true)} className={`${btn} bg-success hover:opacity-90 text-white`}>
-                          Publish FREE
+        <div className="rv-card !p-0 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
+                  <th className="px-4 py-3 w-12">#</th>
+                  <th className="px-4 py-3">Test</th>
+                  <th className="px-4 py-3 min-w-[150px]">Questions</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-soft">
+                {levelTests.map((t, i) => {
+                  const short = typeof t.questionCount === "number" && t.questionCount < FULL_TEST;
+                  const topUp = topUpJobs.get(String(t._id));
+                  const btn = "px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap";
+                  const have = t.questionCount || 0;
+                  return (
+                    <tr key={t._id} className="align-middle hover:bg-slate-light/40 transition-colors">
+                      <td className="px-4 py-3 text-slate-soft tabular-nums">{testNumber(t) || i + 1}</td>
+                      <td className="px-4 py-3 min-w-[220px]">
+                        <button onClick={() => openReview(t._id)} className="font-semibold text-ink hover:text-brand text-left">
+                          {t.title}
                         </button>
-                        <button onClick={() => publishTest(t._id, false)} className={`${btn} bg-brand hover:bg-brand-dark text-white`}>
-                          Premium
-                        </button>
-                      </>
-                    ))}
-                  {t.publishStatus === "published" && short && (
-                    <button
-                      onClick={() => fillShort(t._id)}
-                      disabled={fillingShort || !!topUp}
-                      className={`${btn} bg-warn-light text-warn disabled:opacity-60`}
-                      title="Queues the missing questions on the Generation page; the test stays live meanwhile"
-                    >
-                      Top up to {FULL_TEST}
-                    </button>
-                  )}
-                  {t.publishStatus === "published" && (
-                    <button
-                      onClick={() => unpublishTest(t._id)}
-                      className={`${btn} ${short ? "" : "col-span-2"} bg-slate-light hover:bg-border-strong text-ink-soft`}
-                      title="Take it off the app so its questions can be changed"
-                    >
-                      Unpublish
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                        {topUp && (
+                          <p className="mt-0.5 text-[11px] font-semibold text-info flex items-center gap-1.5">
+                            {topUp.position === 0 && (
+                              <span className="inline-block w-3 h-3 border-2 border-info-border border-t-info rounded-full animate-spin" />
+                            )}
+                            {topUp.position === 0 ? "Topping up now…" : `Waiting to top up (#${topUp.position}${queuePaused ? ", paused" : ""})`}
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 rounded-full bg-slate-light overflow-hidden min-w-[60px]">
+                            <div className={`h-full rounded-full ${short ? "bg-warn" : "bg-success"}`} style={{ width: `${Math.min(100, (have / FULL_TEST) * 100)}%` }} />
+                          </div>
+                          <span className={`text-xs tabular-nums whitespace-nowrap ${short ? "text-warn" : "text-success font-semibold"}`}>
+                            {have}/{FULL_TEST}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                            t.publishStatus === "published" ? (t.isFree ? "bg-success-light text-success" : "bg-brand-light text-brand") : "bg-warn-light text-warn"
+                          }`}
+                        >
+                          {t.publishStatus === "published" ? (t.isFree ? "Live · Free" : "Live · Premium") : "Draft"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-1.5 flex-wrap">
+                          <button onClick={() => openReview(t._id)} className={`${btn} bg-slate-light hover:bg-border-strong text-ink-soft`}>
+                            Review
+                          </button>
+                          {t.publishStatus === "draft" &&
+                            (short ? (
+                              <button
+                                onClick={() => openReview(t._id)}
+                                className={`${btn} bg-warn-light text-warn`}
+                                title={`A test goes out with all ${FULL_TEST} questions. Open it and add the missing ones.`}
+                              >
+                                Add {FULL_TEST - t.questionCount} to publish
+                              </button>
+                            ) : (
+                              <>
+                                <button onClick={() => publishTest(t._id, true)} className={`${btn} bg-success hover:opacity-90 text-white`}>
+                                  Publish free
+                                </button>
+                                <button onClick={() => publishTest(t._id, false)} className={`${btn} bg-brand hover:bg-brand-dark text-white`}>
+                                  Publish premium
+                                </button>
+                              </>
+                            ))}
+                          {t.publishStatus === "published" && short && (
+                            <button
+                              onClick={() => fillShort(t._id)}
+                              disabled={fillingShort || !!topUp}
+                              className={`${btn} bg-warn-light text-warn disabled:opacity-60`}
+                              title="Queues the missing questions on the Generation page; the test stays live meanwhile"
+                            >
+                              Top up to {FULL_TEST}
+                            </button>
+                          )}
+                          {t.publishStatus === "published" && (
+                            <button
+                              onClick={() => unpublishTest(t._id)}
+                              className={`${btn} bg-slate-light hover:bg-border-strong text-ink-soft`}
+                              title="Take it off the app so its questions can be changed"
+                            >
+                              Unpublish
+                            </button>
+                          )}
+                          <button onClick={() => deleteTest(t._id)} className={`${btn} bg-danger-light hover:opacity-80 text-danger`}>
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -846,6 +904,21 @@ export default function PracticeSeries() {
 // A test that is short says so here, with the one button that fixes it.
 // Removal fills its own hole now, so this only ever holds the older ones -
 // the purge of 127 untrustworthy answer keys left 26 live tests wanting.
+function MiniTile({ label, value, tone, hint }) {
+  return (
+    <div className="rv-card p-4 flex items-center gap-3">
+      <span className={`w-1.5 self-stretch rounded-full ${tone}`} />
+      <div className="min-w-0">
+        <p className="font-display text-xl font-extrabold text-ink tabular-nums">{value}</p>
+        <p className="text-xs text-slate truncate">
+          {label}
+          {hint ? ` · ${hint}` : ""}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function FillShortBanner({ count, onFill, busy }) {
   return (
     <div className="rv-card p-4 mb-6 flex items-center justify-between gap-4 flex-wrap border-l-4 border-l-warn">
