@@ -1,407 +1,97 @@
-import {
-  useEffect,
-  useRef,
-} from "react";
-
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  Easing,
-  Image,
-} from "react-native";
-
-import { LinearGradient } from "../components/SolidFill";
+import { useEffect, useRef } from "react";
+import { View, Text, StyleSheet, Animated, Easing, Image } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import {
-  gradients,
-  spacing,
-  radius,
-  type,
-} from "../theme/theme";
+// Shown while the saved login is read. Same look as the Welcome screen so the
+// two feel like one: navy, the logo in the middle, soft rings spreading out
+// from it, the name, and a thin bar filling underneath.
 
-/* =========================================================
-   SPLASH SCREEN
-========================================================= */
+const MARK = require("../../assets/icon.png");
+const NAVY = "#0A1230";
+const VIOLET = "#7C3AED";
 
-export default function SplashScreen() {
-  const insets = useSafeAreaInsets();
-
-  const fade =
-    useRef(new Animated.Value(0)).current;
-
-  const rise =
-    useRef(new Animated.Value(18)).current;
-
-  const pulse =
-    useRef(new Animated.Value(1)).current;
-
+// One ring that grows from behind the logo and fades. `delay` staggers three of them.
+function Ripple({ delay }) {
+  const t = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fade, {
-        toValue: 1,
-        duration: 550,
-        easing: Easing.out(
-          Easing.cubic
-        ),
-        useNativeDriver: true,
-      }),
-
-      Animated.timing(rise, {
-        toValue: 0,
-        duration: 550,
-        easing: Easing.out(
-          Easing.cubic
-        ),
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    const pulseAnimation =
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulse, {
-            toValue: 1.06,
-            duration: 1100,
-            easing: Easing.inOut(
-              Easing.ease
-            ),
-            useNativeDriver: true,
-          }),
-
-          Animated.timing(pulse, {
-            toValue: 1,
-            duration: 1100,
-            easing: Easing.inOut(
-              Easing.ease
-            ),
-            useNativeDriver: true,
-          }),
-        ])
-      );
-
-    pulseAnimation.start();
-
-    return () => {
-      pulseAnimation.stop();
-    };
-  }, [fade, rise, pulse]);
-
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(t, { toValue: 1, duration: 2400, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [t, delay]);
   return (
-    <LinearGradient
-      colors={gradients.hero}
-      start={{
-        x: 0.05,
-        y: 0,
-      }}
-      end={{
-        x: 0.95,
-        y: 1,
-      }}
-      style={styles.fill}
-    >
-      <StatusBar style="light" />
-
-      {/* Decorative background */}
-
-      <View style={styles.orbOne} />
-      <View style={styles.orbTwo} />
-      <View style={styles.orbThree} />
-
-      <View
-        style={[
-          styles.content,
-          {
-            paddingTop:
-              insets.top,
-            paddingBottom:
-              insets.bottom +
-              spacing.xl,
-          },
-        ]}
-      >
-        {/* =================================================
-            CENTER
-        ================================================= */}
-
-        <View style={styles.center}>
-          {/* LOGO */}
-
-          <Animated.View
-            style={[
-              styles.logoOuter,
-              {
-                opacity: fade,
-                transform: [
-                  {
-                    scale: pulse,
-                  },
-                ],
-              },
-            ]}
-          >
-            <View
-              style={styles.logoInner}
-            >
-              <Image
-                source={require("../../assets/brand-logo.png")}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-            </View>
-          </Animated.View>
-
-          {/* BRAND */}
-
-          <Animated.View
-            style={[
-              styles.brandContent,
-              {
-                opacity: fade,
-                transform: [
-                  {
-                    translateY: rise,
-                  },
-                ],
-              },
-            ]}
-          >
-            <Text
-              style={styles.brandName}
-            >
-              Rankveer
-            </Text>
-
-            <Text
-              style={styles.tagline}
-            >
-              Practice with purpose.
-              {"\n"}
-              Rank with proof.
-            </Text>
-          </Animated.View>
-        </View>
-
-        {/* =================================================
-            FOOTER
-        ================================================= */}
-
-        <Animated.View
-          style={[
-            styles.footer,
-            {
-              opacity: fade,
-            },
-          ]}
-        >
-          <View
-            style={styles.dotsRow}
-          >
-            <View
-              style={[
-                styles.dot,
-                styles.dotActive,
-              ]}
-            />
-
-            <View
-              style={styles.dot}
-            />
-
-            <View
-              style={styles.dot}
-            />
-          </View>
-
-          <Text
-            style={styles.footerText}
-          >
-            Preparing your experience
-          </Text>
-        </Animated.View>
-      </View>
-    </LinearGradient>
+    <Animated.View
+      style={[
+        styles.ripple,
+        {
+          opacity: t.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.35, 0] }),
+          transform: [{ scale: t.interpolate({ inputRange: [0, 1], outputRange: [0.6, 2.6] }) }],
+        },
+      ]}
+    />
   );
 }
 
-/* =========================================================
-   STYLES
-========================================================= */
+export default function SplashScreen() {
+  const enter = useRef(new Animated.Value(0)).current;
+  const bar = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(enter, { toValue: 1, duration: 650, easing: Easing.out(Easing.back(1.4)), useNativeDriver: true }).start();
+    Animated.timing(bar, { toValue: 1, duration: 2200, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }).start();
+  }, [enter, bar]);
+
+  return (
+    <View style={styles.root}>
+      <StatusBar style="light" />
+      <View style={styles.glow} />
+
+      <View style={styles.center}>
+        <View style={styles.logoWrap}>
+          <Ripple delay={0} />
+          <Ripple delay={800} />
+          <Ripple delay={1600} />
+          <Animated.View style={[styles.mark, { opacity: enter, transform: [{ scale: enter.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }] }]}>
+            <Image source={MARK} style={styles.markImg} resizeMode="cover" />
+          </Animated.View>
+        </View>
+
+        <Animated.Text style={[styles.name, { opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }]}>
+          Rank<Text style={{ color: "#A78BFA" }}>veer</Text>
+        </Animated.Text>
+      </View>
+
+      <View style={styles.track}>
+        <Animated.View style={[styles.fill, { transform: [{ scaleX: bar }] }]} />
+      </View>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
-  fill: {
-    flex: 1,
-  },
-
-  content: {
-    flex: 1,
-    justifyContent:
-      "space-between",
-    paddingHorizontal:
-      spacing.xl,
-  },
-
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent:
-      "center",
-  },
-
-  /* =====================================================
-     BACKGROUND ORBS
-  ===================================================== */
-
-  orbOne: {
-    position: "absolute",
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    top: -120,
-    right: -100,
-    backgroundColor:
-      "rgba(255,255,255,0.07)",
-  },
-
-  orbTwo: {
-    position: "absolute",
-    width: 190,
-    height: 190,
-    borderRadius: 95,
-    bottom: -90,
-    left: -80,
-    backgroundColor:
-      "rgba(255,255,255,0.05)",
-  },
-
-  orbThree: {
-    position: "absolute",
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    top: "36%",
-    right: -55,
-    backgroundColor:
-      "rgba(255,255,255,0.04)",
-  },
-
-  /* =====================================================
-     LOGO
-  ===================================================== */
-
-  logoOuter: {
+  root: { flex: 1, backgroundColor: NAVY, alignItems: "center", justifyContent: "center" },
+  glow: { position: "absolute", width: 520, height: 520, borderRadius: 260, backgroundColor: "#4F46E5", opacity: 0.18 },
+  center: { alignItems: "center" },
+  logoWrap: { width: 112, height: 112, alignItems: "center", justifyContent: "center", marginBottom: 30 },
+  ripple: { position: "absolute", width: 112, height: 112, borderRadius: 56, borderWidth: 1.5, borderColor: "#A78BFA" },
+  mark: {
     width: 112,
     height: 112,
     borderRadius: 32,
-    backgroundColor:
-      "rgba(255,255,255,0.10)",
-    borderWidth: 1,
-    borderColor:
-      "rgba(255,255,255,0.22)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 22,
-
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.18,
-    shadowRadius: 20,
-    elevation: 8,
-  },
-
-  logoInner: {
-    width: 88,
-    height: 88,
-    borderRadius: 27,
-    backgroundColor:
-      "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 5,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-
-  logo: {
-    width: 66,
-    height: 66,
-  },
-
-  /* =====================================================
-     BRAND
-  ===================================================== */
-
-  brandContent: {
-    alignItems: "center",
-  },
-
-  brandName: {
-    ...type.display,
-    color: "#FFFFFF",
-    textAlign: "center",
-    fontSize: 32,
-    lineHeight: 38,
-    fontWeight: "900",
-    letterSpacing: -0.8,
-  },
-
-  tagline: {
-    ...type.small,
-    color:
-      "rgba(255,255,255,0.84)",
-    textAlign: "center",
-    marginTop: 7,
-    lineHeight: 18,
-    fontWeight: "500",
-  },
-
-  /* =====================================================
-     FOOTER
-  ===================================================== */
-
-  footer: {
-    alignItems: "center",
-    paddingBottom: spacing.md,
-  },
-
-  dotsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-  },
-
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor:
-      "rgba(255,255,255,0.30)",
-  },
-
-  dotActive: {
-    width: 22,
     backgroundColor: "#FFFFFF",
+    overflow: "hidden",
+    shadowColor: VIOLET,
+    shadowOpacity: 0.75,
+    shadowRadius: 34,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 16,
   },
-
-  footerText: {
-    marginTop: 10,
-    fontSize: 9.5,
-    lineHeight: 14,
-    fontWeight: "600",
-    color:
-      "rgba(255,255,255,0.55)",
-    letterSpacing: 0.2,
-  },
+  markImg: { width: "100%", height: "100%" },
+  name: { fontSize: 38, fontWeight: "800", letterSpacing: -1, color: "#FFFFFF" },
+  track: { position: "absolute", bottom: 64, width: 120, height: 3, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.12)", overflow: "hidden" },
+  fill: { width: "100%", height: "100%", backgroundColor: "#A78BFA", transformOrigin: "left" },
 });
