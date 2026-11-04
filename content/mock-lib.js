@@ -51,7 +51,7 @@ module.exports = function makeMock({ name, want, hindiSubjects = [], spreadNumer
       if (q.options.length !== 4 || q.optionsHi.length !== 4) errs.push(`Q${n}: needs 4 options in both languages`);
       if (new Set(q.options).size !== 4) errs.push(`Q${n}: options repeat`);
       if (!/^[A-D]$/.test(q.correct)) errs.push(`Q${n}: correct must be A-D`);
-      if (q.check && !q.check()) errs.push(`Q${n}: answer check FAILED`);
+      if (q.check && !q.check()) errs.push(`Q${n}: answer check FAILED :: ${String(q.question).slice(0,60)}`);
       if (!q.solution || !q.solutionHi || !q.questionHi) errs.push(`Q${n}: missing Hindi or solution`);
       const hindi = hindiSubjects.includes(q.subject);
       if (!hindi && /[ऀ-ॿ]/.test(q.question + q.options.join("") + q.solution)) errs.push(`Q${n}: Hindi in the English text`);
