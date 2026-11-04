@@ -59,7 +59,7 @@ module.exports = function makeMock({ name, want, hindiSubjects = [], spreadNumer
       // A numeric answer must be named in its own solution.
       const ans = q.options[L(q.correct)];
       // The upload check calls a solution under ~40 characters "too short to teach anything".
-      if (!/=/.test(q.solution) && (String(q.solution).length < 28 || String(q.solutionHi).length < 20)) errs.push(`Q${n}: solution is too short (needs a real explanation)`);
+      if ((String(q.solution).length < 24) || (!/=/.test(q.solution) && (String(q.solution).length < 28 || String(q.solutionHi).length < 20))) errs.push(`Q${n}: solution is too short (needs a real explanation) :: ${String(q.question).slice(0,50)}`);
       // The server rewrites "3 * 4" between digits into "3 × 4"; a made-up operator must use another symbol (@, #, $).
       if (/\d\s*\*\s*\d/.test(q.question + q.solution)) errs.push(`Q${n}: "*" between numbers is turned into × by the server - use @ or # for a made-up operator`);
       if (/[a-zA-Z0-9)]^[a-zA-Z0-9(]/.test(q.question)) errs.push(`Q${n}: "^" is turned into a superscript by the server - write the superscript character directly`);
