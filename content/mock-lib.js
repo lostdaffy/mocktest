@@ -58,6 +58,8 @@ module.exports = function makeMock({ name, want, hindiSubjects = [], spreadNumer
       if (hindi && !/[ऀ-ॿ]/.test(q.question)) errs.push(`Q${n}: Hindi question has no Hindi`);
       // A numeric answer must be named in its own solution.
       const ans = q.options[L(q.correct)];
+      // The upload check calls a solution under ~40 characters "too short to teach anything".
+      if (!/=/.test(q.solution) && (String(q.solution).length < 26 || String(q.solutionHi).length < 26)) errs.push(`Q${n}: solution is too short (needs a real explanation)`);
       // The server rewrites "3 * 4" between digits into "3 × 4"; a made-up operator must use another symbol (@, #, $).
       if (/\d\s*\*\s*\d/.test(q.question + q.solution)) errs.push(`Q${n}: "*" between numbers is turned into × by the server - use @ or # for a made-up operator`);
       // A plain numeric answer ("₹1,200", "45 km", "20%") must be named in its own solution.
