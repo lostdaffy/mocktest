@@ -473,9 +473,41 @@ async function sendTestPush(req, res) {
   res.status(502).json({ message: `Not delivered: ${(errors || []).join("; ") || "Expo did not accept it"}`, sent, errors });
 }
 
+// POST /api/admin/users/:id/message  { title, body, screen? }
+// A message to this one student: a push to their phone (if notifications are on)
+// and an item in their Notifications list for 14 days - for a gift ("1 month
+// Premium is yours"), a reply, a reminder. It goes through the same path as a
+// broadcast, with the audience set to this student, so it shows in the history.
+async function sendMessageToUser(req, res) {
+  const user = await User.findById(req.params.id).select("name role blockedAt pushToken").lean();
+  if (!user) return res.status(404).json({ message: "User not found" });
+  if (user.role === "admin") return res.status(400).json({ message: "Messages go to students, not admin accounts" });
+  if (user.blockedAt) return res.status(400).json({ message: "This account is blocked" });
+  try {
+    const { startBroadcast } = require("../services/broadcast");
+    const doc = await startBroadcast(
+      { title: req.body?.title, body: req.body?.body, screen: req.body?.screen, audience: { kind: "user", userId: String(user._id) } },
+      { wait: true }
+    );
+    const fresh = await require("../models/Broadcast").findById(doc._id).lean();
+    const onPhone = fresh.delivered > 0;
+    res.status(201).json({
+      message: onPhone
+        ? `Sent to ${user.name || "the student"}'s phone, and it is in their Notifications list`
+        : `Saved in ${user.name || "the student"}'s Notifications list. ${user.pushToken ? "The push was not accepted" : "Their phone has no notification token yet, so no push went out"}.`,
+      onPhone,
+      broadcast: fresh,
+    });
+  } catch (err) {
+    if (err.status) return res.status(err.status).json({ message: err.message });
+    throw err;
+  }
+}
+
 module.exports = {
   setBlocked,
   sendTestPush,
+  sendMessageToUser,
   searchUsers,
   getUserStats,
   exportUsersCsv,

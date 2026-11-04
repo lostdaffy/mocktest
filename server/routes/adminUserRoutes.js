@@ -13,6 +13,7 @@ const {
   deleteUser,
   setUserRole,
   sendTestPush,
+  sendMessageToUser,
   setBlocked,
 } = require("../controllers/adminUserController");
 const { protect, adminOnly } = require("../middleware/auth");
@@ -39,6 +40,7 @@ router.patch("/:id/reset-password", protect, adminOnly, asyncRoute(adminResetPas
 router.patch("/:id/subscription", protect, adminOnly, asyncRoute(manageSubscription));
 router.get("/:id", protect, adminOnly, asyncRoute(getUserDetail)); // full support view of one account
 router.patch("/:id/block", protect, adminOnly, asyncRoute(setBlocked)); // a shared or misused account: out everywhere, no new sign-in
+router.post("/:id/message", protect, adminOnly, asyncRoute(sendMessageToUser)); // a personal message / gift note to this one student
 router.post("/:id/test-push", protect, adminOnly, asyncRoute(sendTestPush)); // one notification to this account's phone only
 router.patch("/:id/unlock", protect, adminOnly, asyncRoute(unlockUser)); // clear the login lockout
 router.patch("/:id/logout", protect, adminOnly, asyncRoute(forceLogout)); // free a stuck single-device session

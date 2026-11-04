@@ -10,6 +10,7 @@ import {
   RiAlarmWarningLine,
   RiCloseLine,
   RiNotification3Line,
+  RiGiftLine,
 } from "@remixicon/react";
 import api from "../api/axios";
 import { PageHeader } from "../components/ui";
@@ -298,6 +299,60 @@ export default function Users() {
     }
   }
 
+  // ---- A personal message to one student (a gift note, a reply, a reminder)
+  const [msgTarget, setMsgTarget] = useState(null);
+  const [msgTitle, setMsgTitle] = useState("");
+  const [msgBody, setMsgBody] = useState("");
+  const [msgScreen, setMsgScreen] = useState("HomeTab");
+  const [msgSending, setMsgSending] = useState(false);
+  const MSG_TEMPLATES = (name) => [
+    {
+      label: "Gift: free Premium",
+      title: "A gift for you 🎁",
+      body: `Hi ${(name || "").split(" ")[0] || "there"}, Rankveer has given you free Premium. All mocks, PYQs and practice are unlocked. Best of luck!`,
+      screen: "HomeTab",
+    },
+    {
+      label: "New mocks added",
+      title: "New mock tests are live",
+      body: "New mocks have been added for your exam. Take one today and check your rank.",
+      screen: "HomeTab",
+    },
+    {
+      label: "Thank you",
+      title: "Thank you for using Rankveer",
+      body: "We are happy to have you. If anything in the app can be better, tell us from the Profile screen.",
+      screen: "",
+    },
+  ];
+  function openMessage(user, template) {
+    const t = template || MSG_TEMPLATES(user.name)[0];
+    setMsgTarget(user);
+    setMsgTitle(t.title);
+    setMsgBody(t.body);
+    setMsgScreen(t.screen);
+  }
+  async function handleSendMessage(e) {
+    e.preventDefault();
+    if (!msgTitle.trim() || !msgBody.trim()) return toast.error("Write both a title and a message");
+    const ok = await toast.confirm({
+      title: `Send to ${msgTarget.name || "this student"}?`,
+      message: `"${msgTitle.trim()}" goes to this one student only (a push on their phone, and in the app's Notifications list for 14 days). A sent message cannot be taken back.`,
+      confirmLabel: "Send now",
+    });
+    if (!ok) return;
+    setMsgSending(true);
+    try {
+      const res = await api.post(`/admin/users/${msgTarget._id}/message`, { title: msgTitle, body: msgBody, screen: msgScreen });
+      toast.success(res.data.message || "Sent");
+      setMsgTarget(null);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Couldn't send the message");
+    } finally {
+      setMsgSending(false);
+    }
+  }
+
   function openSubModal(user) {
     setSubTarget(user);
     setSubAction("grant");
@@ -315,9 +370,19 @@ export default function Users() {
         reason: subReason || undefined,
       });
       toast.success(res.data.message || "Subscription updated");
+      const gifted = subAction !== "revoke" && subTarget;
+      const giftedUser = subTarget;
       setSubTarget(null);
       load(page, search);
       loadStats();
+      if (gifted) {
+        const tell = await toast.confirm({
+          title: `Tell ${giftedUser.name || "the student"} about it?`,
+          message: "Send them a notification about the free plan. You can edit the text before it goes.",
+          confirmLabel: "Write the message",
+        });
+        if (tell) openMessage(giftedUser);
+      }
     } catch (err) {
       toast.error("Update failed: " + (err.response?.data?.message || err.message));
     } finally {
@@ -665,6 +730,16 @@ export default function Users() {
                     )}
                     <button
                       onClick={() => {
+                        const u = detail.user;
+                        closeDetail();
+                        openMessage(u);
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-brand/5 hover:bg-brand/10 text-brand text-xs font-medium inline-flex items-center gap-1.5"
+                    >
+                      <RiGiftLine size={13} /> Send message
+                    </button>
+                    <button
+                      onClick={() => {
                         closeDetail();
                         setResetTarget(detail.user);
                       }}
@@ -880,6 +955,53 @@ export default function Users() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Message to one student */}
+      {msgTarget && (
+        <div className="fixed inset-0 bg-brand-navy/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <form onSubmit={handleSendMessage} className="bg-surface rounded-lg p-6 w-full max-w-md">
+            <h3 className="font-semibold text-ink mb-1">Message to {msgTarget.name}</h3>
+            <p className="text-sm text-slate mb-3">One student only. Shown as a push notification and in their Notifications list.</p>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {MSG_TEMPLATES(msgTarget.name).map((t) => (
+                <button
+                  key={t.label}
+                  type="button"
+                  onClick={() => {
+                    setMsgTitle(t.title);
+                    setMsgBody(t.body);
+                    setMsgScreen(t.screen);
+                  }}
+                  className="text-xs px-2.5 py-1 rounded-full bg-slate-light hover:bg-border-strong text-ink-soft font-medium"
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <label className="rv-label">Title</label>
+            <input className="rv-input mb-1" value={msgTitle} onChange={(e) => setMsgTitle(e.target.value)} maxLength={65} />
+            <p className="text-[11px] text-slate-soft mb-3 text-right">{msgTitle.length}/65</p>
+            <label className="rv-label">Message</label>
+            <textarea className="rv-input resize-y mb-1" rows={4} value={msgBody} onChange={(e) => setMsgBody(e.target.value)} maxLength={240} />
+            <p className="text-[11px] text-slate-soft mb-3 text-right">{msgBody.length}/240</p>
+            <label className="rv-label">When they tap it, open</label>
+            <select className="rv-input mb-4" value={msgScreen} onChange={(e) => setMsgScreen(e.target.value)}>
+              <option value="">Just the notification</option>
+              <option value="HomeTab">Home</option>
+              <option value="Subscription">Premium / plans</option>
+              <option value="LiveTab">Live exams</option>
+            </select>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setMsgTarget(null)} className="flex-1 px-4 py-2.5 rounded-lg bg-slate-light hover:bg-border-strong text-sm font-medium transition-colors">
+                Cancel
+              </button>
+              <button type="submit" disabled={msgSending} className="flex-1 px-4 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium transition-colors disabled:opacity-60">
+                {msgSending ? "Sending..." : "Send"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

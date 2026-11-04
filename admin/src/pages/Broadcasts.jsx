@@ -17,7 +17,7 @@ const SCREENS = [
   ["ExamSeries", "That exam's mock series"],
 ];
 const AUDIENCE_LABEL = (a, examName) =>
-  a?.kind === "exam" ? `${examName(a.exam)} students` : a?.kind === "paid" ? "Paid students" : a?.kind === "free" ? "Free students" : "All students";
+  a?.kind === "user" ? "One student" : a?.kind === "exam" ? `${examName(a.exam)} students` : a?.kind === "paid" ? "Paid students" : a?.kind === "free" ? "Free students" : "All students";
 
 export default function Broadcasts() {
   const toast = useToast();

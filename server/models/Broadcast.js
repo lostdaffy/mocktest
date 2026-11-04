@@ -9,8 +9,9 @@ const broadcastSchema = new mongoose.Schema(
     body: { type: String, required: true, trim: true, maxlength: 240 },
     // Who it is for: everyone, the students of one exam, or paid / free.
     audience: {
-      kind: { type: String, enum: ["all", "exam", "paid", "free"], default: "all" },
+      kind: { type: String, enum: ["all", "exam", "paid", "free", "user"], default: "all" },
       exam: { type: String, trim: true }, // with kind "exam": an examGoals value, e.g. "SSC_CGL"
+      userId: { type: mongoose.Schema.Types.ObjectId }, // with kind "user": the one student it is for (a gift note, a personal reply)
     },
     // What a tap on it in the app's Notifications list opens.
     screen: { type: String, enum: ["", "HomeTab", "LiveTab", "Subscription", "ExamSeries"], default: "" },

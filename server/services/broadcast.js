@@ -26,6 +26,7 @@ function audienceFilter(audience = {}, now = new Date()) {
   if (audience.kind === "exam") f.examGoals = audience.exam;
   else if (audience.kind === "paid") Object.assign(f, paid);
   else if (audience.kind === "free") f.$nor = [paid];
+  else if (audience.kind === "user") f._id = audience.userId;
   return f;
 }
 
@@ -36,11 +37,18 @@ function isFor(audience = {}, user, now = new Date()) {
   if (audience.kind === "exam") return (user.examGoals || []).includes(audience.exam);
   if (audience.kind === "paid") return Boolean(paid);
   if (audience.kind === "free") return !paid;
+  if (audience.kind === "user") return String(audience.userId) === String(user._id);
   return true;
 }
 
 function cleanAudience(a = {}) {
-  const kind = ["all", "exam", "paid", "free"].includes(a.kind) ? a.kind : "all";
+  const kind = ["all", "exam", "paid", "free", "user"].includes(a.kind) ? a.kind : "all";
+  if (kind === "user") {
+    // One student, by id. A malformed id is refused rather than turned into "everyone".
+    const id = String(a.userId || "");
+    if (!/^[0-9a-fA-F]{24}$/.test(id)) throw Object.assign(new Error("Choose the student"), { status: 400 });
+    return { kind, userId: id };
+  }
   return kind === "exam" ? { kind, exam: String(a.exam || "").trim() } : { kind };
 }
 
@@ -79,7 +87,9 @@ async function startBroadcast({ title, body, audience, screen }, { wait = false 
   const scr = SCREENS.includes(screen) ? screen : "";
   if (scr === "ExamSeries" && aud.kind !== "exam") throw fail(400, "Mock series opens one exam's mocks - choose an exam audience for it");
 
-  const recent = await Broadcast.findOne({ title: t, body: b, createdAt: { $gt: new Date(Date.now() - SAME_MESSAGE_GAP_MS) } }).lean();
+  // The same text to two different students is fine; the same text to the same audience twice in ten minutes is a double click.
+  const sameAudience = aud.kind === "user" ? { "audience.userId": aud.userId } : { "audience.kind": { $ne: "user" } };
+  const recent = await Broadcast.findOne({ title: t, body: b, ...sameAudience, createdAt: { $gt: new Date(Date.now() - SAME_MESSAGE_GAP_MS) } }).lean();
   if (recent) throw fail(409, "This exact message went out less than 10 minutes ago");
 
   const filter = audienceFilter(aud);
