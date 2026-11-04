@@ -62,6 +62,7 @@ module.exports = function makeMock({ name, want, hindiSubjects = [], spreadNumer
       if (!/=/.test(q.solution) && (String(q.solution).length < 26 || String(q.solutionHi).length < 26)) errs.push(`Q${n}: solution is too short (needs a real explanation)`);
       // The server rewrites "3 * 4" between digits into "3 × 4"; a made-up operator must use another symbol (@, #, $).
       if (/\d\s*\*\s*\d/.test(q.question + q.solution)) errs.push(`Q${n}: "*" between numbers is turned into × by the server - use @ or # for a made-up operator`);
+      if (/[a-zA-Z0-9)]^[a-zA-Z0-9(]/.test(q.question)) errs.push(`Q${n}: "^" is turned into a superscript by the server - write the superscript character directly`);
       // A plain numeric answer ("₹1,200", "45 km", "20%") must be named in its own solution.
       if (/^[₹−-]?[\d,.]+\s*(%|°|[A-Za-z²³]{0,6})?$/.test(ans.trim()) && !norm(q.solution).includes(norm(ans).replace(/[^\d.]/g, ""))) errs.push(`Q${n}: solution does not show the marked number ${ans}`);
     });
