@@ -57,6 +57,7 @@ module.exports = function makeMock({ name, want, hindiSubjects = [], spreadNumer
       if (!hindi && /[ऀ-ॿ]/.test(q.question + q.options.join("") + q.solution)) errs.push(`Q${n}: Hindi in the English text`);
       if (hindi && !/[ऀ-ॿ]/.test(q.question)) errs.push(`Q${n}: Hindi question has no Hindi`);
       // A numeric answer must be named in its own solution.
+      if (String(q.question).length < 17) errs.push(`Q${n}: question is very short :: ${q.question}`);
       const ans = q.options[L(q.correct)];
       // The upload check calls a solution under ~40 characters "too short to teach anything".
       if ((String(q.solution).length < 24) || (!/=/.test(q.solution) && (String(q.solution).length < 28 || String(q.solutionHi).length < 20))) errs.push(`Q${n}: solution is too short (needs a real explanation) :: ${String(q.question).slice(0,50)}`);
