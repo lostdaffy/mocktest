@@ -309,7 +309,7 @@
   "subject": "Maths",
   "topic": "Calculus",
   "difficulty": "medium",
-  "question": "What is the derivative of e^x · x at x = 0?",
+  "question": "What is the derivative of eˣ · x at x = 0?",
   "questionHi": "x = 0 पर eˣ · x का अवकलज क्या है?",
   "optionA": "2",
   "optionB": "0",
