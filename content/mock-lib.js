@@ -13,7 +13,7 @@
 const fs = require("fs");
 const path = require("path");
 
-module.exports = function makeMock({ name, want, hindiSubjects = [] }) {
+module.exports = function makeMock({ name, want, hindiSubjects = [], spreadNumeric = false }) {
   const Q = [];
   const add = (subject, topic, difficulty, question, questionHi, options, optionsHi, correct, solution, solutionHi, check) =>
     Q.push({ subject, topic, difficulty, question, questionHi, options, optionsHi: optionsHi || [...options], correct, solution, solutionHi, check });
@@ -24,7 +24,7 @@ module.exports = function makeMock({ name, want, hindiSubjects = [] }) {
   function done() {
     const orderMatters = (q) =>
       /Syllogism|Venn|Statement|Assumption|Conclusion|Course of Action/i.test(q.topic) ||
-      q.options.every((o) => /^[-−₹]?[\d,.]+/.test(o.trim())) ||
+      (!spreadNumeric && q.options.every((o) => /^[-−₹]?[\d,.]+/.test(o.trim()))) ||
       q.options.every((o) => /^[A-D]$/.test(o.trim())) || // "which part has the error": A, B, C, D name the parts
       q.options.some((o) => /^(Only|Both|Neither|All of|None of|केवल|न तो|दोनों|उपरोक्त|इनमें से कोई)/.test(o.trim()));
     const tally = () => { const c = { A: 0, B: 0, C: 0, D: 0 }; Q.forEach((q) => c[q.correct]++); return c; };
