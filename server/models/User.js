@@ -91,6 +91,15 @@ const userSchema = new mongoose.Schema(
       pyqUsed: { type: Number, default: 0 },
     },
 
+    // Coupon codes this person has already been given a plan with. Claimed
+    // atomically when a coupon payment lands, so one ₹1 coupon can't buy
+    // month after month - not even with two checkouts paid at once. Carried
+    // over if the same number deletes the account and signs up again.
+    usedCoupons: { type: [String], default: [], select: false },
+    // Which order claimed each coupon, so a repeat notice for that same
+    // payment (app retry, Razorpay webhook) is not mistaken for a second use.
+    couponClaims: { type: Map, of: String, default: undefined, select: false },
+
     // Bookmarked questions for later revision (separate from "marked for
     // review" which is a per-attempt, in-exam-only flag)
     bookmarkedQuestions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Question" }],

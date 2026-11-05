@@ -29,15 +29,23 @@ async function deleteAccountData(user) {
   // Recorded first: if anything below fails, the account still exists and
   // the deletion can simply be retried.
   if (phone) {
+    // Every coupon this account has had a plan with - from the account and
+    // from its paid orders (which stay behind for tax records).
+    const me = await require("../models/User").findById(userId).select("+usedCoupons").lean();
+    const paidCodes = await Subscription.distinct("couponCode", { user: userId, status: "paid", couponCode: { $nin: [null, ""] } });
+    const coupons = [...new Set([...(me?.usedCoupons || []), ...paidCodes])];
     await DeletedAccount.findOneAndUpdate(
       { phoneHash: hashPhone(phone) },
       {
-        freeUsage: {
-          mockTestsUsed: usage.mockTestsUsed || 0,
-          liveExamsUsed: usage.liveExamsUsed || 0,
-          pyqUsed: usage.pyqUsed || 0,
+        $set: {
+          freeUsage: {
+            mockTestsUsed: usage.mockTestsUsed || 0,
+            liveExamsUsed: usage.liveExamsUsed || 0,
+            pyqUsed: usage.pyqUsed || 0,
+          },
+          deletedAt: new Date(),
         },
-        deletedAt: new Date(),
+        $addToSet: { usedCoupons: { $each: coupons } },
       },
       { upsert: true }
     );

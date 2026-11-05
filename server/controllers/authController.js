@@ -408,6 +408,7 @@ async function signup(req, res) {
         referralCode: myReferralCode,
         referredBy,
         ...(priorAccount?.freeUsage ? { freeUsage: priorAccount.freeUsage } : {}),
+        ...(priorAccount?.usedCoupons?.length ? { usedCoupons: priorAccount.usedCoupons } : {}),
       });
     } catch (err) {
       // Two signups racing for the same phone/email - the unique indexes

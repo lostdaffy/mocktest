@@ -14,6 +14,9 @@ const deletedAccountSchema = new mongoose.Schema({
     liveExamsUsed: { type: Number, default: 0 },
     pyqUsed: { type: Number, default: 0 },
   },
+  // Coupons this number already used, so deleting the account and signing
+  // up again doesn't make a one-time coupon usable a second time.
+  usedCoupons: { type: [String], default: [] },
   deletedAt: { type: Date, default: Date.now },
 });
 

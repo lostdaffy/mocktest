@@ -268,6 +268,7 @@ function lastCode(ch, to) {
   await db.collection("tests").insertOne({ title: "personal practice", generatedForUser: oid });
   await db.collection("subscriptions").insertMany([
     { user: oid, plan: "yearly", amount: 449, startDate: new Date(), endDate: new Date(), status: "paid" },
+    { user: oid, plan: "monthly", amount: 1, couponCode: "DIWALI", startDate: new Date(), endDate: new Date(), status: "paid" },
     { user: oid, plan: "yearly", amount: 449, startDate: new Date(), endDate: new Date(), status: "created" },
   ]);
 
@@ -283,7 +284,7 @@ function lastCode(ch, to) {
     (await db.collection("reports").countDocuments({ reportedBy: oid })) === 0 &&
     (await db.collection("tests").countDocuments({ generatedForUser: oid })) === 0);
   const subsLeft = await db.collection("subscriptions").find({ user: oid }).toArray();
-  check("paid record kept for tax, unpaid order removed", subsLeft.length === 1 && subsLeft[0].status === "paid");
+  check("paid records kept for tax, unpaid order removed", subsLeft.length === 2 && subsLeft.every((x) => x.status === "paid"));
   const tombs = await db.collection("deletedaccounts").find({}).toArray();
   const tombText = JSON.stringify(tombs);
   check("left-behind record holds no phone/email/name", tombs.length === 1 && !tombText.includes(P10) && !tombText.includes(E10) && !tombText.includes("Del Me"));
@@ -297,6 +298,7 @@ function lastCode(ch, to) {
   const again = await db.collection("users").findOne({ phone: P10 });
   check("same number + email can sign up again", r.status === 201, `status ${r.status} ${r.json.message || ""}`);
   check("re-signup pays no second referral reward", (await credits()) === credAfterFirst, `credits ${await credits()}`);
+  check("re-signup keeps the coupons already used (no second ₹1 month)", again && (again.usedCoupons || []).includes("DIWALI"), JSON.stringify(again && again.usedCoupons));
   check("re-signup keeps already-used free tests", again && again.freeUsage && again.freeUsage.mockTestsUsed === 2, JSON.stringify(again && again.freeUsage));
 
   await db.collection("users").updateOne({ _id: again._id }, { $set: { role: "admin" } });

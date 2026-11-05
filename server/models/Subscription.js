@@ -27,6 +27,8 @@ const subscriptionSchema = new mongoose.Schema(
     razorpaySignature: { type: String },
 
     status: { type: String, enum: ["created", "paid", "failed"], default: "created" },
+    // Paid with a coupon this person had already used: recorded, no time added.
+    duplicateCoupon: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

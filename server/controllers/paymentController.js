@@ -88,11 +88,12 @@ async function createOrder(req, res) {
       // One coupon, one use per student. Without this, a single student can
       // buy again and again on the same code - each purchase is only one
       // use, so even maxUses can't stop them until the count runs out.
-      const alreadyUsed = await Subscription.findOne({
+      const claimed = await User.exists({ _id: req.user._id, usedCoupons: appliedCoupon.code });
+      const alreadyUsed = claimed || (await Subscription.findOne({
         user: req.user._id,
         couponCode: appliedCoupon.code,
         status: "paid",
-      });
+      }));
       if (alreadyUsed) {
         return res.status(400).json({ message: "You have already used this coupon" });
       }
@@ -176,6 +177,43 @@ async function activateSubscription({ razorpayOrderId, razorpayPaymentId, razorp
   if (subscription.status === "paid") return { ok: true, subscription, alreadyDone: true };
 
   const buyer = await User.findById(subscription.user);
+
+  // A coupon gives one plan per person. The claim is a single atomic write,
+  // so two checkouts opened on the same coupon and paid together can't both
+  // add a month. The second payment is recorded (the money was taken) but
+  // adds no time; it shows up in the log for a refund if anyone asks.
+  if (subscription.couponCode) {
+    const code = subscription.couponCode;
+    const slot = "couponClaims." + code.replace(/[.$]/g, "_");
+    const claim = await User.updateOne(
+      { _id: subscription.user, usedCoupons: { $ne: code }, [slot]: { $exists: false } },
+      { $addToSet: { usedCoupons: code }, $set: { [slot]: razorpayOrderId } }
+    );
+    let ours = claim.modifiedCount === 1;
+    if (!ours) {
+      // Already claimed - fine only if THIS order made the claim earlier.
+      const u = await User.findById(subscription.user).select("+couponClaims").lean();
+      ours = !!u?.couponClaims && u.couponClaims[code.replace(/[.$]/g, "_")] === razorpayOrderId;
+    }
+    const earlierPaid = await Subscription.exists({
+      user: subscription.user,
+      couponCode: code,
+      status: "paid",
+      _id: { $ne: subscription._id },
+    });
+    if (!ours || earlierPaid) {
+      const now = new Date();
+      subscription.razorpayPaymentId = razorpayPaymentId;
+      if (razorpaySignature) subscription.razorpaySignature = razorpaySignature;
+      subscription.status = "paid";
+      subscription.startDate = now;
+      subscription.endDate = now; // no time added
+      subscription.duplicateCoupon = true;
+      await subscription.save();
+      console.warn(`Coupon ${subscription.couponCode} paid a second time by user ${subscription.user} (order ${razorpayOrderId}) - no time added`);
+      return { ok: true, subscription, duplicateCoupon: true };
+    }
+  }
 
   // Renewal stacking. A student who renews EARLY must not lose the days
   // still left on their current plan - the new term starts the moment the

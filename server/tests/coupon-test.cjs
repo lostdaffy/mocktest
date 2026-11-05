@@ -186,6 +186,34 @@ function fakeRes() {
   check("app preview: DIWALI not valid on yearly", (await val("DIWALI", "yearly")).valid === false);
   r = await orderPlan(diwaliUser, "yearly", "OLD");
   check("a coupon with no plan list still follows the plan's own switch", r.statusCode === 400 && /expired/.test(r.body.message), r.body?.message);
+  // ---- one person, one use: two checkouts paid together give ONE month
+  await Coupon.create({ code: "ONCE", type: "fixed_price", value: 1, plans: ["monthly"] });
+  const twice = await mkUser(52);
+  const oA = await orderPlan(twice, "monthly", "ONCE");
+  const oB = await orderPlan(twice, "monthly", "ONCE");
+  check("same student can open two checkouts (own retry)", oA.statusCode === 200 && oB.statusCode === 200);
+  const idA = (await Subscription.findById(oA.body.subscriptionId)).razorpayOrderId;
+  const idB = (await Subscription.findById(oB.body.subscriptionId)).razorpayOrderId;
+  await Promise.all([pay(idA), pay(idB)]);
+  const tw = await User.findById(twice._id);
+  const days = Math.round((tw.subscriptionExpiresAt - Date.now()) / 86400000);
+  check("both paid at once -> only one month added", days >= 27 && days <= 32, `${days} days`);
+  const dupes = await Subscription.countDocuments({ user: twice._id, duplicateCoupon: true });
+  check("the second payment is recorded as a duplicate", dupes === 1, `duplicates ${dupes}`);
+  check("coupon counted once for that student", (await Coupon.findOne({ code: "ONCE" })).usedCount === 1);
+  r = await orderPlan(twice, "monthly", "ONCE");
+  check("a third try is refused at checkout", r.statusCode === 400 && /already used/.test(r.body.message), r.body?.message);
+
+  // ---- a repeat notice for the SAME payment (webhook after a crash) still grants it
+  const crash = await mkUser(53);
+  const oC = await orderPlan(crash, "monthly", "ONCE");
+  const subC = await Subscription.findById(oC.body.subscriptionId);
+  // as if the claim was written and the server died before saving the order
+  await User.updateOne({ _id: crash._id }, { $addToSet: { usedCoupons: "ONCE" }, $set: { "couponClaims.ONCE": subC.razorpayOrderId } });
+  await pay(subC.razorpayOrderId);
+  const cr = await User.findById(crash._id);
+  check("retry of the claiming order still adds the month", cr.subscriptionStatus === "active" && !(await Subscription.findById(subC._id)).duplicateCoupon);
+
   const dw = await Coupon.findOne({ code: "DIWALI" });
   const pr = fakeRes();
   await setCouponPlans({ params: { id: dw._id }, body: { plans: [] } }, pr);
