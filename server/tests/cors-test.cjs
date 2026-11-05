@@ -59,11 +59,12 @@ const stop = async (srv) => { srv.kill("SIGKILL"); await new Promise((r) => srv.
   check("the log says which origins it fell back to", /falling back to https:\/\/rankveer\.com/.test(srv.log));
   await stop(srv);
 
-  // ---- an explicit allowlist replaces the default
+  // ---- an explicit allowlist adds to the default
   srv = await startServer(uri, { NODE_ENV: "production", ALLOWED_ORIGINS: "https://admin.rankveer.com" });
   check("a configured allowlist is used", (await allowedFor("https://admin.rankveer.com")) === "https://admin.rankveer.com");
-  check("...and it replaces the default rather than adding to it",
-    (await allowedFor("https://rankveer.com")) === null, String(await allowedFor("https://rankveer.com")));
+  check("...and the real site stays allowed alongside it",
+    (await allowedFor("https://rankveer.com")) === "https://rankveer.com", String(await allowedFor("https://rankveer.com")));
+  check("...but localhost is still refused in production", (await allowedFor("http://localhost:5173")) === null);
   await stop(srv);
 
   // ---- development

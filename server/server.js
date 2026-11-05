@@ -115,26 +115,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS allowlist. ALLOWED_ORIGINS (comma-separated) overrides the default.
-// The sites this API is actually for. Used when ALLOWED_ORIGINS is not set,
-// so the safe behaviour is the DEFAULT rather than something that has to be
-// remembered. This used to fall back to allowing every website, which was
-// the right call while the domains didn't exist yet - but the domains are
-// live now, and a deployment that forgets one environment variable should
-// not quietly reopen the API to the whole web.
-
-
-
-// isme localhost ko hta kar commit karna hai dobara se and render pe bhi karna hai 
-const DEFAULT_ORIGINS = ["https://rankveer.com", "https://www.rankveer.com","http://localhost:5173"];
+// CORS allowlist. The sites this API is actually for are always allowed;
+// ALLOWED_ORIGINS (comma-separated) adds more. Localhost is never on this
+// list - outside production any localhost port is allowed further down.
+const DEFAULT_ORIGINS = ["https://rankveer.com", "https://www.rankveer.com"];
 
 const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
-
-// const allowedOrigins = configuredOrigins.length ? configuredOrigins : DEFAULT_ORIGINS;
-
 
 const allowedOrigins = [
   ...new Set([...DEFAULT_ORIGINS, ...configuredOrigins]),
@@ -256,6 +245,7 @@ app.post("/api/auth/signup/request-otp", authLimit(5, phoneKey), authLimit(30));
 app.post("/api/auth/signup", authLimit(15, phoneKey));
 app.post("/api/auth/forgot-password", authLimit(5, phoneKey), authLimit(60));
 app.post("/api/auth/reset-password", authLimit(10, phoneKey), authLimit(60));
+app.post("/api/auth/change-password", authLimit(20));
 
 // Health check. Reports the DATABASE state too, because "the web server is
 // up" is not the same as "the app works" - a server that can't reach Mongo

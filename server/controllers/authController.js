@@ -272,7 +272,7 @@ async function sendSignupOtp(req, res) {
 
   try {
     if (!PHONE_RE.test(phone)) {
-      return res.status(400).json({ message: "Valid 10-digit Indian mobile number daalo" });
+      return res.status(400).json({ message: "Please enter a valid 10-digit Indian mobile number" });
     }
 
     const existing = await User.findOne({ phone });
@@ -339,7 +339,7 @@ async function signup(req, res) {
       return res.status(400).json({ message: "Name, phone, email and password are all required" });
     }
     if (!PHONE_RE.test(phone)) {
-      return res.status(400).json({ message: "Valid 10-digit Indian mobile number daalo" });
+      return res.status(400).json({ message: "Please enter a valid 10-digit Indian mobile number" });
     }
     // Email is required because it's the only way to reset a forgotten
     // password - an account without one could be lost for good.
@@ -450,7 +450,7 @@ async function login(req, res) {
     const phone = String(req.body.phone || "").trim();
     const { password } = req.body;
     if (!phone || !password) {
-      return res.status(400).json({ message: "Phone aur password dono daalo" });
+      return res.status(400).json({ message: "Please enter both your phone number and password" });
     }
 
     const user = await User.findOne({ phone }).select("+passwordHash +failedLoginAttempts +lockUntil");
@@ -617,7 +617,7 @@ async function forgotPassword(req, res) {
   try {
     const phone = String(req.body.phone || "").trim();
     if (!PHONE_RE.test(phone)) {
-      return res.status(400).json({ message: "Valid 10-digit mobile number daalo" });
+      return res.status(400).json({ message: "Please enter a valid 10-digit mobile number" });
     }
 
     const user = await User.findOne({ phone });
@@ -721,6 +721,56 @@ async function resetPassword(req, res) {
   }
 }
 
+// POST /api/auth/change-password  { currentPassword, newPassword }
+// For a signed-in student who knows their password. Every other device is
+// signed out; this one stays signed in.
+async function changePassword(req, res) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Enter your current password and a new password" });
+    }
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ message: "New password must be at least 6 characters" });
+    }
+
+    const me = await User.findById(req.user._id).select("+passwordHash");
+    // A legacy account with no password has nothing to check against, so it
+    // goes through the emailed code instead.
+    if (!me.passwordHash) {
+      return res.status(400).json({
+        message: 'This account has no password yet. Sign out and use "Forgot password" to set one.',
+        code: "NO_PASSWORD_SET",
+      });
+    }
+
+    // Wrong answers count towards the same lock as login.
+    const denied = await recheckPassword(req.user._id, currentPassword, "Your current password is wrong");
+    if (denied) return res.status(denied.status).json(denied.body);
+
+    if (await bcrypt.compare(String(newPassword), me.passwordHash)) {
+      return res.status(400).json({ message: "The new password must be different from the current one" });
+    }
+
+    me.passwordHash = await bcrypt.hash(String(newPassword), 10);
+    // An emailed reset code from before the change must not still work.
+    me.passwordResetOTPHash = undefined;
+    me.passwordResetExpires = undefined;
+    me.passwordResetAttempts = 0;
+    await me.save();
+
+    const others = await Session.updateMany(
+      { user: me._id, revokedAt: null, _id: { $ne: req.sessionId } },
+      { $set: { revokedAt: new Date(), revokedReason: "password changed" } }
+    );
+
+    res.json({ message: "Password changed", signedOutOthers: others.modifiedCount });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Your password could not be changed. Please try again in a little while." });
+  }
+}
+
 // POST /api/auth/delete-account  { password }
 // In-app account deletion (a Play Store requirement). Removes everything
 // rankveer.com/delete-account says is removed. Paid subscription records
@@ -756,6 +806,7 @@ module.exports = {
   registerPushToken,
   forgotPassword,
   resetPassword,
+  changePassword,
   deleteAccount,
   listSessions,
   revokeSession,

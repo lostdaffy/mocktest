@@ -9,6 +9,7 @@ const {
   registerPushToken,
   forgotPassword,
   resetPassword,
+  changePassword,
   deleteAccount,
   listSessions,
   revokeSession,
@@ -23,6 +24,7 @@ router.post("/signup", asyncRoute(signup));
 router.post("/login", asyncRoute(login)); // phone + password
 router.post("/forgot-password", asyncRoute(forgotPassword)); // reset code by EMAIL
 router.post("/reset-password", asyncRoute(resetPassword)); // reset password using the emailed code
+router.post("/change-password", protect, asyncRoute(changePassword)); // signed-in student who knows the current password
 router.get("/me", protect, asyncRoute(getMe));
 router.patch("/profile", protect, asyncRoute(updateProfile));
 router.post("/push-token", protect, asyncRoute(registerPushToken));

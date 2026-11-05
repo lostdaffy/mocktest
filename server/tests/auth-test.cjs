@@ -232,6 +232,25 @@ function lastCode(ch, to) {
   const leaked = ["passwordHash", "passwordResetOTPHash", "failedLoginAttempts", "lockUntil", "activeSessionId"].filter((k) => k in (r.json.user || {}));
   check("/auth/me leaks no auth internals", r.status === 200 && leaked.length === 0, leaked.join(","));
 
+  // ---- change password (signed in, knows the current one)
+  r = await api("POST", "/auth/login", { phone: P2, password: "secret123" });
+  const tokenP2 = r.json.token;
+  check("change password needs sign-in", (await api("POST", "/auth/change-password", { currentPassword: "secret123", newPassword: "changed1" })).status === 401);
+  r = await api("POST", "/auth/change-password", { currentPassword: "secret123" }, tokenP2);
+  check("change password without new password refused", r.status === 400);
+  r = await api("POST", "/auth/change-password", { currentPassword: "secret123", newPassword: "abc" }, tokenP2);
+  check("change password: new one too short refused", r.status === 400 && /at least 6/.test(r.json.message));
+  r = await api("POST", "/auth/change-password", { currentPassword: "wrongpw", newPassword: "changed1" }, tokenP2);
+  check("change password with wrong current password refused", r.status === 401 && r.json.code === "PASSWORD_REQUIRED");
+  r = await api("POST", "/auth/change-password", { currentPassword: "secret123", newPassword: "secret123" }, tokenP2);
+  check("change password to the same password refused", r.status === 400 && /different/.test(r.json.message));
+  r = await api("POST", "/auth/change-password", { currentPassword: "secret123", newPassword: "changed1" }, tokenP2);
+  check("change password with correct current password works", r.status === 200, r.json.message);
+  check("this device stays signed in after the change", (await api("GET", "/auth/me", null, tokenP2)).status === 200);
+  check("old password no longer logs in", (await api("POST", "/auth/login", { phone: P2, password: "secret123" })).status === 401);
+  r = await api("POST", "/auth/login", { phone: P2, password: "changed1" });
+  check("new password logs in", r.status === 200);
+
   // ---- in-app account deletion
   const P10 = "9000000010", E10 = "del.me@test.com";
   const refCode = (await db.collection("users").findOne({ phone: P2 })).referralCode;
