@@ -170,8 +170,11 @@ const callsFor = (level) =>
   await db.collection("queuestates").updateOne({ key: "generation" }, { $set: { resumableAfter: new Date(Date.now() - 1000) } });
   await sleep(7000); // more than one worker tick
   st = await api("GET", "/generation/status", { token });
-  check("the queue does NOT start by itself once the reset has passed - the team resumes it",
-    st.json.paused === true, st.json.pausedReason);
+  // Since 2026-10-22 (0dfcf79) an allowance pause lifts itself once the
+  // allowance has reset, so the queue carries on overnight with nobody at
+  // the panel. Only a pause the admin made waits for Resume (checked below).
+  check("the queue starts again by itself once the reset has passed",
+    st.json.paused === false && !st.json.resumableAfter, `${st.json.paused} · ${st.json.pausedReason}`);
 
   // ...whereas a pause by a person has no time at all.
   await api("POST", "/generation/pause", { token });

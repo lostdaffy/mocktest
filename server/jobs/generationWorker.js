@@ -1,6 +1,7 @@
 const GenerationJob = require("../models/GenerationJob");
 const QueueState = require("../models/QueueState");
 const { resumeTime, istTime } = require("../utils/aiAllowance");
+const { clearCached } = require("../services/generationCache");
 
 // One job at a time, on purpose.
 //
@@ -358,6 +359,9 @@ async function runGenerationTick() {
   } finally {
     running = false;
     currentJobId = null;
+    // What is built (or how far a mock got) has changed: the panel must not
+    // keep showing the answer it worked out before this job.
+    clearCached();
   }
 }
 
