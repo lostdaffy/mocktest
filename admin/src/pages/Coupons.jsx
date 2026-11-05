@@ -24,6 +24,7 @@ export default function Coupons() {
   const [value, setValue] = useState("");
   const [maxUses, setMaxUses] = useState("");
   const [note, setNote] = useState("");
+  const [validTill, setValidTill] = useState(""); // "YYYY-MM-DD", last day the coupon works (IST)
   const [planKeys, setPlanKeys] = useState([]); // plans the new coupon works on
   const [plans, setPlans] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -60,6 +61,8 @@ export default function Coupons() {
         type,
         value: Number(value),
         maxUses: maxUses ? Number(maxUses) : null,
+        // Works through the whole of the last day in India.
+        expiresAt: validTill ? new Date(`${validTill}T23:59:59+05:30`).toISOString() : null,
         note,
         plans: planKeys,
       });
@@ -68,6 +71,7 @@ export default function Coupons() {
       setValue("");
       setMaxUses("");
       setNote("");
+      setValidTill("");
       setPlanKeys([]);
       setShowForm(false);
       setTab("active");
@@ -79,6 +83,10 @@ export default function Coupons() {
     }
   }
 
+  const tillText = (c) =>
+    c.expiresAt
+      ? `${new Date(c.expiresAt) < new Date() ? "Ended" : "Till"} ${new Date(c.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}`
+      : "No end date";
   const planName = (key) => plans.find((p) => p.key === key)?.name || key;
   const planLabel = (c) => (c.plans?.length ? c.plans.map(planName).join(", ") : "All plans with coupons on");
 
@@ -173,7 +181,16 @@ export default function Coupons() {
               <p className="text-xs text-warn mt-2">A picked plan has coupons switched off, so this coupon won't work there until you switch them on in Plans.</p>
             )}
           </div>
-          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (e.g. 'Diwali offer, ends 15 Nov')" className="w-full mt-3 rv-input text-sm" />
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate mb-1.5">Valid till (last day, optional)</label>
+              <input type="date" value={validTill} onChange={(e) => setValidTill(e.target.value)} className="rv-input" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate mb-1.5">Note</label>
+              <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Diwali offer, 1 Month for ₹1" className="w-full rv-input text-sm" />
+            </div>
+          </div>
         </form>
       )}
 
@@ -242,7 +259,10 @@ export default function Coupons() {
                         <p className="text-ink-soft font-medium">{worth(c)}</p>
                         <p className="text-[11px] text-slate-soft">{TYPE_LABELS[c.type]}</p>
                       </td>
-                      <td className="px-4 py-3 text-xs text-ink-soft max-w-[200px]">{planLabel(c)}</td>
+                      <td className="px-4 py-3 text-xs text-ink-soft max-w-[200px]">
+                        {planLabel(c)}
+                        <p className={`text-[11px] ${c.expiresAt && new Date(c.expiresAt) < new Date() ? "text-danger" : "text-slate-soft"}`}>{tillText(c)}</p>
+                      </td>
                       <td className="px-4 py-3">
                         {c.maxUses ? (
                           <div className="flex items-center gap-2">
