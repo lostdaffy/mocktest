@@ -157,6 +157,40 @@ function fakeRes() {
   r = await order(racers[0], "NOPE");
   check("unknown coupon refused", r.statusCode === 400, r.body?.message);
 
+  // ---- a coupon made for one plan works only on that plan (Diwali ₹1 on 1 Month)
+  const Plan = require(path.join(SERVER, "models/Plan"));
+  const { clearPlanCache } = require(path.join(SERVER, "services/plans"));
+  const { validateCoupon, createCoupon, setCouponPlans } = require(path.join(SERVER, "controllers/couponController"));
+  await Plan.updateOne({ key: "monthly" }, { couponsAllowed: true });
+  await Plan.updateOne({ key: "yearly" }, { couponsAllowed: false });
+  clearPlanCache();
+  const make = async (body) => { const res = fakeRes(); await createCoupon({ body }, res); return res; };
+  r = await make({ code: "diwali", type: "fixed_price", value: 1, plans: ["monthly"] });
+  check("coupon can be made for the 1 Month plan only", r.statusCode === 201 && r.body.coupon.plans.join() === "monthly", JSON.stringify(r.body?.coupon?.plans));
+  r = await make({ code: "BADPLAN", type: "percent", value: 10, plans: ["monthly", "no_such_plan"] });
+  check("unknown plan in the list is refused", r.statusCode === 400 && /Unknown plan/.test(r.body.message), r.body?.message);
+
+  const orderPlan = async (user, plan, code) => { const res = fakeRes(); await createOrder({ body: { plan, couponCode: code }, user: { _id: user._id } }, res); return res; };
+  const diwaliUser = await mkUser(51);
+  r = await orderPlan(diwaliUser, "monthly", "DIWALI");
+  check("DIWALI on 1 Month: ₹59 -> ₹1", r.statusCode === 200 && r.body.finalAmount === 1, `${r.statusCode} ${r.body?.finalAmount ?? r.body?.message}`);
+  r = await orderPlan(diwaliUser, "yearly", "DIWALI");
+  check("DIWALI on a plan with coupons off is refused", r.statusCode === 400, r.body?.message);
+  // Even if the yearly plan takes coupons again later, DIWALI stays 1-Month-only.
+  await Plan.updateOne({ key: "yearly" }, { couponsAllowed: true });
+  clearPlanCache();
+  r = await orderPlan(diwaliUser, "yearly", "DIWALI");
+  check("DIWALI refused on yearly even when yearly takes coupons", r.statusCode === 400 && /not valid for this plan/.test(r.body.message), r.body?.message);
+  const val = async (code, plan) => { const res = fakeRes(); await validateCoupon({ query: { code, plan } }, res); return res.body; };
+  check("app preview: DIWALI valid on 1 Month", (await val("DIWALI", "monthly")).finalAmount === 1);
+  check("app preview: DIWALI not valid on yearly", (await val("DIWALI", "yearly")).valid === false);
+  r = await orderPlan(diwaliUser, "yearly", "OLD");
+  check("a coupon with no plan list still follows the plan's own switch", r.statusCode === 400 && /expired/.test(r.body.message), r.body?.message);
+  const dw = await Coupon.findOne({ code: "DIWALI" });
+  const pr = fakeRes();
+  await setCouponPlans({ params: { id: dw._id }, body: { plans: [] } }, pr);
+  check("plan list can be cleared from the admin", pr.statusCode === 200 && pr.body.coupon.plans.length === 0);
+
   await mongoose.disconnect();
   await mem.stop();
 

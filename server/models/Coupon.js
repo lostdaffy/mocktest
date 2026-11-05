@@ -16,6 +16,10 @@ const couponSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     expiresAt: { type: Date, default: null },
 
+    // Plan keys this coupon works on (e.g. ["monthly"]). Empty = every plan
+    // that takes coupons, which is how coupons made before this field work.
+    plans: { type: [String], default: [] },
+
     note: { type: String }, // admin-facing reminder of what this coupon is for
   },
   { timestamps: true }

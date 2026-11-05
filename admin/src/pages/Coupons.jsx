@@ -24,13 +24,16 @@ export default function Coupons() {
   const [value, setValue] = useState("");
   const [maxUses, setMaxUses] = useState("");
   const [note, setNote] = useState("");
+  const [planKeys, setPlanKeys] = useState([]); // plans the new coupon works on
+  const [plans, setPlans] = useState([]);
   const [saving, setSaving] = useState(false);
 
   async function load() {
     setLoading(true);
     try {
-      const res = await api.get("/admin/coupons");
+      const [res, pl] = await Promise.all([api.get("/admin/coupons"), api.get("/admin/plans").catch(() => ({ data: { plans: [] } }))]);
       setCoupons(res.data.coupons);
+      setPlans((pl.data.plans || []).filter((p) => !p.archivedAt));
     } finally {
       setLoading(false);
     }
@@ -46,6 +49,10 @@ export default function Coupons() {
       toast.error("Enter both a code and a value");
       return;
     }
+    if (!planKeys.length) {
+      toast.error("Pick the plan(s) this coupon works on");
+      return;
+    }
     setSaving(true);
     try {
       await api.post("/admin/coupons", {
@@ -54,12 +61,14 @@ export default function Coupons() {
         value: Number(value),
         maxUses: maxUses ? Number(maxUses) : null,
         note,
+        plans: planKeys,
       });
       toast.success(`Coupon "${code}" created`);
       setCode("");
       setValue("");
       setMaxUses("");
       setNote("");
+      setPlanKeys([]);
       setShowForm(false);
       setTab("active");
       load();
@@ -69,6 +78,9 @@ export default function Coupons() {
       setSaving(false);
     }
   }
+
+  const planName = (key) => plans.find((p) => p.key === key)?.name || key;
+  const planLabel = (c) => (c.plans?.length ? c.plans.map(planName).join(", ") : "All plans with coupons on");
 
   async function handleToggle(c) {
     await api.patch(`/admin/coupons/${c._id}/toggle`);
@@ -98,7 +110,7 @@ export default function Coupons() {
       <PageHeader
         eyebrow="Billing"
         title="Coupons"
-        subtitle="Discount codes for subscriptions — for testing, launch offers, or a manual discount for one student. The 1 Month plan does not take coupons."
+        subtitle="Discount codes for subscriptions. Each coupon works only on the plans you pick, and only while that plan has coupons switched on (Plans page)."
         actions={
           <button onClick={() => setShowForm((v) => !v)} className="rv-btn-primary">
             <RiAddLine size={16} /> {showForm ? "Close" : "New coupon"}
@@ -139,7 +151,29 @@ export default function Coupons() {
               {saving ? "Saving..." : "Create"}
             </button>
           </div>
-          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (e.g. 'Launch week offer, ends Sept 1')" className="w-full mt-3 rv-input text-sm" />
+          <div className="mt-4">
+            <p className="text-xs font-medium text-slate mb-1.5">Works on these plans</p>
+            <div className="flex flex-wrap gap-2">
+              {plans.map((p) => {
+                const on = planKeys.includes(p.key);
+                return (
+                  <button
+                    type="button"
+                    key={p.key}
+                    onClick={() => setPlanKeys((ks) => (on ? ks.filter((k) => k !== p.key) : [...ks, p.key]))}
+                    className={`text-sm font-semibold px-3 py-1.5 rounded-full border transition-colors ${on ? "bg-brand text-white border-brand" : "bg-white text-ink-soft border-border hover:border-brand"}`}
+                  >
+                    {p.name} · ₹{p.price}
+                    {!p.couponsAllowed && <span className={`ml-1.5 text-[11px] font-medium ${on ? "text-white/80" : "text-warn"}`}>(coupons off)</span>}
+                  </button>
+                );
+              })}
+            </div>
+            {planKeys.some((k) => plans.find((p) => p.key === k && !p.couponsAllowed)) && (
+              <p className="text-xs text-warn mt-2">A picked plan has coupons switched off, so this coupon won't work there until you switch them on in Plans.</p>
+            )}
+          </div>
+          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (e.g. 'Diwali offer, ends 15 Nov')" className="w-full mt-3 rv-input text-sm" />
         </form>
       )}
 
@@ -190,6 +224,7 @@ export default function Coupons() {
                 <tr className="bg-slate-light/60 text-left text-[11px] font-semibold uppercase tracking-wide text-slate">
                   <th className="px-4 py-3">Code</th>
                   <th className="px-4 py-3">Discount</th>
+                  <th className="px-4 py-3">Plans</th>
                   <th className="px-4 py-3 min-w-[150px]">Used</th>
                   <th className="px-4 py-3">Note</th>
                   <th className="px-4 py-3 text-right">Actions</th>
@@ -207,6 +242,7 @@ export default function Coupons() {
                         <p className="text-ink-soft font-medium">{worth(c)}</p>
                         <p className="text-[11px] text-slate-soft">{TYPE_LABELS[c.type]}</p>
                       </td>
+                      <td className="px-4 py-3 text-xs text-ink-soft max-w-[200px]">{planLabel(c)}</td>
                       <td className="px-4 py-3">
                         {c.maxUses ? (
                           <div className="flex items-center gap-2">

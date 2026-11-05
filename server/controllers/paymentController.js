@@ -77,7 +77,7 @@ async function createOrder(req, res) {
       // stacking with it - keeps the pricing unambiguous instead of
       // needing rules for how two discounts combine.
       try {
-        const result = await resolveCoupon(couponCode, basePrice);
+        const result = await resolveCoupon(couponCode, basePrice, planDoc.key);
         appliedCoupon = result.coupon;
         finalAmount = result.finalAmount;
         discount = basePrice - finalAmount;
