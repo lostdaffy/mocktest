@@ -172,7 +172,8 @@ export default function ForgotPasswordScreen({
                 "Login"
               ),
           },
-        ]
+        ],
+        { type: "success" }
       );
     } catch (err) {
       // Code used up: send them back to request a fresh one instead

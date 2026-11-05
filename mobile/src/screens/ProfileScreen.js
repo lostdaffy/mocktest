@@ -107,6 +107,31 @@ export default function ProfileScreen({
     useState("");
 
   /* =======================================================
+     CHANGE PASSWORD
+  ======================================================= */
+
+  const [pwOpen, setPwOpen] =
+    useState(false);
+
+  const [pwCurrent, setPwCurrent] =
+    useState("");
+
+  const [pwNew, setPwNew] =
+    useState("");
+
+  const [pwConfirm, setPwConfirm] =
+    useState("");
+
+  const [pwShow, setPwShow] =
+    useState(false);
+
+  const [pwError, setPwError] =
+    useState("");
+
+  const [pwSaving, setPwSaving] =
+    useState(false);
+
+  /* =======================================================
      DELETE ACCOUNT (Play Store requires this in-app)
   ======================================================= */
 
@@ -328,6 +353,78 @@ export default function ProfileScreen({
       );
     } finally {
       setSavingLang(false);
+    }
+  }
+
+  /* =======================================================
+     CHANGE PASSWORD
+  ======================================================= */
+
+  function openChangePassword() {
+    setPwCurrent("");
+    setPwNew("");
+    setPwConfirm("");
+    setPwShow(false);
+    setPwError("");
+    setPwOpen(true);
+  }
+
+  async function confirmChangePassword() {
+    if (!pwCurrent) {
+      setPwError("Enter your current password");
+      return;
+    }
+
+    if (pwNew.length < 6) {
+      setPwError("New password must be at least 6 characters");
+      return;
+    }
+
+    if (pwNew !== pwConfirm) {
+      setPwError("The new passwords do not match");
+      return;
+    }
+
+    if (pwNew === pwCurrent) {
+      setPwError("The new password must be different from the current one");
+      return;
+    }
+
+    setPwSaving(true);
+    setPwError("");
+
+    try {
+      const res = await api.post(
+        "/auth/change-password",
+        {
+          currentPassword: pwCurrent,
+          newPassword: pwNew,
+        }
+      );
+
+      setPwOpen(false);
+      setPwCurrent("");
+      setPwNew("");
+      setPwConfirm("");
+
+      const others =
+        res.data?.signedOutOthers || 0;
+
+      AppAlert.alert(
+        "Password changed",
+        others
+          ? `Your new password is saved. You were signed out on ${others} other device${others === 1 ? "" : "s"}.`
+          : "Your new password is saved. Use it the next time you sign in.",
+        [{ text: "OK" }],
+        { type: "success" }
+      );
+    } catch (err) {
+      setPwError(
+        err.response?.data?.message ||
+          "Couldn't change the password. Please try again."
+      );
+    } finally {
+      setPwSaving(false);
     }
   }
 
@@ -1174,6 +1271,67 @@ export default function ProfileScreen({
           </View>
 
           {/* =================================================
+              CHANGE PASSWORD
+          ================================================= */}
+
+          <TouchableOpacity
+            style={[
+              styles.logoutCard,
+              styles.pwCard,
+            ]}
+            onPress={
+              openChangePassword
+            }
+            activeOpacity={0.78}
+          >
+            <View
+              style={[
+                styles.logoutIcon,
+                styles.pwIcon,
+              ]}
+            >
+              <Ionicons
+                name="key-outline"
+                size={20}
+                color={
+                  colors.brand
+                }
+              />
+            </View>
+
+            <View
+              style={
+                styles.logoutInfo
+              }
+            >
+              <Text
+                style={[
+                  styles.logoutTitle,
+                  styles.pwTitle,
+                ]}
+              >
+                Change password
+              </Text>
+
+              <Text
+                style={
+                  styles.logoutSubtitle
+                }
+              >
+                Set a new password for this account
+              </Text>
+            </View>
+
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={
+                colors.brand
+              }
+            />
+          </TouchableOpacity>
+
+          {/* =================================================
               LOGOUT
           ================================================= */}
 
@@ -1438,6 +1596,161 @@ export default function ProfileScreen({
                     }
                   >
                     Save
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* =====================================================
+          CHANGE PASSWORD MODAL
+      ===================================================== */}
+
+      <Modal
+        visible={pwOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() =>
+          !pwSaving &&
+          setPwOpen(false)
+        }
+      >
+        <View
+          style={
+            styles.modalBackdrop
+          }
+        >
+          <View
+            style={
+              styles.modalCard
+            }
+          >
+            <Text
+              style={
+                styles.modalTitle
+              }
+            >
+              Change password
+            </Text>
+
+            <Text
+              style={
+                styles.modalSubtitle
+              }
+            >
+              Other phones signed in to this account will be signed out.
+            </Text>
+
+            {[
+              ["Current password", pwCurrent, setPwCurrent],
+              ["New password (min 6 characters)", pwNew, setPwNew],
+              ["Confirm new password", pwConfirm, setPwConfirm],
+            ].map(([label, value, setValue], i) => (
+              <TextInput
+                key={label}
+                style={[
+                  styles.modalInput,
+                  i > 0 && { marginTop: 10 },
+                ]}
+                value={value}
+                onChangeText={(text) => {
+                  setValue(text);
+                  setPwError("");
+                }}
+                placeholder={label}
+                placeholderTextColor={
+                  colors.slateSoft
+                }
+                secureTextEntry={!pwShow}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoFocus={i === 0}
+                returnKeyType={i === 2 ? "done" : "next"}
+                onSubmitEditing={
+                  i === 2
+                    ? confirmChangePassword
+                    : undefined
+                }
+              />
+            ))}
+
+            <TouchableOpacity
+              style={styles.pwShowRow}
+              activeOpacity={0.7}
+              onPress={() =>
+                setPwShow(!pwShow)
+              }
+            >
+              <Ionicons
+                name={pwShow ? "eye-off-outline" : "eye-outline"}
+                size={16}
+                color={colors.slate}
+              />
+              <Text style={styles.pwShowText}>
+                {pwShow ? "Hide passwords" : "Show passwords"}
+              </Text>
+            </TouchableOpacity>
+
+            {pwError ? (
+              <Text
+                style={
+                  styles.modalError
+                }
+              >
+                {pwError}
+              </Text>
+            ) : null}
+
+            <View
+              style={
+                styles.modalActions
+              }
+            >
+              <TouchableOpacity
+                style={
+                  styles.modalCancel
+                }
+                activeOpacity={0.8}
+                disabled={pwSaving}
+                onPress={() =>
+                  setPwOpen(false)
+                }
+              >
+                <Text
+                  style={
+                    styles.modalCancelText
+                  }
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modalSave,
+                  pwSaving &&
+                    styles.modalSaveDisabled,
+                ]}
+                activeOpacity={0.85}
+                disabled={pwSaving}
+                onPress={
+                  confirmChangePassword
+                }
+              >
+                {pwSaving ? (
+                  <ActivityIndicator
+                    size="small"
+                    color="#FFFFFF"
+                  />
+                ) : (
+                  <Text
+                    style={
+                      styles.modalSaveText
+                    }
+                  >
+                    Change
                   </Text>
                 )}
               </TouchableOpacity>
@@ -2669,6 +2982,38 @@ const makeStyles =
     logoutInfo: {
       flex: 1,
       minWidth: 0,
+    },
+
+    pwCard: {
+      marginBottom: 10,
+      backgroundColor:
+        softBg(colors, colors.brandTint),
+      borderColor:
+        colors.border,
+    },
+
+    pwIcon: {
+      backgroundColor:
+        softBg(colors, colors.brandLight),
+    },
+
+    pwTitle: {
+      color: colors.brand,
+    },
+
+    pwShowRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 10,
+      alignSelf: "flex-start",
+      paddingVertical: 4,
+    },
+
+    pwShowText: {
+      marginLeft: 6,
+      fontSize: 12.5,
+      fontWeight: "600",
+      color: colors.slate,
     },
 
     deleteCard: {
