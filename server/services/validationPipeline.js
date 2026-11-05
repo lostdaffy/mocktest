@@ -305,8 +305,9 @@ function sameFactInPaper(a, b) {
 // Greek is judged apart: a single Greek letter is maths and physics notation
 // (θ, α, β, π, λ, Ω, μ) and every trigonometry, algebra and electricity
 // question needs it. Only Greek words - three or more Greek letters in a
-// row - are leaked text.
-const FOREIGN_SCRIPT = /[Ѐ-ӿ؀-ۿঀ-෿一-鿿]|[Ͱ-Ͽ]{3,}/;
+// row - are leaked text. So is any Greek letter glued to a Devanagari one
+// inside a word ('प्रश्ναनुसार'): notation stands apart ('θ का मान').
+const FOREIGN_SCRIPT = /[Ѐ-ӿ؀-ۿঀ-෿一-鿿]|[Ͱ-Ͽ]{3,}|[ऀ-ॣ०-ॿ][Ͱ-Ͽ]|[Ͱ-Ͽ][ऀ-ॣ०-ॿ]/;
 // A Latin letter glued to a Devanagari letter, inside one word ('स्कanner',
 // 'pitraaदेशः'). The danda is left out: "HCF × LCM।" is a sentence ending.
 const LATIN_INSIDE_HINDI_WORD = /[ऀ-ॣ०-ॿ][A-Za-z]|[A-Za-z][ऀ-ॣ०-ॿ]/;

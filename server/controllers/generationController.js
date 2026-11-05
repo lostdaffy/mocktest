@@ -4,24 +4,9 @@ const { findGaps, coverage } = require("../services/generationGaps");
 const { GEMINI_MODELS, currentModel } = require("../services/geminiService");
 const { nextAllowanceReset } = require("../utils/aiAllowance");
 
-// coverage() and findGaps() walk the whole catalog. On the free instance one
-// call took ~28 s, and the Generation page asked for both every 2.5 s, so
-// calls piled up and slowed every other request. They change only when a job
-// finishes, so one answer is shared for a minute - and calls that arrive while
-// one is being worked out wait for that one instead of starting their own.
-const memo = new Map();
-function cached(key, ttlMs, fn) {
-  const hit = memo.get(key);
-  if (hit && (hit.pending || Date.now() - hit.at < ttlMs)) return hit.promise;
-  const entry = { at: Date.now(), pending: true };
-  entry.promise = fn().then(
-    (v) => ((entry.pending = false), (entry.at = Date.now()), v),
-    (e) => (memo.delete(key), Promise.reject(e))
-  );
-  memo.set(key, entry);
-  return entry.promise;
-}
-const clearCached = () => memo.clear();
+// Coverage and gaps are shared for a minute (services/generationCache.js);
+// the worker clears them when a job ends, these handlers when one is queued.
+const { cached, clearCached } = require("../services/generationCache");
 
 // GET /api/generation/status (admin)
 //
