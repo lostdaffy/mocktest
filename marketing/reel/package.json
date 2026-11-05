@@ -1,0 +1,10 @@
+{
+  "name": "rankveer-reel",
+  "private": true,
+  "description": "Builds a short vertical marketing reel: Hindi TTS + HTML animation rendered with Chrome, joined with ffmpeg.",
+  "dependencies": {
+    "ffmpeg-static": "^5.3.0",
+    "msedge-tts": "^2.1.1",
+    "puppeteer-core": "^23.11.1"
+  }
+}

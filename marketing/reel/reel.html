@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Rankveer reel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Poppins:wght@500;700;800&display=block" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0b1033;
+    --navy2: #172554;
+    --brand: #6d5dfc;
+    --violet: #a78bfa;
+    --amber: #fbbf24;
+    --green: #34d399;
+    --red: #f87171;
+    --white: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--navy); }
+  body { font-family: "Baloo 2", "Poppins", sans-serif; color: var(--white); position: relative; }
+  .abs { position: absolute; }
+
+  /* background */
+  #bg { inset: 0; background: radial-gradient(1200px 900px at 50% 10%, #26307a 0%, var(--navy2) 45%, var(--navy) 100%); }
+  .blob { border-radius: 50%; filter: blur(90px); opacity: .55; }
+  #b1 { width: 620px; height: 620px; left: -180px; top: 220px; background: #5b4cf0; }
+  #b2 { width: 560px; height: 560px; right: -200px; top: 1050px; background: #8b5cf6; }
+  #b3 { width: 420px; height: 420px; left: 300px; top: 1500px; background: #2563eb; opacity: .35; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.35); }
+
+  /* brand bar */
+  #bar { top: 80px; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 22px; }
+  #bar img { width: 96px; height: 96px; border-radius: 26px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+  .word { font-family: "Poppins"; font-weight: 800; font-size: 66px; letter-spacing: -1px; }
+  .word b { color: var(--violet); font-weight: 800; }
+
+  /* captions */
+  .cap { left: 60px; right: 60px; text-align: center; }
+  .line { display: block; font-weight: 800; font-size: 96px; line-height: 1.12; text-shadow: 0 6px 24px rgba(0,0,0,.35); }
+  .line.small { font-size: 78px; }
+  .hl { background: linear-gradient(90deg, var(--amber), #fb923c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hl2 { background: linear-gradient(90deg, #c4b5fd, #818cf8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  /* phone */
+  #phone { left: 260px; top: 700px; width: 560px; height: 1000px; border-radius: 70px; background: #05070f; padding: 18px;
+    box-shadow: 0 40px 90px rgba(0,0,0,.55), 0 0 0 3px rgba(255,255,255,.08) inset; }
+  #screen { position: relative; width: 100%; height: 100%; border-radius: 54px; overflow: hidden; background: #fff; }
+  #screen img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  #notch { left: 50%; top: 30px; width: 150px; height: 34px; margin-left: -75px; border-radius: 20px; background: #05070f; z-index: 3; }
+
+  /* chips + cards */
+  .chip { font-family: "Poppins"; font-weight: 700; font-size: 40px; padding: 18px 34px; border-radius: 60px;
+    background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.28); backdrop-filter: blur(8px); white-space: nowrap;
+    box-shadow: 0 12px 30px rgba(0,0,0,.25); }
+  .chip.hi { font-family: "Baloo 2"; font-size: 44px; }
+  .card { display: flex; align-items: center; gap: 22px; padding: 26px 34px; border-radius: 34px; background: #ffffff; color: #101936;
+    font-weight: 800; font-size: 50px; box-shadow: 0 20px 50px rgba(0,0,0,.4); white-space: nowrap; }
+  .card .ic { width: 78px; height: 78px; border-radius: 22px; display: grid; place-items: center; font-size: 44px; }
+
+  /* language toggle */
+  #toggle { left: 140px; top: 1500px; width: 800px; height: 150px; border-radius: 80px; background: #ffffff; box-shadow: 0 24px 60px rgba(0,0,0,.45); }
+  #knob { left: 10px; top: 10px; width: 390px; height: 130px; border-radius: 70px; background: linear-gradient(90deg, #6d5dfc, #8b5cf6); }
+  .tg { top: 0; width: 400px; height: 150px; display: grid; place-items: center; font-weight: 800; font-size: 60px; }
+
+  /* result card */
+  #res { left: 120px; top: 1310px; width: 840px; padding: 40px 46px; border-radius: 44px; background: #ffffff; color: #101936; box-shadow: 0 30px 70px rgba(0,0,0,.45); }
+  #res h3 { font-family: "Poppins"; font-size: 40px; margin-bottom: 22px; }
+  .row { display: flex; align-items: center; gap: 22px; margin: 16px 0; font-family: "Poppins"; font-weight: 700; font-size: 34px; }
+  .row span:first-child { width: 220px; }
+  .track { flex: 1; height: 30px; border-radius: 20px; background: #eef0f7; overflow: hidden; }
+  .fill { height: 100%; border-radius: 20px; transform-origin: left center; }
+  .tag { font-family: "Baloo 2"; font-size: 34px; color: #dc2626; width: 140px; text-align: right; }
+
+  /* end card */
+  #endIcon { left: 340px; top: 470px; width: 400px; height: 400px; border-radius: 100px; box-shadow: 0 40px 100px rgba(109,93,252,.55); }
+  #endWord { top: 930px; left: 0; right: 0; text-align: center; font-size: 150px; }
+  #tagline { top: 1120px; left: 0; right: 0; text-align: center; font-family: "Poppins"; font-weight: 700; font-size: 38px; letter-spacing: 8px; color: #c7d2fe; }
+  #play { left: 190px; top: 1500px; width: 700px; height: 140px; border-radius: 80px; background: #ffffff; color: #101936; display: flex; align-items: center; justify-content: center; gap: 24px; font-weight: 800; font-size: 52px; box-shadow: 0 24px 60px rgba(0,0,0,.4); }
+  #play .tri { width: 0; height: 0; border-left: 46px solid #34a853; border-top: 28px solid transparent; border-bottom: 28px solid transparent; }
+  #disc { bottom: 60px; left: 80px; right: 80px; text-align: center; font-size: 28px; color: rgba(255,255,255,.6); font-weight: 600; }
+  .emoji { font-size: 110px; }
+</style>
+</head>
+<body>
+<div id="bg" class="abs"></div>
+<div id="b1" class="abs blob"></div>
+<div id="b2" class="abs blob"></div>
+<div id="b3" class="abs blob"></div>
+<div id="dots"></div>
+
+<div id="bar" class="abs"><img src="assets/icon.png" alt=""><div class="word">Rank<b>veer</b></div></div>
+
+<!-- hook -->
+<div id="hookEmoji">
+  <div class="abs emoji" style="left:120px;top:420px">📚</div>
+  <div class="abs emoji" style="left:820px;top:520px">🎯</div>
+  <div class="abs emoji" style="left:160px;top:1380px">🏆</div>
+  <div class="abs emoji" style="left:800px;top:1460px">⏱️</div>
+</div>
+
+<div id="phone" class="abs"><div id="notch" class="abs"></div><div id="screen">
+  <img id="s2" src="assets/2-mock-tests.png" alt="">
+  <img id="s5" src="assets/5-chapters.png" alt="">
+  <img id="s6" src="assets/6-practice.png" alt="">
+  <img id="s3" src="assets/3-test.png" alt="">
+  <img id="s4" src="assets/4-result.png" alt="">
+</div></div>
+
+<!-- exam chips -->
+<div id="chips">
+  <div class="abs chip" style="left:40px;top:760px">SSC</div>
+  <div class="abs chip hi" style="left:770px;top:840px">रेलवे</div>
+  <div class="abs chip hi" style="left:30px;top:1080px">यूपी पुलिस</div>
+  <div class="abs chip" style="left:800px;top:1180px">UPTET</div>
+  <div class="abs chip" style="left:50px;top:1400px">CTET</div>
+  <div class="abs chip" style="left:740px;top:1500px">Banking</div>
+  <div class="abs chip hi" style="left:330px;top:1730px">+ और भी कई</div>
+</div>
+
+<!-- practice cards -->
+<div id="cards">
+  <div class="abs card" style="left:40px;top:860px"><div class="ic" style="background:#ede9fe">📖</div>चैप्टर प्रैक्टिस</div>
+  <div class="abs card" style="left:360px;top:1150px"><div class="ic" style="background:#dbeafe">📝</div>पिछले साल के पेपर</div>
+  <div class="abs card" style="left:60px;top:1440px"><div class="ic" style="background:#fef3c7">⚡</div>रोज़ नया GK क्विज़</div>
+</div>
+
+<!-- language toggle -->
+<div id="toggle" class="abs">
+  <div id="knob" class="abs"></div>
+  <div id="tgHi" class="abs tg" style="left:0">हिंदी</div>
+  <div id="tgEn" class="abs tg" style="left:400px;font-family:Poppins">English</div>
+</div>
+
+<!-- result -->
+<div id="res" class="abs">
+  <h3>Your analysis</h3>
+  <div class="row"><span>Maths</span><div class="track"><div class="fill" id="f1" style="width:82%;background:#34d399"></div></div><span class="tag" style="color:#059669">✓</span></div>
+  <div class="row"><span>Reasoning</span><div class="track"><div class="fill" id="f2" style="width:70%;background:#818cf8"></div></div><span class="tag" style="color:#4f46e5">✓</span></div>
+  <div class="row"><span>GK</span><div class="track"><div class="fill" id="f3" style="width:38%;background:#f87171"></div></div><span class="tag">कमज़ोर</span></div>
+</div>
+
+<!-- end card -->
+<img id="endIcon" class="abs" src="assets/icon.png" alt="">
+<div id="endWord" class="abs word">Rank<b>veer</b></div>
+<div id="tagline" class="abs">LEARN • PRACTICE • IMPROVE</div>
+<div id="play" class="abs"><div class="tri"></div>Google Play पर उपलब्ध</div>
+<div id="disc" class="abs">Rankveer एक स्वतंत्र ऐप है, किसी सरकारी संस्था से संबद्ध नहीं।</div>
+
+<div id="caps"></div>
+
+<script>
+// Every motion is a Web Animation with an absolute start time, so the
+// renderer can jump to any frame: setTime(t) sets every animation's clock.
+const TL = window.TL; // { total, scenes: [{id,start,end,show}] }
+const S = Object.fromEntries(TL.scenes.map((s) => [s.id, s]));
+const $ = (q) => document.querySelector(q);
+const ease = "cubic-bezier(.22,1.2,.36,1)";       // pop with a little overshoot
+const smooth = "cubic-bezier(.4,0,.2,1)";
+function A(el, frames, start, dur, easing = smooth, extra = {}) {
+  if (typeof el === "string") el = $(el);
+  const a = el.animate(frames, { delay: start * 1000, duration: dur * 1000, fill: "both", easing, ...extra });
+  a.pause();
+  return a;
+}
+const pop = (el, start, dy = 60) => A(el, [
+  { opacity: 0, transform: `translateY(${dy}px) scale(.85)` },
+  { opacity: 1, transform: "translateY(0) scale(1)" }], start, .55, ease);
+// Exits only take hold from their start (fill forwards), so they never hide or show anything early.
+const out = (el, start, dur = .3) => A(el, [{ opacity: 1 }, { opacity: 0 }], start, dur, smooth, { fill: "forwards" });
+
+// ---- background: slow drift, forever
+A("#b1", [{ transform: "translate(0,0)" }, { transform: "translate(160px,120px)" }, { transform: "translate(0,0)" }], 0, 12, "ease-in-out", { iterations: Infinity });
+A("#b2", [{ transform: "translate(0,0)" }, { transform: "translate(-140px,-160px)" }, { transform: "translate(0,0)" }], 0, 14, "ease-in-out", { iterations: Infinity });
+A("#b3", [{ transform: "scale(1)" }, { transform: "scale(1.3)" }, { transform: "scale(1)" }], 0, 9, "ease-in-out", { iterations: Infinity });
+const dots = $("#dots");
+for (let i = 0; i < 26; i++) {
+  const d = document.createElement("div");
+  d.className = "abs dot";
+  const x = (i * 397) % 1080, y = (i * 733) % 1920, s = 6 + (i % 4) * 4;
+  Object.assign(d.style, { left: x + "px", top: y + "px", width: s + "px", height: s + "px" });
+  dots.appendChild(d);
+  A(d, [{ transform: "translateY(0)", opacity: .2 }, { transform: "translateY(-220px)", opacity: .7 }, { transform: "translateY(-440px)", opacity: 0 }], -(i % 7), 7 + (i % 5), "linear", { iterations: Infinity });
+}
+
+// ---- captions: one block per scene, lines pop one after another
+const CAP_TOP = { hook: 640, exams: 300, practice: 300, lang: 300, result: 300, cta: 1250 };
+const HL = { hook: [1], exams: [1], practice: [], lang: [0], result: [1], cta: [1] };
+for (const s of TL.scenes) {
+  const box = document.createElement("div");
+  box.className = "abs cap";
+  box.style.top = CAP_TOP[s.id] + "px";
+  const lines = s.show.map((txt, i) => {
+    const l = document.createElement("span");
+    l.className = "line" + (s.id === "hook" ? "" : " small") + (HL[s.id].includes(i) ? " " + (s.id === "lang" ? "hl2" : "hl") : "");
+    if (s.id === "hook") l.style.fontSize = i === 0 ? "100px" : "92px";
+    l.textContent = txt;
+    box.appendChild(l);
+    return l;
+  });
+  if (s.id === "practice") box.style.display = "none"; // the cards carry this scene's words
+  $("#caps").appendChild(box);
+  const span = s.end - s.start;
+  lines.forEach((l, i) => pop(l, s.start + i * Math.min(0.9, span / (lines.length + 1)), 50));
+  const next = TL.scenes[TL.scenes.indexOf(s) + 1];
+  if (next) out(box, next.start - 0.25, .25);
+}
+
+// ---- hook: emoji float in, everything clears for the phone
+document.querySelectorAll("#hookEmoji .emoji").forEach((e, i) => {
+  A(e, [{ opacity: 0, transform: "scale(.2) rotate(-30deg)" }, { opacity: 1, transform: "scale(1) rotate(0)" }], S.hook.start + .3 + i * .25, .6, ease);
+  A(e, [{ translate: "0 0" }, { translate: "0 -30px" }, { translate: "0 0" }], 0, 2.4, "ease-in-out", { iterations: Infinity });
+  out(e, S.exams.start - .3, .3);
+});
+// brand bar comes in after the hook
+A("#bar", [{ opacity: 0, transform: "translateY(-40px)" }, { opacity: 1, transform: "translateY(0)" }], S.exams.start - .1, .6, ease);
+out("#bar", S.cta.start - .2, .3);
+
+// ---- phone: slides up for "exams", stays through "result", leaves for the end card
+A("#phone", [{ transform: "translateY(1300px) rotate(8deg)" }, { transform: "translateY(0) rotate(0)" }], S.exams.start, .9, ease);
+A("#phone", [{ transform: "translateY(0) scale(1)", opacity: 1 }, { transform: "translateY(300px) scale(.6)", opacity: 0 }], S.cta.start - .3, .5, smooth, { fill: "forwards" });
+// gentle sway while on screen
+A("#screen", [{ transform: "translateY(0)" }, { transform: "translateY(-6px)" }, { transform: "translateY(0)" }], 0, 3, "ease-in-out", { iterations: Infinity });
+
+// screens: each fades in over the previous one
+const pMid = S.practice.start + (S.practice.end - S.practice.start) * 0.45;
+const shots = [["#s2", S.exams.start], ["#s5", S.practice.start], ["#s6", pMid], ["#s3", S.lang.start], ["#s4", S.result.start]];
+shots.forEach(([q, t], i) => {
+  const el = $(q);
+  el.style.opacity = i === 0 ? 1 : 0;
+  if (i) A(el, [{ opacity: 0, transform: "scale(1.08)" }, { opacity: 1, transform: "scale(1)" }], t, .45, smooth);
+});
+// slow scroll on the long screens so they feel alive
+A("#s2", [{ objectPosition: "50% 0%" }, { objectPosition: "50% 100%" }], S.exams.start + 1.2, 4.5, "ease-in-out");
+
+// ---- exam chips fly in around the phone
+document.querySelectorAll("#chips .chip").forEach((c, i) => {
+  const fromLeft = parseInt(c.style.left) < 400;
+  A(c, [{ opacity: 0, transform: `translateX(${fromLeft ? -260 : 260}px) scale(.7)` }, { opacity: 1, transform: "translateX(0) scale(1)" }],
+    S.exams.start + 1.0 + i * 0.55, .6, ease);
+  A(c, [{ translate: "0 0" }, { translate: "0 -14px" }, { translate: "0 0" }], i * .3, 2.2, "ease-in-out", { iterations: Infinity });
+  out(c, S.practice.start - .25, .25);
+});
+
+// ---- practice: three cards, timed to the three phrases
+const pSpan = S.practice.end - S.practice.start;
+document.querySelectorAll("#cards .card").forEach((c, i) => {
+  pop(c, S.practice.start + i * pSpan / 3, 80);
+  out(c, S.lang.start - .25, .25);
+});
+
+// ---- language toggle: Hindi, then English, then Hindi
+const tg = $("#toggle");
+pop(tg, S.lang.start + .2, 100);
+out(tg, S.result.start - .25, .25);
+const lSpan = S.lang.end - S.lang.start;
+// Easing per keyframe: an easing on the whole animation would bend the timing of every step.
+const E = { easing: "cubic-bezier(.4,0,.2,1)" };
+A("#knob", [{ transform: "translateX(0)", ...E }, { transform: "translateX(0)", offset: .3, ...E }, { transform: "translateX(390px)", offset: .4, ...E },
+  { transform: "translateX(390px)", offset: .8, ...E }, { transform: "translateX(0)", offset: .88, ...E }, { transform: "translateX(0)" }],
+  S.lang.start + .2, lSpan, "linear");
+A("#tgHi", [{ color: "#fff" }, { color: "#fff", offset: .3 }, { color: "#101936", offset: .4 }, { color: "#101936", offset: .8 }, { color: "#fff", offset: .88 }, { color: "#fff" }], S.lang.start + .2, lSpan, "linear");
+A("#tgEn", [{ color: "#101936" }, { color: "#101936", offset: .3 }, { color: "#fff", offset: .4 }, { color: "#fff", offset: .8 }, { color: "#101936", offset: .88 }, { color: "#101936" }], S.lang.start + .2, lSpan, "linear");
+
+// ---- result: card pops, bars grow, weak topic pulses
+pop("#res", S.result.start + .2, 120);
+out("#res", S.cta.start - .25, .25);
+["#f1", "#f2", "#f3"].forEach((q, i) => A(q, [{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], S.result.start + .6 + i * .35, .8, smooth));
+A("#res .tag:last-child", [{ transform: "scale(1)" }, { transform: "scale(1.18)" }, { transform: "scale(1)" }], S.result.start + 1.8, .7, "ease-in-out", { iterations: 2 });
+
+// ---- end card
+const c0 = S.cta.start;
+A("#endIcon", [{ opacity: 0, transform: "scale(.3) rotate(-20deg)" }, { opacity: 1, transform: "scale(1) rotate(0)" }], c0 + .1, .8, ease);
+A("#endIcon", [{ translate: "0 0" }, { translate: "0 -16px" }, { translate: "0 0" }], 0, 2.6, "ease-in-out", { iterations: Infinity });
+pop("#endWord", c0 + .45, 60);
+pop("#tagline", c0 + .8, 40);
+pop("#play", c0 + 1.6, 80);
+A("#play", [{ transform: "scale(1)" }, { transform: "scale(1.06)" }, { transform: "scale(1)" }], c0 + 2.6, 1, "ease-in-out", { iterations: Infinity, composite: "add" });
+A("#disc", [{ opacity: 0 }, { opacity: 1 }], c0 + 1.2, .6);
+
+window.setTime = (t) => { for (const a of document.getAnimations()) a.currentTime = t * 1000; };
+window.setTime(0);
+window.READY = document.fonts.ready.then(() => Promise.all([...document.images].map((i) => i.decode().catch(() => {}))));
+</script>
+</body>
+</html>
