@@ -74,7 +74,14 @@ function numberSignature(text) {
     .replace(/(?<![ऀ-ॿ])(दो|तीन|चार|पाँच|पांच|छह|सात|आठ|नौ|दस|ग्यारह|बारह)(?![ऀ-ॿ])/g, (m, w) => ` ~${COUNT_WORDS[w]} `)
     .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => "^" + [...m].map((c) => SUPERSCRIPT_DIGITS[c]).join("") + " ")
     .replace(/\^\s+(?=\d)/g, "^");
-  return (plain.match(/@[0-9a-z]+|[#^~]?[0-9]+(?:\.[0-9]+)?/g) || []).sort().join("|");
+  // A letter series is its letters, as a number series is its numbers.
+  // "B, C, E, H, L, ?" and "E, F, H, K, O, ?" carry no number at all, so
+  // with the same wording they looked like repeats of each other; the same
+  // for "a b _ c a _ c a b _" patterns. The run itself joins the signature.
+  const runs = [];
+  for (const m of String(text || "").matchAll(/(?:\b[A-Za-z]{1,8}\b|\?)(?:\s*,\s*(?:\b[A-Za-z]{1,8}\b|\?)){3,}/g)) runs.push(`@s:${m[0].replace(/\s+/g, "")}`);
+  for (const m of String(text || "").matchAll(/(?:(?<=^|\s)[A-Za-z0-9_?](?=\s|$)\s*){6,}/g)) runs.push(`@p:${m[0].replace(/\s+/g, "")}`);
+  return [...(plain.match(/@[0-9a-z]+|[#^~]?[0-9]+(?:\.[0-9]+)?/g) || []), ...runs].sort().join("|");
 }
 
 // Words that name the same thing. "The number of divisors of 120" is "the

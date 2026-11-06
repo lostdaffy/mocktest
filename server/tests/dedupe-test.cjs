@@ -174,6 +174,13 @@ const NOT_SAME = [
 ];
 NOT_SAME.forEach(([a, b], i) => check(`different questions are left alone (${i + 1})`, !sameFactInPaper(a, b) && !sameFactInPaper(b, a)));
 
+// A letter series is its letters: two different series with the same wording
+// are not repeats; the same series is.
+check("different letter series are not repeats", !looksLikeRepeat("Find the missing letter in the series: B, C, E, H, L, ?", ["Find the missing letter in the series: E, F, H, K, O, ?"]).repeat);
+check("different letter clusters are not repeats", !looksLikeRepeat("Complete the series: JKL, IJK, HIJ, ?, FGH", ["Complete the series: DEF, EFG, FGH, ?, HIJ"]).repeat);
+check("different repeating patterns are not repeats", !looksLikeRepeat("Choose the letters that complete the series: a b _ c a _ c a b _", ["Choose the letters that complete the series: a _ b b a _ b b _ a"]).repeat);
+check("the same letter series is a repeat", looksLikeRepeat("Find the missing letter in the series: B, C, E, H, L, ?", ["Which letter is missing in the series: B, C, E, H, L, ?"]).repeat);
+
 const failed = results.filter((x) => !x.ok);
 console.log(`\n${results.length - failed.length}/${results.length} passed`);
 process.exit(failed.length ? 1 : 0);

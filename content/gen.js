@@ -41,7 +41,7 @@ const numbersOf = (p) => JSON.stringify(
  * Returns the questions of tests `from`..`to` of `level`, titled by title(n).
  * `used` is shared by every level of the topic.
  */
-function fillTests({ kinds, level, from, to, title, used = new Set(), size = 20 }) {
+function fillTests({ kinds, level, from, to, title, used = new Set(), size = 20, cap = 2 }) {
   const mine = kinds.filter((k) => k.levels.includes(level));
   if (!mine.length) throw new Error(`no kind for ${level}`);
   const pools = new Map(mine.map((k) => [k.id, shuffle(k.cands(), hash(k.id + level))]));
@@ -65,10 +65,10 @@ function fillTests({ kinds, level, from, to, title, used = new Set(), size = 20 
     const order = shuffle(mine, hash(`${level}#${n}`));
     const count = new Map();
     const qs = [];
-    for (let round = 0; qs.length < size && round < 3; round++) {
+    for (let round = 0; qs.length < size && round < cap + 1; round++) {
       for (const k of order) {
         if (qs.length >= size) break;
-        if ((count.get(k.id) || 0) >= 2) continue;
+        if ((count.get(k.id) || 0) >= cap) continue;
         if (round > 0 && k.once) continue;
         const p = take(k);
         if (!p) continue;
@@ -91,12 +91,14 @@ const LEVELS = ["easy", "medium", "hard", "advanced"];
 const cache = new Map();
 // `used` may be shared with other topics of the chapter (a kind used in two
 // topics then never repeats a set of numbers across them).
-function fillTopic({ kinds, prefix, tests = 10, used = new Set(), levels = LEVELS }) {
+// `cap`: how many questions of one kind a test may hold (2 by default; a
+// topic with fewer kinds, like a reasoning series, may allow 3).
+function fillTopic({ kinds, prefix, tests = 10, used = new Set(), levels = LEVELS, cap = 2 }) {
   if (cache.has(prefix)) return cache.get(prefix);
   const out = {};
   for (const level of levels) {
     const name = level[0].toUpperCase() + level.slice(1);
-    const all = fillTests({ kinds, level, from: 1, to: tests, title: (n) => `${prefix} · ${name} #${n}`, used });
+    const all = fillTests({ kinds, level, from: 1, to: tests, title: (n) => `${prefix} · ${name} #${n}`, used, cap });
     out[level] = Array.from({ length: tests }, (_, i) => all.slice(i * 20, i * 20 + 20));
   }
   cache.set(prefix, out);
