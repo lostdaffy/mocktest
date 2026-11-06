@@ -20,6 +20,16 @@ const asyncRoute = require("../utils/asyncRoute");
 
 // Everything here is admin-only: this is the machinery that fills the bank.
 router.get("/status", protect, adminOnly, asyncRoute(queueStatus));
+// The waiting work by kind, and the AI quality checks cleared without the AI
+// (services/offlineChecks.js): list them with their questions, then send the
+// verdicts - rules and repeats still run here, anything wrong is flagged.
+const offline = require("../services/offlineChecks");
+router.get("/queue-summary", protect, adminOnly, asyncRoute(async (req, res) => res.json({ summary: await offline.summary() })));
+router.get("/quality-checks", protect, adminOnly, asyncRoute(async (req, res) => res.json({ jobs: await offline.listChecks({ limit: Number(req.query.limit) || 50, after: /^[a-f0-9]{24}$/i.test(String(req.query.after || "")) ? req.query.after : null }) })));
+router.post("/quality-checks/resolve", protect, adminOnly, asyncRoute(async (req, res) => {
+  const verdicts = Array.isArray(req.body?.verdicts) ? req.body.verdicts.slice(0, 200) : [];
+  res.json({ results: await offline.resolveChecks(verdicts, { by: "admin" }) });
+}));
 router.get("/activity", protect, adminOnly, asyncRoute(activity));
 router.get("/gaps", protect, adminOnly, asyncRoute(listGaps));
 router.post("/enqueue", protect, adminOnly, asyncRoute(enqueue));

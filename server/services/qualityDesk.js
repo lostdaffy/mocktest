@@ -347,4 +347,4 @@ async function checkQuestions(ids, { source = "admin", mode } = {}) {
   return out;
 }
 
-module.exports = { inspect, checkQuestions, applyFix, dismissFix, undoFix, buildReplacement, buildMend };
+module.exports = { inspect, checkQuestions, applyFix, dismissFix, undoFix, buildReplacement, buildMend, chapterBank, repeatOf };
